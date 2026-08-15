@@ -1,0 +1,11 @@
+# IDE
+.idea/
+*.iml
+.vscode/
+
+# macOS
+.DS_Store
+
+# Ambiente
+.env
+*.local
