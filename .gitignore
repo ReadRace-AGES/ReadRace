@@ -9,3 +9,6 @@
 # Ambiente
 .env
 *.local
+
+# Docker
+docker-compose.override.yml

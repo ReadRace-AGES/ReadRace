@@ -1,0 +1,26 @@
+# Build output
+target/
+
+# IDE
+.idea/
+*.iml
+.vscode/
+*.iws
+*.ipr
+
+# Git
+.git/
+.gitignore
+.gitattributes
+
+# Docs
+README.md
+HELP.md
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Env
+.env
+*.local

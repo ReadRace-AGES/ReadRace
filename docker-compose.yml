@@ -1,20 +1,46 @@
 services:
+
+  # ==================== BANCO DE DADOS ====================
   db:
     image: postgres:16-alpine
     container_name: readrace-db
     environment:
-      POSTGRES_DB: readrace
-      POSTGRES_USER: readrace
-      POSTGRES_PASSWORD: readrace
+      POSTGRES_DB: ${DB_NAME:-readrace}
+      POSTGRES_USER: ${DB_USER:-readrace}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-readrace}
     ports:
-      - "5433:5432"
+      - "${DB_PORT:-5433}:5432"
     volumes:
       - pgdata:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U readrace -d readrace"]
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER:-readrace} -d ${DB_NAME:-readrace}"]
       interval: 5s
       timeout: 5s
       retries: 10
+
+  # ==================== BACKEND API ====================
+  api:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: readrace-api
+    environment:
+      DB_URL: jdbc:postgresql://db:5432/${DB_NAME:-readrace}
+      DB_USER: ${DB_USER:-readrace}
+      DB_PASSWORD: ${DB_PASSWORD:-readrace}
+      SERVER_PORT: 8080
+      SPRING_PROFILES_ACTIVE: ${SPRING_PROFILES_ACTIVE:-dev}
+    ports:
+      - "${API_PORT:-8080}:8080"
+    depends_on:
+      db:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:8080/actuator/health || exit 1"]
+      interval: 15s
+      timeout: 5s
+      start_period: 40s
+      retries: 5
 
 volumes:
   pgdata:
