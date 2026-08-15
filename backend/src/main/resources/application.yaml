@@ -3,7 +3,7 @@ spring:
     name: readrace-api
 
   datasource:
-    url: ${DB_URL:jdbc:postgresql://localhost:5432/readrace}
+    url: ${DB_URL:jdbc:postgresql://localhost:5433/readrace}
     username: ${DB_USER:readrace}
     password: ${DB_PASSWORD:readrace}
 

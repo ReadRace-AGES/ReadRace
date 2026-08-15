@@ -7,7 +7,7 @@ services:
       POSTGRES_USER: readrace
       POSTGRES_PASSWORD: readrace
     ports:
-      - "5432:5432"
+      - "5433:5432"
     volumes:
       - pgdata:/var/lib/postgresql/data
     healthcheck:
