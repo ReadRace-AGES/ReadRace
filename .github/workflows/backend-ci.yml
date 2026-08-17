@@ -32,7 +32,7 @@ jobs:
           cache: maven
 
       - name: Build e testes
-        run: ./mvnw --batch-mode verify
+        run: ./mvnw --batch-mode spotless:check verify
 
       - name: Publica relatório de testes
         if: always()
