@@ -12,3 +12,5 @@
 
 # Docker
 docker-compose.override.yml
+**/workspace.xml
+**/workspace.xml
