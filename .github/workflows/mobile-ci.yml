@@ -13,7 +13,7 @@ on:
 
 jobs:
   build:
-    name: Lint e typecheck
+    name: Typecheck
     runs-on: ubuntu-latest
 
     defaults:
@@ -33,6 +33,9 @@ jobs:
 
       - name: Instala dependências
         run: npm ci
+
+      - name: Gera tipos do Expo
+        run: npx expo customize tsconfig.json
 
       - name: Verificação de tipos
         run: npx tsc --noEmit
