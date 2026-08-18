@@ -3,17 +3,28 @@ name: Backend CI
 on:
   pull_request:
     branches: [main, dev]
-    paths:
-      - 'backend/**'
-      - '.github/workflows/backend-ci.yml'
   push:
     branches: [main, dev]
-    paths:
-      - 'backend/**'
 
 jobs:
+  detecta-mudancas:
+    name: Detecta mudanças
+    runs-on: ubuntu-latest
+    outputs:
+      backend: ${{ steps.filtro.outputs.backend }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dorny/paths-filter@v3
+        id: filtro
+        with:
+          filters: |
+            backend:
+              - 'backend/**'
+              - '.github/workflows/backend-ci.yml'
+
   build:
     name: Build e testes
+    needs: detecta-mudancas
     runs-on: ubuntu-latest
 
     defaults:
@@ -22,9 +33,11 @@ jobs:
 
     steps:
       - name: Checkout do código
+        if: needs.detecta-mudancas.outputs.backend == 'true'
         uses: actions/checkout@v4
 
       - name: Configura JDK 21
+        if: needs.detecta-mudancas.outputs.backend == 'true'
         uses: actions/setup-java@v4
         with:
           java-version: '21'
@@ -32,10 +45,11 @@ jobs:
           cache: maven
 
       - name: Build e testes
+        if: needs.detecta-mudancas.outputs.backend == 'true'
         run: ./mvnw --batch-mode spotless:check verify
 
       - name: Publica relatório de testes
-        if: always()
+        if: needs.detecta-mudancas.outputs.backend == 'true' && always()
         uses: actions/upload-artifact@v4
         with:
           name: relatorio-testes
