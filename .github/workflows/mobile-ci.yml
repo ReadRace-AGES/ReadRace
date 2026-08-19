@@ -1,0 +1,57 @@
+name: Mobile CI
+
+on:
+  pull_request:
+    branches: [main, dev]
+  push:
+    branches: [main, dev]
+
+jobs:
+  detecta-mudancas:
+    name: Detecta mudanças
+    runs-on: ubuntu-latest
+    outputs:
+      mobile: ${{ steps.filtro.outputs.mobile }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dorny/paths-filter@v3
+        id: filtro
+        with:
+          filters: |
+            mobile:
+              - 'mobile/**'
+              - '.github/workflows/mobile-ci.yml'
+
+  build:
+    name: Typecheck
+    needs: detecta-mudancas
+    runs-on: ubuntu-latest
+
+    defaults:
+      run:
+        working-directory: mobile
+
+    steps:
+      - name: Checkout do código
+        if: needs.detecta-mudancas.outputs.mobile == 'true'
+        uses: actions/checkout@v4
+
+      - name: Configura Node 22
+        if: needs.detecta-mudancas.outputs.mobile == 'true'
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+          cache-dependency-path: mobile/package-lock.json
+
+      - name: Instala dependências
+        if: needs.detecta-mudancas.outputs.mobile == 'true'
+        run: npm ci
+
+      - name: Gera tipos do Expo
+        if: needs.detecta-mudancas.outputs.mobile == 'true'
+        run: npx expo customize tsconfig.json
+
+      - name: Verificação de tipos
+        if: needs.detecta-mudancas.outputs.mobile == 'true'
+        run: npx tsc --noEmit
