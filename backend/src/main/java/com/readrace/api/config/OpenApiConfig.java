@@ -1,10 +1,10 @@
 package com.readrace.api.config;
 
-import io.swagger.v3.oas.models.OpenAPI;
-import io.swagger.v3.oas.models.info.Info;
-
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+
+import io.swagger.v3.oas.models.OpenAPI;
+import io.swagger.v3.oas.models.info.Info;
 
 /**
  * Configuração do Swagger/OpenAPI.
@@ -27,8 +27,8 @@ public class OpenApiConfig {
                         new Info()
                                 .title("ReadRace API")
                                 .description(
-                                        "API do ReadRace - aplicativo de leitura gamificada."
-                                            + " Projeto acadêmico PUCRS.")
+                                        "API do ReadRace - aplicativo de leitura"
+                                                + " gamificada. Projeto acadêmico PUCRS.")
                                 .version("0.0.1-SNAPSHOT"));
     }
 }
