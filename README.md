@@ -6,27 +6,32 @@ Aplicativo mobile de incentivo ao hábito de leitura por meio de gamificação c
 
 ## Stack
 
-| Camada | Tecnologia |
-|--------|-----------|
-| Mobile | React Native |
-| Backend | Java 21 + Spring Boot 4.1 |
-| Banco de Dados | PostgreSQL 16 |
-| Build | Maven (wrapper incluso) |
-| Migrations | Flyway |
-| Containers | Docker + Docker Compose |
+| Camada | Tecnologia | Versão |
+|--------|-----------|--------|
+| Mobile | React Native + Expo | Expo SDK 57, RN 0.86.2 |
+| Backend | Java + Spring Boot | Java 21, Spring Boot 4.1 |
+| Banco de Dados | PostgreSQL | 16 (alpine) |
+| Build (back) | Maven | via wrapper (mvnw) |
+| Build (mobile) | npm | Node 22 |
+| Migrations | Flyway | - |
+| Formatação | Spotless (Google Java Format AOSP) | - |
+| CI/CD | GitHub Actions | backend-ci + mobile-ci |
+| Documentacao API | Springdoc OpenAPI (Swagger UI) | 2.8.8 |
+| Containers | Docker + Docker Compose | - |
 
 ---
 
 ## Pré-requisitos
 
 - [Docker](https://docs.docker.com/get-docker/) e Docker Compose (v2+)
-- **OU**, para rodar sem Docker:
+- [Node.js 22](https://nodejs.org/) (para o mobile)
+- **OU**, para rodar o backend sem Docker:
   - Java 21 (JDK)
   - PostgreSQL 16 rodando localmente
 
 ---
 
-## Início rápido
+## Inicio rapido
 
 ```bash
 # 1. Clone o repositório e entre na branch de desenvolvimento
@@ -37,19 +42,26 @@ git checkout dev
 # 2. Copie o arquivo de variáveis de ambiente
 cp .env.example .env
 
-# 3. Suba tudo (banco + API) com um comando
+# 3. Suba banco + API com um comando
 docker compose up --build
+
+# 4. Em outro terminal, suba o mobile
+cd mobile
+npm install
+npm start
 ```
 
-A API estará disponível em `http://localhost:8080` e o health check em `http://localhost:8080/actuator/health`.
+- API disponivel em `http://localhost:8080`
+- Health check em `http://localhost:8080/actuator/health`
+- Expo DevTools abre no navegador (escaneie o QR com Expo Go no celular)
 
 ---
 
-## Formas de compilação e execução
+## Backend — Formas de compilacao e execucao
 
-### Opção 1 — Tudo via Docker (recomendado para onboarding)
+### Opcao 1 — Tudo via Docker (recomendado para onboarding)
 
-Não precisa de Java nem PostgreSQL instalados. O Docker cuida de tudo.
+Nao precisa de Java nem PostgreSQL instalados. O Docker cuida de tudo.
 
 ```bash
 # Subir banco + API
@@ -68,16 +80,16 @@ docker compose down
 docker compose down -v
 ```
 
-**Rebuild após mudança no `pom.xml` ou no código:**
+**Rebuild apos mudanca no `pom.xml` ou no codigo:**
 ```bash
 docker compose up --build api
 ```
 
 ---
 
-### Opção 2 — Banco no Docker, API local (recomendado para desenvolvimento)
+### Opcao 2 — Banco no Docker, API local (recomendado para desenvolvimento)
 
-Ideal para o dia a dia porque o hot reload (`spring-boot-devtools`) é instantâneo.
+Ideal para o dia a dia porque o hot reload (`spring-boot-devtools`) e instantaneo.
 
 ```bash
 # 1. Sobe apenas o banco
@@ -96,9 +108,9 @@ cd backend
 
 ---
 
-### Opção 3 — Tudo local (sem Docker)
+### Opcao 3 — Tudo local (sem Docker)
 
-Se por algum motivo não puder usar Docker:
+Se por algum motivo nao puder usar Docker:
 
 1. Instale PostgreSQL 16 e crie o banco:
 ```sql
@@ -107,7 +119,7 @@ CREATE USER readrace WITH PASSWORD 'readrace';
 GRANT ALL PRIVILEGES ON DATABASE readrace TO readrace;
 ```
 
-2. Ajuste as variáveis no `.env` ou exporte:
+2. Ajuste as variaveis no `.env` ou exporte:
 ```bash
 export DB_URL=jdbc:postgresql://localhost:5432/readrace
 export DB_USER=readrace
@@ -129,7 +141,7 @@ cd backend
 ./mvnw clean package -DskipTests
 ```
 
-O artefato será gerado em `backend/target/api-0.0.1-SNAPSHOT.jar`.
+O artefato sera gerado em `backend/target/api-0.0.1-SNAPSHOT.jar`.
 
 Para executar o .jar diretamente:
 ```bash
@@ -138,28 +150,94 @@ java -jar target/api-0.0.1-SNAPSHOT.jar
 
 ---
 
+## Mobile — Como rodar
+
+```bash
+cd mobile
+npm install
+npm start
+```
+
+Opcoes apos o start:
+- Pressione `a` para abrir no emulador Android
+- Pressione `i` para abrir no simulador iOS (macOS)
+- Pressione `w` para abrir no navegador (web)
+- Escaneie o QR code com o app **Expo Go** no celular (mesmo WiFi)
+
+### Scripts disponiveis
+
+| Script | Comando | Descricao |
+|--------|---------|-----------|
+| start | `npm start` | Inicia o Expo DevTools |
+| android | `npm run android` | Abre direto no emulador Android |
+| ios | `npm run ios` | Abre direto no simulador iOS |
+| web | `npm run web` | Abre no navegador |
+| lint | `npm run lint` | Roda o linter do Expo |
+
+---
+
 ## Executando testes
 
-Os testes de integração usam Testcontainers (sobe um PostgreSQL efêmero via Docker automaticamente).
+### Backend
+
+Os testes de integracao usam Testcontainers (sobe um PostgreSQL efemero via Docker automaticamente).
 
 ```bash
 cd backend
 ./mvnw test
 ```
 
-> Requisito: Docker precisa estar rodando para os testes de integração funcionarem.
+> Requisito: Docker precisa estar rodando para os testes de integracao funcionarem.
+
+### Mobile
+
+```bash
+cd mobile
+npx tsc --noEmit   # verificacao de tipos
+```
 
 ---
 
-## Variáveis de ambiente
+## Formatacao de codigo (Spotless)
 
-| Variável | Default | Descrição |
+O backend usa Spotless com Google Java Format (estilo AOSP) para manter codigo consistente.
+
+```bash
+cd backend
+
+# Verificar se esta formatado (o CI roda isso)
+./mvnw spotless:check
+
+# Corrigir automaticamente
+./mvnw spotless:apply
+```
+
+> Dica: rode `./mvnw spotless:apply` antes de cada commit para evitar falhas no CI.
+
+---
+
+## CI/CD (GitHub Actions)
+
+O projeto possui dois workflows que rodam automaticamente em push/PR para `main` e `dev`:
+
+| Workflow | Arquivo | O que faz |
+|----------|---------|-----------|
+| Backend CI | `.github/workflows/backend-ci.yml` | `spotless:check` + `verify` (compila + testa) |
+| Mobile CI | `.github/workflows/mobile-ci.yml` | `tsc --noEmit` (verificacao de tipos) |
+
+Ambos usam path filter — so rodam se houver mudancas na pasta relevante.
+
+---
+
+## Variaveis de ambiente
+
+| Variavel | Default | Descricao |
 |----------|---------|-----------|
 | `DB_NAME` | readrace | Nome do banco de dados |
-| `DB_USER` | readrace | Usuário do banco |
+| `DB_USER` | readrace | Usuario do banco |
 | `DB_PASSWORD` | readrace | Senha do banco |
 | `DB_PORT` | 5433 | Porta exposta do PostgreSQL no host |
-| `DB_URL` | jdbc:postgresql://localhost:5433/readrace | URL JDBC (usado em execução local) |
+| `DB_URL` | jdbc:postgresql://localhost:5433/readrace | URL JDBC (usado em execucao local) |
 | `API_PORT` | 8080 | Porta exposta da API no host |
 | `SERVER_PORT` | 8080 | Porta interna do Spring Boot |
 | `SPRING_PROFILES_ACTIVE` | dev | Profile ativo do Spring |
@@ -170,40 +248,82 @@ cd backend
 
 ```
 ReadRace/
-├── .env.example              # Template de variáveis de ambiente
-├── docker-compose.yml        # Orquestração banco + API
+├── .github/workflows/        # CI/CD (GitHub Actions)
+│   ├── backend-ci.yml
+│   └── mobile-ci.yml
+├── .env.example              # Template de variaveis de ambiente
+├── docker-compose.yml        # Orquestracao banco + API
+├── README.md
 ├── backend/
-│   ├── Dockerfile            # Build multi-stage (JDK → JRE)
+│   ├── Dockerfile            # Build multi-stage (JDK -> JRE)
 │   ├── .dockerignore
-│   ├── pom.xml               # Dependências Maven
+│   ├── pom.xml               # Dependencias Maven + Spotless
 │   ├── mvnw / mvnw.cmd      # Maven Wrapper
 │   └── src/
 │       ├── main/
 │       │   ├── java/com/readrace/api/
-│       │   │   └── ApiApplication.java
+│       │   │   ├── ApiApplication.java
+│       │   │   ├── config/                 # CORS, OpenAPI
+│       │   │   ├── controller/
+│       │   │   ├── dto/request/ + dto/response/
+│       │   │   ├── exception/
+│       │   │   ├── model/
+│       │   │   ├── repository/
+│       │   │   └── service/
 │       │   └── resources/
-│       │       └── application.yaml
+│       │       ├── application.yaml
+│       │       └── db/migration/
 │       └── test/
-│           └── java/com/readrace/api/
-│               ├── ApiApplicationTests.java
-│               ├── TestApiApplication.java
-│               └── TestcontainersConfiguration.java
+├── mobile/
+│   ├── app.json              # Configuracao do Expo
+│   ├── package.json
+│   ├── tsconfig.json         # TypeScript strict + path aliases
+│   ├── assets/               # Icones, splash, imagens
+│   └── src/
+│       ├── app/              # Rotas (file-based routing)
+│       ├── components/       # Componentes reutilizaveis
+│       ├── constants/        # Tema, cores, espacamentos
+│       └── hooks/            # Custom hooks
 ```
 
 ---
 
-## Endpoints úteis
+## Documentacao da API (Swagger)
 
-| Endpoint | Descrição |
-|----------|-----------|
-| `GET /actuator/health` | Status da aplicação e conexão com o banco |
-| `GET /actuator/info` | Informações da aplicação |
+Com a API rodando, acesse:
+
+- **Swagger UI**: http://localhost:8080/swagger-ui.html (interface interativa)
+- **OpenAPI JSON**: http://localhost:8080/v3/api-docs (spec raw)
+
+Todos os endpoints, DTOs e validacoes sao documentados automaticamente.
+
+## Endpoints da API
+
+| Metodo | URL | Status | Descricao |
+|--------|-----|--------|-----------|
+| GET | /actuator/health | 200 | Status da aplicacao |
+| GET | /actuator/info | 200 | Informacoes da aplicacao |
+| GET | /swagger-ui.html | 200 | Documentacao interativa (Swagger) |
+| GET | /api/exemplos | 200 | Lista todos (boilerplate) |
+| GET | /api/exemplos/{id} | 200/404 | Busca por ID |
+| POST | /api/exemplos | 201/400 | Cria novo |
+| PUT | /api/exemplos/{id} | 200/400/404 | Atualiza |
+| DELETE | /api/exemplos/{id} | 204/404 | Exclui |
+
+> Os endpoints `/api/exemplos` sao um boilerplate de referencia e serao substituidos pelas entidades reais do dominio.
 
 ---
 
-## Convenções do projeto
+## Convencoes do projeto
 
 - **Branch principal de desenvolvimento**: `dev`
-- **Migrations**: Flyway em `src/main/resources/db/migration/` com nomes `V1__descricao.sql`
-- **Hibernate**: modo `validate` — o Flyway é dono do schema, o Hibernate apenas valida
-- **Spring Security**: desativado temporariamente até implementação do módulo de autenticação
+- **Commits**: portugues, seguindo Conventional Commits (`feat:`, `fix:`, `build:`, `chore:`, `ci:`, `docs:`)
+- **Migrations Flyway**: `V<numero>__descricao_em_snake_case.sql` — imutaveis apos merge em dev
+- **Hibernate**: modo `validate` — Flyway e dono do schema
+- **Formatacao**: Spotless com Google Java Format (AOSP, 4 espacos)
+- **Arquitetura backend**: Controller -> Service -> Repository (controller nao fala com repository)
+- **DTOs**: records Java — Request (entrada com validacao), Response (saida com factory method)
+- **Excecoes**: tratadas globalmente via `@RestControllerAdvice` com `ProblemDetail` (RFC 9457)
+- **Spring Security**: desativado temporariamente ate implementacao do modulo de autenticacao
+- **CORS**: configurado para aceitar todas as origens em dev (restringir em prod)
+- **Mobile routing**: expo-router (file-based, telas em `src/app/`)
