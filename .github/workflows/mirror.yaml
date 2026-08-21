@@ -1,9 +1,13 @@
 name: Mirror para GitLab
+
 on:
   push:
     branches: ['**']
     tags: ['**']
-  delete:
+
+concurrency:
+  group: mirror-gitlab
+  cancel-in-progress: false
 
 jobs:
   mirror:
