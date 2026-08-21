@@ -24,7 +24,11 @@ Aplicativo mobile de incentivo ao hábito de leitura por meio de gamificação c
 ## Pré-requisitos
 
 - [Docker](https://docs.docker.com/get-docker/) e Docker Compose (v2+)
+<<<<<<< Updated upstream
 - [Node.js 22](https://nodejs.org/) (para o mobile)
+=======
+- [Node.js 22](https://nodejs.org/) (para o mobile) — Download direto: [Windows](https://nodejs.org/dist/v22.23.2/node-v22.23.2-x64.msi) | [macOS](https://nodejs.org/dist/v22.23.2/node-v22.23.2.pkg) | [Linux](https://nodejs.org/dist/v22.23.2/node-v22.23.2-linux-x64.tar.xz)
+>>>>>>> Stashed changes
 - **OU**, para rodar o backend sem Docker:
   - Java 21 (JDK)
   - PostgreSQL 16 rodando localmente
