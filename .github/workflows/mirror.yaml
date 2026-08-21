@@ -1,0 +1,20 @@
+name: Mirror para GitLab
+on:
+  push:
+    branches: ['**']
+    tags: ['**']
+  delete:
+
+jobs:
+  mirror:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Push para o tools
+        run: |
+          git push --prune --force \
+            "https://${{ secrets.GITLAB_USER }}:${{ secrets.GITLAB_TOKEN }}@tools.ages.pucrs.br/2026-2/6lmnp/readrace/readrace.git" \
+            "+refs/remotes/origin/*:refs/heads/*" "+refs/tags/*:refs/tags/*"
