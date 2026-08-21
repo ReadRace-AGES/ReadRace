@@ -152,6 +152,26 @@ java -jar target/api-0.0.1-SNAPSHOT.jar
 
 ## Mobile — Como rodar
 
+### Problema comum no Windows: script bloqueado pelo PowerShell
+
+Se ao rodar `npm install` ou `npm start` aparecer o erro:
+
+```
+O arquivo D:\NodeJS\npm.ps1 não pode ser carregado porque a execução de scripts foi desabilitada neste sistema.
+```
+
+Execute este comando no PowerShell **como administrador**:
+
+```powershell
+Set-ExecutionPolicy -Scope CurrentUser -ExecutionPolicy RemoteSigned
+```
+
+Feche e abra o terminal novamente. Depois disso o npm funciona normalmente.
+
+---
+
+### Comandos
+
 ```bash
 cd mobile
 npm install
@@ -159,10 +179,13 @@ npm start
 ```
 
 Opcoes apos o start:
+- Pressione `s` para mudar para **Expo Go** (recomendado se aparecer erro de versao no celular)
 - Pressione `a` para abrir no emulador Android
 - Pressione `i` para abrir no simulador iOS (macOS)
 - Pressione `w` para abrir no navegador (web)
 - Escaneie o QR code com o app **Expo Go** no celular (mesmo WiFi)
+
+> **Nota**: se ao escanear o QR code aparecer erro de versao incompativel no celular, pressione `s` no terminal do Expo para alternar o modo para Expo Go. Isso resolve o conflito de versao entre o SDK e o app.
 
 ### Scripts disponiveis
 
