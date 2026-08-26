@@ -32,9 +32,8 @@ public class GoogleBooksAdapter implements BookSearchPort {
     private final RestClient restClient;
     private final String apiKey;
 
-    public GoogleBooksAdapter(
-            RestClient.Builder restClientBuilder, @Value("${google.books.api-key}") String apiKey) {
-        this.restClient = restClientBuilder.baseUrl(BASE_URL).build();
+    public GoogleBooksAdapter(@Value("${google.books.api-key}") String apiKey) {
+        this.restClient = RestClient.builder().baseUrl(BASE_URL).build();
         this.apiKey = apiKey;
         log.info("GoogleBooksAdapter inicializado (API key configurada)");
     }
