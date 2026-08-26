@@ -1,0 +1,1930 @@
+[
+  {
+    "id": "br001",
+    "volumeInfo": {
+      "title": "Dom Casmurro",
+      "authors": ["Machado de Assis"],
+      "publisher": "Editora Garnier",
+      "publishedDate": "1899",
+      "description": "Um dos maiores romances da literatura brasileira, narra a história de Bentinho e Capitu, explorando temas como ciúme, dúvida e traição.",
+      "industryIdentifiers": [{"type": "ISBN_13", "identifier": "9788544001820"}],
+      "pageCount": 256,
+      "printType": "BOOK",
+      "categories": ["Ficção Brasileira"],
+      "averageRating": 4.5,
+      "ratingsCount": 12840,
+      "imageLinks": {
+        "smallThumbnail": "https://covers.openlibrary.org/b/isbn/9788544001820-S.jpg",
+        "thumbnail": "https://covers.openlibrary.org/b/isbn/9788544001820-M.jpg"
+      },
+      "language": "pt",
+      "previewLink": "https://books.google.com.br/books?id=br001",
+      "infoLink": "https://books.google.com.br/books?id=br001",
+      "canonicalVolumeLink": "https://books.google.com.br/books/about?id=br001"
+    }
+  },
+  {
+    "id": "br002",
+    "volumeInfo": {
+      "title": "Memórias Póstumas de Brás Cubas",
+      "authors": ["Machado de Assis"],
+      "publisher": "Tipografia Nacional",
+      "publishedDate": "1881",
+      "description": "Narrado por um defunto autor, o romance revolucionou a literatura brasileira com seu humor ácido e reflexões filosóficas sobre a condição humana.",
+      "industryIdentifiers": [{"type": "ISBN_13", "identifier": "9788535910117"}],
+      "pageCount": 208,
+      "printType": "BOOK",
+      "categories": ["Ficção Brasileira"],
+      "averageRating": 4.4,
+      "ratingsCount": 9650,
+      "imageLinks": {
+        "smallThumbnail": "https://covers.openlibrary.org/b/isbn/9788535910117-S.jpg",
+        "thumbnail": "https://covers.openlibrary.org/b/isbn/9788535910117-M.jpg"
+      },
+      "language": "pt",
+      "previewLink": "https://books.google.com.br/books?id=br002",
+      "infoLink": "https://books.google.com.br/books?id=br002",
+      "canonicalVolumeLink": "https://books.google.com.br/books/about?id=br002"
+    }
+  },
+  {
+    "id": "br003",
+    "volumeInfo": {
+      "title": "Grande Sertão: Veredas",
+      "authors": ["João Guimarães Rosa"],
+      "publisher": "José Olympio",
+      "publishedDate": "1956",
+      "description": "Obra-prima da literatura brasileira que narra as aventuras do jagunço Riobaldo pelo sertão de Minas Gerais, explorando temas como o bem e o mal.",
+      "industryIdentifiers": [{"type": "ISBN_13", "identifier": "9788520923115"}],
+      "pageCount": 608,
+      "printType": "BOOK",
+      "categories": ["Ficção Brasileira"],
+      "averageRating": 4.6,
+      "ratingsCount": 5420,
+      "imageLinks": {
+        "smallThumbnail": "https://covers.openlibrary.org/b/isbn/9788520923115-S.jpg",
+        "thumbnail": "https://covers.openlibrary.org/b/isbn/9788520923115-M.jpg"
+      },
+      "language": "pt",
+      "previewLink": "https://books.google.com.br/books?id=br003",
+      "infoLink": "https://books.google.com.br/books?id=br003",
+      "canonicalVolumeLink": "https://books.google.com.br/books/about?id=br003"
+    }
+  },
+  {
+    "id": "br004",
+    "volumeInfo": {
+      "title": "Vidas Secas",
+      "authors": ["Graciliano Ramos"],
+      "publisher": "José Olympio",
+      "publishedDate": "1938",
+      "description": "Romance que retrata a vida miserável de uma família de retirantes nordestinos e sua cachorra Baleia, numa linguagem seca como o sertão.",
+      "industryIdentifiers": [{"type": "ISBN_13", "identifier": "9788501068699"}],
+      "pageCount": 176,
+      "printType": "BOOK",
+      "categories": ["Ficção Brasileira"],
+      "averageRating": 4.3,
+      "ratingsCount": 8900,
+      "imageLinks": {
+        "smallThumbnail": "https://covers.openlibrary.org/b/isbn/9788501068699-S.jpg",
+        "thumbnail": "https://covers.openlibrary.org/b/isbn/9788501068699-M.jpg"
+      },
+      "language": "pt",
+      "previewLink": "https://books.google.com.br/books?id=br004",
+      "infoLink": "https://books.google.com.br/books?id=br004",
+      "canonicalVolumeLink": "https://books.google.com.br/books/about?id=br004"
+    }
+  },
+  {
+    "id": "br005",
+    "volumeInfo": {
+      "title": "O Cortiço",
+      "authors": ["Aluísio Azevedo"],
+      "publisher": "B. L. Garnier",
+      "publishedDate": "1890",
+      "description": "Romance naturalista que retrata a vida coletiva de um cortiço no Rio de Janeiro, explorando as relações sociais e a influência do meio sobre o indivíduo.",
+      "industryIdentifiers": [{"type": "ISBN_13", "identifier": "9788525406637"}],
+      "pageCount": 224,
+      "printType": "BOOK",
+      "categories": ["Ficção Brasileira"],
+      "averageRating": 4.1,
+      "ratingsCount": 7200,
+      "imageLinks": {
+        "smallThumbnail": "https://covers.openlibrary.org/b/isbn/9788525406637-S.jpg",
+        "thumbnail": "https://covers.openlibrary.org/b/isbn/9788525406637-M.jpg"
+      },
+      "language": "pt",
+      "previewLink": "https://books.google.com.br/books?id=br005",
+      "infoLink": "https://books.google.com.br/books?id=br005",
+      "canonicalVolumeLink": "https://books.google.com.br/books/about?id=br005"
+    }
+  },
+  {
+    "id": "br006",
+    "volumeInfo": {
+      "title": "Capitães da Areia",
+      "authors": ["Jorge Amado"],
+      "publisher": "José Olympio",
+      "publishedDate": "1937",
+      "description": "Romance que conta a história de um grupo de meninos de rua que vivem em um trapiche abandonado em Salvador, Bahia.",
+      "industryIdentifiers": [{"type": "ISBN_13", "identifier": "9788535912456"}],
+      "pageCount": 272,
+      "printType": "BOOK",
+      "categories": ["Ficção Brasileira"],
+      "averageRating": 4.5,
+      "ratingsCount": 11200,
+      "imageLinks": {
+        "smallThumbnail": "https://covers.openlibrary.org/b/isbn/9788535912456-S.jpg",
+        "thumbnail": "https://covers.openlibrary.org/b/isbn/9788535912456-M.jpg"
+      },
+      "language": "pt",
+      "previewLink": "https://books.google.com.br/books?id=br006",
+      "infoLink": "https://books.google.com.br/books?id=br006",
+      "canonicalVolumeLink": "https://books.google.com.br/books/about?id=br006"
+    }
+  },
+  {
+    "id": "br007",
+    "volumeInfo": {
+      "title": "Iracema",
+      "authors": ["José de Alencar"],
+      "publisher": "Typographia de Viana & Filhos",
+      "publishedDate": "1865",
+      "description": "Romance indianista que narra o amor entre a índia Iracema e o colonizador português Martim, origem mítica do povo cearense.",
+      "industryIdentifiers": [{"type": "ISBN_13", "identifier": "9788572326988"}],
+      "pageCount": 144,
+      "printType": "BOOK",
+      "categories": ["Ficção Brasileira"],
+      "averageRating": 3.9,
+      "ratingsCount": 6100,
+      "imageLinks": {
+        "smallThumbnail": "https://covers.openlibrary.org/b/isbn/9788572326988-S.jpg",
+        "thumbnail": "https://covers.openlibrary.org/b/isbn/9788572326988-M.jpg"
+      },
+      "language": "pt",
+      "previewLink": "https://books.google.com.br/books?id=br007",
+      "infoLink": "https://books.google.com.br/books?id=br007",
+      "canonicalVolumeLink": "https://books.google.com.br/books/about?id=br007"
+    }
+  },
+  {
+    "id": "br008",
+    "volumeInfo": {
+      "title": "A Hora da Estrela",
+      "authors": ["Clarice Lispector"],
+      "publisher": "José Olympio",
+      "publishedDate": "1977",
+      "description": "Último romance de Clarice Lispector, conta a história de Macabéa, uma jovem nordestina perdida no Rio de Janeiro.",
+      "industryIdentifiers": [{"type": "ISBN_13", "identifier": "9788532509048"}],
+      "pageCount": 96,
+      "printType": "BOOK",
+      "categories": ["Ficção Brasileira"],
+      "averageRating": 4.3,
+      "ratingsCount": 8400,
+      "imageLinks": {
+        "smallThumbnail": "https://covers.openlibrary.org/b/isbn/9788532509048-S.jpg",
+        "thumbnail": "https://covers.openlibrary.org/b/isbn/9788532509048-M.jpg"
+      },
+      "language": "pt",
+      "previewLink": "https://books.google.com.br/books?id=br008",
+      "infoLink": "https://books.google.com.br/books?id=br008",
+      "canonicalVolumeLink": "https://books.google.com.br/books/about?id=br008"
+    }
+  },
+  {
+    "id": "br009",
+    "volumeInfo": {
+      "title": "O Alienista",
+      "authors": ["Machado de Assis"],
+      "publisher": "Editora Garnier",
+      "publishedDate": "1882",
+      "description": "Conto longo que satiriza a ciência e o poder, narrando a história do Dr. Simão Bacamarte que interna toda a cidade de Itaguaí num manicômio.",
+      "industryIdentifiers": [{"type": "ISBN_13", "identifier": "9788525410092"}],
+      "pageCount": 96,
+      "printType": "BOOK",
+      "categories": ["Ficção Brasileira"],
+      "averageRating": 4.2,
+      "ratingsCount": 5800,
+      "imageLinks": {
+        "smallThumbnail": "https://covers.openlibrary.org/b/isbn/9788525410092-S.jpg",
+        "thumbnail": "https://covers.openlibrary.org/b/isbn/9788525410092-M.jpg"
+      },
+      "language": "pt",
+      "previewLink": "https://books.google.com.br/books?id=br009",
+      "infoLink": "https://books.google.com.br/books?id=br009",
+      "canonicalVolumeLink": "https://books.google.com.br/books/about?id=br009"
+    }
+  },
+  {
+    "id": "br010",
+    "volumeInfo": {
+      "title": "Quincas Borba",
+      "authors": ["Machado de Assis"],
+      "publisher": "Editora Garnier",
+      "publishedDate": "1891",
+      "description": "Romance que acompanha a ascensão e queda de Rubião, herdeiro do filósofo Quincas Borba, numa crítica mordaz à sociedade carioca.",
+      "industryIdentifiers": [{"type": "ISBN_13", "identifier": "9788535921878"}],
+      "pageCount": 272,
+      "printType": "BOOK",
+      "categories": ["Ficção Brasileira"],
+      "averageRating": 4.3,
+      "ratingsCount": 4500,
+      "imageLinks": {
+        "smallThumbnail": "https://covers.openlibrary.org/b/isbn/9788535921878-S.jpg",
+        "thumbnail": "https://covers.openlibrary.org/b/isbn/9788535921878-M.jpg"
+      },
+      "language": "pt",
+      "previewLink": "https://books.google.com.br/books?id=br010",
+      "infoLink": "https://books.google.com.br/books?id=br010",
+      "canonicalVolumeLink": "https://books.google.com.br/books/about?id=br010"
+    }
+  },
+  {
+    "id": "fan001",
+    "volumeInfo": {
+      "title": "Harry Potter e a Pedra Filosofal",
+      "authors": ["J.K. Rowling"],
+      "publisher": "Rocco",
+      "publishedDate": "1997-06-26",
+      "description": "Harry Potter descobre no dia do seu aniversário de 11 anos que é um bruxo e é convidado a estudar na Escola de Magia e Bruxaria de Hogwarts.",
+      "industryIdentifiers": [{"type": "ISBN_13", "identifier": "9788532511010"}],
+      "pageCount": 264,
+      "printType": "BOOK",
+      "categories": ["Fantasia"],
+      "averageRating": 4.7,
+      "ratingsCount": 98000,
+      "imageLinks": {
+        "smallThumbnail": "https://covers.openlibrary.org/b/isbn/9788532511010-S.jpg",
+        "thumbnail": "https://covers.openlibrary.org/b/isbn/9788532511010-M.jpg"
+      },
+      "language": "pt",
+      "previewLink": "https://books.google.com.br/books?id=fan001",
+      "infoLink": "https://books.google.com.br/books?id=fan001",
+      "canonicalVolumeLink": "https://books.google.com.br/books/about?id=fan001"
+    }
+  },
+  {
+    "id": "fan002",
+    "volumeInfo": {
+      "title": "O Senhor dos Anéis: A Sociedade do Anel",
+      "authors": ["J.R.R. Tolkien"],
+      "publisher": "Martins Fontes",
+      "publishedDate": "1954-07-29",
+      "description": "Frodo Bolseiro herda o Um Anel e parte numa jornada épica para destruí-lo na Montanha da Perdição, acompanhado pela Sociedade do Anel.",
+      "industryIdentifiers": [{"type": "ISBN_13", "identifier": "9788595084742"}],
+      "pageCount": 576,
+      "printType": "BOOK",
+      "categories": ["Fantasia"],
+      "averageRating": 4.8,
+      "ratingsCount": 65000,
+      "imageLinks": {
+        "smallThumbnail": "https://covers.openlibrary.org/b/isbn/9788595084742-S.jpg",
+        "thumbnail": "https://covers.openlibrary.org/b/isbn/9788595084742-M.jpg"
+      },
+      "language": "pt",
+      "previewLink": "https://books.google.com.br/books?id=fan002",
+      "infoLink": "https://books.google.com.br/books?id=fan002",
+      "canonicalVolumeLink": "https://books.google.com.br/books/about?id=fan002"
+    }
+  },
+  {
+    "id": "fan003",
+    "volumeInfo": {
+      "title": "O Hobbit",
+      "authors": ["J.R.R. Tolkien"],
+      "publisher": "Martins Fontes",
+      "publishedDate": "1937-09-21",
+      "description": "Bilbo Bolseiro é recrutado pelo mago Gandalf para participar de uma aventura com treze anões para recuperar o tesouro guardado pelo dragão Smaug.",
+      "industryIdentifiers": [{"type": "ISBN_13", "identifier": "9788595084739"}],
+      "pageCount": 336,
+      "printType": "BOOK",
+      "categories": ["Fantasia"],
+      "averageRating": 4.7,
+      "ratingsCount": 45000,
+      "imageLinks": {
+        "smallThumbnail": "https://covers.openlibrary.org/b/isbn/9788595084739-S.jpg",
+        "thumbnail": "https://covers.openlibrary.org/b/isbn/9788595084739-M.jpg"
+      },
+      "language": "pt",
+      "previewLink": "https://books.google.com.br/books?id=fan003",
+      "infoLink": "https://books.google.com.br/books?id=fan003",
+      "canonicalVolumeLink": "https://books.google.com.br/books/about?id=fan003"
+    }
+  },
+  {
+    "id": "fan004",
+    "volumeInfo": {
+      "title": "As Crônicas de Nárnia",
+      "authors": ["C.S. Lewis"],
+      "publisher": "Martins Fontes",
+      "publishedDate": "1950-10-16",
+      "description": "Quatro crianças descobrem um mundo mágico além de um guarda-roupa, onde devem ajudar o leão Aslam a derrotar a Feiticeira Branca.",
+      "industryIdentifiers": [{"type": "ISBN_13", "identifier": "9788578270698"}],
+      "pageCount": 752,
+      "printType": "BOOK",
+      "categories": ["Fantasia"],
+      "averageRating": 4.5,
+      "ratingsCount": 32000,
+      "imageLinks": {
+        "smallThumbnail": "https://covers.openlibrary.org/b/isbn/9788578270698-S.jpg",
+        "thumbnail": "https://covers.openlibrary.org/b/isbn/9788578270698-M.jpg"
+      },
+      "language": "pt",
+      "previewLink": "https://books.google.com.br/books?id=fan004",
+      "infoLink": "https://books.google.com.br/books?id=fan004",
+      "canonicalVolumeLink": "https://books.google.com.br/books/about?id=fan004"
+    }
+  },
+  {
+    "id": "fan005",
+    "volumeInfo": {
+      "title": "O Nome do Vento",
+      "authors": ["Patrick Rothfuss"],
+      "publisher": "Arqueiro",
+      "publishedDate": "2007-03-27",
+      "description": "Kvothe narra sua história épica: de menino órfão na rua a lenda viva, passando pela Universidade onde aprende as artes arcanas.",
+      "industryIdentifiers": [{"type": "ISBN_13", "identifier": "9788599296493"}],
+      "pageCount": 656,
+      "printType": "BOOK",
+      "categories": ["Fantasia"],
+      "averageRating": 4.6,
+      "ratingsCount": 28000,
+      "imageLinks": {
+        "smallThumbnail": "https://covers.openlibrary.org/b/isbn/9788599296493-S.jpg",
+        "thumbnail": "https://covers.openlibrary.org/b/isbn/9788599296493-M.jpg"
+      },
+      "language": "pt",
+      "previewLink": "https://books.google.com.br/books?id=fan005",
+      "infoLink": "https://books.google.com.br/books?id=fan005",
+      "canonicalVolumeLink": "https://books.google.com.br/books/about?id=fan005"
+    }
+  },
+  {
+    "id": "sci001",
+    "volumeInfo": {
+      "title": "1984",
+      "authors": ["George Orwell"],
+      "publisher": "Companhia das Letras",
+      "publishedDate": "1949-06-08",
+      "description": "Numa sociedade totalitária governada pelo Grande Irmão, Winston Smith tenta manter sua individualidade e encontrar a verdade.",
+      "industryIdentifiers": [{"type": "ISBN_13", "identifier": "9788535914849"}],
+      "pageCount": 416,
+      "printType": "BOOK",
+      "categories": ["Ficção Científica"],
+      "averageRating": 4.7,
+      "ratingsCount": 75000,
+      "imageLinks": {
+        "smallThumbnail": "https://covers.openlibrary.org/b/isbn/9788535914849-S.jpg",
+        "thumbnail": "https://covers.openlibrary.org/b/isbn/9788535914849-M.jpg"
+      },
+      "language": "pt",
+      "previewLink": "https://books.google.com.br/books?id=sci001",
+      "infoLink": "https://books.google.com.br/books?id=sci001",
+      "canonicalVolumeLink": "https://books.google.com.br/books/about?id=sci001"
+    }
+  },
+  {
+    "id": "sci002",
+    "volumeInfo": {
+      "title": "Admirável Mundo Novo",
+      "authors": ["Aldous Huxley"],
+      "publisher": "Globo Livros",
+      "publishedDate": "1932",
+      "description": "Numa sociedade futura onde as pessoas são geneticamente modificadas e condicionadas desde o nascimento, um homem questiona o sistema.",
+      "industryIdentifiers": [{"type": "ISBN_13", "identifier": "9788525056009"}],
+      "pageCount": 312,
+      "printType": "BOOK",
+      "categories": ["Ficção Científica"],
+      "averageRating": 4.4,
+      "ratingsCount": 42000,
+      "imageLinks": {
+        "smallThumbnail": "https://covers.openlibrary.org/b/isbn/9788525056009-S.jpg",
+        "thumbnail": "https://covers.openlibrary.org/b/isbn/9788525056009-M.jpg"
+      },
+      "language": "pt",
+      "previewLink": "https://books.google.com.br/books?id=sci002",
+      "infoLink": "https://books.google.com.br/books?id=sci002",
+      "canonicalVolumeLink": "https://books.google.com.br/books/about?id=sci002"
+    }
+  },
+  {
+    "id": "sci003",
+    "volumeInfo": {
+      "title": "Duna",
+      "authors": ["Frank Herbert"],
+      "publisher": "Aleph",
+      "publishedDate": "1965-08-01",
+      "description": "No deserto planeta Arrakis, Paul Atreides enfrenta conspirações políticas e descobre seu destino como líder messiânico dos Fremen.",
+      "industryIdentifiers": [{"type": "ISBN_13", "identifier": "9788576572008"}],
+      "pageCount": 680,
+      "printType": "BOOK",
+      "categories": ["Ficção Científica"],
+      "averageRating": 4.6,
+      "ratingsCount": 38000,
+      "imageLinks": {
+        "smallThumbnail": "https://covers.openlibrary.org/b/isbn/9788576572008-S.jpg",
+        "thumbnail": "https://covers.openlibrary.org/b/isbn/9788576572008-M.jpg"
+      },
+      "language": "pt",
+      "previewLink": "https://books.google.com.br/books?id=sci003",
+      "infoLink": "https://books.google.com.br/books?id=sci003",
+      "canonicalVolumeLink": "https://books.google.com.br/books/about?id=sci003"
+    }
+  },
+  {
+    "id": "sci004",
+    "volumeInfo": {
+      "title": "Fahrenheit 451",
+      "authors": ["Ray Bradbury"],
+      "publisher": "Globo Livros",
+      "publishedDate": "1953-10-19",
+      "description": "Num futuro onde livros são proibidos e queimados, o bombeiro Guy Montag começa a questionar seu papel na sociedade.",
+      "industryIdentifiers": [{"type": "ISBN_13", "identifier": "9788525052247"}],
+      "pageCount": 216,
+      "printType": "BOOK",
+      "categories": ["Ficção Científica"],
+      "averageRating": 4.4,
+      "ratingsCount": 35000,
+      "imageLinks": {
+        "smallThumbnail": "https://covers.openlibrary.org/b/isbn/9788525052247-S.jpg",
+        "thumbnail": "https://covers.openlibrary.org/b/isbn/9788525052247-M.jpg"
+      },
+      "language": "pt",
+      "previewLink": "https://books.google.com.br/books?id=sci004",
+      "infoLink": "https://books.google.com.br/books?id=sci004",
+      "canonicalVolumeLink": "https://books.google.com.br/books/about?id=sci004"
+    }
+  },
+  {
+    "id": "sci005",
+    "volumeInfo": {
+      "title": "Fundação",
+      "authors": ["Isaac Asimov"],
+      "publisher": "Aleph",
+      "publishedDate": "1951-05-01",
+      "description": "Hari Seldon prevê a queda do Império Galáctico e cria a Fundação para preservar o conhecimento e encurtar a era de barbárie.",
+      "industryIdentifiers": [{"type": "ISBN_13", "identifier": "9788576572350"}],
+      "pageCount": 296,
+      "printType": "BOOK",
+      "categories": ["Ficção Científica"],
+      "averageRating": 4.5,
+      "ratingsCount": 29000,
+      "imageLinks": {
+        "smallThumbnail": "https://covers.openlibrary.org/b/isbn/9788576572350-S.jpg",
+        "thumbnail": "https://covers.openlibrary.org/b/isbn/9788576572350-M.jpg"
+      },
+      "language": "pt",
+      "previewLink": "https://books.google.com.br/books?id=sci005",
+      "infoLink": "https://books.google.com.br/books?id=sci005",
+      "canonicalVolumeLink": "https://books.google.com.br/books/about?id=sci005"
+    }
+  },
+  {
+    "id": "rom001",
+    "volumeInfo": {
+      "title": "Orgulho e Preconceito",
+      "authors": ["Jane Austen"],
+      "publisher": "Penguin Companhia",
+      "publishedDate": "1813-01-28",
+      "description": "Elizabeth Bennet e o orgulhoso Mr. Darcy superam seus preconceitos e diferenças de classe numa das maiores histórias de amor da literatura.",
+      "industryIdentifiers": [{"type": "ISBN_13", "identifier": "9788563560513"}],
+      "pageCount": 424,
+      "printType": "BOOK",
+      "categories": ["Romance"],
+      "averageRating": 4.6,
+      "ratingsCount": 82000,
+      "imageLinks": {
+        "smallThumbnail": "https://covers.openlibrary.org/b/isbn/9788563560513-S.jpg",
+        "thumbnail": "https://covers.openlibrary.org/b/isbn/9788563560513-M.jpg"
+      },
+      "language": "pt",
+      "previewLink": "https://books.google.com.br/books?id=rom001",
+      "infoLink": "https://books.google.com.br/books?id=rom001",
+      "canonicalVolumeLink": "https://books.google.com.br/books/about?id=rom001"
+    }
+  },
+  {
+    "id": "rom002",
+    "volumeInfo": {
+      "title": "A Culpa é das Estrelas",
+      "authors": ["John Green"],
+      "publisher": "Intrínseca",
+      "publishedDate": "2012-01-10",
+      "description": "Hazel Grace, diagnosticada com câncer terminal, conhece Augustus Waters num grupo de apoio e vive uma história de amor intensa e transformadora.",
+      "industryIdentifiers": [{"type": "ISBN_13", "identifier": "9788580572261"}],
+      "pageCount": 288,
+      "printType": "BOOK",
+      "categories": ["Romance"],
+      "averageRating": 4.4,
+      "ratingsCount": 67000,
+      "imageLinks": {
+        "smallThumbnail": "https://covers.openlibrary.org/b/isbn/9788580572261-S.jpg",
+        "thumbnail": "https://covers.openlibrary.org/b/isbn/9788580572261-M.jpg"
+      },
+      "language": "pt",
+      "previewLink": "https://books.google.com.br/books?id=rom002",
+      "infoLink": "https://books.google.com.br/books?id=rom002",
+      "canonicalVolumeLink": "https://books.google.com.br/books/about?id=rom002"
+    }
+  },
+  {
+    "id": "rom003",
+    "volumeInfo": {
+      "title": "O Pequeno Príncipe",
+      "authors": ["Antoine de Saint-Exupéry"],
+      "publisher": "HarperCollins Brasil",
+      "publishedDate": "1943-04-06",
+      "description": "Um piloto perdido no deserto encontra um pequeno príncipe de outro planeta que compartilha lições sobre amor, amizade e a essência da vida.",
+      "industryIdentifiers": [{"type": "ISBN_13", "identifier": "9788595081512"}],
+      "pageCount": 96,
+      "printType": "BOOK",
+      "categories": ["Romance"],
+      "averageRating": 4.8,
+      "ratingsCount": 120000,
+      "imageLinks": {
+        "smallThumbnail": "https://covers.openlibrary.org/b/isbn/9788595081512-S.jpg",
+        "thumbnail": "https://covers.openlibrary.org/b/isbn/9788595081512-M.jpg"
+      },
+      "language": "pt",
+      "previewLink": "https://books.google.com.br/books?id=rom003",
+      "infoLink": "https://books.google.com.br/books?id=rom003",
+      "canonicalVolumeLink": "https://books.google.com.br/books/about?id=rom003"
+    }
+  },
+  {
+    "id": "rom004",
+    "volumeInfo": {
+      "title": "Cem Anos de Solidão",
+      "authors": ["Gabriel García Márquez"],
+      "publisher": "Record",
+      "publishedDate": "1967-05-30",
+      "description": "A saga da família Buendía ao longo de sete gerações na cidade fictícia de Macondo, numa mistura de realismo mágico e história latino-americana.",
+      "industryIdentifiers": [{"type": "ISBN_13", "identifier": "9788501012173"}],
+      "pageCount": 448,
+      "printType": "BOOK",
+      "categories": ["Romance"],
+      "averageRating": 4.7,
+      "ratingsCount": 55000,
+      "imageLinks": {
+        "smallThumbnail": "https://covers.openlibrary.org/b/isbn/9788501012173-S.jpg",
+        "thumbnail": "https://covers.openlibrary.org/b/isbn/9788501012173-M.jpg"
+      },
+      "language": "pt",
+      "previewLink": "https://books.google.com.br/books?id=rom004",
+      "infoLink": "https://books.google.com.br/books?id=rom004",
+      "canonicalVolumeLink": "https://books.google.com.br/books/about?id=rom004"
+    }
+  },
+  {
+    "id": "rom005",
+    "volumeInfo": {
+      "title": "O Amor nos Tempos do Cólera",
+      "authors": ["Gabriel García Márquez"],
+      "publisher": "Record",
+      "publishedDate": "1985",
+      "description": "Florentino Ariza espera mais de cinquenta anos pelo amor de Fermina Daza, numa história que celebra a persistência do sentimento.",
+      "industryIdentifiers": [{"type": "ISBN_13", "identifier": "9788501044471"}],
+      "pageCount": 432,
+      "printType": "BOOK",
+      "categories": ["Romance"],
+      "averageRating": 4.3,
+      "ratingsCount": 28000,
+      "imageLinks": {
+        "smallThumbnail": "https://covers.openlibrary.org/b/isbn/9788501044471-S.jpg",
+        "thumbnail": "https://covers.openlibrary.org/b/isbn/9788501044471-M.jpg"
+      },
+      "language": "pt",
+      "previewLink": "https://books.google.com.br/books?id=rom005",
+      "infoLink": "https://books.google.com.br/books?id=rom005",
+      "canonicalVolumeLink": "https://books.google.com.br/books/about?id=rom005"
+    }
+  },
+  {
+    "id": "tec001",
+    "volumeInfo": {
+      "title": "Código Limpo",
+      "subtitle": "Habilidades Práticas do Agile Software",
+      "authors": ["Robert C. Martin"],
+      "publisher": "Alta Books",
+      "publishedDate": "2008-08-01",
+      "description": "Um guia prático sobre como escrever código legível, manutenível e profissional, com exemplos em Java.",
+      "industryIdentifiers": [{"type": "ISBN_13", "identifier": "9788576082675"}],
+      "pageCount": 456,
+      "printType": "BOOK",
+      "categories": ["Tecnologia"],
+      "averageRating": 4.5,
+      "ratingsCount": 18000,
+      "imageLinks": {
+        "smallThumbnail": "https://covers.openlibrary.org/b/isbn/9788576082675-S.jpg",
+        "thumbnail": "https://covers.openlibrary.org/b/isbn/9788576082675-M.jpg"
+      },
+      "language": "pt",
+      "previewLink": "https://books.google.com.br/books?id=tec001",
+      "infoLink": "https://books.google.com.br/books?id=tec001",
+      "canonicalVolumeLink": "https://books.google.com.br/books/about?id=tec001"
+    }
+  },
+  {
+    "id": "tec002",
+    "volumeInfo": {
+      "title": "O Programador Pragmático",
+      "subtitle": "De Aprendiz a Mestre",
+      "authors": ["David Thomas", "Andrew Hunt"],
+      "publisher": "Alta Books",
+      "publishedDate": "1999-10-30",
+      "description": "Clássico sobre desenvolvimento de software que aborda desde a mentalidade do programador até técnicas práticas para melhorar código e processos.",
+      "industryIdentifiers": [{"type": "ISBN_13", "identifier": "9788577807000"}],
+      "pageCount": 352,
+      "printType": "BOOK",
+      "categories": ["Tecnologia"],
+      "averageRating": 4.6,
+      "ratingsCount": 15000,
+      "imageLinks": {
+        "smallThumbnail": "https://covers.openlibrary.org/b/isbn/9788577807000-S.jpg",
+        "thumbnail": "https://covers.openlibrary.org/b/isbn/9788577807000-M.jpg"
+      },
+      "language": "pt",
+      "previewLink": "https://books.google.com.br/books?id=tec002",
+      "infoLink": "https://books.google.com.br/books?id=tec002",
+      "canonicalVolumeLink": "https://books.google.com.br/books/about?id=tec002"
+    }
+  },
+  {
+    "id": "tec003",
+    "volumeInfo": {
+      "title": "Arquitetura Limpa",
+      "subtitle": "O Guia do Artesão para Estrutura e Design de Software",
+      "authors": ["Robert C. Martin"],
+      "publisher": "Alta Books",
+      "publishedDate": "2017-09-12",
+      "description": "Princípios universais de arquitetura de software para criar sistemas flexíveis, testáveis e independentes de frameworks.",
+      "industryIdentifiers": [{"type": "ISBN_13", "identifier": "9788550804606"}],
+      "pageCount": 432,
+      "printType": "BOOK",
+      "categories": ["Tecnologia"],
+      "averageRating": 4.4,
+      "ratingsCount": 9500,
+      "imageLinks": {
+        "smallThumbnail": "https://covers.openlibrary.org/b/isbn/9788550804606-S.jpg",
+        "thumbnail": "https://covers.openlibrary.org/b/isbn/9788550804606-M.jpg"
+      },
+      "language": "pt",
+      "previewLink": "https://books.google.com.br/books?id=tec003",
+      "infoLink": "https://books.google.com.br/books?id=tec003",
+      "canonicalVolumeLink": "https://books.google.com.br/books/about?id=tec003"
+    }
+  },
+  {
+    "id": "tec004",
+    "volumeInfo": {
+      "title": "Refatoração",
+      "subtitle": "Aperfeiçoando o Design de Códigos Existentes",
+      "authors": ["Martin Fowler"],
+      "publisher": "Novatec",
+      "publishedDate": "2018-11-20",
+      "description": "Guia completo sobre como melhorar a estrutura interna do código sem alterar seu comportamento externo.",
+      "industryIdentifiers": [{"type": "ISBN_13", "identifier": "9788575227244"}],
+      "pageCount": 456,
+      "printType": "BOOK",
+      "categories": ["Tecnologia"],
+      "averageRating": 4.5,
+      "ratingsCount": 8200,
+      "imageLinks": {
+        "smallThumbnail": "https://covers.openlibrary.org/b/isbn/9788575227244-S.jpg",
+        "thumbnail": "https://covers.openlibrary.org/b/isbn/9788575227244-M.jpg"
+      },
+      "language": "pt",
+      "previewLink": "https://books.google.com.br/books?id=tec004",
+      "infoLink": "https://books.google.com.br/books?id=tec004",
+      "canonicalVolumeLink": "https://books.google.com.br/books/about?id=tec004"
+    }
+  },
+  {
+    "id": "tec005",
+    "volumeInfo": {
+      "title": "Domain-Driven Design",
+      "subtitle": "Atacando as Complexidades no Coração do Software",
+      "authors": ["Eric Evans"],
+      "publisher": "Alta Books",
+      "publishedDate": "2003-08-30",
+      "description": "Abordagem para desenvolvimento de software complexo focando no domínio do negócio e na colaboração entre desenvolvedores e especialistas.",
+      "industryIdentifiers": [{"type": "ISBN_13", "identifier": "9788550800653"}],
+      "pageCount": 528,
+      "printType": "BOOK",
+      "categories": ["Tecnologia"],
+      "averageRating": 4.3,
+      "ratingsCount": 7100,
+      "imageLinks": {
+        "smallThumbnail": "https://covers.openlibrary.org/b/isbn/9788550800653-S.jpg",
+        "thumbnail": "https://covers.openlibrary.org/b/isbn/9788550800653-M.jpg"
+      },
+      "language": "pt",
+      "previewLink": "https://books.google.com.br/books?id=tec005",
+      "infoLink": "https://books.google.com.br/books?id=tec005",
+      "canonicalVolumeLink": "https://books.google.com.br/books/about?id=tec005"
+    }
+  },
+  {
+    "id": "auto001",
+    "volumeInfo": {
+      "title": "O Poder do Hábito",
+      "authors": ["Charles Duhigg"],
+      "publisher": "Objetiva",
+      "publishedDate": "2012-02-28",
+      "description": "Explora a ciência por trás dos hábitos e como eles podem ser transformados para mudar vidas, organizações e sociedades.",
+      "industryIdentifiers": [{"type": "ISBN_13", "identifier": "9788539004119"}],
+      "pageCount": 408,
+      "printType": "BOOK",
+      "categories": ["Autoajuda"],
+      "averageRating": 4.3,
+      "ratingsCount": 52000,
+      "imageLinks": {
+        "smallThumbnail": "https://covers.openlibrary.org/b/isbn/9788539004119-S.jpg",
+        "thumbnail": "https://covers.openlibrary.org/b/isbn/9788539004119-M.jpg"
+      },
+      "language": "pt",
+      "previewLink": "https://books.google.com.br/books?id=auto001",
+      "infoLink": "https://books.google.com.br/books?id=auto001",
+      "canonicalVolumeLink": "https://books.google.com.br/books/about?id=auto001"
+    }
+  },
+  {
+    "id": "auto002",
+    "volumeInfo": {
+      "title": "Hábitos Atômicos",
+      "authors": ["James Clear"],
+      "publisher": "Alta Life",
+      "publishedDate": "2018-10-16",
+      "description": "Um guia prático sobre como construir bons hábitos e abandonar os ruins usando pequenas mudanças incrementais.",
+      "industryIdentifiers": [{"type": "ISBN_13", "identifier": "9788550807560"}],
+      "pageCount": 320,
+      "printType": "BOOK",
+      "categories": ["Autoajuda"],
+      "averageRating": 4.7,
+      "ratingsCount": 95000,
+      "imageLinks": {
+        "smallThumbnail": "https://covers.openlibrary.org/b/isbn/9788550807560-S.jpg",
+        "thumbnail": "https://covers.openlibrary.org/b/isbn/9788550807560-M.jpg"
+      },
+      "language": "pt",
+      "previewLink": "https://books.google.com.br/books?id=auto002",
+      "infoLink": "https://books.google.com.br/books?id=auto002",
+      "canonicalVolumeLink": "https://books.google.com.br/books/about?id=auto002"
+    }
+  },
+  {
+    "id": "auto003",
+    "volumeInfo": {
+      "title": "Mindset",
+      "subtitle": "A Nova Psicologia do Sucesso",
+      "authors": ["Carol S. Dweck"],
+      "publisher": "Objetiva",
+      "publishedDate": "2006-02-28",
+      "description": "Apresenta dois tipos de mentalidade — fixa e de crescimento — e como a forma que pensamos sobre nossas habilidades afeta nosso sucesso.",
+      "industryIdentifiers": [{"type": "ISBN_13", "identifier": "9788547000240"}],
+      "pageCount": 312,
+      "printType": "BOOK",
+      "categories": ["Autoajuda"],
+      "averageRating": 4.2,
+      "ratingsCount": 41000,
+      "imageLinks": {
+        "smallThumbnail": "https://covers.openlibrary.org/b/isbn/9788547000240-S.jpg",
+        "thumbnail": "https://covers.openlibrary.org/b/isbn/9788547000240-M.jpg"
+      },
+      "language": "pt",
+      "previewLink": "https://books.google.com.br/books?id=auto003",
+      "infoLink": "https://books.google.com.br/books?id=auto003",
+      "canonicalVolumeLink": "https://books.google.com.br/books/about?id=auto003"
+    }
+  },
+  {
+    "id": "auto004",
+    "volumeInfo": {
+      "title": "Pai Rico, Pai Pobre",
+      "authors": ["Robert T. Kiyosaki"],
+      "publisher": "Alta Books",
+      "publishedDate": "1997-04-01",
+      "description": "Lições sobre educação financeira através da comparação entre dois pais com visões opostas sobre dinheiro e investimentos.",
+      "industryIdentifiers": [{"type": "ISBN_13", "identifier": "9788550801483"}],
+      "pageCount": 336,
+      "printType": "BOOK",
+      "categories": ["Autoajuda"],
+      "averageRating": 4.1,
+      "ratingsCount": 62000,
+      "imageLinks": {
+        "smallThumbnail": "https://covers.openlibrary.org/b/isbn/9788550801483-S.jpg",
+        "thumbnail": "https://covers.openlibrary.org/b/isbn/9788550801483-M.jpg"
+      },
+      "language": "pt",
+      "previewLink": "https://books.google.com.br/books?id=auto004",
+      "infoLink": "https://books.google.com.br/books?id=auto004",
+      "canonicalVolumeLink": "https://books.google.com.br/books/about?id=auto004"
+    }
+  },
+  {
+    "id": "auto005",
+    "volumeInfo": {
+      "title": "Os 7 Hábitos das Pessoas Altamente Eficazes",
+      "authors": ["Stephen R. Covey"],
+      "publisher": "Best Seller",
+      "publishedDate": "1989-08-15",
+      "description": "Abordagem holística para eficácia pessoal e profissional baseada em princípios universais de caráter e liderança.",
+      "industryIdentifiers": [{"type": "ISBN_13", "identifier": "9788576843283"}],
+      "pageCount": 448,
+      "printType": "BOOK",
+      "categories": ["Autoajuda"],
+      "averageRating": 4.3,
+      "ratingsCount": 38000,
+      "imageLinks": {
+        "smallThumbnail": "https://covers.openlibrary.org/b/isbn/9788576843283-S.jpg",
+        "thumbnail": "https://covers.openlibrary.org/b/isbn/9788576843283-M.jpg"
+      },
+      "language": "pt",
+      "previewLink": "https://books.google.com.br/books?id=auto005",
+      "infoLink": "https://books.google.com.br/books?id=auto005",
+      "canonicalVolumeLink": "https://books.google.com.br/books/about?id=auto005"
+    }
+  },
+  {
+    "id": "cla001",
+    "volumeInfo": {
+      "title": "Crime e Castigo",
+      "authors": ["Fiódor Dostoiévski"],
+      "publisher": "Editora 34",
+      "publishedDate": "1866",
+      "description": "Raskólnikov, um estudante pobre, comete um assassinato e é atormentado pela culpa, numa exploração profunda da psicologia humana.",
+      "industryIdentifiers": [{"type": "ISBN_13", "identifier": "9788573262766"}],
+      "pageCount": 576,
+      "printType": "BOOK",
+      "categories": ["Clássicos"],
+      "averageRating": 4.6,
+      "ratingsCount": 42000,
+      "imageLinks": {
+        "smallThumbnail": "https://covers.openlibrary.org/b/isbn/9788573262766-S.jpg",
+        "thumbnail": "https://covers.openlibrary.org/b/isbn/9788573262766-M.jpg"
+      },
+      "language": "pt",
+      "previewLink": "https://books.google.com.br/books?id=cla001",
+      "infoLink": "https://books.google.com.br/books?id=cla001",
+      "canonicalVolumeLink": "https://books.google.com.br/books/about?id=cla001"
+    }
+  },
+  {
+    "id": "cla002",
+    "volumeInfo": {
+      "title": "O Grande Gatsby",
+      "authors": ["F. Scott Fitzgerald"],
+      "publisher": "Penguin Companhia",
+      "publishedDate": "1925-04-10",
+      "description": "Na era do jazz americana, o misterioso milionário Jay Gatsby persegue obsessivamente o amor perdido de Daisy Buchanan.",
+      "industryIdentifiers": [{"type": "ISBN_13", "identifier": "9788563560667"}],
+      "pageCount": 208,
+      "printType": "BOOK",
+      "categories": ["Clássicos"],
+      "averageRating": 4.3,
+      "ratingsCount": 48000,
+      "imageLinks": {
+        "smallThumbnail": "https://covers.openlibrary.org/b/isbn/9788563560667-S.jpg",
+        "thumbnail": "https://covers.openlibrary.org/b/isbn/9788563560667-M.jpg"
+      },
+      "language": "pt",
+      "previewLink": "https://books.google.com.br/books?id=cla002",
+      "infoLink": "https://books.google.com.br/books?id=cla002",
+      "canonicalVolumeLink": "https://books.google.com.br/books/about?id=cla002"
+    }
+  },
+  {
+    "id": "cla003",
+    "volumeInfo": {
+      "title": "A Metamorfose",
+      "authors": ["Franz Kafka"],
+      "publisher": "Companhia das Letras",
+      "publishedDate": "1915",
+      "description": "Gregor Samsa acorda transformado num inseto gigante e precisa lidar com as consequências dessa transformação absurda.",
+      "industryIdentifiers": [{"type": "ISBN_13", "identifier": "9788535911114"}],
+      "pageCount": 102,
+      "printType": "BOOK",
+      "categories": ["Clássicos"],
+      "averageRating": 4.2,
+      "ratingsCount": 35000,
+      "imageLinks": {
+        "smallThumbnail": "https://covers.openlibrary.org/b/isbn/9788535911114-S.jpg",
+        "thumbnail": "https://covers.openlibrary.org/b/isbn/9788535911114-M.jpg"
+      },
+      "language": "pt",
+      "previewLink": "https://books.google.com.br/books?id=cla003",
+      "infoLink": "https://books.google.com.br/books?id=cla003",
+      "canonicalVolumeLink": "https://books.google.com.br/books/about?id=cla003"
+    }
+  },
+  {
+    "id": "cla004",
+    "volumeInfo": {
+      "title": "O Apanhador no Campo de Centeio",
+      "authors": ["J.D. Salinger"],
+      "publisher": "Todavia",
+      "publishedDate": "1951-07-16",
+      "description": "Holden Caulfield, um adolescente rebelde expulso da escola, vaga por Nova York enquanto questiona a hipocrisia do mundo adulto.",
+      "industryIdentifiers": [{"type": "ISBN_13", "identifier": "9786580309009"}],
+      "pageCount": 256,
+      "printType": "BOOK",
+      "categories": ["Clássicos"],
+      "averageRating": 4.1,
+      "ratingsCount": 52000,
+      "imageLinks": {
+        "smallThumbnail": "https://covers.openlibrary.org/b/isbn/9786580309009-S.jpg",
+        "thumbnail": "https://covers.openlibrary.org/b/isbn/9786580309009-M.jpg"
+      },
+      "language": "pt",
+      "previewLink": "https://books.google.com.br/books?id=cla004",
+      "infoLink": "https://books.google.com.br/books?id=cla004",
+      "canonicalVolumeLink": "https://books.google.com.br/books/about?id=cla004"
+    }
+  },
+  {
+    "id": "cla005",
+    "volumeInfo": {
+      "title": "Anna Karenina",
+      "authors": ["Lev Tolstói"],
+      "publisher": "Companhia das Letras",
+      "publishedDate": "1878",
+      "description": "O caso extraconjugal de Anna Karenina com o Conde Vronsky desafia as convenções da sociedade russa do século XIX.",
+      "industryIdentifiers": [{"type": "ISBN_13", "identifier": "9788535922271"}],
+      "pageCount": 864,
+      "printType": "BOOK",
+      "categories": ["Clássicos"],
+      "averageRating": 4.5,
+      "ratingsCount": 38000,
+      "imageLinks": {
+        "smallThumbnail": "https://covers.openlibrary.org/b/isbn/9788535922271-S.jpg",
+        "thumbnail": "https://covers.openlibrary.org/b/isbn/9788535922271-M.jpg"
+      },
+      "language": "pt",
+      "previewLink": "https://books.google.com.br/books?id=cla005",
+      "infoLink": "https://books.google.com.br/books?id=cla005",
+      "canonicalVolumeLink": "https://books.google.com.br/books/about?id=cla005"
+    }
+  },
+  {
+    "id": "ter001",
+    "volumeInfo": {
+      "title": "O Iluminado",
+      "authors": ["Stephen King"],
+      "publisher": "Suma",
+      "publishedDate": "1977-01-28",
+      "description": "Jack Torrance aceita o emprego de zelador no Hotel Overlook durante o inverno, onde forças sobrenaturais ameaçam sua família.",
+      "industryIdentifiers": [{"type": "ISBN_13", "identifier": "9788556510471"}],
+      "pageCount": 512,
+      "printType": "BOOK",
+      "categories": ["Terror"],
+      "averageRating": 4.5,
+      "ratingsCount": 45000,
+      "imageLinks": {
+        "smallThumbnail": "https://covers.openlibrary.org/b/isbn/9788556510471-S.jpg",
+        "thumbnail": "https://covers.openlibrary.org/b/isbn/9788556510471-M.jpg"
+      },
+      "language": "pt",
+      "previewLink": "https://books.google.com.br/books?id=ter001",
+      "infoLink": "https://books.google.com.br/books?id=ter001",
+      "canonicalVolumeLink": "https://books.google.com.br/books/about?id=ter001"
+    }
+  },
+  {
+    "id": "ter002",
+    "volumeInfo": {
+      "title": "It: A Coisa",
+      "authors": ["Stephen King"],
+      "publisher": "Suma",
+      "publishedDate": "1986-09-15",
+      "description": "Sete amigos enfrentam uma entidade maligna que se alimenta do medo das crianças de Derry, Maine, assumindo a forma de um palhaço.",
+      "industryIdentifiers": [{"type": "ISBN_13", "identifier": "9788556510488"}],
+      "pageCount": 1104,
+      "printType": "BOOK",
+      "categories": ["Terror"],
+      "averageRating": 4.6,
+      "ratingsCount": 52000,
+      "imageLinks": {
+        "smallThumbnail": "https://covers.openlibrary.org/b/isbn/9788556510488-S.jpg",
+        "thumbnail": "https://covers.openlibrary.org/b/isbn/9788556510488-M.jpg"
+      },
+      "language": "pt",
+      "previewLink": "https://books.google.com.br/books?id=ter002",
+      "infoLink": "https://books.google.com.br/books?id=ter002",
+      "canonicalVolumeLink": "https://books.google.com.br/books/about?id=ter002"
+    }
+  },
+  {
+    "id": "ter003",
+    "volumeInfo": {
+      "title": "Drácula",
+      "authors": ["Bram Stoker"],
+      "publisher": "Darkside Books",
+      "publishedDate": "1897-05-26",
+      "description": "O Conde Drácula viaja da Transilvânia para a Inglaterra em busca de sangue novo, enquanto um grupo tenta detê-lo.",
+      "industryIdentifiers": [{"type": "ISBN_13", "identifier": "9788594540607"}],
+      "pageCount": 464,
+      "printType": "BOOK",
+      "categories": ["Terror"],
+      "averageRating": 4.3,
+      "ratingsCount": 32000,
+      "imageLinks": {
+        "smallThumbnail": "https://covers.openlibrary.org/b/isbn/9788594540607-S.jpg",
+        "thumbnail": "https://covers.openlibrary.org/b/isbn/9788594540607-M.jpg"
+      },
+      "language": "pt",
+      "previewLink": "https://books.google.com.br/books?id=ter003",
+      "infoLink": "https://books.google.com.br/books?id=ter003",
+      "canonicalVolumeLink": "https://books.google.com.br/books/about?id=ter003"
+    }
+  },
+  {
+    "id": "juv001",
+    "volumeInfo": {
+      "title": "Percy Jackson e o Ladrão de Raios",
+      "authors": ["Rick Riordan"],
+      "publisher": "Intrínseca",
+      "publishedDate": "2005-06-28",
+      "description": "Percy Jackson descobre que é filho de Poseidon e embarca numa missão para devolver o raio de Zeus e impedir uma guerra entre os deuses.",
+      "industryIdentifiers": [{"type": "ISBN_13", "identifier": "9788598078359"}],
+      "pageCount": 400,
+      "printType": "BOOK",
+      "categories": ["Juvenil"],
+      "averageRating": 4.5,
+      "ratingsCount": 72000,
+      "imageLinks": {
+        "smallThumbnail": "https://covers.openlibrary.org/b/isbn/9788598078359-S.jpg",
+        "thumbnail": "https://covers.openlibrary.org/b/isbn/9788598078359-M.jpg"
+      },
+      "language": "pt",
+      "previewLink": "https://books.google.com.br/books?id=juv001",
+      "infoLink": "https://books.google.com.br/books?id=juv001",
+      "canonicalVolumeLink": "https://books.google.com.br/books/about?id=juv001"
+    }
+  },
+  {
+    "id": "juv002",
+    "volumeInfo": {
+      "title": "Jogos Vorazes",
+      "authors": ["Suzanne Collins"],
+      "publisher": "Rocco",
+      "publishedDate": "2008-09-14",
+      "description": "Katniss Everdeen se voluntaria para os Jogos Vorazes, uma competição mortal televisionada, no lugar de sua irmã mais nova.",
+      "industryIdentifiers": [{"type": "ISBN_13", "identifier": "9788579800016"}],
+      "pageCount": 400,
+      "printType": "BOOK",
+      "categories": ["Juvenil"],
+      "averageRating": 4.4,
+      "ratingsCount": 68000,
+      "imageLinks": {
+        "smallThumbnail": "https://covers.openlibrary.org/b/isbn/9788579800016-S.jpg",
+        "thumbnail": "https://covers.openlibrary.org/b/isbn/9788579800016-M.jpg"
+      },
+      "language": "pt",
+      "previewLink": "https://books.google.com.br/books?id=juv002",
+      "infoLink": "https://books.google.com.br/books?id=juv002",
+      "canonicalVolumeLink": "https://books.google.com.br/books/about?id=juv002"
+    }
+  },
+  {
+    "id": "juv003",
+    "volumeInfo": {
+      "title": "Divergente",
+      "authors": ["Veronica Roth"],
+      "publisher": "Rocco",
+      "publishedDate": "2011-04-25",
+      "description": "Numa sociedade dividida em cinco facções baseadas em virtudes, Tris Prior descobre que é divergente e não se encaixa em nenhuma.",
+      "industryIdentifiers": [{"type": "ISBN_13", "identifier": "9788579801709"}],
+      "pageCount": 504,
+      "printType": "BOOK",
+      "categories": ["Juvenil"],
+      "averageRating": 4.2,
+      "ratingsCount": 45000,
+      "imageLinks": {
+        "smallThumbnail": "https://covers.openlibrary.org/b/isbn/9788579801709-S.jpg",
+        "thumbnail": "https://covers.openlibrary.org/b/isbn/9788579801709-M.jpg"
+      },
+      "language": "pt",
+      "previewLink": "https://books.google.com.br/books?id=juv003",
+      "infoLink": "https://books.google.com.br/books?id=juv003",
+      "canonicalVolumeLink": "https://books.google.com.br/books/about?id=juv003"
+    }
+  },
+  {
+    "id": "juv004",
+    "volumeInfo": {
+      "title": "O Ladrão de Raios em Quadrinhos",
+      "authors": ["Rick Riordan", "Robert Venditti"],
+      "publisher": "Intrínseca",
+      "publishedDate": "2010-10-12",
+      "description": "Adaptação em quadrinhos da aventura de Percy Jackson contra o Ladrão de Raios.",
+      "industryIdentifiers": [{"type": "ISBN_13", "identifier": "9788580572841"}],
+      "pageCount": 128,
+      "printType": "BOOK",
+      "categories": ["Juvenil"],
+      "averageRating": 4.3,
+      "ratingsCount": 15000,
+      "imageLinks": {
+        "smallThumbnail": "https://covers.openlibrary.org/b/isbn/9788580572841-S.jpg",
+        "thumbnail": "https://covers.openlibrary.org/b/isbn/9788580572841-M.jpg"
+      },
+      "language": "pt",
+      "previewLink": "https://books.google.com.br/books?id=juv004",
+      "infoLink": "https://books.google.com.br/books?id=juv004",
+      "canonicalVolumeLink": "https://books.google.com.br/books/about?id=juv004"
+    }
+  },
+  {
+    "id": "juv005",
+    "volumeInfo": {
+      "title": "Maze Runner: Correr ou Morrer",
+      "authors": ["James Dashner"],
+      "publisher": "Vergara & Riba",
+      "publishedDate": "2009-10-06",
+      "description": "Thomas acorda sem memória num lugar chamado Clareira, cercado por um labirinto mortal que muda todas as noites.",
+      "industryIdentifiers": [{"type": "ISBN_13", "identifier": "9788576832249"}],
+      "pageCount": 384,
+      "printType": "BOOK",
+      "categories": ["Juvenil"],
+      "averageRating": 4.2,
+      "ratingsCount": 38000,
+      "imageLinks": {
+        "smallThumbnail": "https://covers.openlibrary.org/b/isbn/9788576832249-S.jpg",
+        "thumbnail": "https://covers.openlibrary.org/b/isbn/9788576832249-M.jpg"
+      },
+      "language": "pt",
+      "previewLink": "https://books.google.com.br/books?id=juv005",
+      "infoLink": "https://books.google.com.br/books?id=juv005",
+      "canonicalVolumeLink": "https://books.google.com.br/books/about?id=juv005"
+    }
+  },
+  {
+    "id": "fic001",
+    "volumeInfo": {
+      "title": "O Alquimista",
+      "authors": ["Paulo Coelho"],
+      "publisher": "HarperCollins Brasil",
+      "publishedDate": "1988",
+      "description": "Santiago, um jovem pastor, viaja do sul da Espanha até o Egito em busca de um tesouro escondido nas pirâmides, descobrindo sua lenda pessoal.",
+      "industryIdentifiers": [{"type": "ISBN_13", "identifier": "9788595086524"}],
+      "pageCount": 176,
+      "printType": "BOOK",
+      "categories": ["Ficção"],
+      "averageRating": 4.2,
+      "ratingsCount": 85000,
+      "imageLinks": {
+        "smallThumbnail": "https://covers.openlibrary.org/b/isbn/9788595086524-S.jpg",
+        "thumbnail": "https://covers.openlibrary.org/b/isbn/9788595086524-M.jpg"
+      },
+      "language": "pt",
+      "previewLink": "https://books.google.com.br/books?id=fic001",
+      "infoLink": "https://books.google.com.br/books?id=fic001",
+      "canonicalVolumeLink": "https://books.google.com.br/books/about?id=fic001"
+    }
+  },
+  {
+    "id": "fic002",
+    "volumeInfo": {
+      "title": "A Revolução dos Bichos",
+      "authors": ["George Orwell"],
+      "publisher": "Companhia das Letras",
+      "publishedDate": "1945-08-17",
+      "description": "Os animais de uma fazenda se revoltam contra o fazendeiro e tentam criar uma sociedade igualitária, mas a corrupção do poder se instala.",
+      "industryIdentifiers": [{"type": "ISBN_13", "identifier": "9788535909555"}],
+      "pageCount": 152,
+      "printType": "BOOK",
+      "categories": ["Ficção"],
+      "averageRating": 4.5,
+      "ratingsCount": 62000,
+      "imageLinks": {
+        "smallThumbnail": "https://covers.openlibrary.org/b/isbn/9788535909555-S.jpg",
+        "thumbnail": "https://covers.openlibrary.org/b/isbn/9788535909555-M.jpg"
+      },
+      "language": "pt",
+      "previewLink": "https://books.google.com.br/books?id=fic002",
+      "infoLink": "https://books.google.com.br/books?id=fic002",
+      "canonicalVolumeLink": "https://books.google.com.br/books/about?id=fic002"
+    }
+  },
+  {
+    "id": "fic003",
+    "volumeInfo": {
+      "title": "O Morro dos Ventos Uivantes",
+      "authors": ["Emily Brontë"],
+      "publisher": "Penguin Companhia",
+      "publishedDate": "1847-12-01",
+      "description": "A paixão destrutiva entre Heathcliff e Catherine assombra as gerações seguintes numa história de amor, vingança e redenção.",
+      "industryIdentifiers": [{"type": "ISBN_13", "identifier": "9788563560520"}],
+      "pageCount": 384,
+      "printType": "BOOK",
+      "categories": ["Ficção"],
+      "averageRating": 4.2,
+      "ratingsCount": 35000,
+      "imageLinks": {
+        "smallThumbnail": "https://covers.openlibrary.org/b/isbn/9788563560520-S.jpg",
+        "thumbnail": "https://covers.openlibrary.org/b/isbn/9788563560520-M.jpg"
+      },
+      "language": "pt",
+      "previewLink": "https://books.google.com.br/books?id=fic003",
+      "infoLink": "https://books.google.com.br/books?id=fic003",
+      "canonicalVolumeLink": "https://books.google.com.br/books/about?id=fic003"
+    }
+  },
+  {
+    "id": "fic004",
+    "volumeInfo": {
+      "title": "O Conde de Monte Cristo",
+      "authors": ["Alexandre Dumas"],
+      "publisher": "Zahar",
+      "publishedDate": "1844",
+      "description": "Edmond Dantès é injustamente preso e, após escapar, assume a identidade do Conde de Monte Cristo para se vingar de quem o traiu.",
+      "industryIdentifiers": [{"type": "ISBN_13", "identifier": "9788537801468"}],
+      "pageCount": 1216,
+      "printType": "BOOK",
+      "categories": ["Ficção"],
+      "averageRating": 4.7,
+      "ratingsCount": 42000,
+      "imageLinks": {
+        "smallThumbnail": "https://covers.openlibrary.org/b/isbn/9788537801468-S.jpg",
+        "thumbnail": "https://covers.openlibrary.org/b/isbn/9788537801468-M.jpg"
+      },
+      "language": "pt",
+      "previewLink": "https://books.google.com.br/books?id=fic004",
+      "infoLink": "https://books.google.com.br/books?id=fic004",
+      "canonicalVolumeLink": "https://books.google.com.br/books/about?id=fic004"
+    }
+  },
+  {
+    "id": "fic005",
+    "volumeInfo": {
+      "title": "A Menina que Roubava Livros",
+      "authors": ["Markus Zusak"],
+      "publisher": "Intrínseca",
+      "publishedDate": "2005-03-14",
+      "description": "Narrado pela Morte, conta a história de Liesel Meminger, uma menina que rouba livros na Alemanha nazista e compartilha com vizinhos.",
+      "industryIdentifiers": [{"type": "ISBN_13", "identifier": "9788598078175"}],
+      "pageCount": 480,
+      "printType": "BOOK",
+      "categories": ["Ficção"],
+      "averageRating": 4.6,
+      "ratingsCount": 55000,
+      "imageLinks": {
+        "smallThumbnail": "https://covers.openlibrary.org/b/isbn/9788598078175-S.jpg",
+        "thumbnail": "https://covers.openlibrary.org/b/isbn/9788598078175-M.jpg"
+      },
+      "language": "pt",
+      "previewLink": "https://books.google.com.br/books?id=fic005",
+      "infoLink": "https://books.google.com.br/books?id=fic005",
+      "canonicalVolumeLink": "https://books.google.com.br/books/about?id=fic005"
+    }
+  },
+  {
+    "id": "mis001",
+    "volumeInfo": {
+      "title": "Sapiens",
+      "subtitle": "Uma Breve História da Humanidade",
+      "authors": ["Yuval Noah Harari"],
+      "publisher": "L&PM Editores",
+      "publishedDate": "2011-01-01",
+      "description": "Uma viagem pela história da humanidade desde os primeiros hominídeos até as revoluções que moldaram o mundo moderno.",
+      "industryIdentifiers": [{"type": "ISBN_13", "identifier": "9788525432186"}],
+      "pageCount": 472,
+      "printType": "BOOK",
+      "categories": ["Não-ficção"],
+      "averageRating": 4.5,
+      "ratingsCount": 88000,
+      "imageLinks": {
+        "smallThumbnail": "https://covers.openlibrary.org/b/isbn/9788525432186-S.jpg",
+        "thumbnail": "https://covers.openlibrary.org/b/isbn/9788525432186-M.jpg"
+      },
+      "language": "pt",
+      "previewLink": "https://books.google.com.br/books?id=mis001",
+      "infoLink": "https://books.google.com.br/books?id=mis001",
+      "canonicalVolumeLink": "https://books.google.com.br/books/about?id=mis001"
+    }
+  },
+  {
+    "id": "mis002",
+    "volumeInfo": {
+      "title": "O Diário de Anne Frank",
+      "authors": ["Anne Frank"],
+      "publisher": "Record",
+      "publishedDate": "1947-06-25",
+      "description": "O diário de uma adolescente judia que ficou escondida durante a ocupação nazista da Holanda, registrando seu cotidiano e esperanças.",
+      "industryIdentifiers": [{"type": "ISBN_13", "identifier": "9788501044457"}],
+      "pageCount": 352,
+      "printType": "BOOK",
+      "categories": ["Não-ficção"],
+      "averageRating": 4.6,
+      "ratingsCount": 72000,
+      "imageLinks": {
+        "smallThumbnail": "https://covers.openlibrary.org/b/isbn/9788501044457-S.jpg",
+        "thumbnail": "https://covers.openlibrary.org/b/isbn/9788501044457-M.jpg"
+      },
+      "language": "pt",
+      "previewLink": "https://books.google.com.br/books?id=mis002",
+      "infoLink": "https://books.google.com.br/books?id=mis002",
+      "canonicalVolumeLink": "https://books.google.com.br/books/about?id=mis002"
+    }
+  },
+  {
+    "id": "mis003",
+    "volumeInfo": {
+      "title": "A Arte da Guerra",
+      "authors": ["Sun Tzu"],
+      "publisher": "Lafonte",
+      "publishedDate": "-500",
+      "description": "Tratado militar chinês milenar sobre estratégia e tática que transcendeu o campo de batalha e é aplicado em negócios e liderança.",
+      "industryIdentifiers": [{"type": "ISBN_13", "identifier": "9788581862316"}],
+      "pageCount": 128,
+      "printType": "BOOK",
+      "categories": ["Não-ficção"],
+      "averageRating": 4.2,
+      "ratingsCount": 45000,
+      "imageLinks": {
+        "smallThumbnail": "https://covers.openlibrary.org/b/isbn/9788581862316-S.jpg",
+        "thumbnail": "https://covers.openlibrary.org/b/isbn/9788581862316-M.jpg"
+      },
+      "language": "pt",
+      "previewLink": "https://books.google.com.br/books?id=mis003",
+      "infoLink": "https://books.google.com.br/books?id=mis003",
+      "canonicalVolumeLink": "https://books.google.com.br/books/about?id=mis003"
+    }
+  },
+  {
+    "id": "mis004",
+    "volumeInfo": {
+      "title": "Homo Deus",
+      "subtitle": "Uma Breve História do Amanhã",
+      "authors": ["Yuval Noah Harari"],
+      "publisher": "Companhia das Letras",
+      "publishedDate": "2015-09-01",
+      "description": "Após conquistar fome, peste e guerra, para onde a humanidade vai? Harari explora o futuro da espécie em busca de imortalidade e felicidade.",
+      "industryIdentifiers": [{"type": "ISBN_13", "identifier": "9788535928198"}],
+      "pageCount": 448,
+      "printType": "BOOK",
+      "categories": ["Não-ficção"],
+      "averageRating": 4.3,
+      "ratingsCount": 35000,
+      "imageLinks": {
+        "smallThumbnail": "https://covers.openlibrary.org/b/isbn/9788535928198-S.jpg",
+        "thumbnail": "https://covers.openlibrary.org/b/isbn/9788535928198-M.jpg"
+      },
+      "language": "pt",
+      "previewLink": "https://books.google.com.br/books?id=mis004",
+      "infoLink": "https://books.google.com.br/books?id=mis004",
+      "canonicalVolumeLink": "https://books.google.com.br/books/about?id=mis004"
+    }
+  },
+  {
+    "id": "mis005",
+    "volumeInfo": {
+      "title": "21 Lições para o Século 21",
+      "authors": ["Yuval Noah Harari"],
+      "publisher": "Companhia das Letras",
+      "publishedDate": "2018-08-30",
+      "description": "Harari aborda os desafios mais urgentes do presente: tecnologia, política, religião e como navegar num mundo de informação excessiva.",
+      "industryIdentifiers": [{"type": "ISBN_13", "identifier": "9788535930900"}],
+      "pageCount": 432,
+      "printType": "BOOK",
+      "categories": ["Não-ficção"],
+      "averageRating": 4.2,
+      "ratingsCount": 28000,
+      "imageLinks": {
+        "smallThumbnail": "https://covers.openlibrary.org/b/isbn/9788535930900-S.jpg",
+        "thumbnail": "https://covers.openlibrary.org/b/isbn/9788535930900-M.jpg"
+      },
+      "language": "pt",
+      "previewLink": "https://books.google.com.br/books?id=mis005",
+      "infoLink": "https://books.google.com.br/books?id=mis005",
+      "canonicalVolumeLink": "https://books.google.com.br/books/about?id=mis005"
+    }
+  },
+  {
+    "id": "fan006",
+    "volumeInfo": {
+      "title": "A Guerra dos Tronos",
+      "authors": ["George R.R. Martin"],
+      "publisher": "Suma",
+      "publishedDate": "1996-08-01",
+      "description": "Famílias nobres disputam o Trono de Ferro dos Sete Reinos enquanto uma ameaça antiga desperta além da Muralha.",
+      "industryIdentifiers": [{"type": "ISBN_13", "identifier": "9788556510785"}],
+      "pageCount": 592,
+      "printType": "BOOK",
+      "categories": ["Fantasia"],
+      "averageRating": 4.7,
+      "ratingsCount": 58000,
+      "imageLinks": {
+        "smallThumbnail": "https://covers.openlibrary.org/b/isbn/9788556510785-S.jpg",
+        "thumbnail": "https://covers.openlibrary.org/b/isbn/9788556510785-M.jpg"
+      },
+      "language": "pt",
+      "previewLink": "https://books.google.com.br/books?id=fan006",
+      "infoLink": "https://books.google.com.br/books?id=fan006",
+      "canonicalVolumeLink": "https://books.google.com.br/books/about?id=fan006"
+    }
+  },
+  {
+    "id": "fan007",
+    "volumeInfo": {
+      "title": "O Último Desejo",
+      "authors": ["Andrzej Sapkowski"],
+      "publisher": "WMF Martins Fontes",
+      "publishedDate": "1993",
+      "description": "Geralt de Rívia é um bruxo que caça monstros por dinheiro, mas enfrenta dilemas morais mais complexos que as criaturas que combate.",
+      "industryIdentifiers": [{"type": "ISBN_13", "identifier": "9788578279585"}],
+      "pageCount": 336,
+      "printType": "BOOK",
+      "categories": ["Fantasia"],
+      "averageRating": 4.4,
+      "ratingsCount": 32000,
+      "imageLinks": {
+        "smallThumbnail": "https://covers.openlibrary.org/b/isbn/9788578279585-S.jpg",
+        "thumbnail": "https://covers.openlibrary.org/b/isbn/9788578279585-M.jpg"
+      },
+      "language": "pt",
+      "previewLink": "https://books.google.com.br/books?id=fan007",
+      "infoLink": "https://books.google.com.br/books?id=fan007",
+      "canonicalVolumeLink": "https://books.google.com.br/books/about?id=fan007"
+    }
+  },
+  {
+    "id": "br011",
+    "volumeInfo": {
+      "title": "O Auto da Compadecida",
+      "authors": ["Ariano Suassuna"],
+      "publisher": "Nova Fronteira",
+      "publishedDate": "1955",
+      "description": "Peça teatral que conta as aventuras de João Grilo e Chicó no sertão nordestino, misturando humor popular e religiosidade.",
+      "industryIdentifiers": [{"type": "ISBN_13", "identifier": "9788520940044"}],
+      "pageCount": 208,
+      "printType": "BOOK",
+      "categories": ["Ficção Brasileira"],
+      "averageRating": 4.7,
+      "ratingsCount": 15000,
+      "imageLinks": {
+        "smallThumbnail": "https://covers.openlibrary.org/b/isbn/9788520940044-S.jpg",
+        "thumbnail": "https://covers.openlibrary.org/b/isbn/9788520940044-M.jpg"
+      },
+      "language": "pt",
+      "previewLink": "https://books.google.com.br/books?id=br011",
+      "infoLink": "https://books.google.com.br/books?id=br011",
+      "canonicalVolumeLink": "https://books.google.com.br/books/about?id=br011"
+    }
+  },
+  {
+    "id": "br012",
+    "volumeInfo": {
+      "title": "Macunaíma",
+      "authors": ["Mário de Andrade"],
+      "publisher": "Penguin Companhia",
+      "publishedDate": "1928",
+      "description": "Romance-rapsódia que narra as aventuras do herói sem nenhum caráter Macunaíma, uma alegoria irreverente da identidade brasileira.",
+      "industryIdentifiers": [{"type": "ISBN_13", "identifier": "9788563560858"}],
+      "pageCount": 224,
+      "printType": "BOOK",
+      "categories": ["Ficção Brasileira"],
+      "averageRating": 4.0,
+      "ratingsCount": 4800,
+      "imageLinks": {
+        "smallThumbnail": "https://covers.openlibrary.org/b/isbn/9788563560858-S.jpg",
+        "thumbnail": "https://covers.openlibrary.org/b/isbn/9788563560858-M.jpg"
+      },
+      "language": "pt",
+      "previewLink": "https://books.google.com.br/books?id=br012",
+      "infoLink": "https://books.google.com.br/books?id=br012",
+      "canonicalVolumeLink": "https://books.google.com.br/books/about?id=br012"
+    }
+  },
+  {
+    "id": "br013",
+    "volumeInfo": {
+      "title": "A Moreninha",
+      "authors": ["Joaquim Manuel de Macedo"],
+      "publisher": "Martin Claret",
+      "publishedDate": "1844",
+      "description": "Romance romântico que conta a história de amor entre Augusto e Carolina na ilha de Paquetá.",
+      "industryIdentifiers": [{"type": "ISBN_13", "identifier": "9788572328258"}],
+      "pageCount": 192,
+      "printType": "BOOK",
+      "categories": ["Ficção Brasileira"],
+      "averageRating": 3.8,
+      "ratingsCount": 5200,
+      "imageLinks": {
+        "smallThumbnail": "https://covers.openlibrary.org/b/isbn/9788572328258-S.jpg",
+        "thumbnail": "https://covers.openlibrary.org/b/isbn/9788572328258-M.jpg"
+      },
+      "language": "pt",
+      "previewLink": "https://books.google.com.br/books?id=br013",
+      "infoLink": "https://books.google.com.br/books?id=br013",
+      "canonicalVolumeLink": "https://books.google.com.br/books/about?id=br013"
+    }
+  },
+  {
+    "id": "br014",
+    "volumeInfo": {
+      "title": "Memórias de um Sargento de Milícias",
+      "authors": ["Manuel Antônio de Almeida"],
+      "publisher": "Penguin Companhia",
+      "publishedDate": "1854",
+      "description": "Acompanha a vida de Leonardo, um típico malandro carioca, na corte de D. João VI no Rio de Janeiro.",
+      "industryIdentifiers": [{"type": "ISBN_13", "identifier": "9788563560803"}],
+      "pageCount": 240,
+      "printType": "BOOK",
+      "categories": ["Ficção Brasileira"],
+      "averageRating": 3.9,
+      "ratingsCount": 4200,
+      "imageLinks": {
+        "smallThumbnail": "https://covers.openlibrary.org/b/isbn/9788563560803-S.jpg",
+        "thumbnail": "https://covers.openlibrary.org/b/isbn/9788563560803-M.jpg"
+      },
+      "language": "pt",
+      "previewLink": "https://books.google.com.br/books?id=br014",
+      "infoLink": "https://books.google.com.br/books?id=br014",
+      "canonicalVolumeLink": "https://books.google.com.br/books/about?id=br014"
+    }
+  },
+  {
+    "id": "br015",
+    "volumeInfo": {
+      "title": "Torto Arado",
+      "authors": ["Itamar Vieira Junior"],
+      "publisher": "Todavia",
+      "publishedDate": "2019-08-01",
+      "description": "Duas irmãs marcadas por um acidente na infância crescem em condições de trabalho análogas à escravidão no interior da Bahia.",
+      "industryIdentifiers": [{"type": "ISBN_13", "identifier": "9786580309078"}],
+      "pageCount": 264,
+      "printType": "BOOK",
+      "categories": ["Ficção Brasileira"],
+      "averageRating": 4.6,
+      "ratingsCount": 22000,
+      "imageLinks": {
+        "smallThumbnail": "https://covers.openlibrary.org/b/isbn/9786580309078-S.jpg",
+        "thumbnail": "https://covers.openlibrary.org/b/isbn/9786580309078-M.jpg"
+      },
+      "language": "pt",
+      "previewLink": "https://books.google.com.br/books?id=br015",
+      "infoLink": "https://books.google.com.br/books?id=br015",
+      "canonicalVolumeLink": "https://books.google.com.br/books/about?id=br015"
+    }
+  },
+  {
+    "id": "fic006",
+    "volumeInfo": {
+      "title": "O Sol é para Todos",
+      "authors": ["Harper Lee"],
+      "publisher": "José Olympio",
+      "publishedDate": "1960-07-11",
+      "description": "Scout Finch narra a história de seu pai, o advogado Atticus Finch, que defende um homem negro acusado injustamente no sul dos EUA.",
+      "industryIdentifiers": [{"type": "ISBN_13", "identifier": "9788503012304"}],
+      "pageCount": 352,
+      "printType": "BOOK",
+      "categories": ["Ficção"],
+      "averageRating": 4.7,
+      "ratingsCount": 72000,
+      "imageLinks": {
+        "smallThumbnail": "https://covers.openlibrary.org/b/isbn/9788503012304-S.jpg",
+        "thumbnail": "https://covers.openlibrary.org/b/isbn/9788503012304-M.jpg"
+      },
+      "language": "pt",
+      "previewLink": "https://books.google.com.br/books?id=fic006",
+      "infoLink": "https://books.google.com.br/books?id=fic006",
+      "canonicalVolumeLink": "https://books.google.com.br/books/about?id=fic006"
+    }
+  },
+  {
+    "id": "fic007",
+    "volumeInfo": {
+      "title": "As Vantagens de Ser Invisível",
+      "authors": ["Stephen Chbosky"],
+      "publisher": "Rocco",
+      "publishedDate": "1999-02-01",
+      "description": "Charlie, um adolescente introvertido, narra através de cartas suas experiências no primeiro ano do ensino médio.",
+      "industryIdentifiers": [{"type": "ISBN_13", "identifier": "9788579800047"}],
+      "pageCount": 272,
+      "printType": "BOOK",
+      "categories": ["Ficção"],
+      "averageRating": 4.3,
+      "ratingsCount": 45000,
+      "imageLinks": {
+        "smallThumbnail": "https://covers.openlibrary.org/b/isbn/9788579800047-S.jpg",
+        "thumbnail": "https://covers.openlibrary.org/b/isbn/9788579800047-M.jpg"
+      },
+      "language": "pt",
+      "previewLink": "https://books.google.com.br/books?id=fic007",
+      "infoLink": "https://books.google.com.br/books?id=fic007",
+      "canonicalVolumeLink": "https://books.google.com.br/books/about?id=fic007"
+    }
+  },
+  {
+    "id": "fic008",
+    "volumeInfo": {
+      "title": "Extraordinário",
+      "authors": ["R.J. Palacio"],
+      "publisher": "Intrínseca",
+      "publishedDate": "2012-02-14",
+      "description": "Auggie Pullman nasceu com uma deformidade facial e vai à escola pela primeira vez, enfrentando o desafio de ser aceito.",
+      "industryIdentifiers": [{"type": "ISBN_13", "identifier": "9788580573015"}],
+      "pageCount": 320,
+      "printType": "BOOK",
+      "categories": ["Ficção"],
+      "averageRating": 4.6,
+      "ratingsCount": 58000,
+      "imageLinks": {
+        "smallThumbnail": "https://covers.openlibrary.org/b/isbn/9788580573015-S.jpg",
+        "thumbnail": "https://covers.openlibrary.org/b/isbn/9788580573015-M.jpg"
+      },
+      "language": "pt",
+      "previewLink": "https://books.google.com.br/books?id=fic008",
+      "infoLink": "https://books.google.com.br/books?id=fic008",
+      "canonicalVolumeLink": "https://books.google.com.br/books/about?id=fic008"
+    }
+  },
+  {
+    "id": "sci006",
+    "volumeInfo": {
+      "title": "O Guia do Mochileiro das Galáxias",
+      "authors": ["Douglas Adams"],
+      "publisher": "Arqueiro",
+      "publishedDate": "1979-10-12",
+      "description": "Arthur Dent é resgatado segundos antes da destruição da Terra por seu amigo Ford Prefect, que revela ser um alienígena pesquisador.",
+      "industryIdentifiers": [{"type": "ISBN_13", "identifier": "9788599296578"}],
+      "pageCount": 208,
+      "printType": "BOOK",
+      "categories": ["Ficção Científica"],
+      "averageRating": 4.5,
+      "ratingsCount": 48000,
+      "imageLinks": {
+        "smallThumbnail": "https://covers.openlibrary.org/b/isbn/9788599296578-S.jpg",
+        "thumbnail": "https://covers.openlibrary.org/b/isbn/9788599296578-M.jpg"
+      },
+      "language": "pt",
+      "previewLink": "https://books.google.com.br/books?id=sci006",
+      "infoLink": "https://books.google.com.br/books?id=sci006",
+      "canonicalVolumeLink": "https://books.google.com.br/books/about?id=sci006"
+    }
+  },
+  {
+    "id": "fan008",
+    "volumeInfo": {
+      "title": "Mistborn: O Império Final",
+      "authors": ["Brandon Sanderson"],
+      "publisher": "Leya",
+      "publishedDate": "2006-07-17",
+      "description": "Num mundo coberto por cinzas, uma jovem descobre poderes mágicos e se junta a uma equipe para derrubar o imortal Lorde Soberano.",
+      "industryIdentifiers": [{"type": "ISBN_13", "identifier": "9788544104446"}],
+      "pageCount": 672,
+      "printType": "BOOK",
+      "categories": ["Fantasia"],
+      "averageRating": 4.6,
+      "ratingsCount": 35000,
+      "imageLinks": {
+        "smallThumbnail": "https://covers.openlibrary.org/b/isbn/9788544104446-S.jpg",
+        "thumbnail": "https://covers.openlibrary.org/b/isbn/9788544104446-M.jpg"
+      },
+      "language": "pt",
+      "previewLink": "https://books.google.com.br/books?id=fan008",
+      "infoLink": "https://books.google.com.br/books?id=fan008",
+      "canonicalVolumeLink": "https://books.google.com.br/books/about?id=fan008"
+    }
+  },
+  {
+    "id": "rom006",
+    "volumeInfo": {
+      "title": "Me Chame pelo Seu Nome",
+      "authors": ["André Aciman"],
+      "publisher": "Intrínseca",
+      "publishedDate": "2007-01-23",
+      "description": "No verão italiano dos anos 80, o jovem Elio vive um romance intenso com Oliver, um acadêmico americano hospedado na casa de sua família.",
+      "industryIdentifiers": [{"type": "ISBN_13", "identifier": "9788551002339"}],
+      "pageCount": 256,
+      "printType": "BOOK",
+      "categories": ["Romance"],
+      "averageRating": 4.2,
+      "ratingsCount": 32000,
+      "imageLinks": {
+        "smallThumbnail": "https://covers.openlibrary.org/b/isbn/9788551002339-S.jpg",
+        "thumbnail": "https://covers.openlibrary.org/b/isbn/9788551002339-M.jpg"
+      },
+      "language": "pt",
+      "previewLink": "https://books.google.com.br/books?id=rom006",
+      "infoLink": "https://books.google.com.br/books?id=rom006",
+      "canonicalVolumeLink": "https://books.google.com.br/books/about?id=rom006"
+    }
+  },
+  {
+    "id": "ter004",
+    "volumeInfo": {
+      "title": "O Cemitério",
+      "authors": ["Stephen King"],
+      "publisher": "Suma",
+      "publishedDate": "1983-11-14",
+      "description": "A família Creed se muda para perto de um cemitério de animais com poderes sobrenaturais que trazem os mortos de volta — mas transformados.",
+      "industryIdentifiers": [{"type": "ISBN_13", "identifier": "9788556510556"}],
+      "pageCount": 416,
+      "printType": "BOOK",
+      "categories": ["Terror"],
+      "averageRating": 4.4,
+      "ratingsCount": 28000,
+      "imageLinks": {
+        "smallThumbnail": "https://covers.openlibrary.org/b/isbn/9788556510556-S.jpg",
+        "thumbnail": "https://covers.openlibrary.org/b/isbn/9788556510556-M.jpg"
+      },
+      "language": "pt",
+      "previewLink": "https://books.google.com.br/books?id=ter004",
+      "infoLink": "https://books.google.com.br/books?id=ter004",
+      "canonicalVolumeLink": "https://books.google.com.br/books/about?id=ter004"
+    }
+  },
+  {
+    "id": "ter005",
+    "volumeInfo": {
+      "title": "Frankenstein",
+      "authors": ["Mary Shelley"],
+      "publisher": "Darkside Books",
+      "publishedDate": "1818-01-01",
+      "description": "Victor Frankenstein cria uma criatura a partir de partes de cadáveres, mas rejeita sua criação, desencadeando uma trilha de destruição.",
+      "industryIdentifiers": [{"type": "ISBN_13", "identifier": "9788594540249"}],
+      "pageCount": 280,
+      "printType": "BOOK",
+      "categories": ["Terror"],
+      "averageRating": 4.2,
+      "ratingsCount": 38000,
+      "imageLinks": {
+        "smallThumbnail": "https://covers.openlibrary.org/b/isbn/9788594540249-S.jpg",
+        "thumbnail": "https://covers.openlibrary.org/b/isbn/9788594540249-M.jpg"
+      },
+      "language": "pt",
+      "previewLink": "https://books.google.com.br/books?id=ter005",
+      "infoLink": "https://books.google.com.br/books?id=ter005",
+      "canonicalVolumeLink": "https://books.google.com.br/books/about?id=ter005"
+    }
+  },
+  {
+    "id": "cla006",
+    "volumeInfo": {
+      "title": "Don Quixote",
+      "authors": ["Miguel de Cervantes"],
+      "publisher": "Penguin Companhia",
+      "publishedDate": "1605",
+      "description": "Um fidalgo enlouquecido pela leitura de romances de cavalaria parte em aventuras imaginárias acompanhado de seu fiel escudeiro Sancho Pança.",
+      "industryIdentifiers": [{"type": "ISBN_13", "identifier": "9788563560346"}],
+      "pageCount": 1232,
+      "printType": "BOOK",
+      "categories": ["Clássicos"],
+      "averageRating": 4.4,
+      "ratingsCount": 32000,
+      "imageLinks": {
+        "smallThumbnail": "https://covers.openlibrary.org/b/isbn/9788563560346-S.jpg",
+        "thumbnail": "https://covers.openlibrary.org/b/isbn/9788563560346-M.jpg"
+      },
+      "language": "pt",
+      "previewLink": "https://books.google.com.br/books?id=cla006",
+      "infoLink": "https://books.google.com.br/books?id=cla006",
+      "canonicalVolumeLink": "https://books.google.com.br/books/about?id=cla006"
+    }
+  },
+  {
+    "id": "cla007",
+    "volumeInfo": {
+      "title": "Os Miseráveis",
+      "authors": ["Victor Hugo"],
+      "publisher": "Zahar",
+      "publishedDate": "1862",
+      "description": "A redenção do ex-presidiário Jean Valjean na França pós-revolucionária, perseguido pelo implacável inspetor Javert.",
+      "industryIdentifiers": [{"type": "ISBN_13", "identifier": "9788537813089"}],
+      "pageCount": 1504,
+      "printType": "BOOK",
+      "categories": ["Clássicos"],
+      "averageRating": 4.6,
+      "ratingsCount": 42000,
+      "imageLinks": {
+        "smallThumbnail": "https://covers.openlibrary.org/b/isbn/9788537813089-S.jpg",
+        "thumbnail": "https://covers.openlibrary.org/b/isbn/9788537813089-M.jpg"
+      },
+      "language": "pt",
+      "previewLink": "https://books.google.com.br/books?id=cla007",
+      "infoLink": "https://books.google.com.br/books?id=cla007",
+      "canonicalVolumeLink": "https://books.google.com.br/books/about?id=cla007"
+    }
+  },
+  {
+    "id": "auto006",
+    "volumeInfo": {
+      "title": "Como Fazer Amigos e Influenciar Pessoas",
+      "authors": ["Dale Carnegie"],
+      "publisher": "Sextante",
+      "publishedDate": "1936-10-01",
+      "description": "Guia clássico de relações humanas com princípios para lidar com pessoas, fazer amigos e influenciar através da comunicação.",
+      "industryIdentifiers": [{"type": "ISBN_13", "identifier": "9788543108683"}],
+      "pageCount": 256,
+      "printType": "BOOK",
+      "categories": ["Autoajuda"],
+      "averageRating": 4.3,
+      "ratingsCount": 72000,
+      "imageLinks": {
+        "smallThumbnail": "https://covers.openlibrary.org/b/isbn/9788543108683-S.jpg",
+        "thumbnail": "https://covers.openlibrary.org/b/isbn/9788543108683-M.jpg"
+      },
+      "language": "pt",
+      "previewLink": "https://books.google.com.br/books?id=auto006",
+      "infoLink": "https://books.google.com.br/books?id=auto006",
+      "canonicalVolumeLink": "https://books.google.com.br/books/about?id=auto006"
+    }
+  },
+  {
+    "id": "tec006",
+    "volumeInfo": {
+      "title": "Estruturas de Dados e Algoritmos com JavaScript",
+      "authors": ["Loiane Groner"],
+      "publisher": "Novatec",
+      "publishedDate": "2018-05-01",
+      "description": "Abordagem prática de estruturas de dados e algoritmos usando JavaScript moderno, com exemplos e exercícios.",
+      "industryIdentifiers": [{"type": "ISBN_13", "identifier": "9788575226933"}],
+      "pageCount": 408,
+      "printType": "BOOK",
+      "categories": ["Tecnologia"],
+      "averageRating": 4.3,
+      "ratingsCount": 3200,
+      "imageLinks": {
+        "smallThumbnail": "https://covers.openlibrary.org/b/isbn/9788575226933-S.jpg",
+        "thumbnail": "https://covers.openlibrary.org/b/isbn/9788575226933-M.jpg"
+      },
+      "language": "pt",
+      "previewLink": "https://books.google.com.br/books?id=tec006",
+      "infoLink": "https://books.google.com.br/books?id=tec006",
+      "canonicalVolumeLink": "https://books.google.com.br/books/about?id=tec006"
+    }
+  },
+  {
+    "id": "tec007",
+    "volumeInfo": {
+      "title": "Spring in Action",
+      "authors": ["Craig Walls"],
+      "publisher": "Manning Publications",
+      "publishedDate": "2022-03-01",
+      "description": "Guia completo do Spring Framework cobrindo Spring Boot, Spring MVC, Spring Security e microservices.",
+      "industryIdentifiers": [{"type": "ISBN_13", "identifier": "9781617297571"}],
+      "pageCount": 520,
+      "printType": "BOOK",
+      "categories": ["Tecnologia"],
+      "averageRating": 4.4,
+      "ratingsCount": 4500,
+      "imageLinks": {
+        "smallThumbnail": "https://covers.openlibrary.org/b/isbn/9781617297571-S.jpg",
+        "thumbnail": "https://covers.openlibrary.org/b/isbn/9781617297571-M.jpg"
+      },
+      "language": "en",
+      "previewLink": "https://books.google.com.br/books?id=tec007",
+      "infoLink": "https://books.google.com.br/books?id=tec007",
+      "canonicalVolumeLink": "https://books.google.com.br/books/about?id=tec007"
+    }
+  },
+  {
+    "id": "fan009",
+    "volumeInfo": {
+      "title": "Harry Potter e o Prisioneiro de Azkaban",
+      "authors": ["J.K. Rowling"],
+      "publisher": "Rocco",
+      "publishedDate": "1999-07-08",
+      "description": "Harry descobre que Sirius Black, um prisioneiro foragido, está atrás dele. Mas nem tudo é o que parece em Hogwarts.",
+      "industryIdentifiers": [{"type": "ISBN_13", "identifier": "9788532512062"}],
+      "pageCount": 348,
+      "printType": "BOOK",
+      "categories": ["Fantasia"],
+      "averageRating": 4.8,
+      "ratingsCount": 85000,
+      "imageLinks": {
+        "smallThumbnail": "https://covers.openlibrary.org/b/isbn/9788532512062-S.jpg",
+        "thumbnail": "https://covers.openlibrary.org/b/isbn/9788532512062-M.jpg"
+      },
+      "language": "pt",
+      "previewLink": "https://books.google.com.br/books?id=fan009",
+      "infoLink": "https://books.google.com.br/books?id=fan009",
+      "canonicalVolumeLink": "https://books.google.com.br/books/about?id=fan009"
+    }
+  },
+  {
+    "id": "fan010",
+    "volumeInfo": {
+      "title": "O Senhor dos Anéis: As Duas Torres",
+      "authors": ["J.R.R. Tolkien"],
+      "publisher": "Martins Fontes",
+      "publishedDate": "1954-11-11",
+      "description": "A Sociedade do Anel se divide. Frodo e Sam seguem para Mordor com a ajuda de Gollum, enquanto Aragorn persegue os orcs.",
+      "industryIdentifiers": [{"type": "ISBN_13", "identifier": "9788595084759"}],
+      "pageCount": 448,
+      "printType": "BOOK",
+      "categories": ["Fantasia"],
+      "averageRating": 4.7,
+      "ratingsCount": 52000,
+      "imageLinks": {
+        "smallThumbnail": "https://covers.openlibrary.org/b/isbn/9788595084759-S.jpg",
+        "thumbnail": "https://covers.openlibrary.org/b/isbn/9788595084759-M.jpg"
+      },
+      "language": "pt",
+      "previewLink": "https://books.google.com.br/books?id=fan010",
+      "infoLink": "https://books.google.com.br/books?id=fan010",
+      "canonicalVolumeLink": "https://books.google.com.br/books/about?id=fan010"
+    }
+  }
+]

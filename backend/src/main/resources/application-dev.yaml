@@ -1,0 +1,10 @@
+# =============================================================
+# Profile: dev
+#
+# Usa o mock local de livros (LocalBooksAdapter).
+# Não precisa de API key do Google.
+# =============================================================
+
+# Nenhuma configuração extra necessária para dev.
+# O LocalBooksAdapter é ativado automaticamente pelo @Profile("dev").
+# O seed de livros está em books-seed.json no classpath.
