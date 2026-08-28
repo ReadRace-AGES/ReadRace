@@ -327,6 +327,8 @@ Todos os endpoints, DTOs e validacoes sao documentados automaticamente.
 | GET | /actuator/health | 200 | Status da aplicacao |
 | GET | /actuator/info | 200 | Informacoes da aplicacao |
 | GET | /swagger-ui.html | 200 | Documentacao interativa (Swagger) |
+| GET | /api/books/volumes | 200/400 | Busca de livros (ver abaixo) |
+| GET | /api/books/volumes/{id} | 200/404 | Busca livro por ID |
 | GET | /api/exemplos | 200 | Lista todos (boilerplate) |
 | GET | /api/exemplos/{id} | 200/404 | Busca por ID |
 | POST | /api/exemplos | 201/400 | Cria novo |
@@ -334,6 +336,28 @@ Todos os endpoints, DTOs e validacoes sao documentados automaticamente.
 | DELETE | /api/exemplos/{id} | 204/404 | Exclui |
 
 > Os endpoints `/api/exemplos` sao um boilerplate de referencia e serao substituidos pelas entidades reais do dominio.
+
+### Busca de livros
+
+A busca de livros funciona de forma **identica** no mock local (profile `dev`) e na Google Books API real (profile `prod`). O frontend usa a mesma interface nos dois ambientes.
+
+Parametros de busca (informe ao menos um):
+
+| Parametro | Descricao | Exemplo |
+|-----------|-----------|---------|
+| `title` | Busca no titulo | `?title=senhor dos aneis` |
+| `author` | Busca no autor | `?author=tolkien` |
+| `genre` | Busca no genero/categoria | `?genre=fantasia` |
+| `q` | Busca livre (todos os campos) | `?q=tolkien` |
+| `maxResults` | Max de resultados (1-40, padrao 10) | `?q=harry&maxResults=5` |
+| `startIndex` | Indice inicial (paginacao, padrao 0) | `?q=harry&startIndex=10` |
+
+Filtros podem ser combinados (E logico):
+```
+GET /api/books/volumes?author=tolkien&genre=fantasia
+```
+
+O resultado segue o formato da Google Books API (`kind`, `totalItems`, `items[]`).
 
 ---
 

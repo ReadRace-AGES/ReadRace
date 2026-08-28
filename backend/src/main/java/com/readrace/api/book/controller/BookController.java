@@ -14,11 +14,19 @@ import com.readrace.api.book.service.BookService;
  * Endpoints de busca de livros.
  *
  * <p>Espelha o comportamento da Google Books API para que o frontend use a mesma interface
- * independente de estar rodando contra o mock local ou a API real.
+ * independente de estar rodando contra o mock local ou a API real. O resultado é idêntico nos dois
+ * ambientes.
+ *
+ * <p>A busca aceita filtros por campo específico (título, autor, gênero) OU uma busca livre. Quando
+ * mais de um filtro é informado, todos devem ser satisfeitos (E lógico).
  *
  * <pre>
- * GET /api/books/volumes?q={query}&maxResults={n}&startIndex={n}   200 | 400
- * GET /api/books/volumes/{volumeId}                                 200 | 404
+ * GET /api/books/volumes?title=senhor+dos+aneis          → busca por título
+ * GET /api/books/volumes?author=tolkien                  → busca por autor
+ * GET /api/books/volumes?genre=fantasia                  → busca por gênero
+ * GET /api/books/volumes?author=rowling&genre=fantasia   → autor E gênero
+ * GET /api/books/volumes?q=tolkien                       → busca livre (todos os campos)
+ * GET /api/books/volumes/{volumeId}                      → busca por ID (200 | 404)
  * </pre>
  */
 @RestController
@@ -32,18 +40,27 @@ public class BookController {
     }
 
     /**
-     * Busca livros por texto livre.
+     * Busca livros por título, autor, gênero ou texto livre.
      *
-     * @param query termo de busca (obrigatório)
+     * <p>Pelo menos um dos parâmetros de busca ({@code title}, {@code author}, {@code genre} ou
+     * {@code q}) deve ser informado.
+     *
+     * @param title termo a buscar no título (opcional)
+     * @param author termo a buscar no autor (opcional)
+     * @param genre termo a buscar no gênero/categoria (opcional)
+     * @param q busca livre em todos os campos (opcional)
      * @param maxResults máximo de resultados (1-40, padrão 10)
      * @param startIndex índice do primeiro resultado (padrão 0)
      */
     @GetMapping
     public GoogleBooksResponse search(
-            @RequestParam("q") String query,
+            @RequestParam(required = false) String title,
+            @RequestParam(required = false) String author,
+            @RequestParam(required = false) String genre,
+            @RequestParam(required = false) String q,
             @RequestParam(required = false) Integer maxResults,
             @RequestParam(required = false) Integer startIndex) {
-        return bookService.search(query, maxResults, startIndex);
+        return bookService.search(title, author, genre, q, maxResults, startIndex);
     }
 
     /** Busca um volume específico pelo ID. */
