@@ -1,7 +1,7 @@
-import React from 'react';
-import { View, Text, ScrollView } from 'react-native';
-import { ReadRaceLogo } from '../components/readracelogo';
-import '../../global.css';
+import React from "react";
+import { View, Text, ScrollView } from "react-native";
+import { ReadRaceLogo } from "../components/readracelogo";
+import "../../global.css";
 
 /**
  * Tela interna de referência (dev/design) com o glossário de
@@ -21,29 +21,29 @@ type Swatch = {
 };
 
 const PRIMARY_COLORS: Swatch[] = [
-  { hex: '#732634', name: 'Vinho — primária' },
-  { hex: '#FEFEFE', name: 'Branco — base', outline: true },
+  { hex: "#732634", name: "Vinho — primária" },
+  { hex: "#FEFEFE", name: "Branco — base", outline: true },
 ];
 
 const TINTS = [
-  { hex: '#732634', pct: '100%' },
-  { hex: '#A15A68', pct: '80%' },
-  { hex: '#BB8891', pct: '60%' },
-  { hex: '#D3B3B9', pct: '40%' },
+  { hex: "#732634", pct: "100%" },
+  { hex: "#A15A68", pct: "80%" },
+  { hex: "#BB8891", pct: "60%" },
+  { hex: "#D3B3B9", pct: "40%" },
 ];
 
 const NEUTRAL_COLORS: Swatch[] = [
-  { hex: '#000000' },
-  { hex: '#B5B5B5' },
-  { hex: '#EFEFEF' },
-  { hex: '#FFFFFF', outline: true },
+  { hex: "#000000" },
+  { hex: "#B5B5B5" },
+  { hex: "#EFEFEF" },
+  { hex: "#FFFFFF", outline: true },
 ];
 
 const OTHER_COLORS: Swatch[] = [
-  { hex: '#C9425B' },
-  { hex: '#A93736' },
-  { hex: '#FDCA7E' },
-  { hex: '#FE383C' },
+  { hex: "#C9425B" },
+  { hex: "#A93736" },
+  { hex: "#FDCA7E" },
+  { hex: "#FE383C" },
 ];
 
 function SectionTitle({ children }: { children: string }) {
@@ -61,7 +61,7 @@ function ColorSwatch({ hex, name, outline }: Swatch) {
   return (
     <View className="flex-1">
       <View
-        className={`h-14 rounded-xl ${outline ? 'border-[1.6px] border-black' : 'border border-black/10'}`}
+        className={`h-14 rounded-xl ${outline ? "border-[1.6px] border-black" : "border border-black/10"}`}
         style={{ backgroundColor: hex }}
       />
       <Text className="text-[11.5px] font-bold text-black mt-1.5 font-mono">

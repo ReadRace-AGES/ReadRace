@@ -1,5 +1,5 @@
-import React from 'react';
-import Svg, { Ellipse, Rect, Path } from 'react-native-svg';
+import React from "react";
+import Svg, { Ellipse, Rect, Path } from "react-native-svg";
 
 type ReadRaceLogoProps = {
   /** Largura e altura do logo (quadrado). @default 145 */
@@ -14,12 +14,7 @@ type ReadRaceLogoProps = {
  */
 export function ReadRaceLogo({ size = 145 }: ReadRaceLogoProps) {
   return (
-    <Svg
-      fill="none"
-      width={size}
-      height={size}
-      viewBox="0 0 145 145"
-    >
+    <Svg fill="none" width={size} height={size} viewBox="0 0 145 145">
       <Ellipse cx={48.083} cy={92.931} fill="#fdca7e" rx={25.721} ry={15.469} />
       <Ellipse cx={98.585} cy={92.38} fill="#fdca7e" rx={24.921} ry={16.699} />
       <Rect width={145} height={145} fill="#a93736" rx={33} />
