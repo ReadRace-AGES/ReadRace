@@ -40,9 +40,12 @@ USER appuser
 # Porta que o Spring Boot escuta
 EXPOSE 8080
 
-# Healthcheck interno do container
-HEALTHCHECK --interval=10s --timeout=5s --start-period=30s --retries=3 \
-  CMD ["java", "-cp", "app.jar", "org.springframework.boot.loader.launch.PropertiesLauncher"] || exit 1
+# Healthcheck interno do container.
+# Forma shell de propósito: com a forma exec (["..."]) o "|| exit 1" faz o
+# Docker desistir do parse JSON e passar o array inteiro como texto para o
+# shell — o healthcheck nunca passa e o container fica sempre "unhealthy".
+HEALTHCHECK --interval=15s --timeout=5s --start-period=40s --retries=3 \
+  CMD curl -fsS http://localhost:8080/actuator/health || exit 1
 
 # Ponto de entrada com otimizações de memória para containers
 ENTRYPOINT ["java", "-XX:+UseContainerSupport", "-XX:MaxRAMPercentage=75.0", "-jar", "app.jar"]
