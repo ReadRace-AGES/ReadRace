@@ -57,4 +57,31 @@ public class Exemplo {
     public String getDescricao() {
         return descricao;
     }
+
+    /**
+     * Igualdade pelo id, e só. Entidade ainda não persistida (id nulo) nunca é igual a outra — nem
+     * a si mesma vinda de outra referência.
+     *
+     * <p>Por isso não se usa {@code @Data} do Lombok em entidade: ele gera equals com todos os
+     * campos, e aí dois objetos "iguais" antes do save viram um só dentro de um Set.
+     */
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj) {
+            return true;
+        }
+        if (!(obj instanceof Exemplo outro)) {
+            return false;
+        }
+        return id != null && id.equals(outro.id);
+    }
+
+    /**
+     * Constante de propósito. Se o hashCode dependesse do id, o objeto mudaria de bucket ao ser
+     * persistido e sumiria de qualquer HashSet em que já estivesse.
+     */
+    @Override
+    public int hashCode() {
+        return getClass().hashCode();
+    }
 }
