@@ -147,7 +147,19 @@
 			<plugin>
 				<groupId>org.springframework.boot</groupId>
 				<artifactId>spring-boot-maven-plugin</artifactId>
+				<configuration>
+					<!--
+						./mvnw spring-boot:run sobe com o profile dev.
+						Isso vale só para execução local pelo Maven — não vai para o jar.
+						Em container e em produção, quem define o profile é a variável
+						SPRING_PROFILES_ACTIVE.
+					-->
+					<profiles>
+						<profile>dev</profile>
+					</profiles>
+				</configuration>
 			</plugin>
+
 			<plugin>
 				<groupId>com.diffplug.spotless</groupId>
 				<artifactId>spotless-maven-plugin</artifactId>
