@@ -30,10 +30,11 @@ import com.readrace.api.book.port.BookSearchPort;
  * comportamento de busca da Google Books API, incluindo os qualificadores de campo ({@code
  * intitle:}, {@code inauthor:}, {@code subject:}), paginação e busca por ID.
  *
- * <p>Ativado apenas com o profile {@code dev}. Em produção, o {@code GoogleBooksAdapter} é usado.
+ * <p>Ativado em qualquer ambiente que NÃO seja {@code prod} (dev, testes, sem profile). Apenas em
+ * produção o {@code GoogleBooksAdapter} assume o lugar.
  */
 @Component
-@Profile("dev")
+@Profile("!prod")
 public class LocalBooksAdapter implements BookSearchPort {
 
     private static final Logger log = LoggerFactory.getLogger(LocalBooksAdapter.class);

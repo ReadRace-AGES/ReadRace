@@ -161,14 +161,25 @@ Opcoes apos o start:
 
 ### Backend
 
-Os testes de integracao usam Testcontainers (sobe um PostgreSQL efemero via Docker automaticamente).
+A suite e dividida em dois grupos, e o sufixo do arquivo decide qual roda:
+
+| Sufixo | Ferramenta | O que e | Precisa de Docker |
+|--------|-----------|---------|-------------------|
+| `*Test` | Surefire | Teste unitario, sem contexto Spring | Nao |
+| `*IT` | Failsafe | Teste de integracao, contexto completo + PostgreSQL real via Testcontainers | Sim |
 
 ```bash
 cd backend
+
+# So os unitarios - rapido, nao precisa de Docker
 ./mvnw test
+
+# Tudo: unitarios + integracao + formatacao + cobertura. E o que o CI roda.
+./mvnw verify
 ```
 
-> Requisito: Docker precisa estar rodando para os testes de integracao funcionarem.
+O relatorio de cobertura sai em `backend/target/site/jacoco/index.html`. O build falha
+se a cobertura de linha cair abaixo do piso definido em `jacoco.linha.minima` no `pom.xml`.
 
 ### Mobile
 
@@ -222,7 +233,55 @@ Ambos usam path filter — so rodam se houver mudancas na pasta relevante.
 | `API_PORT` | 8080 | Porta exposta da API no host |
 | `SERVER_PORT` | 8080 | Porta interna do Spring Boot |
 | `SPRING_PROFILES_ACTIVE` | dev | Profile ativo do Spring |
+| `CORS_ALLOWED_ORIGINS` | *(vazio)* | Origens liberadas no CORS, separadas por virgula. Vazio bloqueia tudo; o profile `dev` libera `*` |
 
+---
+
+## Estrutura do projeto
+
+```
+ReadRace/
+├── .github/workflows/        # CI/CD (GitHub Actions)
+│   ├── backend-ci.yml
+│   └── mobile-ci.yml
+├── .env.example              # Template de variaveis de ambiente
+├── docker-compose.yml        # Orquestracao banco + API
+├── README.md
+├── backend/
+│   ├── Dockerfile            # Build multi-stage (JDK -> JRE)
+│   ├── .dockerignore
+│   ├── pom.xml               # Dependencias Maven + Spotless
+│   ├── mvnw / mvnw.cmd      # Maven Wrapper
+│   └── src/
+│       ├── main/
+│       │   ├── java/com/readrace/api/
+│       │   │   ├── ApiApplication.java
+│       │   │   ├── config/                 # CORS, OpenAPI, Jackson
+│       │   │   ├── book/                   # Modulo de livros (port/adapter/dto/service/controller)
+│       │   │   ├── controller/
+│       │   │   ├── dto/request/ + dto/response/
+│       │   │   ├── exception/
+│       │   │   ├── model/
+│       │   │   ├── repository/
+│       │   │   └── service/
+│       │   └── resources/
+│       │       ├── application.yaml        # comum a todos os ambientes
+│       │       ├── application-dev.yaml    # log de SQL e CORS aberto - so em dev
+│       │       ├── application-prod.yaml   # Google Books API key - so em prod
+│       │       ├── books-seed.json         # 60 livros do mock (ISBNs reais)
+│       │       └── db/migration/
+│       └── test/                           # *Test unitario, *IT integracao
+├── mobile/
+│   ├── app.json              # Configuracao do Expo
+│   ├── package.json
+│   ├── tsconfig.json         # TypeScript strict + path aliases
+│   ├── assets/               # Icones, splash, imagens
+│   └── src/
+│       ├── app/              # Rotas (file-based routing)
+│       ├── components/       # Componentes reutilizaveis
+│       ├── constants/        # Tema, cores, espacamentos
+│       └── hooks/            # Custom hooks
+```
 
 ---
 
@@ -322,5 +381,10 @@ Para confirmar o ambiente ativo, o titulo do Swagger mostra `[PROD]` e a fonte d
 - **DTOs**: records Java — Request (entrada com validacao), Response (saida com factory method)
 - **Excecoes**: tratadas globalmente via `@RestControllerAdvice` com `ProblemDetail` (RFC 9457)
 - **Spring Security**: desativado temporariamente ate implementacao do modulo de autenticacao
-- **CORS**: configurado para aceitar todas as origens em dev (restringir em prod)
+- **CORS**: fechado por padrao. Quem libera origem e a configuracao do ambiente, nunca o codigo -
+  o profile `dev` libera `*`, os demais usam `CORS_ALLOWED_ORIGINS`
+- **Profiles**: `application.yaml` guarda o que vale em todo ambiente; o que e so de desenvolvimento
+  (log de SQL, CORS aberto) fica em `application-dev.yaml`. `./mvnw spring-boot:run` e o Docker
+  Compose ja ativam `dev`
+- **Cobertura**: piso verificado pelo JaCoCo no `verify`, definido em `jacoco.linha.minima`
 - **Mobile routing**: expo-router (file-based, telas em `src/app/`)
