@@ -14,6 +14,7 @@ import java.util.regex.Pattern;
  *   <li>{@code intitle:} — restringe a busca ao título
  *   <li>{@code inauthor:} — restringe a busca ao autor
  *   <li>{@code subject:} — restringe a busca ao gênero/categoria
+ *   <li>{@code isbn:} — restringe a busca ao ISBN
  * </ul>
  *
  * <p>Exemplos:
@@ -22,6 +23,7 @@ import java.util.regex.Pattern;
  *   "intitle:senhor dos aneis"     → apenas no título
  *   "inauthor:tolkien"             → apenas no autor
  *   "subject:fantasia"             → apenas no gênero
+ *   "isbn:9786586064537"           → apenas no ISBN
  *   "intitle:harry inauthor:rowling" → título E autor
  *   "tolkien"                      → busca geral (todos os campos)
  * </pre>
@@ -33,21 +35,24 @@ import java.util.regex.Pattern;
 final class SearchQuery {
 
     private static final Pattern QUALIFIER_PATTERN =
-            Pattern.compile("(intitle|inauthor|subject):\"?([^\"]+?)\"?(?=\\s+\\w+:|$)");
+            Pattern.compile("(intitle|inauthor|subject|isbn):\"?([^\"]+?)\"?(?=\\s+\\w+:|$)");
 
     private final List<String> titleTerms;
     private final List<String> authorTerms;
     private final List<String> subjectTerms;
+    private final List<String> isbnTerms;
     private final String freeText;
 
     private SearchQuery(
             List<String> titleTerms,
             List<String> authorTerms,
             List<String> subjectTerms,
+            List<String> isbnTerms,
             String freeText) {
         this.titleTerms = titleTerms;
         this.authorTerms = authorTerms;
         this.subjectTerms = subjectTerms;
+        this.isbnTerms = isbnTerms;
         this.freeText = freeText;
     }
 
@@ -56,6 +61,7 @@ final class SearchQuery {
         List<String> titles = new ArrayList<>();
         List<String> authors = new ArrayList<>();
         List<String> subjects = new ArrayList<>();
+        List<String> isbns = new ArrayList<>();
 
         String remaining = rawQuery;
 
@@ -68,6 +74,7 @@ final class SearchQuery {
                 case "intitle" -> titles.add(value);
                 case "inauthor" -> authors.add(value);
                 case "subject" -> subjects.add(value);
+                case "isbn" -> isbns.add(value);
                 default -> {
                     // ignora qualificadores desconhecidos
                 }
@@ -78,12 +85,15 @@ final class SearchQuery {
 
         String freeText = remaining.trim();
 
-        return new SearchQuery(titles, authors, subjects, freeText);
+        return new SearchQuery(titles, authors, subjects, isbns, freeText);
     }
 
     /** Indica se a query não usa nenhum qualificador (busca geral em todos os campos). */
     boolean isGeneralSearch() {
-        return titleTerms.isEmpty() && authorTerms.isEmpty() && subjectTerms.isEmpty();
+        return titleTerms.isEmpty()
+                && authorTerms.isEmpty()
+                && subjectTerms.isEmpty()
+                && isbnTerms.isEmpty();
     }
 
     List<String> titleTerms() {
@@ -96,6 +106,10 @@ final class SearchQuery {
 
     List<String> subjectTerms() {
         return subjectTerms;
+    }
+
+    List<String> isbnTerms() {
+        return isbnTerms;
     }
 
     String freeText() {

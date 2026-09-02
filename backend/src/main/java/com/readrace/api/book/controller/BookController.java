@@ -24,6 +24,7 @@ import com.readrace.api.book.service.BookService;
  * GET /api/books/volumes?title=senhor+dos+aneis          → busca por título
  * GET /api/books/volumes?author=tolkien                  → busca por autor
  * GET /api/books/volumes?genre=fantasia                  → busca por gênero
+ * GET /api/books/volumes?isbn=9786586064537              → busca por ISBN
  * GET /api/books/volumes?author=rowling&genre=fantasia   → autor E gênero
  * GET /api/books/volumes?q=tolkien                       → busca livre (todos os campos)
  * GET /api/books/volumes/{volumeId}                      → busca por ID (200 | 404)
@@ -42,12 +43,13 @@ public class BookController {
     /**
      * Busca livros por título, autor, gênero ou texto livre.
      *
-     * <p>Pelo menos um dos parâmetros de busca ({@code title}, {@code author}, {@code genre} ou
-     * {@code q}) deve ser informado.
+     * <p>Pelo menos um dos parâmetros de busca ({@code title}, {@code author}, {@code genre},
+     * {@code isbn} ou {@code q}) deve ser informado.
      *
      * @param title termo a buscar no título (opcional)
      * @param author termo a buscar no autor (opcional)
      * @param genre termo a buscar no gênero/categoria (opcional)
+     * @param isbn ISBN do livro (opcional)
      * @param q busca livre em todos os campos (opcional)
      * @param maxResults máximo de resultados (1-40, padrão 10)
      * @param startIndex índice do primeiro resultado (padrão 0)
@@ -57,10 +59,11 @@ public class BookController {
             @RequestParam(required = false) String title,
             @RequestParam(required = false) String author,
             @RequestParam(required = false) String genre,
+            @RequestParam(required = false) String isbn,
             @RequestParam(required = false) String q,
             @RequestParam(required = false) Integer maxResults,
             @RequestParam(required = false) Integer startIndex) {
-        return bookService.search(title, author, genre, q, maxResults, startIndex);
+        return bookService.search(title, author, genre, isbn, q, maxResults, startIndex);
     }
 
     /** Busca um volume específico pelo ID. */

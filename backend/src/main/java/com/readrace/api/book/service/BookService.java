@@ -41,6 +41,7 @@ public class BookService {
      * @param title termo de título (opcional)
      * @param author termo de autor (opcional)
      * @param genre termo de gênero/categoria (opcional)
+     * @param isbn ISBN do livro (opcional)
      * @param freeText busca livre em todos os campos (opcional)
      * @param maxResults máximo de resultados (1-40, padrão 10)
      * @param startIndex índice do primeiro resultado (padrão 0)
@@ -50,15 +51,16 @@ public class BookService {
             String title,
             String author,
             String genre,
+            String isbn,
             String freeText,
             Integer maxResults,
             Integer startIndex) {
-        String query = buildQuery(title, author, genre, freeText);
+        String query = buildQuery(title, author, genre, isbn, freeText);
 
         if (query.isBlank()) {
             throw new ResponseStatusException(
                     HttpStatus.BAD_REQUEST,
-                    "Informe ao menos um filtro de busca: title, author, genre ou q");
+                    "Informe ao menos um filtro de busca: title, author, genre, isbn ou q");
         }
 
         int limit = clamp(maxResults, 1, MAX_RESULTS_LIMIT, MAX_RESULTS_DEFAULT);
@@ -89,7 +91,8 @@ public class BookService {
      * Monta a query no formato Google Books a partir dos filtros. Ex: title="senhor",
      * author="tolkien" vira {@code intitle:"senhor" inauthor:"tolkien"}.
      */
-    private String buildQuery(String title, String author, String genre, String freeText) {
+    private String buildQuery(
+            String title, String author, String genre, String isbn, String freeText) {
         List<String> parts = new ArrayList<>();
 
         if (isNotBlank(title)) {
@@ -100,6 +103,10 @@ public class BookService {
         }
         if (isNotBlank(genre)) {
             parts.add("subject:\"%s\"".formatted(genre.trim()));
+        }
+        if (isNotBlank(isbn)) {
+            // Remove hífens e espaços do ISBN (formato usado pela Google Books API)
+            parts.add("isbn:%s".formatted(isbn.trim().replaceAll("[\\s-]", "")));
         }
         if (isNotBlank(freeText)) {
             parts.add(freeText.trim());

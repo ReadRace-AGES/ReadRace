@@ -119,6 +119,7 @@ public class LocalBooksAdapter implements BookSearchPort {
         return matchesTitle(info, searchQuery.titleTerms())
                 && matchesAuthor(info, searchQuery.authorTerms())
                 && matchesSubject(info, searchQuery.subjectTerms())
+                && matchesIsbnTerms(info, searchQuery.isbnTerms())
                 && matchesGeneral(info, searchQuery.freeText());
     }
 
@@ -160,6 +161,11 @@ public class LocalBooksAdapter implements BookSearchPort {
     private boolean matchesSubject(VolumeInfo info, List<String> subjectTerms) {
         return subjectTerms.stream()
                 .allMatch(term -> anyContains(info.categories(), normalize(term)));
+    }
+
+    /** Todos os termos de ISBN precisam aparecer em algum identificador do livro. */
+    private boolean matchesIsbnTerms(VolumeInfo info, List<String> isbnTerms) {
+        return isbnTerms.stream().allMatch(term -> matchesIsbn(info, normalize(term)));
     }
 
     /** Verifica se o termo aparece em algum ISBN. */

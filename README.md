@@ -108,48 +108,6 @@ cd backend
 
 ---
 
-### Opcao 3 — Tudo local (sem Docker)
-
-Se por algum motivo nao puder usar Docker:
-
-1. Instale PostgreSQL 16 e crie o banco:
-```sql
-CREATE DATABASE readrace;
-CREATE USER readrace WITH PASSWORD 'readrace';
-GRANT ALL PRIVILEGES ON DATABASE readrace TO readrace;
-```
-
-2. Ajuste as variaveis no `.env` ou exporte:
-```bash
-export DB_URL=jdbc:postgresql://localhost:5432/readrace
-export DB_USER=readrace
-export DB_PASSWORD=readrace
-```
-
-3. Compile e rode:
-```bash
-cd backend
-./mvnw spring-boot:run
-```
-
----
-
-### Compilar o .jar sem executar
-
-```bash
-cd backend
-./mvnw clean package -DskipTests
-```
-
-O artefato sera gerado em `backend/target/api-0.0.1-SNAPSHOT.jar`.
-
-Para executar o .jar diretamente:
-```bash
-java -jar target/api-0.0.1-SNAPSHOT.jar
-```
-
----
-
 ## Mobile — Como rodar
 
 ### Problema comum no Windows: script bloqueado pelo PowerShell
@@ -265,49 +223,6 @@ Ambos usam path filter — so rodam se houver mudancas na pasta relevante.
 | `SERVER_PORT` | 8080 | Porta interna do Spring Boot |
 | `SPRING_PROFILES_ACTIVE` | dev | Profile ativo do Spring |
 
----
-
-## Estrutura do projeto
-
-```
-ReadRace/
-├── .github/workflows/        # CI/CD (GitHub Actions)
-│   ├── backend-ci.yml
-│   └── mobile-ci.yml
-├── .env.example              # Template de variaveis de ambiente
-├── docker-compose.yml        # Orquestracao banco + API
-├── README.md
-├── backend/
-│   ├── Dockerfile            # Build multi-stage (JDK -> JRE)
-│   ├── .dockerignore
-│   ├── pom.xml               # Dependencias Maven + Spotless
-│   ├── mvnw / mvnw.cmd      # Maven Wrapper
-│   └── src/
-│       ├── main/
-│       │   ├── java/com/readrace/api/
-│       │   │   ├── ApiApplication.java
-│       │   │   ├── config/                 # CORS, OpenAPI
-│       │   │   ├── controller/
-│       │   │   ├── dto/request/ + dto/response/
-│       │   │   ├── exception/
-│       │   │   ├── model/
-│       │   │   ├── repository/
-│       │   │   └── service/
-│       │   └── resources/
-│       │       ├── application.yaml
-│       │       └── db/migration/
-│       └── test/
-├── mobile/
-│   ├── app.json              # Configuracao do Expo
-│   ├── package.json
-│   ├── tsconfig.json         # TypeScript strict + path aliases
-│   ├── assets/               # Icones, splash, imagens
-│   └── src/
-│       ├── app/              # Rotas (file-based routing)
-│       ├── components/       # Componentes reutilizaveis
-│       ├── constants/        # Tema, cores, espacamentos
-│       └── hooks/            # Custom hooks
-```
 
 ---
 
@@ -348,6 +263,7 @@ Parametros de busca (informe ao menos um):
 | `title` | Busca no titulo | `?title=senhor dos aneis` |
 | `author` | Busca no autor | `?author=tolkien` |
 | `genre` | Busca no genero/categoria | `?genre=fantasia` |
+| `isbn` | Busca por ISBN (hifens e espacos sao ignorados) | `?isbn=9786586064537` |
 | `q` | Busca livre (todos os campos) | `?q=tolkien` |
 | `maxResults` | Max de resultados (1-40, padrao 10) | `?q=harry&maxResults=5` |
 | `startIndex` | Indice inicial (paginacao, padrao 0) | `?q=harry&startIndex=10` |
@@ -358,6 +274,40 @@ GET /api/books/volumes?author=tolkien&genre=fantasia
 ```
 
 O resultado segue o formato da Google Books API (`kind`, `totalItems`, `items[]`).
+
+### Usando a Google Books API real (profile prod)
+
+Em `dev`, a busca usa o mock local (60 livros). Para usar a Google Books API real, ative o profile `prod` e configure uma API key.
+
+#### Gerando a API key
+
+1. Acesse o [Google Cloud Console](https://console.cloud.google.com/)
+2. Crie um projeto (seletor no topo → **Novo Projeto**), ou use um existente
+3. Ative a API:
+   - Menu → **APIs e Serviços** → **Biblioteca**
+   - Pesquise por **Books API** e clique em **Ativar**
+4. Crie a credencial:
+   - Menu → **APIs e Serviços** → **Credenciais**
+   - **Criar credenciais** → **Chave de API**
+   - Na pergunta "Que dados você acessará?", escolha **Dados públicos**
+   - Copie a chave gerada (formato `AIzaSy...`)
+5. (Opcional, recomendado) Restrinja a chave:
+   - Clique na chave → **Restrições de API** → **Restringir chave** → marque apenas **Books API** → Salvar
+
+> O tier gratuito permite 1000 requisicoes por dia. Nao e necessario cartao de credito nem OAuth para dados publicos.
+
+#### Rodando em prod
+
+Via Docker (edite o `.env`):
+```
+SPRING_PROFILES_ACTIVE=prod
+GOOGLE_BOOKS_API_KEY=AIzaSy_sua_chave_aqui
+```
+```bash
+docker compose up --build
+```
+
+Para confirmar o ambiente ativo, o titulo do Swagger mostra `[PROD]` e a fonte de livros (Google Books API real). A chave nunca deve ser commitada — o `.env` esta no `.gitignore`.
 
 ---
 
