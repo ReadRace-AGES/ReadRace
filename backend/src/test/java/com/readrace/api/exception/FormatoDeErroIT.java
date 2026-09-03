@@ -16,22 +16,12 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.readrace.api.TestcontainersConfiguration;
 
-/**
- * O contrato de erro da issue #10: TODA resposta 4xx/5xx é um JSON {"code","message"}.
- *
- * <p>Um teste por caminho de erro. Se algum deles voltar a devolver HTML, corpo vazio ou o formato
- * antigo de ProblemDetail, quebra aqui — que é o ponto: o critério de validação #3 exige "never
- * stack traces or HTML".
- */
 @Import({TestcontainersConfiguration.class, FormatoDeErroIT.ControllerQueExplode.class})
 @SpringBootTest
 @AutoConfigureMockMvc
 @DisplayName("Formato padrão de erro")
 class FormatoDeErroIT {
-
     @Autowired private MockMvcTester mvc;
-
-    // ==================== 404 de negócio ====================
 
     @Test
     void deve_devolver_resource_not_found_quando_o_id_nao_existir() {
@@ -50,8 +40,6 @@ class FormatoDeErroIT {
                 .isEqualTo("Exemplo 999 não encontrado");
     }
 
-    // ==================== 404 de rota ====================
-
     @Test
     void deve_devolver_route_not_found_em_json_quando_a_rota_nao_existir() {
         assertThat(mvc.get().uri("/api/rota-que-nao-existe"))
@@ -60,8 +48,6 @@ class FormatoDeErroIT {
                 .extractingPath("$.code")
                 .isEqualTo("ROUTE_NOT_FOUND");
     }
-
-    // ==================== 400 ====================
 
     @Test
     void deve_devolver_validation_error_apontando_o_campo_reprovado() {
@@ -98,8 +84,6 @@ class FormatoDeErroIT {
                 .isEqualTo("MALFORMED_REQUEST");
     }
 
-    // ==================== 405 e 415 ====================
-
     @Test
     void deve_devolver_method_not_allowed_quando_o_verbo_nao_existir_na_rota() {
         assertThat(mvc.patch().uri("/api/exemplos"))
@@ -122,8 +106,6 @@ class FormatoDeErroIT {
                 .isEqualTo("UNSUPPORTED_MEDIA_TYPE");
     }
 
-    // ==================== 500 ====================
-
     @Test
     void deve_devolver_internal_error_quando_estourar_excecao_nao_prevista() {
         assertThat(mvc.get().uri("/teste/explode"))
@@ -133,7 +115,6 @@ class FormatoDeErroIT {
                 .isEqualTo("INTERNAL_ERROR");
     }
 
-    /** O detalhe técnico vai para o log, nunca para o cliente. */
     @Test
     void nao_deve_vazar_a_mensagem_interna_da_excecao_no_corpo_do_500() {
         assertThat(mvc.get().uri("/teste/explode"))
@@ -143,19 +124,12 @@ class FormatoDeErroIT {
                 .doesNotContain("senha do banco");
     }
 
-    // ==================== o corpo é sempre JSON ====================
-
     @Test
     void nunca_deve_devolver_html_em_resposta_de_erro() {
         assertThat(mvc.get().uri("/api/rota-que-nao-existe"))
                 .hasContentTypeCompatibleWith(MediaType.APPLICATION_JSON);
     }
 
-    /**
-     * A rota /error é o despachante interno do Tomcat: erro estourado num filtro (antes do
-     * DispatcherServlet) cai aqui, fora do alcance do @RestControllerAdvice. Sem tratamento próprio
-     * ela devolve a whitelabel page, em HTML.
-     */
     @Test
     void deve_devolver_json_tambem_na_rota_interna_de_erro() {
         assertThat(mvc.get().uri("/error"))
@@ -165,13 +139,8 @@ class FormatoDeErroIT {
                 .isEqualTo("INTERNAL_ERROR");
     }
 
-    /**
-     * Endpoint que só existe durante o teste: precisa de uma exceção não mapeada para provar o
-     * fallback de 500. Fica aqui, e não no código de produção, de propósito.
-     */
     @RestController
     static class ControllerQueExplode {
-
         @GetMapping("/teste/explode")
         String explode() {
             throw new IllegalStateException("detalhe interno com a senha do banco");

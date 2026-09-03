@@ -16,22 +16,11 @@ import org.springframework.test.web.servlet.assertj.MockMvcTester;
 import com.readrace.api.TestcontainersConfiguration;
 import com.readrace.api.service.HealthService;
 
-/**
- * O caminho triste do healthcheck: alguma dependência caiu.
- *
- * <p>A indisponibilidade é simulada trocando o {@link HealthService} por um mock, e não derrubando
- * o container do Testcontainers. Derrubar o banco de verdade envenenaria o contexto do Spring, que
- * é reaproveitado entre classes de teste — as outras suítes passariam a falhar por um motivo que
- * não é o delas.
- *
- * <p>O caminho feliz, contra o PostgreSQL real de pé, está em {@link HealthControllerIT}.
- */
 @Import(TestcontainersConfiguration.class)
 @SpringBootTest
 @AutoConfigureMockMvc
 @DisplayName("GET /api/health com dependência fora")
 class HealthIndisponivelIT {
-
     @MockitoBean private HealthService healthService;
 
     @Autowired private MockMvcTester mvc;

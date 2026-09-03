@@ -2,16 +2,6 @@ package com.readrace.api.exception;
 
 import org.springframework.http.HttpStatus;
 
-/**
- * O catálogo fechado de erros da API.
- *
- * <p>Existe para que o {@code code} da resposta seja estável: enquanto for enum, ninguém digita uma
- * string nova no meio de um service e cria um código que o mobile não conhece. Quer um erro novo?
- * Adiciona aqui, e o time vê no diff do PR.
- *
- * <p><b>Nome de constante publicado é contrato.</b> Renomear um valor daqui quebra o {@code if} do
- * app de quem já atualizou. Adicionar é seguro; renomear e remover, não.
- */
 public enum CodigoErro {
     RESOURCE_NOT_FOUND(HttpStatus.NOT_FOUND, "Recurso não encontrado."),
     ROUTE_NOT_FOUND(HttpStatus.NOT_FOUND, "Rota não encontrada."),
@@ -34,7 +24,6 @@ public enum CodigoErro {
         return status;
     }
 
-    /** Usada quando não há nada mais específico a dizer ao usuário. */
     public String mensagemPadrao() {
         return mensagemPadrao;
     }

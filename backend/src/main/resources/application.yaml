@@ -39,10 +39,6 @@ management:
 # ==================== ReadRace ====================
 readrace:
   usuario-seed:
-    # Sprint 1 roda sem autenticação: o UsuarioAtualProvider devolve este id
-    # fixo em toda requisição. Fica em configuração, e não hardcoded, para
-    # acompanhar o seed do banco (issue #13) e variar por ambiente.
-    # Some quando o módulo de autenticação entrar.
     id: ${USUARIO_SEED_ID:00000000-0000-0000-0000-000000000001}
 
   cors:

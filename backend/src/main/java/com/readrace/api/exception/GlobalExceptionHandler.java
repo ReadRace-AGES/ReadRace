@@ -18,39 +18,15 @@ import org.springframework.web.servlet.resource.NoResourceFoundException;
 
 import com.readrace.api.dto.response.ErroResponse;
 
-/**
- * O único lugar da aplicação que transforma exceção em resposta HTTP.
- *
- * <p>Consequência prática: <b>não existe try/catch em controller nem em service</b> para montar
- * resposta de erro. O service lança, isto aqui traduz. Se um caminho de erro novo aparecer, ele é
- * adicionado nesta classe — não espalhado.
- *
- * <p>Cobre tanto as exceções de domínio quanto as do próprio Spring MVC (rota inexistente, verbo
- * errado, JSON quebrado). Sem isso, o Spring devolveria o formato dele — ou corpo vazio — e o
- * critério de validação #3 da issue #10 ("nunca stack trace ou HTML") não seria verdade.
- */
 @RestControllerAdvice
 public class GlobalExceptionHandler {
-
     private static final Logger log = LoggerFactory.getLogger(GlobalExceptionHandler.class);
 
-    // ==================== Domínio ====================
-
-    /**
-     * Um handler para TODAS as exceções de negócio: cada uma já sabe o próprio código. Criar uma
-     * exceção nova não exige tocar nesta classe.
-     */
     @ExceptionHandler(ExcecaoDeNegocio.class)
     public ResponseEntity<ErroResponse> tratarNegocio(ExcecaoDeNegocio ex) {
         return resposta(ex.getCodigo(), ex.getMessage());
     }
 
-    // ==================== Requisição malformada ====================
-
-    /**
-     * Falha de @Valid. A message junta campo e motivo porque o contrato só tem duas chaves — o
-     * mobile mostra o texto direto, sem precisar interpretar um mapa.
-     */
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<ErroResponse> tratarValidacao(MethodArgumentNotValidException ex) {
         String mensagem =
@@ -61,16 +37,13 @@ public class GlobalExceptionHandler {
         return resposta(CodigoErro.VALIDATION_ERROR, mensagem);
     }
 
-    /** JSON sintaticamente quebrado, corpo ausente ou tipo incompatível dentro do JSON. */
     @ExceptionHandler(HttpMessageNotReadableException.class)
     public ResponseEntity<ErroResponse> tratarCorpoIlegivel(HttpMessageNotReadableException ex) {
-        // A mensagem original expõe nome de classe Java e posição no parser: fica no log.
         log.debug("Corpo da requisição ilegível", ex);
 
         return resposta(CodigoErro.MALFORMED_REQUEST, "Corpo da requisição inválido ou ausente.");
     }
 
-    /** Path variable ou query param com tipo errado: {@code /api/exemplos/abc} num id numérico. */
     @ExceptionHandler(MethodArgumentTypeMismatchException.class)
     public ResponseEntity<ErroResponse> tratarTipoInvalido(MethodArgumentTypeMismatchException ex) {
         return resposta(
@@ -86,12 +59,6 @@ public class GlobalExceptionHandler {
                 "O parâmetro '%s' é obrigatório.".formatted(ex.getParameterName()));
     }
 
-    // ==================== Rota, verbo e formato ====================
-
-    /**
-     * Rota que não existe. Sem este handler o Spring devolve 404 com corpo VAZIO, e o app não tem o
-     * que mostrar na tela.
-     */
     @ExceptionHandler(NoResourceFoundException.class)
     public ResponseEntity<ErroResponse> tratarRotaInexistente(NoResourceFoundException ex) {
         return resposta(
@@ -112,23 +79,12 @@ public class GlobalExceptionHandler {
         return resposta(CodigoErro.UNSUPPORTED_MEDIA_TYPE, "Envie o corpo como application/json.");
     }
 
-    // ==================== Rede de segurança ====================
-
-    /**
-     * Qualquer coisa não prevista acima. É o handler que garante o critério "nunca stack trace": o
-     * detalhe técnico vai INTEIRO para o log, e o cliente recebe uma mensagem genérica.
-     *
-     * <p>Vazar {@code ex.getMessage()} aqui seria um vazamento de informação — mensagem de exceção
-     * costuma carregar SQL, caminho de arquivo e, eventualmente, credencial.
-     */
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ErroResponse> tratarInesperado(Exception ex) {
         log.error("Exceção não tratada chegou ao handler global", ex);
 
         return resposta(CodigoErro.INTERNAL_ERROR, CodigoErro.INTERNAL_ERROR.mensagemPadrao());
     }
-
-    // ==================== Apoio ====================
 
     private ResponseEntity<ErroResponse> resposta(CodigoErro codigo, String mensagem) {
         return ResponseEntity.status(codigo.status()).body(ErroResponse.de(codigo, mensagem));

@@ -12,19 +12,11 @@ import org.springframework.test.web.servlet.assertj.MockMvcTester;
 
 import com.readrace.api.TestcontainersConfiguration;
 
-/**
- * O healthcheck público da API, exigido pela issue #10.
- *
- * <p>Não confundir com o {@code /actuator/health}: aquele é infraestrutura, checa o banco e é usado
- * pelo docker-compose. Este é contrato de API — o mobile pergunta "a API está de pé?" e recebe
- * sempre o mesmo JSON, sem depender do formato do Actuator.
- */
 @Import(TestcontainersConfiguration.class)
 @SpringBootTest
 @AutoConfigureMockMvc
 @DisplayName("GET /api/health")
 class HealthControllerIT {
-
     @Autowired private MockMvcTester mvc;
 
     @Test
