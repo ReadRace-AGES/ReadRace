@@ -15,14 +15,14 @@ class UsuarioAtualDeSeedTest {
 
     @Test
     void deve_devolver_sempre_o_id_configurado() {
-        UsuarioAtualProvider provider = new UsuarioAtualDeSeed(ID_DE_SEED);
+        UsuarioAtualDeSeed provider = new UsuarioAtualDeSeed(ID_DE_SEED);
 
         assertThat(provider.idDoUsuarioAtual()).isEqualTo(new UsuarioId(ID_DE_SEED));
     }
 
     @Test
     void deve_devolver_o_mesmo_id_em_chamadas_repetidas() {
-        UsuarioAtualProvider provider = new UsuarioAtualDeSeed(ID_DE_SEED);
+        UsuarioAtualDeSeed provider = new UsuarioAtualDeSeed(ID_DE_SEED);
 
         assertThat(provider.idDoUsuarioAtual()).isEqualTo(provider.idDoUsuarioAtual());
     }

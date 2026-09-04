@@ -8,14 +8,13 @@ import org.springframework.stereotype.Component;
 import com.readrace.api.model.UsuarioId;
 
 @Component
-public class UsuarioAtualDeSeed implements UsuarioAtualProvider {
+public class UsuarioAtualDeSeed {
     private final UsuarioId id;
 
     public UsuarioAtualDeSeed(@Value("${readrace.usuario-seed.id}") UUID id) {
         this.id = new UsuarioId(id);
     }
 
-    @Override
     public UsuarioId idDoUsuarioAtual() {
         return id;
     }

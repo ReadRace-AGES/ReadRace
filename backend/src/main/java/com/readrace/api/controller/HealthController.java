@@ -14,6 +14,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 @RestController
 @Tag(name = "Health", description = "Verificação de disponibilidade da API")
 public class HealthController {
+
     private final HealthService healthService;
 
     public HealthController(HealthService healthService) {

@@ -6,13 +6,13 @@ import com.readrace.api.dto.response.UsuarioAtualResponse;
 
 @Service
 public class UsuarioAtualService {
-    private final UsuarioAtualProvider usuarioAtualProvider;
+    private final UsuarioAtualDeSeed usuarioAtual;
 
-    public UsuarioAtualService(UsuarioAtualProvider usuarioAtualProvider) {
-        this.usuarioAtualProvider = usuarioAtualProvider;
+    public UsuarioAtualService(UsuarioAtualDeSeed usuarioAtual) {
+        this.usuarioAtual = usuarioAtual;
     }
 
     public UsuarioAtualResponse buscar() {
-        return UsuarioAtualResponse.de(usuarioAtualProvider.idDoUsuarioAtual());
+        return UsuarioAtualResponse.de(usuarioAtual.idDoUsuarioAtual());
     }
 }
