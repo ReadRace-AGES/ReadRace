@@ -62,15 +62,15 @@ class ExemploControllerIT {
     }
 
     @Test
-    void deve_devolver_404_em_problem_detail_quando_o_id_nao_existir() {
+    void deve_devolver_404_no_formato_padrao_quando_o_id_nao_existir() {
         assertThat(mvc.get().uri("/api/exemplos/{id}", 999L))
                 .hasStatus(HttpStatus.NOT_FOUND)
                 .bodyJson()
-                .extractingPath("$.title")
-                .isEqualTo("Recurso não encontrado");
+                .extractingPath("$.code")
+                .isEqualTo("RESOURCE_NOT_FOUND");
     }
 
-    /** A validação do @NotBlank tem que virar 400 com o nome do campo, não 500. */
+    /** A validação do @NotBlank tem que virar 400 apontando o campo, não 500. */
     @Test
     void deve_devolver_400_apontando_o_campo_quando_o_nome_for_vazio() {
         assertThat(
@@ -82,8 +82,8 @@ class ExemploControllerIT {
                                         {"nome":"","descricao":"sem nome"}"""))
                 .hasStatus(HttpStatus.BAD_REQUEST)
                 .bodyJson()
-                .extractingPath("$.campos.nome")
-                .isEqualTo("informe o nome");
+                .extractingPath("$.message")
+                .isEqualTo("nome: informe o nome");
     }
 
     /**
