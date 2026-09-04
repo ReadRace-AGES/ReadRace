@@ -108,48 +108,6 @@ cd backend
 
 ---
 
-### Opcao 3 — Tudo local (sem Docker)
-
-Se por algum motivo nao puder usar Docker:
-
-1. Instale PostgreSQL 16 e crie o banco:
-```sql
-CREATE DATABASE readrace;
-CREATE USER readrace WITH PASSWORD 'readrace';
-GRANT ALL PRIVILEGES ON DATABASE readrace TO readrace;
-```
-
-2. Ajuste as variaveis no `.env` ou exporte:
-```bash
-export DB_URL=jdbc:postgresql://localhost:5432/readrace
-export DB_USER=readrace
-export DB_PASSWORD=readrace
-```
-
-3. Compile e rode:
-```bash
-cd backend
-./mvnw spring-boot:run
-```
-
----
-
-### Compilar o .jar sem executar
-
-```bash
-cd backend
-./mvnw clean package -DskipTests
-```
-
-O artefato sera gerado em `backend/target/api-0.0.1-SNAPSHOT.jar`.
-
-Para executar o .jar diretamente:
-```bash
-java -jar target/api-0.0.1-SNAPSHOT.jar
-```
-
----
-
 ## Mobile — Como rodar
 
 ### Problema comum no Windows: script bloqueado pelo PowerShell
@@ -298,7 +256,8 @@ ReadRace/
 │       ├── main/
 │       │   ├── java/com/readrace/api/
 │       │   │   ├── ApiApplication.java
-│       │   │   ├── config/                 # CORS, OpenAPI
+│       │   │   ├── config/                 # CORS, OpenAPI, Jackson
+│       │   │   ├── book/                   # Modulo de livros (port/adapter/dto/service/controller)
 │       │   │   ├── controller/
 │       │   │   ├── dto/request/ + dto/response/
 │       │   │   ├── exception/
@@ -308,6 +267,8 @@ ReadRace/
 │       │   └── resources/
 │       │       ├── application.yaml        # comum a todos os ambientes
 │       │       ├── application-dev.yaml    # log de SQL e CORS aberto - so em dev
+│       │       ├── application-prod.yaml   # Google Books API key - so em prod
+│       │       ├── books-seed.json         # 60 livros do mock (ISBNs reais)
 │       │       └── db/migration/
 │       └── test/                           # *Test unitario, *IT integracao
 ├── mobile/
@@ -340,6 +301,8 @@ Todos os endpoints, DTOs e validacoes sao documentados automaticamente.
 | GET | /actuator/health | 200 | Status da aplicacao |
 | GET | /actuator/info | 200 | Informacoes da aplicacao |
 | GET | /swagger-ui.html | 200 | Documentacao interativa (Swagger) |
+| GET | /api/books/volumes | 200/400 | Busca de livros (ver abaixo) |
+| GET | /api/books/volumes/{id} | 200/404 | Busca livro por ID |
 | GET | /api/exemplos | 200 | Lista todos (boilerplate) |
 | GET | /api/exemplos/{id} | 200/404 | Busca por ID |
 | POST | /api/exemplos | 201/400 | Cria novo |
@@ -347,6 +310,63 @@ Todos os endpoints, DTOs e validacoes sao documentados automaticamente.
 | DELETE | /api/exemplos/{id} | 204/404 | Exclui |
 
 > Os endpoints `/api/exemplos` sao um boilerplate de referencia e serao substituidos pelas entidades reais do dominio.
+
+### Busca de livros
+
+A busca de livros funciona de forma **identica** no mock local (profile `dev`) e na Google Books API real (profile `prod`). O frontend usa a mesma interface nos dois ambientes.
+
+Parametros de busca (informe ao menos um):
+
+| Parametro | Descricao | Exemplo |
+|-----------|-----------|---------|
+| `title` | Busca no titulo | `?title=senhor dos aneis` |
+| `author` | Busca no autor | `?author=tolkien` |
+| `genre` | Busca no genero/categoria | `?genre=fantasia` |
+| `isbn` | Busca por ISBN (hifens e espacos sao ignorados) | `?isbn=9786586064537` |
+| `q` | Busca livre (todos os campos) | `?q=tolkien` |
+| `maxResults` | Max de resultados (1-40, padrao 10) | `?q=harry&maxResults=5` |
+| `startIndex` | Indice inicial (paginacao, padrao 0) | `?q=harry&startIndex=10` |
+
+Filtros podem ser combinados (E logico):
+```
+GET /api/books/volumes?author=tolkien&genre=fantasia
+```
+
+O resultado segue o formato da Google Books API (`kind`, `totalItems`, `items[]`).
+
+### Usando a Google Books API real (profile prod)
+
+Em `dev`, a busca usa o mock local (60 livros). Para usar a Google Books API real, ative o profile `prod` e configure uma API key.
+
+#### Gerando a API key
+
+1. Acesse o [Google Cloud Console](https://console.cloud.google.com/)
+2. Crie um projeto (seletor no topo → **Novo Projeto**), ou use um existente
+3. Ative a API:
+   - Menu → **APIs e Serviços** → **Biblioteca**
+   - Pesquise por **Books API** e clique em **Ativar**
+4. Crie a credencial:
+   - Menu → **APIs e Serviços** → **Credenciais**
+   - **Criar credenciais** → **Chave de API**
+   - Na pergunta "Que dados você acessará?", escolha **Dados públicos**
+   - Copie a chave gerada (formato `AIzaSy...`)
+5. (Opcional, recomendado) Restrinja a chave:
+   - Clique na chave → **Restrições de API** → **Restringir chave** → marque apenas **Books API** → Salvar
+
+> O tier gratuito permite 1000 requisicoes por dia. Nao e necessario cartao de credito nem OAuth para dados publicos.
+
+#### Rodando em prod
+
+Via Docker (edite o `.env`):
+```
+SPRING_PROFILES_ACTIVE=prod
+GOOGLE_BOOKS_API_KEY=AIzaSy_sua_chave_aqui
+```
+```bash
+docker compose up --build
+```
+
+Para confirmar o ambiente ativo, o titulo do Swagger mostra `[PROD]` e a fonte de livros (Google Books API real). A chave nunca deve ser commitada — o `.env` esta no `.gitignore`.
 
 ---
 

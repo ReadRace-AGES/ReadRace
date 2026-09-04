@@ -5,6 +5,10 @@
 #   * ./mvnw spring-boot:run  (o plugin já força o profile dev)
 #   * docker compose          (SPRING_PROFILES_ACTIVE=dev no .env)
 #
+# Usa o mock local de livros (LocalBooksAdapter), ativado pelo @Profile("dev").
+# O seed de livros está em books-seed.json no classpath. Não precisa de API key
+# do Google neste profile.
+#
 # Nada aqui deve valer em produção.
 # =============================================================
 
