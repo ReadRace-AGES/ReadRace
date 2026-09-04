@@ -1,6 +1,7 @@
 import React from "react";
 import { View, Text, ScrollView } from "react-native";
 import { ReadRaceLogo } from "../components/readracelogo";
+import { Avatar } from "../components/avatar";
 import "../../global.css";
 
 /**
@@ -169,6 +170,37 @@ export default function IdentidadeVisualScreen() {
           </Text>
           <Text className="text-[10px] text-neutral-500 tracking-wide mt-0.5">
             INTER — DISPLAY & TEXTO
+          </Text>
+        </View>
+
+        {/* AVATAR */}
+        <SectionTitle>Avatar</SectionTitle>
+        <View className="bg-[#EFEFEF] rounded-2xl px-4 py-5 gap-4">
+          <View className="flex-row items-center justify-between">
+            <Avatar name="Aninha07" photoUrl="https://i.pravatar.cc/150?img=5" />
+            <Avatar name="FBMB123" photoUrl="https://i.pravatar.cc/150?img=12" />
+            <Avatar name="Maria_L" />
+            <Avatar name="" />
+          </View>
+          <Text className="text-[10px] text-neutral-500">
+            Com foto · com foto · sem foto (inicial &quot;M&quot;) · nome vazio
+          </Text>
+
+          <Avatar
+            name="Maria_L"
+            photoUrl="https://url-invalida.exemplo/nao-existe.jpg"
+          />
+          <Text className="text-[10px] text-neutral-500 -mt-2">
+            Foto que falha ao carregar → cai para a inicial
+          </Text>
+
+          <View className="gap-2.5">
+            <Avatar name="Aninha07" photoUrl="https://i.pravatar.cc/150?img=5" streak={9} />
+            <Avatar name="Maria_L" streak="21 dias" />
+            <Avatar name="FBMB123" photoUrl="https://i.pravatar.cc/150?img=12" />
+          </View>
+          <Text className="text-[10px] text-neutral-500 -mt-2">
+            Com badge de sequência (número ou &quot;N dias&quot;) · sem badge
           </Text>
         </View>
       </ScrollView>
