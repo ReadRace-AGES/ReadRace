@@ -203,14 +203,25 @@ Opcoes apos o start:
 
 ### Backend
 
-Os testes de integracao usam Testcontainers (sobe um PostgreSQL efemero via Docker automaticamente).
+A suite e dividida em dois grupos, e o sufixo do arquivo decide qual roda:
+
+| Sufixo | Ferramenta | O que e | Precisa de Docker |
+|--------|-----------|---------|-------------------|
+| `*Test` | Surefire | Teste unitario, sem contexto Spring | Nao |
+| `*IT` | Failsafe | Teste de integracao, contexto completo + PostgreSQL real via Testcontainers | Sim |
 
 ```bash
 cd backend
+
+# So os unitarios - rapido, nao precisa de Docker
 ./mvnw test
+
+# Tudo: unitarios + integracao + formatacao + cobertura. E o que o CI roda.
+./mvnw verify
 ```
 
-> Requisito: Docker precisa estar rodando para os testes de integracao funcionarem.
+O relatorio de cobertura sai em `backend/target/site/jacoco/index.html`. O build falha
+se a cobertura de linha cair abaixo do piso definido em `jacoco.linha.minima` no `pom.xml`.
 
 ### Mobile
 
@@ -264,6 +275,7 @@ Ambos usam path filter — so rodam se houver mudancas na pasta relevante.
 | `API_PORT` | 8080 | Porta exposta da API no host |
 | `SERVER_PORT` | 8080 | Porta interna do Spring Boot |
 | `SPRING_PROFILES_ACTIVE` | dev | Profile ativo do Spring |
+| `CORS_ALLOWED_ORIGINS` | *(vazio)* | Origens liberadas no CORS, separadas por virgula. Vazio bloqueia tudo; o profile `dev` libera `*` |
 
 ---
 
@@ -294,9 +306,10 @@ ReadRace/
 │       │   │   ├── repository/
 │       │   │   └── service/
 │       │   └── resources/
-│       │       ├── application.yaml
+│       │       ├── application.yaml        # comum a todos os ambientes
+│       │       ├── application-dev.yaml    # log de SQL e CORS aberto - so em dev
 │       │       └── db/migration/
-│       └── test/
+│       └── test/                           # *Test unitario, *IT integracao
 ├── mobile/
 │   ├── app.json              # Configuracao do Expo
 │   ├── package.json
@@ -348,5 +361,10 @@ Todos os endpoints, DTOs e validacoes sao documentados automaticamente.
 - **DTOs**: records Java — Request (entrada com validacao), Response (saida com factory method)
 - **Excecoes**: tratadas globalmente via `@RestControllerAdvice` com `ProblemDetail` (RFC 9457)
 - **Spring Security**: desativado temporariamente ate implementacao do modulo de autenticacao
-- **CORS**: configurado para aceitar todas as origens em dev (restringir em prod)
+- **CORS**: fechado por padrao. Quem libera origem e a configuracao do ambiente, nunca o codigo -
+  o profile `dev` libera `*`, os demais usam `CORS_ALLOWED_ORIGINS`
+- **Profiles**: `application.yaml` guarda o que vale em todo ambiente; o que e so de desenvolvimento
+  (log de SQL, CORS aberto) fica em `application-dev.yaml`. `./mvnw spring-boot:run` e o Docker
+  Compose ja ativam `dev`
+- **Cobertura**: piso verificado pelo JaCoCo no `verify`, definido em `jacoco.linha.minima`
 - **Mobile routing**: expo-router (file-based, telas em `src/app/`)

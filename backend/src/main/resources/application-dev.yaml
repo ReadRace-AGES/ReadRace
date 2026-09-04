@@ -1,0 +1,24 @@
+# =============================================================
+# Profile: dev
+#
+# Ativado por:
+#   * ./mvnw spring-boot:run  (o plugin já força o profile dev)
+#   * docker compose          (SPRING_PROFILES_ACTIVE=dev no .env)
+#
+# Nada aqui deve valer em produção.
+# =============================================================
+
+readrace:
+  cors:
+    # Em dev o app roda em Expo web, emulador e device físico — cada um
+    # com uma origem diferente. Em produção, listar os domínios reais.
+    allowed-origins: "*"
+
+logging:
+  level:
+    # Mostra o SQL gerado pelo Hibernate durante o desenvolvimento.
+    org.hibernate.SQL: debug
+    # Mostra o VALOR de cada parâmetro da query. Útil para depurar,
+    # e exatamente por isso nunca pode subir em produção: quando houver
+    # autenticação, e-mail e hash de senha apareceriam no log.
+    org.hibernate.orm.jdbc.bind: trace

@@ -18,6 +18,11 @@
 
 	<properties>
 		<java.version>21</java.version>
+		<!--
+			Piso de cobertura de linha. Não é meta, é freio contra regressão:
+			hoje o projeto está em ~90%, então há folga. Subir a cada sprint.
+		-->
+		<jacoco.linha.minima>0.70</jacoco.linha.minima>
 	</properties>
 
 	<dependencies>
@@ -147,6 +152,80 @@
 			<plugin>
 				<groupId>org.springframework.boot</groupId>
 				<artifactId>spring-boot-maven-plugin</artifactId>
+				<configuration>
+					<!--
+						./mvnw spring-boot:run sobe com o profile dev.
+						Isso vale só para execução local pelo Maven — não vai para o jar.
+						Em container e em produção, quem define o profile é a variável
+						SPRING_PROFILES_ACTIVE.
+					-->
+					<profiles>
+						<profile>dev</profile>
+					</profiles>
+				</configuration>
+			</plugin>
+
+			<!--
+				Failsafe roda os testes de integração (*IT), que precisam de Docker.
+				Surefire continua rodando só os unitários (*Test).
+
+				Na prática:
+					./mvnw test     -> rápido, sem Docker
+					./mvnw verify   -> tudo, é o que o CI executa
+			-->
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-failsafe-plugin</artifactId>
+				<configuration>
+					<!-- Herda o agente do JaCoCo para os testes de integração contarem na cobertura -->
+					<argLine>${argLine}</argLine>
+				</configuration>
+			</plugin>
+
+			<!--
+				Cobertura de testes. O piso é baixo de propósito: serve para impedir
+				regressão, não para ser meta. Subir a cada sprint.
+			-->
+			<plugin>
+				<groupId>org.jacoco</groupId>
+				<artifactId>jacoco-maven-plugin</artifactId>
+				<version>0.8.13</version>
+				<executions>
+					<execution>
+						<id>prepare-agent</id>
+						<goals>
+							<goal>prepare-agent</goal>
+						</goals>
+					</execution>
+					<execution>
+						<id>report</id>
+						<phase>verify</phase>
+						<goals>
+							<goal>report</goal>
+						</goals>
+					</execution>
+					<execution>
+						<id>check</id>
+						<phase>verify</phase>
+						<goals>
+							<goal>check</goal>
+						</goals>
+						<configuration>
+							<rules>
+								<rule>
+									<element>BUNDLE</element>
+									<limits>
+										<limit>
+											<counter>LINE</counter>
+											<value>COVEREDRATIO</value>
+											<minimum>${jacoco.linha.minima}</minimum>
+										</limit>
+									</limits>
+								</rule>
+							</rules>
+						</configuration>
+					</execution>
+				</executions>
 			</plugin>
 			<plugin>
 				<groupId>com.diffplug.spotless</groupId>

@@ -36,7 +36,10 @@ management:
       probes:
         enabled: true
 
-logging:
-  level:
-    org.hibernate.SQL: debug
-    org.hibernate.orm.jdbc.bind: trace
+# ==================== ReadRace ====================
+readrace:
+  cors:
+    # Fechado por padrão. Cada ambiente declara as origens que libera —
+    # ver application-dev.yaml. Esquecer de configurar em produção deixa a
+    # API fechada, em vez de aberta para qualquer origem.
+    allowed-origins: ${CORS_ALLOWED_ORIGINS:}

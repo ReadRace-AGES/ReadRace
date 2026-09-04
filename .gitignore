@@ -13,4 +13,11 @@
 # Docker
 docker-compose.override.yml
 **/workspace.xml
-**/workspace.xml
+
+# Instruções de IA
+# Padrão sem barra casa em qualquer nível: pega CLAUDE.md da raiz,
+# backend/CLAUDE.md, mobile/CLAUDE.md e assim por diante.
+CLAUDE.md
+AGENTS.md
+GEMINI.md
+.claude/
