@@ -15,7 +15,7 @@ import com.readrace.api.dto.response.ErroResponse;
 public class ApiErrorController implements ErrorController {
     @RequestMapping("${server.error.path:${error.path:/error}}")
     public ResponseEntity<ErroResponse> tratar(HttpServletRequest request) {
-        CodigoErro codigo = codigoPara(statusDe(request));
+        CodigoErro codigo = CodigoErro.paraStatus(statusDe(request));
 
         return ResponseEntity.status(codigo.status()).body(ErroResponse.de(codigo));
     }
@@ -29,15 +29,5 @@ public class ApiErrorController implements ErrorController {
         HttpStatus resolvido = HttpStatus.resolve(Integer.parseInt(status.toString()));
 
         return resolvido != null ? resolvido : HttpStatus.INTERNAL_SERVER_ERROR;
-    }
-
-    private CodigoErro codigoPara(HttpStatus status) {
-        return switch (status) {
-            case NOT_FOUND -> CodigoErro.ROUTE_NOT_FOUND;
-            case METHOD_NOT_ALLOWED -> CodigoErro.METHOD_NOT_ALLOWED;
-            case UNSUPPORTED_MEDIA_TYPE -> CodigoErro.UNSUPPORTED_MEDIA_TYPE;
-            case BAD_REQUEST -> CodigoErro.MALFORMED_REQUEST;
-            default -> CodigoErro.INTERNAL_ERROR;
-        };
     }
 }

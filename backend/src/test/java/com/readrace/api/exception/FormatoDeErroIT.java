@@ -13,6 +13,7 @@ import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.assertj.MockMvcTester;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.server.ResponseStatusException;
 
 import com.readrace.api.TestcontainersConfiguration;
 
@@ -125,6 +126,23 @@ class FormatoDeErroIT {
     }
 
     @Test
+    void deve_respeitar_o_status_da_response_status_exception() {
+        assertThat(mvc.get().uri("/teste/response-status"))
+                .hasStatus(HttpStatus.BAD_REQUEST)
+                .bodyJson()
+                .extractingPath("$.code")
+                .isEqualTo("MALFORMED_REQUEST");
+    }
+
+    @Test
+    void deve_usar_o_motivo_da_response_status_exception_como_message() {
+        assertThat(mvc.get().uri("/teste/response-status"))
+                .bodyJson()
+                .extractingPath("$.message")
+                .isEqualTo("Filtro de busca ausente");
+    }
+
+    @Test
     void nunca_deve_devolver_html_em_resposta_de_erro() {
         assertThat(mvc.get().uri("/api/rota-que-nao-existe"))
                 .hasContentTypeCompatibleWith(MediaType.APPLICATION_JSON);
@@ -144,6 +162,11 @@ class FormatoDeErroIT {
         @GetMapping("/teste/explode")
         String explode() {
             throw new IllegalStateException("detalhe interno com a senha do banco");
+        }
+
+        @GetMapping("/teste/response-status")
+        String responseStatus() {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Filtro de busca ausente");
         }
     }
 }

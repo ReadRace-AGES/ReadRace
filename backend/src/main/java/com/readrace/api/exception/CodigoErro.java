@@ -27,4 +27,14 @@ public enum CodigoErro {
     public String mensagemPadrao() {
         return mensagemPadrao;
     }
+
+    public static CodigoErro paraStatus(HttpStatus status) {
+        return switch (status) {
+            case NOT_FOUND -> ROUTE_NOT_FOUND;
+            case METHOD_NOT_ALLOWED -> METHOD_NOT_ALLOWED;
+            case UNSUPPORTED_MEDIA_TYPE -> UNSUPPORTED_MEDIA_TYPE;
+            case BAD_REQUEST -> MALFORMED_REQUEST;
+            default -> INTERNAL_ERROR;
+        };
+    }
 }
