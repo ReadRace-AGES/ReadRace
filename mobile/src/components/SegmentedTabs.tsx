@@ -21,20 +21,20 @@ export function SegmentedTabs({ options, initialOption, onChange }: SegmentedTab
   }
 
   return (
-    <View className="flex-row self-stretch rounded-full bg-[#EFEFEF] p-1">
+    <View className="flex-row self-stretch rounded-pill bg-surface-muted p-1">
       {options.map((option) => {
         const ativa = option === selecionada;
         return (
           <Pressable
             key={option}
             onPress={() => selecionar(option)}
-            className={`flex-1 items-center justify-center rounded-full px-2 py-2 ${
-              ativa ? 'bg-white' : ''
+            className={`flex-1 items-center justify-center rounded-pill px-2 py-2 ${
+              ativa ? 'bg-surface' : ''
             }`}
           >
             <Text
               numberOfLines={1}
-              className={`text-sm font-bold ${ativa ? 'text-[#732634]' : 'text-[#B5B5B5]'}`}
+              className={`text-bodySmall font-inter-bold ${ativa ? 'text-primary' : 'text-text-secondary'}`}
             >
               {option}
             </Text>

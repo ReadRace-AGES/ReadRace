@@ -311,16 +311,108 @@ ReadRace/
 │       │       └── db/migration/
 │       └── test/                           # *Test unitario, *IT integracao
 ├── mobile/
-│   ├── app.json              # Configuracao do Expo
+│   ├── app.config.js         # Configuracao do Expo (le cores de src/theme/tokens)
+│   ├── tailwind.config.js    # Deriva as classes de src/theme/tokens
 │   ├── package.json
 │   ├── tsconfig.json         # TypeScript strict + path aliases
 │   ├── assets/               # Icones, splash, imagens
 │   └── src/
 │       ├── app/              # Rotas (file-based routing)
 │       ├── components/       # Componentes reutilizaveis
-│       ├── constants/        # Tema, cores, espacamentos
+│       ├── theme/            # Tokens de design - fonte unica de cor e medida
 │       └── hooks/            # Custom hooks
 ```
+
+---
+
+## Tema do app
+
+`mobile/src/theme/tokens.js` e a **fonte unica** de cor, tipografia, espacamento, raio, sombra e
+tamanho. `tailwind.config.js` e `app.config.js` derivam dele, entao trocar um valor la muda o app
+inteiro - classes Tailwind, estilos de `StyleSheet` e ate a cor da splash.
+
+A tela `identidadevisual` mostra todos os tokens renderizados; e por ela que se confere uma mudanca.
+
+### ⚠️ O Figma tem dois lotes de telas
+
+Os frames com **`node-id >= 2011`** foram feitos as pressas e **nao servem para extrair valor de
+design** - so como referencia de layout e fluxo:
+
+`2011-531` `2011-674` `2011-1204` `2011-1290` `2011-1454` `2011-1538` `2043-609` `2054-657`
+`2059-755` `2060-1726` `2060-1814` `2060-1910` - mais as copias `2082-*` e `2083-*`.
+
+Os frames **abaixo de 2011** sao do designer e sao a unica fonte valida. Todo valor da tabela
+abaixo saiu de um deles.
+
+### Cores
+
+| Token | Valor | Frame de origem |
+|---|---|---|
+| `primary` | `#732634` | `navbar` 34-322, cabecalho de `menu - comunidades` 3-7, botoes de 3-6 |
+| `primarySoft` | `#823E4A` | `navbar` 34-322 |
+| `accent` | `#C9425B` | coracao e "Ver todos" em `menu - social` 3-4, `card` 403-404 |
+| `surface` | `#FEFEFE` | titulo e campo em 3-7 e `menu - adicionar livro` 271-279 |
+| `surfaceMuted` | `#F5F5F5` | fundo do `card` 403-404 |
+| `surfaceAlt` | `#E4E4E4` | linha alternada do ranking, `menu - clube do livro` 3-6 |
+| `surfacePink` | `#F6E2E2` | bloco do post em `card` 403-404 - e `rgba(255,56,60,.1)` composto sobre `#F5F5F5` |
+| `surfacePinkStrong` | `#EFC7CF` | chip de conquista em `perfil` 270-230 |
+| `surfaceDisabled` | `#EDEDED` | conquista bloqueada em `perfil` 270-230 |
+| `overlay` | `rgba(0,0,0,0.65)` | camada sob o modal de `menu - adicionar livro` 271-279 |
+| `chipOnPrimary` | `rgba(255,255,255,0.11)` | chip "7 dias" sobre o cabecalho, 3-7 e 3-4 |
+| `border` | `#EEEEEE` | borda do `card` 403-404 |
+| `borderStrong` | `#D1D1D6` | separadores em `perfil` 270-230 |
+| `inputBorder` | `#CBD5E1` | campo de texto em `menu - adicionar livro` 271-279 |
+| `text` | `#1E1E1E` | corpo do `card` 403-404 |
+| `textSecondary` | `#888888` | "3h atras" em `card` 403-404 |
+| `textMuted` | `#A3A3A3` | conquista bloqueada em `perfil` 270-230 |
+| `textInverse` | `#FEFEFE` | titulo e subtitulo do cabecalho, 3-7 e 3-8 |
+| `navInactive*` | `#D98B9A` → `#AE7E86` | gradiente do icone inativo em `navbar` 34-322 |
+| `progressTrack` | `#D9D9D9` | trilha da barra em `desafios` 3-8 |
+| `rankGold/Silver/Bronze*` | ver `tokens.js` | 1o/2o/3o lugar em `menu - clube do livro` 3-6 |
+
+### Tipografia
+
+Familia **Inter**, nos pesos 400, 600, 700 e **800** (o titulo do cabecalho vermelho e ExtraBold).
+
+| Item | Valor | Origem |
+|---|---|---|
+| Escala | 32 / 24 / 20 / 18 / 16 / 14 / 12 / 10 | `card` 403-404, `desafios` 3-8, `menu - comunidades` 3-7 |
+| `lineHeight.normal` | `1.5` | 16px ocupa 24px, 14px ocupa 21px, 12px ocupa 18px (`card` 403-404) |
+| `lineHeight.heading` | `0.9` | titulo do cabecalho: 21.4px em fonte de 24px (3-7 e 3-8) |
+| `letterSpacingRatio` | `-0.011em` | `-0.176px`@16, `-0.154px`@14, `-0.132px`@12 (`card` 403-404) |
+
+### Medidas
+
+| Token | Valor | Origem |
+|---|---|---|
+| `buttonHeight` | `40` | `menu - comunidades` 3-7, `desafios` 3-8, `menu - adicionar livro` 271-279 |
+| `inputHeight` | `40` | campo em `menu - adicionar livro` 271-279 |
+| `navHeight` | `76` | instancia de `navbar` em 3-6, 3-7, 3-8 |
+| `headerHeight` | `192` | cabecalho vermelho em 3-7 e 3-8 |
+| `progressTrackHeight` | `8` | barra em `desafios` 3-8 |
+| `chipHeight` | `23` | chips de XP e dificuldade em `desafios` 3-8 |
+| `icon` / `iconSmall` | `24` / `16` | 3-6, 3-7, 3-8 |
+| `avatar` / `avatarLarge` | `40` / `50` | 39-42px em 3-6/3-8/403-404; 50px na lista de 3-7 |
+| `radius.xl` | `32` | cantos inferiores do cabecalho vermelho, 3-7 e 3-8 |
+| `radius.pill` | `9999` | botoes e barra de progresso |
+
+### Reconciliacoes deliberadas
+
+O design nao esta numa grade regular. Onde valores proximos significam a mesma coisa, o tema
+escolhe um so - e a decisao fica aqui em vez de ser rediscutida a cada componente:
+
+- **Espacamento** normalizado em multiplos de 4. O design usa 7, 10, 11, 15 e 23px em pontos
+  isolados (`card` 403-404, `menu - clube do livro` 3-6); o tema arredonda para 8, 12, 16 e 24.
+- **Altura do botao = 40.** Tres frames medem 40 (3-7, 3-8, 271-279) e um mede 47 (3-6, que
+  tambem usa botoes mais estreitos: 288px contra 325px dos demais). 40 e a maioria.
+- **Raio do campo de texto.** O Figma mede 6px em 271-279; o tema usa `radius.sm` (8) para nao
+  criar um degrau de 2px na escala.
+- **Avatar em dois tamanhos, nao um.** 39, 42 e 50px aparecem no design; 39 e 42 viram `avatar`
+  (40) e 50 vira `avatarLarge`, porque a diferenca de 10px e intencional.
+
+> **Sem valor inventado.** `success` e `danger` foram removidos do tema: eram o Material Green 500
+> e o Red 600, que nao aparecem em nenhum frame. Quando o design cobrir estados de sucesso e erro,
+> o valor entra medido.
 
 ---
 
@@ -368,3 +460,7 @@ Todos os endpoints, DTOs e validacoes sao documentados automaticamente.
   Compose ja ativam `dev`
 - **Cobertura**: piso verificado pelo JaCoCo no `verify`, definido em `jacoco.linha.minima`
 - **Mobile routing**: expo-router (file-based, telas em `src/app/`)
+- **Valores de design**: vem **so** de `mobile/src/theme/tokens.js`. Nenhuma cor, tamanho de fonte,
+  espacamento ou raio escrito direto no componente. Se faltar um token, abra issue no tema - **nao
+  meca o Figma**: parte das telas foi feita as pressas e nao serve de fonte (veja *Tema do app*).
+  O Figma e referencia visual; o tema e a fonte de verdade
