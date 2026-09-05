@@ -157,7 +157,6 @@ CREATE TABLE livro_genero (
 CREATE TABLE clube_do_livro (
     id UUID NOT NULL,
     livro_id UUID NOT NULL,
-    lider_id UUID NOT NULL,
     nome VARCHAR(120) NOT NULL,
     descricao TEXT,
     capa_url TEXT,
@@ -169,12 +168,6 @@ CREATE TABLE clube_do_livro (
     CONSTRAINT fk_clube_do_livro_livro
         FOREIGN KEY (livro_id)
         REFERENCES livro (id)
-        ON DELETE NO ACTION
-        ON UPDATE NO ACTION,
-
-    CONSTRAINT fk_clube_do_livro_lider
-        FOREIGN KEY (lider_id)
-        REFERENCES usuario (id)
         ON DELETE NO ACTION
         ON UPDATE NO ACTION
 );
@@ -479,6 +472,9 @@ CREATE TABLE desafio_amigo (
 
     CONSTRAINT chk_desafio_amigo_periodo
         CHECK (fim_em > inicio_em),
+
+    CONSTRAINT chk_desafio_amigo_livro_por_tipo
+        CHECK (tipo_meta <> 'livro' OR livro_id IS NOT NULL),
 
     CONSTRAINT fk_desafio_amigo_criador
         FOREIGN KEY (criador_id)
