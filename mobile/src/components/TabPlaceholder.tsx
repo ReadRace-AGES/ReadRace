@@ -1,5 +1,5 @@
 import { router } from 'expo-router';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { Pressable, Text, View } from 'react-native';
 
 type TabPlaceholderProps = {
   title: string;
@@ -7,44 +7,15 @@ type TabPlaceholderProps = {
 
 export function TabPlaceholder({ title }: TabPlaceholderProps) {
   return (
-    <View style={styles.container}>
-      <Text style={styles.title}>{title}</Text>
-      <Text style={styles.subtitle}>Tela raiz da aba</Text>
-      <Pressable style={styles.button} onPress={() => router.push('../teste')}>
-        <Text style={styles.buttonText}>Abrir tela de teste</Text>
+    <View className="flex-1 items-center justify-center bg-[#FEFEFE] p-6">
+      <Text className="text-[28px] font-bold text-[#732634]">{title}</Text>
+      <Text className="mt-2 text-[16px] text-[#666666]">Tela raiz da aba</Text>
+      <Pressable
+        className="mt-6 rounded-lg bg-[#732634] px-[18px] py-3"
+        onPress={() => router.push('../teste')}
+      >
+        <Text className="text-[15px] font-semibold text-white">Abrir tela de teste</Text>
       </Pressable>
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    alignItems: 'center',
-    backgroundColor: '#FEFEFE',
-    flex: 1,
-    justifyContent: 'center',
-    padding: 24,
-  },
-  title: {
-    color: '#732634',
-    fontSize: 28,
-    fontWeight: '700',
-  },
-  subtitle: {
-    color: '#666666',
-    fontSize: 16,
-    marginTop: 8,
-  },
-  button: {
-    backgroundColor: '#732634',
-    borderRadius: 8,
-    marginTop: 24,
-    paddingHorizontal: 18,
-    paddingVertical: 12,
-  },
-  buttonText: {
-    color: '#FFFFFF',
-    fontSize: 15,
-    fontWeight: '600',
-  },
-});

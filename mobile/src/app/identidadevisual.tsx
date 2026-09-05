@@ -1,7 +1,5 @@
-import React from "react";
 import { View, Text, ScrollView } from "react-native";
-import { ReadRaceLogo } from "../components/readracelogo";
-import "../../global.css";
+import { ReadRaceLogo } from "@/components/readracelogo";
 
 /**
  * Tela interna de referência (dev/design) com o glossário de
