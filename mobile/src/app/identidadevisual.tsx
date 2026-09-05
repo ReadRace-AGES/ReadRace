@@ -18,9 +18,10 @@ const COLOR_GROUPS: { title: string; names: ColorName[] }[] = [
       'surfacePinkStrong',
       'surfaceDisabled',
       'overlay',
+      'chipOnPrimary',
     ],
   },
-  { title: 'Bordas', names: ['border', 'borderStrong'] },
+  { title: 'Bordas', names: ['border', 'borderStrong', 'inputBorder'] },
   { title: 'Texto', names: ['text', 'textSecondary', 'textMuted', 'textInverse'] },
   { title: 'Navegação', names: ['navInactiveStart', 'navInactive', 'navInactiveEnd'] },
   {
@@ -35,11 +36,11 @@ const COLOR_GROUPS: { title: string; names: ColorName[] }[] = [
       'rankBronzeEnd',
     ],
   },
-  { title: 'Estado', names: ['success', 'danger'] },
 ];
 
 const TEXT_SAMPLES: { name: keyof typeof textStyles; sample: string }[] = [
   { name: 'display', sample: '145' },
+  { name: 'headerTitle', sample: 'Olá, Sate!' },
   { name: 'h1', sample: 'Olá, Sate!' },
   { name: 'h2', sample: 'Clube do Livro Quarta-Feira' },
   { name: 'h3', sample: 'Meus Grupos' },
