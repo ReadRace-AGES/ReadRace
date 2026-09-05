@@ -1,4 +1,20 @@
 :root {
+  /* Cores da identidade visual do ReadRace */
+  --color-primary: #732634;
+  --color-primary-tint-80: #a15a68;
+  --color-primary-tint-60: #bb8891;
+  --color-primary-tint-40: #d3b3b9;
+  --color-background: #fefefe;
+  --color-neutral-black: #000000;
+  --color-neutral-gray: #b5b5b5;
+  --color-neutral-light: #efefef;
+  --color-neutral-white: #ffffff;
+  --color-accent-pink: #c9425b;
+  --color-accent-red-dark: #a93736;
+  --color-accent-yellow: #fdca7e;
+  --color-accent-red: #fe383c;
+
+  /* Escala tipografica usada na identidade visual */
   --font-display:
     Spline Sans, Inter, ui-sans-serif, system-ui, sans-serif, Apple Color Emoji,
     Segoe UI Emoji, Segoe UI Symbol, Noto Color Emoji;
@@ -9,4 +25,11 @@
     "SF Pro Rounded", "Hiragino Maru Gothic ProN", Meiryo, "MS PGothic",
     sans-serif;
   --font-serif: Georgia, "Times New Roman", serif;
+
+  /* Medidas recorrentes da identidade visual */
+  --radius-small: 8px;
+  --radius-medium: 16px;
+  --radius-large: 24px;
+  --spacing-section: 24px;
+  --spacing-content: 20px;
 }

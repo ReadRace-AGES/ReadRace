@@ -1,7 +1,5 @@
 import { Redirect } from "expo-router";
 
-//redireciona para outras telas (não é tela visual)
-
 export default function Index() {
-  return <Redirect href="../identidadevisual" />;
+  return <Redirect href="../(tabs)/feed" />;
 }
