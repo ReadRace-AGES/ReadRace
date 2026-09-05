@@ -27,6 +27,9 @@ export default function RootLayout() {
         headerShown: false,
         contentStyle: { backgroundColor: colors.surface },
       }}
-    />
+    >
+      <Stack.Screen name="(tabs)" />
+      <Stack.Screen name="teste" options={{ headerShown: true, title: 'Tela de teste' }} />
+    </Stack>
   );
 }

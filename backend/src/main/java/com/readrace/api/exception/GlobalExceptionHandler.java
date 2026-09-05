@@ -1,44 +1,111 @@
 package com.readrace.api.exception;
 
-import java.util.LinkedHashMap;
-import java.util.Map;
+import java.util.stream.Collectors;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.ProblemDetail;
+import org.springframework.http.ResponseEntity;
+import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.validation.FieldError;
+import org.springframework.web.HttpMediaTypeNotSupportedException;
+import org.springframework.web.HttpRequestMethodNotSupportedException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
+import org.springframework.web.bind.MissingServletRequestParameterException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
+import org.springframework.web.server.ResponseStatusException;
+import org.springframework.web.servlet.resource.NoResourceFoundException;
+
+import com.readrace.api.dto.response.ErroResponse;
 
 @RestControllerAdvice
 public class GlobalExceptionHandler {
+    private static final Logger log = LoggerFactory.getLogger(GlobalExceptionHandler.class);
 
-    @ExceptionHandler(RecursoNaoEncontradoException.class)
-    public ProblemDetail tratarNaoEncontrado(RecursoNaoEncontradoException ex) {
-        return problema(HttpStatus.NOT_FOUND, "Recurso não encontrado", ex.getMessage());
+    @ExceptionHandler(ExcecaoDeNegocio.class)
+    public ResponseEntity<ErroResponse> tratarNegocio(ExcecaoDeNegocio ex) {
+        return resposta(ex.getCodigo(), ex.getMessage());
     }
 
     @ExceptionHandler(MethodArgumentNotValidException.class)
-    public ProblemDetail tratarValidacao(MethodArgumentNotValidException ex) {
-        ProblemDetail problema =
-                problema(
-                        HttpStatus.BAD_REQUEST,
-                        "Dados inválidos",
-                        "Um ou mais campos não passaram na validação.");
+    public ResponseEntity<ErroResponse> tratarValidacao(MethodArgumentNotValidException ex) {
+        String mensagem =
+                ex.getBindingResult().getFieldErrors().stream()
+                        .map(this::descrever)
+                        .collect(Collectors.joining("; "));
 
-        Map<String, String> campos = new LinkedHashMap<>();
-        for (FieldError erro : ex.getBindingResult().getFieldErrors()) {
-            campos.put(erro.getField(), erro.getDefaultMessage());
-        }
-        problema.setProperty("campos", campos);
-
-        return problema;
+        return resposta(CodigoErro.VALIDATION_ERROR, mensagem);
     }
 
-    private ProblemDetail problema(HttpStatus status, String titulo, String detalhe) {
-        ProblemDetail problema = ProblemDetail.forStatusAndDetail(status, detalhe);
+    @ExceptionHandler(HttpMessageNotReadableException.class)
+    public ResponseEntity<ErroResponse> tratarCorpoIlegivel(HttpMessageNotReadableException ex) {
+        log.debug("Corpo da requisição ilegível", ex);
 
-        problema.setTitle(titulo);
-        return problema;
+        return resposta(CodigoErro.MALFORMED_REQUEST, "Corpo da requisição inválido ou ausente.");
+    }
+
+    @ExceptionHandler(MethodArgumentTypeMismatchException.class)
+    public ResponseEntity<ErroResponse> tratarTipoInvalido(MethodArgumentTypeMismatchException ex) {
+        return resposta(
+                CodigoErro.MALFORMED_REQUEST,
+                "O valor de '%s' não está no formato esperado.".formatted(ex.getName()));
+    }
+
+    @ExceptionHandler(MissingServletRequestParameterException.class)
+    public ResponseEntity<ErroResponse> tratarParametroAusente(
+            MissingServletRequestParameterException ex) {
+        return resposta(
+                CodigoErro.MALFORMED_REQUEST,
+                "O parâmetro '%s' é obrigatório.".formatted(ex.getParameterName()));
+    }
+
+    @ExceptionHandler(NoResourceFoundException.class)
+    public ResponseEntity<ErroResponse> tratarRotaInexistente(NoResourceFoundException ex) {
+        return resposta(
+                CodigoErro.ROUTE_NOT_FOUND,
+                "Rota não encontrada: %s".formatted(ex.getResourcePath()));
+    }
+
+    @ExceptionHandler(HttpRequestMethodNotSupportedException.class)
+    public ResponseEntity<ErroResponse> tratarVerboInvalido(
+            HttpRequestMethodNotSupportedException ex) {
+        return resposta(
+                CodigoErro.METHOD_NOT_ALLOWED,
+                "O método %s não é aceito nesta rota.".formatted(ex.getMethod()));
+    }
+
+    @ExceptionHandler(HttpMediaTypeNotSupportedException.class)
+    public ResponseEntity<ErroResponse> tratarMidiaInvalida(HttpMediaTypeNotSupportedException ex) {
+        return resposta(CodigoErro.UNSUPPORTED_MEDIA_TYPE, "Envie o corpo como application/json.");
+    }
+
+    @ExceptionHandler(ResponseStatusException.class)
+    public ResponseEntity<ErroResponse> tratarStatusExplicito(ResponseStatusException ex) {
+        HttpStatus status = HttpStatus.resolve(ex.getStatusCode().value());
+
+        if (status == null) {
+            status = HttpStatus.INTERNAL_SERVER_ERROR;
+        }
+        CodigoErro codigo = CodigoErro.paraStatus(status);
+        String mensagem = ex.getReason() != null ? ex.getReason() : codigo.mensagemPadrao();
+
+        return ResponseEntity.status(status).body(ErroResponse.de(codigo, mensagem));
+    }
+
+    @ExceptionHandler(Exception.class)
+    public ResponseEntity<ErroResponse> tratarInesperado(Exception ex) {
+        log.error("Exceção não tratada chegou ao handler global", ex);
+
+        return resposta(CodigoErro.INTERNAL_ERROR, CodigoErro.INTERNAL_ERROR.mensagemPadrao());
+    }
+
+    private ResponseEntity<ErroResponse> resposta(CodigoErro codigo, String mensagem) {
+        return ResponseEntity.status(codigo.status()).body(ErroResponse.de(codigo, mensagem));
+    }
+
+    private String descrever(FieldError erro) {
+        return "%s: %s".formatted(erro.getField(), erro.getDefaultMessage());
     }
 }
