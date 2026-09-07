@@ -17,6 +17,13 @@ const PILL_SHADOW = [
   { offsetX: 0, offsetY: -2, blurRadius: 4, color: "rgba(0,0,0,0.07)" },
 ];
 
+// A pill tem paddingHorizontal: 25 e columnGap: 24 entre ícones.
+// GAP_HIT_SLOP (12 = 24/2) cobre exatamente o vão entre duas abas vizinhas.
+// EDGE_HIT_SLOP (25) estende a primeira/última aba até a borda externa da pill,
+// senão sobra uma faixa morta de 13px (25 - 12) nas pontas da barra.
+const GAP_HIT_SLOP = 12;
+const EDGE_HIT_SLOP = 25;
+
 type IconComponent = ComponentType<{ active: boolean; size?: number }>;
 
 type TabDefinition = {
@@ -33,8 +40,16 @@ const TAB_ORDER: readonly TabDefinition[] = [
   { routeName: "perfil", Icon: PersonTabIcon, accessibilityLabel: "Perfil" },
 ];
 
-export function BottomTabBar({ state, descriptors, navigation, insets }: BottomTabBarProps) {
+type RouteOf<Props> = Props extends { state: { routes: readonly (infer R)[] } } ? R : never;
+type TabWithRoute = TabDefinition & { route: RouteOf<BottomTabBarProps> };
+
+export function BottomTabBar({ state, navigation, insets }: BottomTabBarProps) {
   const focusedRouteName = state.routes[state.index]?.name;
+
+  const visibleTabs: TabWithRoute[] = TAB_ORDER.map((tab) => ({
+    ...tab,
+    route: state.routes.find((r) => r.name === tab.routeName),
+  })).filter((tab): tab is TabWithRoute => tab.route !== undefined);
 
   return (
     <View className="items-center px-5" style={{ paddingTop: 12, paddingBottom: insets.bottom || 22 }}>
@@ -49,12 +64,10 @@ export function BottomTabBar({ state, descriptors, navigation, insets }: BottomT
           boxShadow: PILL_SHADOW,
         }}
       >
-        {TAB_ORDER.map((tab) => {
-          const route = state.routes.find((r) => r.name === tab.routeName);
-          if (!route) return null;
-
-          const isFocused = focusedRouteName === tab.routeName;
-          const Icon = tab.Icon;
+        {visibleTabs.map(({ route, Icon, accessibilityLabel, routeName }, index) => {
+          const isFocused = focusedRouteName === routeName;
+          const isFirst = index === 0;
+          const isLast = index === visibleTabs.length - 1;
 
           const onPress = () => {
             const event = navigation.emit({
@@ -64,7 +77,7 @@ export function BottomTabBar({ state, descriptors, navigation, insets }: BottomT
             });
 
             if (!isFocused && !event.defaultPrevented) {
-              navigation.navigate(route.name, route.params);
+              navigation.navigate(routeName, route.params);
             }
           };
 
@@ -72,10 +85,15 @@ export function BottomTabBar({ state, descriptors, navigation, insets }: BottomT
             <Pressable
               key={route.key}
               onPress={onPress}
-              hitSlop={12}
+              hitSlop={{
+                top: GAP_HIT_SLOP,
+                bottom: GAP_HIT_SLOP,
+                left: isFirst ? EDGE_HIT_SLOP : GAP_HIT_SLOP,
+                right: isLast ? EDGE_HIT_SLOP : GAP_HIT_SLOP,
+              }}
               accessibilityRole="button"
               accessibilityState={isFocused ? { selected: true } : {}}
-              accessibilityLabel={tab.accessibilityLabel}
+              accessibilityLabel={accessibilityLabel}
               className="items-center justify-center"
             >
               <Icon active={isFocused} size={22} />
