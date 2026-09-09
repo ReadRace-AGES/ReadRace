@@ -22,6 +22,9 @@ public class Usuario {
     @Column(name = "avatar_url", columnDefinition = "text")
     private String avatarUrl;
 
+    @Column(nullable = false)
+    private Integer nivel;
+
     protected Usuario() {}
 
     public UUID getId() {
@@ -38,5 +41,23 @@ public class Usuario {
 
     public String getAvatarUrl() {
         return avatarUrl;
+    }
+
+    public Integer getNivel() {
+        return nivel;
+    }
+
+    public String getTitulo() {
+        if (nivel <= 10) {
+            return "Leitor iniciante";
+        } else if (nivel <= 20) {
+            return "Leitor explorador";
+        } else if (nivel <= 30) {
+            return "Leitor dedicado";
+        } else if (nivel <= 40) {
+            return "Leitor experiente";
+        } else {
+            return "Mestre da leitura";
+        }
     }
 }
