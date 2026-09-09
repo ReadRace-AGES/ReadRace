@@ -13,8 +13,7 @@ import jakarta.persistence.Table;
 @Table(name = "livro_autor")
 public class LivroAutor {
 
-    @EmbeddedId
-    private LivroAutorId id;
+    @EmbeddedId private LivroAutorId id;
 
     @MapsId("livroId")
     @ManyToOne(fetch = FetchType.LAZY, optional = false)

@@ -1,22 +1,21 @@
 package com.readrace.api.model;
 
-import java.util.UUID;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
-import jakarta.persistence.Table;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.OrderBy;
+import jakarta.persistence.Table;
 
 @Entity
 @Table(name = "livro")
 public class Livro {
 
-    @Id
-    private UUID id;
+    @Id private UUID id;
 
     @Column(nullable = false, length = 255)
     private String titulo;

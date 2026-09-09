@@ -43,8 +43,7 @@ public class LivroAutorId implements Serializable {
             return false;
         }
 
-        return Objects.equals(livroId, outro.livroId)
-                && Objects.equals(autorId, outro.autorId);
+        return Objects.equals(livroId, outro.livroId) && Objects.equals(autorId, outro.autorId);
     }
 
     @Override

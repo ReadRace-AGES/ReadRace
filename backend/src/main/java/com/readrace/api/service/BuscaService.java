@@ -39,7 +39,8 @@ public class BuscaService {
     public BuscaResponse<?> buscar(String termo, String tipo) {
 
         if (termo == null || termo.isEmpty()) {
-            throw new ParametroInvalidoException( "O parâmetro 'q' é obrigatório e deve ter pelo menos 1 caractere.");
+            throw new ParametroInvalidoException(
+                    "O parâmetro 'q' é obrigatório e deve ter pelo menos 1 caractere.");
         }
 
         TipoBusca tipoBusca = TipoBusca.de(tipo);
@@ -55,7 +56,10 @@ public class BuscaService {
             return new BuscaResponse<>(tipoBusca.getValor(), itens);
         } else if (tipoBusca == TipoBusca.USUARIOS) {
 
-            List<Usuario> usuarios = usuarioRepository.findByNomeContainingIgnoreCaseOrNomeUsuarioContainingIgnoreCase(termo, termo);
+            List<Usuario> usuarios =
+                    usuarioRepository
+                            .findByNomeContainingIgnoreCaseOrNomeUsuarioContainingIgnoreCase(
+                                    termo, termo);
             List<UsuarioBuscaResponse> itens = new ArrayList<>();
 
             for (Usuario usuario : usuarios) {
@@ -65,7 +69,8 @@ public class BuscaService {
             return new BuscaResponse<>(tipoBusca.getValor(), itens);
         } else {
 
-            List<Comunidade> comunidades = comunidadeRepository.findByNomeContainingIgnoreCase(termo);
+            List<Comunidade> comunidades =
+                    comunidadeRepository.findByNomeContainingIgnoreCase(termo);
             List<ComunidadeBuscaResponse> itens = new ArrayList<>();
 
             for (Comunidade comunidade : comunidades) {

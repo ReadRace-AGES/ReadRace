@@ -24,6 +24,7 @@ public enum TipoBusca {
             }
         }
 
-        throw new ParametroInvalidoException("O parâmetro 'tipo' deve ser livros, usuarios ou comunidades.");
+        throw new ParametroInvalidoException(
+                "O parâmetro 'tipo' deve ser livros, usuarios ou comunidades.");
     }
 }

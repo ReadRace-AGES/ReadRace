@@ -4,11 +4,7 @@ import java.util.UUID;
 
 import com.readrace.api.model.Usuario;
 
-public record UsuarioBuscaResponse(
-        UUID id,
-        String nome,
-        String username,
-        String avatar) {
+public record UsuarioBuscaResponse(UUID id, String nome, String username, String avatar) {
 
     public static UsuarioBuscaResponse de(Usuario usuario) {
         return new UsuarioBuscaResponse(

@@ -6,11 +6,7 @@ import java.util.stream.Collectors;
 import com.readrace.api.model.Livro;
 
 public record LivroBuscaResponse(
-        UUID id,
-        String titulo,
-        String autor,
-        String capa,
-        Integer totalPaginas) {
+        UUID id, String titulo, String autor, String capa, Integer totalPaginas) {
 
     public static LivroBuscaResponse de(Livro livro) {
         String autores =

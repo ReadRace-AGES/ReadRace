@@ -4,11 +4,7 @@ import java.util.UUID;
 
 import com.readrace.api.model.Comunidade;
 
-public record ComunidadeBuscaResponse(
-        UUID id,
-        String nome,
-        String descricao,
-        String capa) {
+public record ComunidadeBuscaResponse(UUID id, String nome, String descricao, String capa) {
 
     public static ComunidadeBuscaResponse de(Comunidade comunidade) {
         return new ComunidadeBuscaResponse(
