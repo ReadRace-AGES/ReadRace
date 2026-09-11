@@ -21,9 +21,12 @@ export type StreakBadgeProps = {
   iconSize?: number;
 };
 
+// `charAt(0)` pega meia unidade UTF-16: em "😀Ana" sairia um caractere quebrado.
+// `Array.from` itera por code point, e so letra vira inicial - emoji, digito ou
+// simbolo na frente deixam o circulo vazio, como pede a issue #20.
 function getInitial(name?: string): string | null {
-  const letter = name?.trim().charAt(0);
-  return letter ? letter.toUpperCase() : null;
+  const [first] = Array.from(name?.trim().normalize('NFC') ?? '');
+  return first && /\p{L}/u.test(first) ? first.toUpperCase() : null;
 }
 
 function FlameIcon({ height = 14, color = BADGE_ICON }: { height?: number; color?: string }) {
@@ -59,11 +62,11 @@ function FlameIcon({ height = 14, color = BADGE_ICON }: { height?: number; color
 export function StreakBadge({ value, iconSize = 14 }: StreakBadgeProps) {
   return (
     <View
-      className="flex-row items-center gap-1.5 rounded-full px-3 py-1.5"
+      className="flex-row items-center gap-1 rounded-pill px-3 py-1"
       style={{ backgroundColor: BADGE_BG }}
     >
       <FlameIcon height={iconSize} />
-      <Text className="text-sm font-bold" style={{ color: BADGE_FG }}>
+      <Text className="text-bodySmall font-bold" style={{ color: BADGE_FG }}>
         {value}
       </Text>
     </View>
@@ -79,7 +82,7 @@ export function Avatar({ name, photoUrl, size = 48 }: AvatarProps) {
 
   return (
     <View
-      className="items-center justify-center overflow-hidden rounded-full"
+      className="items-center justify-center overflow-hidden rounded-pill"
       style={{ width: size, height: size, backgroundColor: AVATAR_BG }}
     >
       {showPhoto ? (
