@@ -12,7 +12,8 @@ import com.readrace.api.model.Autor;
 public interface AutorRepository extends JpaRepository<Autor, UUID> {
 
     @Query(
-            value = """
+            value =
+                    """
                     SELECT a.*
                     FROM autor a
                     JOIN livro_autor la ON la.autor_id = a.id

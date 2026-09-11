@@ -11,8 +11,7 @@ import jakarta.persistence.Table;
 @Table(name = "livro")
 public class Livro {
 
-    @Id
-    private UUID id;
+    @Id private UUID id;
 
     @Column(nullable = false, length = 13)
     private String isbn;
