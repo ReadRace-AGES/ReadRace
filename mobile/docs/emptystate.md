@@ -9,7 +9,7 @@ Componente de apresentação para listas vazias. A tela decide quando exibi-lo e
 />
 ```
 
-O renderizador do ícone recebe tamanho e cor do tema. Na Busca, reutilize o ícone do campo de busca. O ícone é decorativo para leitores de tela. O slot `action` aceita um `PrimaryButton` quando estiver disponível, sem acoplar o componente a ele. Sem ação, nenhum contêiner ou espaçamento de botão é criado.
+O renderizador do ícone recebe tamanho e cor do tema. Na Busca, use `SearchIcon` de `components/icons`, o mesmo do campo de busca. O ícone é decorativo para leitores de tela. O slot `action` aceita um `PrimaryButton` quando estiver disponível, sem acoplar o componente a ele. Sem ação, nenhum contêiner ou espaçamento de botão é criado.
 
 O círculo usa `surfacePink`, o ícone `primarySoft` e o texto `textSecondary` com `textStyles.body`. Medidas usam os tokens existentes: ícone `sizes.icon`, preenchimento do círculo e distância até o texto `spacing[6]`, preenchimento externo `spacing[4]` e raio `radius.pill`. O PNG é referência do arranjo; não foram extraídas medidas dele.
 
