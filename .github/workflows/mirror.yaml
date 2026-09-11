@@ -19,6 +19,13 @@ jobs:
 
       - name: Push para o tools
         run: |
-          git push --prune --force \
-            "https://${{ secrets.GITLAB_USER }}:${{ secrets.GITLAB_TOKEN }}@tools.ages.pucrs.br/2026-2/6lmnp/readrace/readrace.git" \
-            "+refs/remotes/origin/*:refs/heads/*" "+refs/tags/*:refs/tags/*"
+          for attempt in {1..3}; do
+            echo "Tentativa $attempt de 3..."
+            git push --prune --force \
+              "https://${{ secrets.GITLAB_USER }}:${{ secrets.GITLAB_TOKEN }}@tools.ages.pucrs.br/2026-2/6lmnp/readrace/readrace.git" \
+              "+refs/remotes/origin/*:refs/heads/*" "+refs/tags/*:refs/tags/*" && break
+            if [ $attempt -lt 3 ]; then
+              echo "Falha na tentativa $attempt. Aguardando 15 segundos antes de tentar novamente..."
+              sleep 15
+            fi
+          done
