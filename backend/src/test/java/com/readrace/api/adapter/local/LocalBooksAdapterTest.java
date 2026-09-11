@@ -88,6 +88,32 @@ class LocalBooksAdapterTest {
     }
 
     @Test
+    void deve_combinar_qualificador_de_titulo_com_texto_livre() {
+        // "Dom Casmurro" (título) escrito por "Machado de Assis" (texto livre bate no autor).
+        GoogleBooksResponse resposta = adapter.search("intitle:\"Dom Casmurro\" Machado", 10, 0);
+
+        assertThat(resposta.items())
+                .isNotEmpty()
+                .allSatisfy(
+                        volume ->
+                                assertThat(volume.volumeInfo().title())
+                                        .containsIgnoringCase("dom casmurro"));
+    }
+
+    @Test
+    void deve_combinar_qualificador_de_isbn_com_texto_livre() {
+        // ISBN do 1984 (Orwell) + texto livre "Orwell".
+        GoogleBooksResponse resposta = adapter.search("isbn:9786586064537 Orwell", 10, 0);
+
+        assertThat(resposta.items())
+                .singleElement()
+                .satisfies(
+                        volume ->
+                                assertThat(volume.volumeInfo().title())
+                                        .containsIgnoringCase("1984"));
+    }
+
+    @Test
     void deve_ignorar_acentos_e_case_na_busca_geral() {
         GoogleBooksResponse comAcento = adapter.search("história", 40, 0);
         GoogleBooksResponse semAcento = adapter.search("HISTORIA", 40, 0);

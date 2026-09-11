@@ -63,4 +63,37 @@ class SearchQueryTest {
         assertThat(query.titleTerms()).containsExactly("harry");
         assertThat(query.authorTerms()).containsExactly("rowling");
     }
+
+    @Test
+    void deve_separar_qualificador_de_titulo_do_texto_livre() {
+        SearchQuery query = SearchQuery.parse("intitle:\"Dom Casmurro\" Machado");
+
+        assertThat(query.titleTerms()).containsExactly("Dom Casmurro");
+        assertThat(query.freeText()).isEqualTo("Machado");
+        assertThat(query.isGeneralSearch()).isFalse();
+    }
+
+    @Test
+    void deve_separar_qualificador_de_isbn_do_texto_livre() {
+        SearchQuery query = SearchQuery.parse("isbn:9786586064537 Machado");
+
+        assertThat(query.isbnTerms()).containsExactly("9786586064537");
+        assertThat(query.freeText()).isEqualTo("Machado");
+    }
+
+    @Test
+    void deve_separar_qualificador_de_autor_do_texto_livre() {
+        SearchQuery query = SearchQuery.parse("inauthor:\"tolkien\" fantasia");
+
+        assertThat(query.authorTerms()).containsExactly("tolkien");
+        assertThat(query.freeText()).isEqualTo("fantasia");
+    }
+
+    @Test
+    void deve_juntar_qualificador_e_texto_livre_disperso() {
+        SearchQuery query = SearchQuery.parse("classico intitle:\"1984\" distopia");
+
+        assertThat(query.titleTerms()).containsExactly("1984");
+        assertThat(query.freeText()).isEqualTo("classico distopia");
+    }
 }

@@ -29,6 +29,12 @@ import com.readrace.api.service.BookService;
  * GET /api/books/volumes?q=tolkien                       → busca livre (todos os campos)
  * GET /api/books/volumes/{volumeId}                      → busca por ID (200 | 404)
  * </pre>
+ *
+ * <p><b>Encoding dos parâmetros:</b> o cliente deve URL-encodar os valores de busca. Caracteres
+ * reservados como {@code #} e {@code &} precisam ir percent-encodados ({@code C#} → {@code C%23}),
+ * senão o servidor rejeita a URL antes de a requisição chegar aqui. Clientes HTTP normais (o {@code
+ * fetch} com {@code URLSearchParams}, axios com {@code params}, OkHttp) já fazem isso
+ * automaticamente; o problema só aparece ao montar a URL na mão (ex.: colar direto no navegador).
  */
 @RestController
 @RequestMapping("/api/books/volumes")

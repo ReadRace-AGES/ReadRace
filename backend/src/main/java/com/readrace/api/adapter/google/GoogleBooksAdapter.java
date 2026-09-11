@@ -1,5 +1,7 @@
 package com.readrace.api.adapter.google;
 
+import java.net.URI;
+import java.nio.charset.StandardCharsets;
 import java.time.Duration;
 import java.util.Optional;
 
@@ -12,11 +14,11 @@ import org.springframework.http.client.SimpleClientHttpRequestFactory;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestClient;
 import org.springframework.web.client.RestClientException;
-import org.springframework.web.server.ResponseStatusException;
 import org.springframework.web.util.UriComponentsBuilder;
 
 import com.readrace.api.dto.GoogleBookVolume;
 import com.readrace.api.dto.GoogleBooksResponse;
+import com.readrace.api.exception.ServicoExternoIndisponivelException;
 import com.readrace.api.service.BookSearchPort;
 
 /**
@@ -29,8 +31,10 @@ import com.readrace.api.service.BookSearchPort;
  *
  * <p>Limites do tier gratuito: 1000 requests/dia.
  *
- * <p>Toda chamada externa tem timeout de conexão e de leitura, e qualquer falha da API do Google é
- * traduzida para {@code 502 Bad Gateway} — nunca vaza como {@code 500}, que sugeriria erro nosso.
+ * <p>Toda chamada externa tem timeout de conexão e de leitura, e qualquer falha da API do Google
+ * vira {@link ServicoExternoIndisponivelException} (HTTP 503, {@code code =
+ * EXTERNAL_SERVICE_UNAVAILABLE}) — nunca vaza como {@code 500}, que sugeriria erro nosso. Assim o
+ * cliente distingue "Google fora do ar" de um problema interno.
  */
 @Component
 @Profile("prod")
@@ -63,14 +67,18 @@ public class GoogleBooksAdapter implements BookSearchPort {
 
     @Override
     public GoogleBooksResponse search(String query, int maxResults, int startIndex) {
-        String uri =
+        // .encode().toUri() percent-encoda o valor: sem isso, caracteres reservados como & e #
+        // dentro do termo (ex.: "Tom & Jerry", "C# para iniciantes") cortariam a URL e derrubariam
+        // até a key. Um java.net.URI já pronto evita o RestClient reprocessar como template.
+        URI uri =
                 UriComponentsBuilder.fromPath("")
                         .queryParam("q", query)
                         .queryParam("maxResults", maxResults)
                         .queryParam("startIndex", startIndex)
                         .queryParam("key", apiKey)
+                        .encode(StandardCharsets.UTF_8)
                         .build()
-                        .toUriString();
+                        .toUri();
 
         try {
             GoogleBooksResponse response =
@@ -84,11 +92,12 @@ public class GoogleBooksAdapter implements BookSearchPort {
 
     @Override
     public Optional<GoogleBookVolume> getById(String volumeId) {
-        String uri =
+        URI uri =
                 UriComponentsBuilder.fromPath("/{id}")
                         .queryParam("key", apiKey)
+                        .encode(StandardCharsets.UTF_8)
                         .buildAndExpand(volumeId)
-                        .toUriString();
+                        .toUri();
 
         try {
             GoogleBookVolume volume =
@@ -112,10 +121,10 @@ public class GoogleBooksAdapter implements BookSearchPort {
         }
     }
 
-    private ResponseStatusException indisponivel(Exception causa) {
+    private ServicoExternoIndisponivelException indisponivel(Exception causa) {
         log.warn("Falha ao consultar a Google Books API", causa);
-        return new ResponseStatusException(
-                HttpStatus.BAD_GATEWAY, "Serviço de livros indisponível no momento.", causa);
+        return new ServicoExternoIndisponivelException(
+                "Serviço de livros indisponível no momento.");
     }
 
     /** Sinaliza internamente que o Google respondeu 404, para virar Optional.empty(). */

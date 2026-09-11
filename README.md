@@ -426,6 +426,8 @@ GET /api/books/volumes?author=tolkien&genre=fantasia
 
 O resultado segue o formato da Google Books API (`kind`, `totalItems`, `items[]`).
 
+> **Encoding dos parametros:** o cliente deve URL-encodar os valores. Caracteres reservados como `#` e `&` precisam ir percent-encodados (`C#` vira `C%23`), senao o servidor rejeita a URL antes de ela chegar na aplicacao. Clientes HTTP normais (`fetch` com `URLSearchParams`, axios com `params`, OkHttp) fazem isso automaticamente — o problema so aparece ao colar a URL crua no navegador ou no Swagger "Try it out". Com o valor bem encodado (`?title=C%23`), a busca retorna 200 normalmente.
+
 ### Usando a Google Books API real (profile prod)
 
 Em `dev`, a busca usa o mock local (60 livros). Para usar a Google Books API real, ative o profile `prod` e configure uma API key.
