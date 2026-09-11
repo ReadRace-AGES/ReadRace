@@ -7,9 +7,12 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 
+import lombok.AccessLevel;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 
 @Getter
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
 @Entity
 @Table(name = "usuario")
 public class Usuario {
@@ -27,8 +30,6 @@ public class Usuario {
 
     @Column(nullable = false)
     private Integer nivel;
-
-    protected Usuario() {}
 
     public String getTitulo() {
         if (nivel <= 10) {

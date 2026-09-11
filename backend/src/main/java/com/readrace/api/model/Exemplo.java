@@ -7,7 +7,9 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 
+import lombok.AccessLevel;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 
 /**
  * Entidade = espelho da tabela criada na migration.
@@ -17,6 +19,7 @@ import lombok.Getter;
  * senão a aplicação não sobe.
  */
 @Getter
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
 @Entity
 @Table(name = "exemplo")
 public class Exemplo {
@@ -30,9 +33,6 @@ public class Exemplo {
 
     @Column(length = 255)
     private String descricao;
-
-    /** Exigido pelo JPA. Não use no código da aplicação. */
-    protected Exemplo() {}
 
     public Exemplo(String nome, String descricao) {
         this.nome = nome;

@@ -7,9 +7,12 @@ import java.util.UUID;
 import jakarta.persistence.Column;
 import jakarta.persistence.Embeddable;
 
+import lombok.AccessLevel;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 
 @Getter
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
 @Embeddable
 public class LivroAutorId implements Serializable {
 
@@ -20,8 +23,6 @@ public class LivroAutorId implements Serializable {
 
     @Column(name = "autor_id", nullable = false)
     private UUID autorId;
-
-    protected LivroAutorId() {}
 
     public LivroAutorId(UUID livroId, UUID autorId) {
         this.livroId = livroId;

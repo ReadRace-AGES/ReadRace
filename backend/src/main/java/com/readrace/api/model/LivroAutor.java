@@ -9,9 +9,12 @@ import jakarta.persistence.ManyToOne;
 import jakarta.persistence.MapsId;
 import jakarta.persistence.Table;
 
+import lombok.AccessLevel;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 
 @Getter
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
 @Entity
 @Table(name = "livro_autor")
 public class LivroAutor {
@@ -30,6 +33,4 @@ public class LivroAutor {
 
     @Column(nullable = false)
     private Short ordem;
-
-    protected LivroAutor() {}
 }

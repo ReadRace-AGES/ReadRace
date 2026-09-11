@@ -11,9 +11,12 @@ import jakarta.persistence.OneToMany;
 import jakarta.persistence.OrderBy;
 import jakarta.persistence.Table;
 
+import lombok.AccessLevel;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 
 @Getter
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
 @Entity
 @Table(name = "livro")
 public class Livro {
@@ -32,6 +35,4 @@ public class Livro {
     @OneToMany(mappedBy = "livro")
     @OrderBy("ordem ASC")
     private List<LivroAutor> livroAutores = new ArrayList<>();
-
-    protected Livro() {}
 }
