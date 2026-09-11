@@ -1,4 +1,4 @@
-package com.readrace.api.book.dto;
+package com.readrace.api.dto;
 
 /**
  * Representa um volume (livro) individual retornado pela Google Books API.

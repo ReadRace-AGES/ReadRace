@@ -1,4 +1,4 @@
-package com.readrace.api.book.service;
+package com.readrace.api.service;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -7,9 +7,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 
-import com.readrace.api.book.dto.GoogleBookVolume;
-import com.readrace.api.book.dto.GoogleBooksResponse;
-import com.readrace.api.book.port.BookSearchPort;
+import com.readrace.api.dto.GoogleBookVolume;
+import com.readrace.api.dto.GoogleBooksResponse;
 import com.readrace.api.exception.RecursoNaoEncontradoException;
 
 /**
@@ -77,14 +76,12 @@ public class BookService {
      * @throws RecursoNaoEncontradoException se não existir
      */
     public GoogleBookVolume getById(String volumeId) {
-        GoogleBookVolume volume = bookSearchPort.getById(volumeId);
-
-        if (volume == null) {
-            throw new RecursoNaoEncontradoException(
-                    "Volume '%s' não encontrado".formatted(volumeId));
-        }
-
-        return volume;
+        return bookSearchPort
+                .getById(volumeId)
+                .orElseThrow(
+                        () ->
+                                new RecursoNaoEncontradoException(
+                                        "Volume '%s' não encontrado".formatted(volumeId)));
     }
 
     /**

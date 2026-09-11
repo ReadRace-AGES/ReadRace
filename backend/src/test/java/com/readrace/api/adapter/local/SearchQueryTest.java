@@ -1,4 +1,4 @@
-package com.readrace.api.book.adapter.local;
+package com.readrace.api.adapter.local;
 
 import static org.assertj.core.api.Assertions.assertThat;
 

@@ -1,4 +1,4 @@
-package com.readrace.api.book.dto;
+package com.readrace.api.dto;
 
 import java.util.List;
 

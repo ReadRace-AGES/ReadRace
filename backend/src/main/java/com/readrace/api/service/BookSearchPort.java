@@ -1,7 +1,9 @@
-package com.readrace.api.book.port;
+package com.readrace.api.service;
 
-import com.readrace.api.book.dto.GoogleBookVolume;
-import com.readrace.api.book.dto.GoogleBooksResponse;
+import java.util.Optional;
+
+import com.readrace.api.dto.GoogleBookVolume;
+import com.readrace.api.dto.GoogleBooksResponse;
 
 /**
  * Porta de busca de livros.
@@ -35,7 +37,7 @@ public interface BookSearchPort {
      * Busca um volume específico pelo ID.
      *
      * @param volumeId identificador único do volume
-     * @return o volume encontrado, ou {@code null} se não existir
+     * @return o volume encontrado, ou {@link Optional#empty()} se não existir
      */
-    GoogleBookVolume getById(String volumeId);
+    Optional<GoogleBookVolume> getById(String volumeId);
 }

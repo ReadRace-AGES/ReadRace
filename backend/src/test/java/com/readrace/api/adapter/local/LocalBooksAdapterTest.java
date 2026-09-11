@@ -1,4 +1,4 @@
-package com.readrace.api.book.adapter.local;
+package com.readrace.api.adapter.local;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -6,10 +6,11 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
-import com.fasterxml.jackson.databind.DeserializationFeature;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.readrace.api.book.dto.GoogleBookVolume;
-import com.readrace.api.book.dto.GoogleBooksResponse;
+import com.readrace.api.dto.GoogleBooksResponse;
+
+import tools.jackson.databind.DeserializationFeature;
+import tools.jackson.databind.ObjectMapper;
+import tools.jackson.databind.json.JsonMapper;
 
 /**
  * Teste unitário do mock local. Carrega o books-seed.json real e prova que a busca por título,
@@ -23,7 +24,9 @@ class LocalBooksAdapterTest {
     @BeforeEach
     void setUp() {
         ObjectMapper objectMapper =
-                new ObjectMapper().disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES);
+                JsonMapper.builder()
+                        .disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES)
+                        .build();
         adapter = new LocalBooksAdapter(objectMapper);
         adapter.loadBooks();
     }
@@ -126,15 +129,15 @@ class LocalBooksAdapterTest {
 
     @Test
     void deve_buscar_volume_por_id() {
-        GoogleBookVolume volume = adapter.getById("sci001");
-
-        assertThat(volume).isNotNull();
-        assertThat(volume.id()).isEqualTo("sci001");
+        assertThat(adapter.getById("sci001"))
+                .isPresent()
+                .get()
+                .satisfies(volume -> assertThat(volume.id()).isEqualTo("sci001"));
     }
 
     @Test
-    void deve_devolver_null_para_id_inexistente() {
-        assertThat(adapter.getById("nao-existe")).isNull();
-        assertThat(adapter.getById(null)).isNull();
+    void deve_devolver_vazio_para_id_inexistente() {
+        assertThat(adapter.getById("nao-existe")).isEmpty();
+        assertThat(adapter.getById(null)).isEmpty();
     }
 }

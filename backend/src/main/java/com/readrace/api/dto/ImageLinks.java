@@ -1,4 +1,4 @@
-package com.readrace.api.book.dto;
+package com.readrace.api.dto;
 
 /**
  * Links de imagem da capa do livro em diferentes tamanhos.

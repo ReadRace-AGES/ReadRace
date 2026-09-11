@@ -1,4 +1,4 @@
-package com.readrace.api.book.dto;
+package com.readrace.api.dto;
 
 /**
  * Identificador de indústria (ISBN_10, ISBN_13, etc.).

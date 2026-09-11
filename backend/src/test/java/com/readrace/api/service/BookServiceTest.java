@@ -1,10 +1,12 @@
-package com.readrace.api.book.service;
+package com.readrace.api.service;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.when;
+
+import java.util.Optional;
 
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -16,10 +18,9 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.web.server.ResponseStatusException;
 
-import com.readrace.api.book.dto.GoogleBookVolume;
-import com.readrace.api.book.dto.GoogleBooksResponse;
-import com.readrace.api.book.dto.VolumeInfo;
-import com.readrace.api.book.port.BookSearchPort;
+import com.readrace.api.dto.GoogleBookVolume;
+import com.readrace.api.dto.GoogleBooksResponse;
+import com.readrace.api.dto.VolumeInfo;
 import com.readrace.api.exception.RecursoNaoEncontradoException;
 
 /**
@@ -106,7 +107,7 @@ class BookServiceTest {
 
     @Test
     void deve_lancar_404_quando_volume_nao_existir() {
-        when(bookSearchPort.getById("inexistente")).thenReturn(null);
+        when(bookSearchPort.getById("inexistente")).thenReturn(Optional.empty());
 
         assertThatThrownBy(() -> bookService.getById("inexistente"))
                 .isInstanceOf(RecursoNaoEncontradoException.class);
@@ -120,7 +121,7 @@ class BookServiceTest {
                         new VolumeInfo(
                                 "1984", null, null, null, null, null, null, null, null, null, null,
                                 null, null, null, null, null, null));
-        when(bookSearchPort.getById("abc123")).thenReturn(volume);
+        when(bookSearchPort.getById("abc123")).thenReturn(Optional.of(volume));
 
         GoogleBookVolume resultado = bookService.getById("abc123");
 

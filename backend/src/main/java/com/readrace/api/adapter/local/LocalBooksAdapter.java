@@ -1,10 +1,11 @@
-package com.readrace.api.book.adapter.local;
+package com.readrace.api.adapter.local;
 
 import java.io.IOException;
 import java.io.InputStream;
 import java.text.Normalizer;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -16,12 +17,13 @@ import org.springframework.context.annotation.Profile;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.stereotype.Component;
 
-import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.readrace.api.book.dto.GoogleBookVolume;
-import com.readrace.api.book.dto.GoogleBooksResponse;
-import com.readrace.api.book.dto.VolumeInfo;
-import com.readrace.api.book.port.BookSearchPort;
+import com.readrace.api.dto.GoogleBookVolume;
+import com.readrace.api.dto.GoogleBooksResponse;
+import com.readrace.api.dto.VolumeInfo;
+import com.readrace.api.service.BookSearchPort;
+
+import tools.jackson.core.type.TypeReference;
+import tools.jackson.databind.ObjectMapper;
 
 /**
  * Implementação local (mock) do {@link BookSearchPort}.
@@ -50,9 +52,7 @@ public class LocalBooksAdapter implements BookSearchPort {
 
     @PostConstruct
     void loadBooks() {
-        try {
-            InputStream input = new ClassPathResource("books-seed.json").getInputStream();
-
+        try (InputStream input = new ClassPathResource("books-seed.json").getInputStream()) {
             List<SeedEntry> entries =
                     objectMapper.readValue(input, new TypeReference<List<SeedEntry>>() {});
 
@@ -66,7 +66,9 @@ public class LocalBooksAdapter implements BookSearchPort {
                             .collect(Collectors.toMap(GoogleBookVolume::id, Function.identity()));
 
             log.info("LocalBooksAdapter carregou {} livros do seed", books.size());
-        } catch (IOException e) {
+        } catch (IOException | RuntimeException e) {
+            // IOException: falha ao abrir o recurso. RuntimeException: no Jackson 3 os erros de
+            // parse são unchecked (JacksonException). Nos dois casos, falha rápido no startup.
             throw new IllegalStateException("Falha ao carregar books-seed.json", e);
         }
     }
@@ -95,11 +97,11 @@ public class LocalBooksAdapter implements BookSearchPort {
     }
 
     @Override
-    public GoogleBookVolume getById(String volumeId) {
+    public Optional<GoogleBookVolume> getById(String volumeId) {
         if (volumeId == null) {
-            return null;
+            return Optional.empty();
         }
-        return booksById.get(volumeId);
+        return Optional.ofNullable(booksById.get(volumeId));
     }
 
     /**

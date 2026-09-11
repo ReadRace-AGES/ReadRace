@@ -1,4 +1,4 @@
-package com.readrace.api.book.dto;
+package com.readrace.api.dto;
 
 /**
  * Informações de acesso ao volume.

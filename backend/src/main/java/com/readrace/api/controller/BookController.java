@@ -1,4 +1,4 @@
-package com.readrace.api.book.controller;
+package com.readrace.api.controller;
 
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -6,9 +6,9 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.readrace.api.book.dto.GoogleBookVolume;
-import com.readrace.api.book.dto.GoogleBooksResponse;
-import com.readrace.api.book.service.BookService;
+import com.readrace.api.dto.GoogleBookVolume;
+import com.readrace.api.dto.GoogleBooksResponse;
+import com.readrace.api.service.BookService;
 
 /**
  * Endpoints de busca de livros.
