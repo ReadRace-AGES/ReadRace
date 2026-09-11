@@ -1,28 +1,20 @@
-import type { BottomTabBarProps } from "expo-router/js-tabs";
-import type { ComponentType } from "react";
-import { Pressable, View } from "react-native";
+import type { BottomTabBarProps } from 'expo-router/js-tabs';
+import type { ComponentType } from 'react';
+import { Pressable, View } from 'react-native';
 
-import { BookTabIcon, HomeTabIcon, PersonTabIcon, SearchTabIcon, StarTabIcon } from "@/components/TabIcons";
+import { BookTabIcon, HomeTabIcon, PersonTabIcon, SearchTabIcon, StarTabIcon } from '@/components/TabIcons';
+import { colors, shadows, sizes, spacing } from '@/theme';
 
-// Valores extraídos do componente "navbar" no Figma via Copy as SVG / Dev Mode
-// (referência oficial "navbar.png" do design), não aproximados.
-const TAB_COLORS = {
-  active: "#732634",
-  background: "#FEFEFE",
-  border: "#F4EEEE",
-} as const;
-
-const PILL_SHADOW = [
-  { offsetX: 0, offsetY: 4, blurRadius: 4, color: "rgba(0,0,0,0.07)" },
-  { offsetX: 0, offsetY: -2, blurRadius: 4, color: "rgba(0,0,0,0.07)" },
-];
-
-// A pill tem paddingHorizontal: 25 e columnGap: 24 entre ícones.
-// GAP_HIT_SLOP (12 = 24/2) cobre exatamente o vão entre duas abas vizinhas.
-// EDGE_HIT_SLOP (25) estende a primeira/última aba até a borda externa da pill,
-// senão sobra uma faixa morta de 13px (25 - 12) nas pontas da barra.
-const GAP_HIT_SLOP = 12;
-const EDGE_HIT_SLOP = 25;
+// A pill tem paddingHorizontal: spacing[6] e columnGap: spacing[6] entre ícones.
+// GAP_HIT_SLOP cobre exatamente o vão entre duas abas vizinhas.
+// EDGE_HIT_SLOP estende a primeira/última aba até a borda externa da pill,
+// senão sobra uma faixa morta nas pontas da barra.
+const GAP_HIT_SLOP = spacing[6] / 2;
+const EDGE_HIT_SLOP = spacing[6];
+// A pill tem height fixo (sizes.navHeight) com borda de sizes.borderWidth em cima
+// e embaixo; sem isso o Pressable (mesma altura da pill) deixa essa borda fora da
+// área tocável, criando uma faixa morta de 2 * sizes.borderWidth no topo/base da aba.
+const VERTICAL_HIT_SLOP = sizes.borderWidth;
 
 type IconComponent = ComponentType<{ active: boolean; size?: number }>;
 
@@ -33,11 +25,11 @@ type TabDefinition = {
 };
 
 const TAB_ORDER: readonly TabDefinition[] = [
-  { routeName: "feed", Icon: HomeTabIcon, accessibilityLabel: "Feed" },
-  { routeName: "meus-livros", Icon: BookTabIcon, accessibilityLabel: "Meus Livros" },
-  { routeName: "buscar", Icon: SearchTabIcon, accessibilityLabel: "Buscar" },
-  { routeName: "desafios", Icon: StarTabIcon, accessibilityLabel: "Desafios" },
-  { routeName: "perfil", Icon: PersonTabIcon, accessibilityLabel: "Perfil" },
+  { routeName: 'feed', Icon: HomeTabIcon, accessibilityLabel: 'Feed' },
+  { routeName: 'meus-livros', Icon: BookTabIcon, accessibilityLabel: 'Meus Livros' },
+  { routeName: 'buscar', Icon: SearchTabIcon, accessibilityLabel: 'Buscar' },
+  { routeName: 'desafios', Icon: StarTabIcon, accessibilityLabel: 'Desafios' },
+  { routeName: 'perfil', Icon: PersonTabIcon, accessibilityLabel: 'Perfil' },
 ];
 
 type RouteOf<Props> = Props extends { state: { routes: readonly (infer R)[] } } ? R : never;
@@ -52,16 +44,17 @@ export function BottomTabBar({ state, navigation, insets }: BottomTabBarProps) {
   })).filter((tab): tab is TabWithRoute => tab.route !== undefined);
 
   return (
-    <View className="items-center px-5" style={{ paddingTop: 12, paddingBottom: insets.bottom || 22 }}>
+    <View
+      className="items-center px-5"
+      style={{ paddingTop: spacing[3], paddingBottom: insets.bottom || spacing[6] }}
+    >
       <View
-        className="flex-row items-center rounded-full border"
+        className="flex-row items-center justify-center rounded-pill border border-border bg-surface"
         style={{
-          backgroundColor: TAB_COLORS.background,
-          borderColor: TAB_COLORS.border,
-          columnGap: 24,
-          paddingVertical: 14,
-          paddingHorizontal: 25,
-          boxShadow: PILL_SHADOW,
+          height: sizes.navHeight,
+          columnGap: spacing[6],
+          paddingHorizontal: spacing[6],
+          ...shadows.floating,
         }}
       >
         {visibleTabs.map(({ route, Icon, accessibilityLabel, routeName }, index) => {
@@ -71,7 +64,7 @@ export function BottomTabBar({ state, navigation, insets }: BottomTabBarProps) {
 
           const onPress = () => {
             const event = navigation.emit({
-              type: "tabPress",
+              type: 'tabPress',
               target: route.key,
               canPreventDefault: true,
             });
@@ -86,8 +79,8 @@ export function BottomTabBar({ state, navigation, insets }: BottomTabBarProps) {
               key={route.key}
               onPress={onPress}
               hitSlop={{
-                top: GAP_HIT_SLOP,
-                bottom: GAP_HIT_SLOP,
+                top: VERTICAL_HIT_SLOP,
+                bottom: VERTICAL_HIT_SLOP,
                 left: isFirst ? EDGE_HIT_SLOP : GAP_HIT_SLOP,
                 right: isLast ? EDGE_HIT_SLOP : GAP_HIT_SLOP,
               }}
@@ -95,14 +88,15 @@ export function BottomTabBar({ state, navigation, insets }: BottomTabBarProps) {
               accessibilityState={isFocused ? { selected: true } : {}}
               accessibilityLabel={accessibilityLabel}
               className="items-center justify-center"
+              style={{ height: sizes.navHeight }}
             >
-              <Icon active={isFocused} size={22} />
+              <Icon active={isFocused} size={sizes.navIcon} />
               <View
-                className="mt-1 rounded-full"
+                className="mt-1 rounded-pill"
                 style={{
-                  width: 24,
-                  height: 3.5,
-                  backgroundColor: isFocused ? TAB_COLORS.active : "transparent",
+                  width: sizes.navIndicatorWidth,
+                  height: sizes.navIndicatorHeight,
+                  backgroundColor: isFocused ? colors.primary : 'transparent',
                 }}
               />
             </Pressable>
