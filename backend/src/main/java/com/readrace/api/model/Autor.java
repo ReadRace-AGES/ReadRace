@@ -7,6 +7,9 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 
+import lombok.Getter;
+
+@Getter
 @Entity
 @Table(name = "autor")
 public class Autor {
@@ -17,12 +20,4 @@ public class Autor {
     private String nome;
 
     protected Autor() {}
-
-    public UUID getId() {
-        return id;
-    }
-
-    public String getNome() {
-        return nome;
-    }
 }

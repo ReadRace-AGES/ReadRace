@@ -7,6 +7,9 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 
+import lombok.Getter;
+
+@Getter
 @Entity
 @Table(name = "usuario")
 public class Usuario {
@@ -26,26 +29,6 @@ public class Usuario {
     private Integer nivel;
 
     protected Usuario() {}
-
-    public UUID getId() {
-        return id;
-    }
-
-    public String getNome() {
-        return nome;
-    }
-
-    public String getNomeUsuario() {
-        return nomeUsuario;
-    }
-
-    public String getAvatarUrl() {
-        return avatarUrl;
-    }
-
-    public Integer getNivel() {
-        return nivel;
-    }
 
     public String getTitulo() {
         if (nivel <= 10) {

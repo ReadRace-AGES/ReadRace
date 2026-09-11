@@ -7,6 +7,9 @@ import java.util.UUID;
 import jakarta.persistence.Column;
 import jakarta.persistence.Embeddable;
 
+import lombok.Getter;
+
+@Getter
 @Embeddable
 public class LivroAutorId implements Serializable {
 
@@ -23,14 +26,6 @@ public class LivroAutorId implements Serializable {
     public LivroAutorId(UUID livroId, UUID autorId) {
         this.livroId = livroId;
         this.autorId = autorId;
-    }
-
-    public UUID getLivroId() {
-        return livroId;
-    }
-
-    public UUID getAutorId() {
-        return autorId;
     }
 
     @Override

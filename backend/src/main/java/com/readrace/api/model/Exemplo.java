@@ -7,6 +7,8 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 
+import lombok.Getter;
+
 /**
  * Entidade = espelho da tabela criada na migration.
  *
@@ -14,6 +16,7 @@ import jakarta.persistence.Table;
  * entidade bate com o banco. Mexeu aqui, tem que ter uma migration correspondente no mesmo PR,
  * senão a aplicação não sobe.
  */
+@Getter
 @Entity
 @Table(name = "exemplo")
 public class Exemplo {
@@ -44,18 +47,6 @@ public class Exemplo {
     public void atualizar(String nome, String descricao) {
         this.nome = nome;
         this.descricao = descricao;
-    }
-
-    public Long getId() {
-        return id;
-    }
-
-    public String getNome() {
-        return nome;
-    }
-
-    public String getDescricao() {
-        return descricao;
     }
 
     /**

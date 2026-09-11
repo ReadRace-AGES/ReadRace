@@ -11,6 +11,9 @@ import jakarta.persistence.OneToMany;
 import jakarta.persistence.OrderBy;
 import jakarta.persistence.Table;
 
+import lombok.Getter;
+
+@Getter
 @Entity
 @Table(name = "livro")
 public class Livro {
@@ -31,24 +34,4 @@ public class Livro {
     private List<LivroAutor> livroAutores = new ArrayList<>();
 
     protected Livro() {}
-
-    public UUID getId() {
-        return id;
-    }
-
-    public String getTitulo() {
-        return titulo;
-    }
-
-    public Integer getTotalPaginas() {
-        return totalPaginas;
-    }
-
-    public String getCapaUrl() {
-        return capaUrl;
-    }
-
-    public List<LivroAutor> getLivroAutores() {
-        return livroAutores;
-    }
 }

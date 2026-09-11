@@ -9,6 +9,9 @@ import jakarta.persistence.ManyToOne;
 import jakarta.persistence.MapsId;
 import jakarta.persistence.Table;
 
+import lombok.Getter;
+
+@Getter
 @Entity
 @Table(name = "livro_autor")
 public class LivroAutor {
@@ -29,20 +32,4 @@ public class LivroAutor {
     private Short ordem;
 
     protected LivroAutor() {}
-
-    public LivroAutorId getId() {
-        return id;
-    }
-
-    public Livro getLivro() {
-        return livro;
-    }
-
-    public Autor getAutor() {
-        return autor;
-    }
-
-    public Short getOrdem() {
-        return ordem;
-    }
 }
