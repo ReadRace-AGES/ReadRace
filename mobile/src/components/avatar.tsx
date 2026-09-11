@@ -2,17 +2,34 @@ import React, { useState } from "react";
 import { View, Text } from "react-native";
 import { Image } from "expo-image";
 import Svg, { Path } from "react-native-svg";
+import { colors, sizes, textStyles, typography } from "@/theme";
 
-const AVATAR_BG = "#732634";
-const AVATAR_FG = "#FFFFFF";
-
-const BADGE_BG = "#EFEFEF";
-const BADGE_FG = "#1A1A1A";
-const BADGE_ICON = "#FF383C";
+/**
+ * Cores que o design usa mas o tema ainda nao nomeia.
+ *
+ * NAO transformar em token aqui: `src/theme/tokens.js` e a fonte unica e so
+ * recebe valor medido num frame do designer (README, "Tema do app"). Estas duas
+ * precisam de issue no tema antes de virar token — ate la ficam locais e
+ * visiveis, em vez de espalhadas pelo componente:
+ *
+ * - a chama e `#FF383C`, o mesmo vermelho que o README ja cita ao derivar
+ *   `surfacePink` (`rgba(255,56,60,.1)` sobre `#F5F5F5`) — falta so o nome;
+ * - o fundo da pilula e `#EFEFEF`, vizinho de `surfaceMuted` (#F5F5F5) e de
+ *   `surfaceDisabled` (#EDEDED) sem ser nenhum dos dois.
+ */
+const BADGE_BG_SEM_TOKEN = "#EFEFEF";
+const BADGE_ICON_SEM_TOKEN = "#FF383C";
 
 type AvatarProps = {
   name?: string;
   photoUrl?: string | null;
+  /**
+   * Lado do circulo em px. @default sizes.avatar (40)
+   *
+   * O design tem dois tamanhos: `sizes.avatar` no post, no card de desafio e na
+   * linha do ranking, e `sizes.avatarLarge` no item da lista de comunidade.
+   * Passe `sizes.avatarLarge` nesse caso — nao um numero solto.
+   */
   size?: number;
 };
 
@@ -29,7 +46,7 @@ function getInitial(name?: string): string | null {
   return first && /\p{L}/u.test(first) ? first.toUpperCase() : null;
 }
 
-function FlameIcon({ height = 14, color = BADGE_ICON }: { height?: number; color?: string }) {
+function FlameIcon({ height = sizes.iconSmall, color = BADGE_ICON_SEM_TOKEN }: { height?: number; color?: string }) {
   return (
     <Svg width={(height * 7) / 10} height={height} viewBox="0 0 7 10" fill="none">
       <Path
@@ -59,21 +76,19 @@ function FlameIcon({ height = 14, color = BADGE_ICON }: { height?: number; color
  * </View>
  * ```
  */
-export function StreakBadge({ value, iconSize = 14 }: StreakBadgeProps) {
+export function StreakBadge({ value, iconSize = sizes.iconSmall }: StreakBadgeProps) {
   return (
     <View
       className="flex-row items-center gap-1 rounded-pill px-3 py-1"
-      style={{ backgroundColor: BADGE_BG }}
+      style={{ backgroundColor: BADGE_BG_SEM_TOKEN }}
     >
       <FlameIcon height={iconSize} />
-      <Text className="text-bodySmall font-bold" style={{ color: BADGE_FG }}>
-        {value}
-      </Text>
+      <Text style={[textStyles.bodySmallStrong, { color: colors.text }]}>{value}</Text>
     </View>
   );
 }
 
-export function Avatar({ name, photoUrl, size = 48 }: AvatarProps) {
+export function Avatar({ name, photoUrl, size = sizes.avatar }: AvatarProps) {
 
   const [failedUrl, setFailedUrl] = useState<string | null>(null);
 
@@ -83,7 +98,7 @@ export function Avatar({ name, photoUrl, size = 48 }: AvatarProps) {
   return (
     <View
       className="items-center justify-center overflow-hidden rounded-pill"
-      style={{ width: size, height: size, backgroundColor: AVATAR_BG }}
+      style={{ width: size, height: size, backgroundColor: colors.primary }}
     >
       {showPhoto ? (
         <Image
@@ -94,8 +109,14 @@ export function Avatar({ name, photoUrl, size = 48 }: AvatarProps) {
         />
       ) : initial ? (
         <Text
-          className="font-bold"
-          style={{ color: AVATAR_FG, fontSize: size * 0.42 }}
+          style={{
+            // Proporcao geometrica sobre o lado do circulo, nao um tamanho de
+            // fonte do design: a inicial precisa escalar junto com `size`, que
+            // e quem vem do tema.
+            fontFamily: typography.fontFamily.bold,
+            fontSize: Math.round(size * 0.42),
+            color: colors.textInverse,
+          }}
         >
           {initial}
         </Text>
