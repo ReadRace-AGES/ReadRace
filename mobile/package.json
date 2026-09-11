@@ -3,6 +3,7 @@
   "main": "expo-router/entry",
   "version": "1.0.0",
   "dependencies": {
+    "@expo-google-fonts/inter": "^0.4.2",
     "@expo/ui": "~57.0.11",
     "expo": "~57.0.14",
     "expo-constants": "~57.0.12",
@@ -10,6 +11,7 @@
     "expo-font": "~57.0.1",
     "expo-glass-effect": "~57.0.1",
     "expo-image": "~57.0.3",
+    "expo-linear-gradient": "~57.0.1",
     "expo-linking": "~57.0.6",
     "expo-router": "~57.0.14",
     "expo-splash-screen": "~57.0.7",
