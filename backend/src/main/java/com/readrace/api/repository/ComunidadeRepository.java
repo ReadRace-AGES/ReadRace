@@ -9,5 +9,5 @@ import com.readrace.api.model.Comunidade;
 
 public interface ComunidadeRepository extends JpaRepository<Comunidade, UUID> {
 
-    List<Comunidade> findByNomeContainingIgnoreCase(String termo);
+    List<Comunidade> findByNomeContainingIgnoreCaseAndExcluidoEmIsNull(String nome);
 }

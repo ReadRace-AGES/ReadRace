@@ -35,4 +35,22 @@ public class Livro {
     @OneToMany(mappedBy = "livro")
     @OrderBy("ordem ASC")
     private List<LivroAutor> livroAutores = new ArrayList<>();
+
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj) {
+            return true;
+        }
+
+        if (!(obj instanceof Livro outro)) {
+            return false;
+        }
+
+        return id != null && id.equals(outro.id);
+    }
+
+    @Override
+    public int hashCode() {
+        return getClass().hashCode();
+    }
 }

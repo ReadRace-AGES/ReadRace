@@ -9,6 +9,7 @@ import com.readrace.api.model.Usuario;
 
 public interface UsuarioRepository extends JpaRepository<Usuario, UUID> {
 
-    List<Usuario> findByNomeContainingIgnoreCaseOrNomeUsuarioContainingIgnoreCase(
-            String termoNome, String termoNomeUsuario);
+    List<Usuario>
+            findByNomeContainingIgnoreCaseAndExcluidoEmIsNullOrNomeUsuarioContainingIgnoreCaseAndExcluidoEmIsNull(
+                    String nome, String nomeUsuario);
 }

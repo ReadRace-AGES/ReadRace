@@ -11,6 +11,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.context.annotation.Import;
 import org.springframework.http.HttpStatus;
+import org.springframework.test.context.jdbc.Sql;
 import org.springframework.test.web.servlet.assertj.MockMvcTester;
 
 import com.readrace.api.TestcontainersConfiguration;
@@ -151,5 +152,53 @@ class BuscaControllerIT {
                 .bodyJson()
                 .extractingPath("$.code")
                 .isEqualTo("PARAMETRO_INVALIDO");
+    }
+
+    @Test
+    @Sql(
+            statements =
+                    """
+                    UPDATE usuario
+                    SET excluido_em = NOW()
+                    WHERE id = '00000000-0000-0000-0000-000000000001';
+                    """)
+    @Sql(
+            statements =
+                    """
+                    UPDATE usuario
+                    SET excluido_em = NULL
+                    WHERE id = '00000000-0000-0000-0000-000000000001';
+                    """,
+            executionPhase = Sql.ExecutionPhase.AFTER_TEST_METHOD)
+    void nao_deve_retornar_usuario_excluido() {
+        assertThat(mvc.get().uri("/api/busca?q=danielribeiro&tipo=usuarios"))
+                .hasStatusOk()
+                .bodyJson()
+                .extractingPath("$.itens")
+                .isEqualTo(List.of());
+    }
+
+    @Test
+    @Sql(
+            statements =
+                    """
+                    UPDATE comunidade
+                    SET excluido_em = NOW()
+                    WHERE id = '60000000-0000-0000-0000-000000000001';
+                    """)
+    @Sql(
+            statements =
+                    """
+                    UPDATE comunidade
+                    SET excluido_em = NULL
+                    WHERE id = '60000000-0000-0000-0000-000000000001';
+                    """,
+            executionPhase = Sql.ExecutionPhase.AFTER_TEST_METHOD)
+    void nao_deve_retornar_comunidade_excluida() {
+        assertThat(mvc.get().uri("/api/busca?q=brASile&tipo=comunidades"))
+                .hasStatusOk()
+                .bodyJson()
+                .extractingPath("$.itens")
+                .isEqualTo(List.of());
     }
 }

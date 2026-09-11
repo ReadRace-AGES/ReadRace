@@ -58,7 +58,7 @@ public class BuscaService {
 
             List<Usuario> usuarios =
                     usuarioRepository
-                            .findByNomeContainingIgnoreCaseOrNomeUsuarioContainingIgnoreCase(
+                            .findByNomeContainingIgnoreCaseAndExcluidoEmIsNullOrNomeUsuarioContainingIgnoreCaseAndExcluidoEmIsNull(
                                     termo, termo);
             List<UsuarioBuscaResponse> itens = new ArrayList<>();
 
@@ -70,7 +70,7 @@ public class BuscaService {
         } else {
 
             List<Comunidade> comunidades =
-                    comunidadeRepository.findByNomeContainingIgnoreCase(termo);
+                    comunidadeRepository.findByNomeContainingIgnoreCaseAndExcluidoEmIsNull(termo);
             List<ComunidadeBuscaResponse> itens = new ArrayList<>();
 
             for (Comunidade comunidade : comunidades) {

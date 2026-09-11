@@ -21,4 +21,22 @@ public class Autor {
 
     @Column(nullable = false, length = 255)
     private String nome;
+
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj) {
+            return true;
+        }
+
+        if (!(obj instanceof Autor outro)) {
+            return false;
+        }
+
+        return id != null && id.equals(outro.id);
+    }
+
+    @Override
+    public int hashCode() {
+        return getClass().hashCode();
+    }
 }

@@ -1,5 +1,6 @@
 package com.readrace.api.model;
 
+import java.time.OffsetDateTime;
 import java.util.UUID;
 
 import jakarta.persistence.Column;
@@ -30,6 +31,27 @@ public class Usuario {
 
     @Column(nullable = false)
     private Integer nivel;
+
+    @Column(name = "excluido_em")
+    private OffsetDateTime excluidoEm;
+
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj) {
+            return true;
+        }
+
+        if (!(obj instanceof Usuario outro)) {
+            return false;
+        }
+
+        return id != null && id.equals(outro.id);
+    }
+
+    @Override
+    public int hashCode() {
+        return getClass().hashCode();
+    }
 
     public String getTitulo() {
         if (nivel <= 10) {

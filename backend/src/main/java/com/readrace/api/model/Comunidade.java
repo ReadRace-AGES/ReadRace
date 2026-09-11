@@ -1,5 +1,6 @@
 package com.readrace.api.model;
 
+import java.time.OffsetDateTime;
 import java.util.UUID;
 
 import jakarta.persistence.Column;
@@ -27,4 +28,25 @@ public class Comunidade {
 
     @Column(name = "imagem_url", columnDefinition = "text")
     private String imagemUrl;
+
+    @Column(name = "excluido_em")
+    private OffsetDateTime excluidoEm;
+
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj) {
+            return true;
+        }
+
+        if (!(obj instanceof Comunidade outra)) {
+            return false;
+        }
+
+        return id != null && id.equals(outra.id);
+    }
+
+    @Override
+    public int hashCode() {
+        return getClass().hashCode();
+    }
 }
