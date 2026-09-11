@@ -9,7 +9,16 @@ import type { TextStyle } from 'react-native';
 
 import tokens from './tokens';
 
-export const { colors, typography, spacing, radius, shadows, sizes, gradients } = tokens;
+export const {
+  colors,
+  typography,
+  spacing,
+  radius,
+  shadows,
+  sizes,
+  gradients,
+  bookCover,
+} = tokens;
 
 export type ColorToken = keyof typeof colors;
 export type FontSizeToken = keyof typeof typography.fontSize;
@@ -19,13 +28,19 @@ export type RadiusToken = keyof typeof radius;
 type Weight = keyof typeof typography.fontFamily;
 type Leading = keyof typeof typography.lineHeight;
 
-function text(size: FontSizeToken, weight: Weight, leading: Leading = 'normal'): TextStyle {
+function text(
+  size: FontSizeToken,
+  weight: Weight,
+  leading: Leading = 'normal'
+): TextStyle {
   const fontSize = typography.fontSize[size];
   return {
     fontFamily: typography.fontFamily[weight],
     fontSize,
     lineHeight: Math.round(fontSize * typography.lineHeight[leading]),
-    letterSpacing: Number((fontSize * typography.letterSpacingRatio).toFixed(3)),
+    letterSpacing: Number(
+      (fontSize * typography.letterSpacingRatio).toFixed(3)
+    ),
   };
 }
 
@@ -59,6 +74,7 @@ export function useAppFonts() {
 }
 
 export const theme = {
+  bookCover,
   colors,
   typography,
   textStyles,
