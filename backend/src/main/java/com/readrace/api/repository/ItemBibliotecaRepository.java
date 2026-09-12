@@ -15,28 +15,63 @@ import com.readrace.api.model.ItemBiblioteca;
 public interface ItemBibliotecaRepository extends JpaRepository<ItemBiblioteca, UUID> {
 
     /**
-     * Data do último registro de leitura de um item; itens sem registro não aparecem. Vem como
-     * {@link Instant} porque é assim que o driver entrega um {@code timestamptz} em query nativa.
+     * Um item de uma página da biblioteca, na ordem da lista. A atividade é o último registro de
+     * leitura ou, sem registro, a data de adição; vem como {@link Instant} porque é assim que o
+     * driver entrega um {@code timestamptz} em query nativa.
      */
-    interface UltimaLeitura {
+    interface ItemPaginado {
         UUID getItemId();
 
-        Instant getRegistradoEm();
+        Instant getAtividade();
     }
 
-    @EntityGraph(attributePaths = {"livro", "livro.livroAutores", "livro.livroAutores.autor"})
-    List<ItemBiblioteca> findByUsuarioId(UUID usuarioId);
+    // Native de propósito: RegistroLeitura não tem entidade ainda (é escopo da #33), e o keyset
+    // precisa da ordenação no banco. A página vem só com ids; as entidades são carregadas depois
+    // por findByIdIn, com livro e autores, em uma query.
+    String PAGINA_SELECT =
+            """
+            SELECT i.id AS itemId, GREATEST(r.ultima, i.adicionado_em) AS atividade
+            FROM item_biblioteca i
+            LEFT JOIN (
+                SELECT item_biblioteca_id, MAX(registrado_em) AS ultima
+                FROM registro_leitura
+                GROUP BY item_biblioteca_id
+            ) r ON r.item_biblioteca_id = i.id
+            WHERE i.usuario_id = :usuarioId
+            """;
 
-    // Native de propósito: RegistroLeitura não tem entidade ainda (é escopo da #33) e a tela só
-    // precisa da data mais recente por item para ordenar por atividade.
+    // Ordem: atividade mais recente primeiro; empate pelo id ascendente. O cursor é o último item
+    // devolvido, e a condição pega quem vem depois dele nessa mesma ordem.
+    String PAGINA_CURSOR_E_ORDEM =
+            """
+              AND (
+                GREATEST(r.ultima, i.adicionado_em) < :cursorAtividade
+                OR (GREATEST(r.ultima, i.adicionado_em) = :cursorAtividade AND i.id > :cursorId)
+              )
+            ORDER BY atividade DESC, i.id ASC
+            LIMIT :limite
+            """;
+
+    @Query(value = PAGINA_SELECT + "  AND i.favorito\n" + PAGINA_CURSOR_E_ORDEM, nativeQuery = true)
+    List<ItemPaginado> paginarFavoritos(
+            @Param("usuarioId") UUID usuarioId,
+            @Param("cursorAtividade") Instant cursorAtividade,
+            @Param("cursorId") UUID cursorId,
+            @Param("limite") int limite);
+
     @Query(
             value =
-                    """
-                    SELECT item_biblioteca_id AS itemId, MAX(registrado_em) AS registradoEm
-                    FROM registro_leitura
-                    WHERE item_biblioteca_id IN (:itemIds)
-                    GROUP BY item_biblioteca_id
-                    """,
+                    PAGINA_SELECT
+                            + "  AND i.status_leitura = CAST(:status AS status_leitura)\n"
+                            + PAGINA_CURSOR_E_ORDEM,
             nativeQuery = true)
-    List<UltimaLeitura> buscarUltimaLeituraPorItem(@Param("itemIds") Collection<UUID> itemIds);
+    List<ItemPaginado> paginarPorStatus(
+            @Param("usuarioId") UUID usuarioId,
+            @Param("status") String status,
+            @Param("cursorAtividade") Instant cursorAtividade,
+            @Param("cursorId") UUID cursorId,
+            @Param("limite") int limite);
+
+    @EntityGraph(attributePaths = {"livro", "livro.livroAutores", "livro.livroAutores.autor"})
+    List<ItemBiblioteca> findByIdIn(Collection<UUID> ids);
 }
