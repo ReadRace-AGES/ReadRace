@@ -12,8 +12,7 @@ import com.readrace.api.model.Genero;
 public interface GeneroRepository extends JpaRepository<Genero, UUID> {
 
     @Query(
-            value =
-                    """
+            value = """
                     SELECT g.*
                     FROM genero g
                     JOIN livro_genero lg ON lg.genero_id = g.id

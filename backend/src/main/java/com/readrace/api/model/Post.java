@@ -12,7 +12,8 @@ import jakarta.persistence.Table;
 @Table(name = "post")
 public class Post {
 
-    @Id private UUID id;
+    @Id
+    private UUID id;
 
     @Column(name = "autor_id", nullable = false)
     private UUID autorId;
