@@ -67,18 +67,7 @@ public class GoogleBooksAdapter implements BookSearchPort {
 
     @Override
     public GoogleBooksResponse search(String query, int maxResults, int startIndex) {
-        // .encode().toUri() percent-encoda o valor: sem isso, caracteres reservados como & e #
-        // dentro do termo (ex.: "Tom & Jerry", "C# para iniciantes") cortariam a URL e derrubariam
-        // até a key. Um java.net.URI já pronto evita o RestClient reprocessar como template.
-        URI uri =
-                UriComponentsBuilder.fromPath("")
-                        .queryParam("q", query)
-                        .queryParam("maxResults", maxResults)
-                        .queryParam("startIndex", startIndex)
-                        .queryParam("key", apiKey)
-                        .encode(StandardCharsets.UTF_8)
-                        .build()
-                        .toUri();
+        URI uri = montarUrlBusca(query, maxResults, startIndex, apiKey);
 
         try {
             GoogleBooksResponse response =
@@ -92,12 +81,7 @@ public class GoogleBooksAdapter implements BookSearchPort {
 
     @Override
     public Optional<GoogleBookVolume> getById(String volumeId) {
-        URI uri =
-                UriComponentsBuilder.fromPath("/{id}")
-                        .queryParam("key", apiKey)
-                        .encode(StandardCharsets.UTF_8)
-                        .buildAndExpand(volumeId)
-                        .toUri();
+        URI uri = montarUrlPorId(volumeId, apiKey);
 
         try {
             GoogleBookVolume volume =
@@ -119,6 +103,41 @@ public class GoogleBooksAdapter implements BookSearchPort {
         } catch (RestClientException e) {
             throw indisponivel(e);
         }
+    }
+
+    /**
+     * Monta a URL ABSOLUTA de busca a partir do {@link #BASE_URL} (não um caminho relativo).
+     *
+     * <p>Com caminho relativo + {@code baseUrl}, o RestClient aplicaria a regra de resolução de URL
+     * relativa da RFC 3986 e descartaria o último segmento — sairia {@code .../books/v1/} em vez de
+     * {@code .../books/v1/volumes}, quebrando toda busca em produção. Partindo do {@code BASE_URL}
+     * absoluto, não há resolução relativa.
+     *
+     * <p>O {@code .encode()} garante que caracteres reservados no valor ({@code &}, {@code #} —
+     * ex.: "Tom &amp; Jerry", "C#") sejam percent-encodados e não cortem a query nem a {@code key}.
+     *
+     * <p>Package-private para ser testável sem rede nem chave real: o teste chama este método e
+     * compara a URL montada com a esperada.
+     */
+    static URI montarUrlBusca(String query, int maxResults, int startIndex, String apiKey) {
+        return UriComponentsBuilder.fromUriString(BASE_URL)
+                .queryParam("q", query)
+                .queryParam("maxResults", maxResults)
+                .queryParam("startIndex", startIndex)
+                .queryParam("key", apiKey)
+                .encode(StandardCharsets.UTF_8)
+                .build()
+                .toUri();
+    }
+
+    /** Monta a URL ABSOLUTA {@code BASE_URL/{id}} (ver {@link #montarUrlBusca}). */
+    static URI montarUrlPorId(String volumeId, String apiKey) {
+        return UriComponentsBuilder.fromUriString(BASE_URL)
+                .pathSegment("{id}")
+                .queryParam("key", apiKey)
+                .encode(StandardCharsets.UTF_8)
+                .buildAndExpand(volumeId)
+                .toUri();
     }
 
     private ServicoExternoIndisponivelException indisponivel(Exception causa) {
