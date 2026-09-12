@@ -1,0 +1,17 @@
+# =============================================================
+# Profile: prod
+#
+# Usa a Google Books API real (GoogleBooksAdapter).
+# Requer GOOGLE_BOOKS_API_KEY configurada.
+# Limite: 1000 requests/dia no tier gratuito.
+# =============================================================
+
+google:
+  books:
+    api-key: ${GOOGLE_BOOKS_API_KEY}
+
+# Em produção, desativar logs verbosos do Hibernate
+logging:
+  level:
+    org.hibernate.SQL: warn
+    org.hibernate.orm.jdbc.bind: warn

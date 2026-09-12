@@ -10,6 +10,9 @@ public enum CodigoErro {
     PARAMETRO_INVALIDO(HttpStatus.BAD_REQUEST, "Parâmetro de busca inválido."),
     METHOD_NOT_ALLOWED(HttpStatus.METHOD_NOT_ALLOWED, "Método não permitido para esta rota."),
     UNSUPPORTED_MEDIA_TYPE(HttpStatus.UNSUPPORTED_MEDIA_TYPE, "Formato de conteúdo não suportado."),
+    EXTERNAL_SERVICE_UNAVAILABLE(
+            HttpStatus.SERVICE_UNAVAILABLE,
+            "Serviço externo indisponível no momento. Tente novamente mais tarde."),
     INTERNAL_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, "Erro interno. Tente novamente.");
 
     private final HttpStatus status;
@@ -35,6 +38,7 @@ public enum CodigoErro {
             case METHOD_NOT_ALLOWED -> METHOD_NOT_ALLOWED;
             case UNSUPPORTED_MEDIA_TYPE -> UNSUPPORTED_MEDIA_TYPE;
             case BAD_REQUEST -> MALFORMED_REQUEST;
+            case BAD_GATEWAY, SERVICE_UNAVAILABLE, GATEWAY_TIMEOUT -> EXTERNAL_SERVICE_UNAVAILABLE;
             default -> INTERNAL_ERROR;
         };
     }
