@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import {
   ActivityIndicator,
   Pressable,
@@ -47,26 +47,28 @@ export function RegistrarProgressoSheet({
   visible,
   livroId,
   totalPaginas,
-  paginaAtual,
   onClose,
   onSuccess,
 }: RegistrarProgressoSheetProps) {
   const [page, setPage] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const submitting = useRef(false);
 
   useEffect(() => {
     if (visible) {
-      setPage(paginaAtual > 0 ? String(paginaAtual) : "");
+      setPage("");
       setError(null);
-      setLoading(false);
     }
-  }, [paginaAtual, visible]);
+  }, [livroId, visible]);
 
   const parsedPage = useMemo(() => {
-    if (!page.trim()) return null;
-    return Number(page);
-  }, [page]);
+    if (!/^\d+$/.test(page)) return null;
+    const parsed = Number(page);
+    return Number.isSafeInteger(parsed) && parsed > 0 && parsed <= totalPaginas
+      ? parsed
+      : null;
+  }, [page, totalPaginas]);
 
   const previewPage =
     parsedPage == null || Number.isNaN(parsedPage)
@@ -82,8 +84,9 @@ export function RegistrarProgressoSheet({
     !loading;
 
   async function submit() {
-    if (!canSubmit || parsedPage == null) return;
+    if (submitting.current || !canSubmit || parsedPage == null) return;
 
+    submitting.current = true;
     setLoading(true);
     setError(null);
     try {
@@ -97,6 +100,7 @@ export function RegistrarProgressoSheet({
           : "Não foi possível registrar o progresso. Tente novamente.",
       );
     } finally {
+      submitting.current = false;
       setLoading(false);
     }
   }
@@ -104,6 +108,7 @@ export function RegistrarProgressoSheet({
   return (
     <BottomSheet
       visible={visible}
+      dismissible={!loading}
       onClose={onClose}
       accessibilityLabel="Registrar progresso"
     >
@@ -121,7 +126,7 @@ export function RegistrarProgressoSheet({
             hitSlop={spacing[3]}
             style={styles.closeButton}
           >
-            <Text style={styles.closeText}>x</Text>
+            <Text style={styles.closeText}>✕</Text>
           </Pressable>
         </View>
 
@@ -131,7 +136,7 @@ export function RegistrarProgressoSheet({
           keyboardType="number-pad"
           value={page}
           onChangeText={(value) => {
-            setPage(value.replace(/\D/g, ""));
+            setPage(value);
             setError(null);
           }}
           placeholder="Ex: 145"

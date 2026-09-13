@@ -48,16 +48,15 @@ public class RegistrarProgressoService {
 
         UsuarioId usuarioAtualId = usuarioAtual.idDoUsuarioAtual();
 
+        // A restrição única também serializa a criação quando o item ainda não existe.
+        itemBibliotecaRepository.criarSeAusente(UUID.randomUUID(), usuarioAtualId.valor(), livroId);
         ItemBiblioteca item =
                 itemBibliotecaRepository
                         .findByUsuarioIdAndLivro_Id(usuarioAtualId.valor(), livro.getId())
-                        .orElseGet(
-                                () ->
-                                        itemBibliotecaRepository.save(
-                                                new ItemBiblioteca(usuarioAtualId.valor(), livro)));
+                        .orElseThrow();
 
         int paginaMaximaAnterior = item.getPaginaMaxima();
-        boolean concluidoAntes = item.estaConcluido();
+        boolean concluidoAntes = paginaMaximaAnterior >= livro.getTotalPaginas();
         int xpPaginas = Math.max(0, pagina - paginaMaximaAnterior);
 
         item.registrarProgresso(pagina);

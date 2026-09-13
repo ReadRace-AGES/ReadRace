@@ -21,6 +21,7 @@ export type BottomSheetProps = {
   onClose: () => void;
   children: ReactNode;
   accessibilityLabel?: string;
+  dismissible?: boolean;
 };
 
 const ANIMATION_MS = 220;
@@ -33,6 +34,7 @@ export function BottomSheet({
   onClose,
   children,
   accessibilityLabel = "Painel inferior",
+  dismissible = true,
 }: BottomSheetProps) {
   const insets = useSafeAreaInsets();
   const { height } = useWindowDimensions();
@@ -44,19 +46,21 @@ export function BottomSheet({
 
   const close = useMemo(
     () => () => {
-      if (isClosing.current) return;
+      if (!dismissible || isClosing.current) return;
       isClosing.current = true;
       Keyboard.dismiss();
       onClose();
     },
-    [onClose],
+    [dismissible, onClose],
   );
 
   const panResponder = useMemo(
     () =>
       PanResponder.create({
         onMoveShouldSetPanResponder: (_, gesture) =>
-          gesture.dy > 4 && Math.abs(gesture.dy) > Math.abs(gesture.dx),
+          dismissible &&
+          gesture.dy > 4 &&
+          Math.abs(gesture.dy) > Math.abs(gesture.dx),
         onPanResponderMove: (_, gesture) => {
           dragY.setValue(Math.max(0, gesture.dy));
         },
@@ -80,7 +84,7 @@ export function BottomSheet({
           }).start();
         },
       }),
-    [close, dragY],
+    [close, dismissible, dragY],
   );
 
   useEffect(() => {
@@ -153,6 +157,7 @@ export function BottomSheet({
           <Pressable
             accessibilityRole="button"
             accessibilityLabel="Fechar painel"
+            disabled={!dismissible}
             onPress={close}
             style={StyleSheet.absoluteFill}
           />

@@ -11,6 +11,7 @@ import jakarta.persistence.LockModeType;
 import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Lock;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
@@ -79,6 +80,20 @@ public interface ItemBibliotecaRepository extends JpaRepository<ItemBiblioteca, 
 
     @EntityGraph(attributePaths = {"livro", "livro.livroAutores", "livro.livroAutores.autor"})
     List<ItemBiblioteca> findByIdIn(Collection<UUID> ids);
+
+    @Modifying
+    @Query(
+            value =
+                    """
+            INSERT INTO item_biblioteca (id, usuario_id, livro_id, status_leitura)
+            VALUES (:id, :usuarioId, :livroId, 'lendo')
+            ON CONFLICT (usuario_id, livro_id) DO NOTHING
+            """,
+            nativeQuery = true)
+    void criarSeAusente(
+            @Param("id") UUID id,
+            @Param("usuarioId") UUID usuarioId,
+            @Param("livroId") UUID livroId);
 
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     Optional<ItemBiblioteca> findByUsuarioIdAndLivro_Id(UUID usuarioId, UUID livroId);

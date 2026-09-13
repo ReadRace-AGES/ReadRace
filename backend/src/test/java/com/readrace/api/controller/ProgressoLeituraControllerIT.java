@@ -2,6 +2,9 @@ package com.readrace.api.controller;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import jakarta.persistence.EntityManager;
+
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -10,42 +13,29 @@ import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.context.annotation.Import;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
-import org.springframework.test.context.jdbc.Sql;
 import org.springframework.test.web.servlet.assertj.MockMvcTester;
+import org.springframework.transaction.annotation.Transactional;
 
 import com.readrace.api.TestcontainersConfiguration;
 
 @Import(TestcontainersConfiguration.class)
 @SpringBootTest
 @AutoConfigureMockMvc
+@Transactional
 @DisplayName("POST /api/livros/{livroId}/progresso")
-@Sql(
-        statements =
-                """
-                UPDATE item_biblioteca
-                SET pagina_atual = 100,
-                    pagina_maxima = 100,
-                    status_leitura = 'lendo'
-                WHERE id = '40000000-0000-0000-0000-000000000001';
-
-                DELETE FROM registro_leitura
-                WHERE item_biblioteca_id IN (
-                    SELECT id
-                    FROM item_biblioteca
-                    WHERE usuario_id = '00000000-0000-0000-0000-000000000001'
-                      AND livro_id = '30000000-0000-0000-0000-000000000013'
-                );
-
-                DELETE FROM item_biblioteca
-                WHERE usuario_id = '00000000-0000-0000-0000-000000000001'
-                  AND livro_id = '30000000-0000-0000-0000-000000000013';
-                """)
 class ProgressoLeituraControllerIT {
 
+    // O seed inicia Dom Casmurro na página 145; cada teste desfaz suas alterações por rollback.
     private static final String LIVRO_DOM_CASMURRO = "30000000-0000-0000-0000-000000000001";
     private static final String LIVRO_FORA_DA_BIBLIOTECA = "30000000-0000-0000-0000-000000000013";
 
     @Autowired private MockMvcTester mvc;
+    @Autowired private EntityManager entityManager;
+
+    @AfterEach
+    void deve_persistir_alteracoes_antes_do_rollback() {
+        entityManager.flush();
+    }
 
     @Test
     void deve_avancar_pagina_e_devolver_xp_das_paginas_novas() {
@@ -53,7 +43,7 @@ class ProgressoLeituraControllerIT {
                         mvc.post()
                                 .uri("/api/livros/{livroId}/progresso", LIVRO_DOM_CASMURRO)
                                 .contentType(MediaType.APPLICATION_JSON)
-                                .content("{\"pagina\":145}"))
+                                .content("{\"pagina\":190}"))
                 .hasStatusOk()
                 .bodyJson()
                 .extractingPath("$.xpPaginas")
@@ -63,7 +53,7 @@ class ProgressoLeituraControllerIT {
                         mvc.post()
                                 .uri("/api/livros/{livroId}/progresso", LIVRO_DOM_CASMURRO)
                                 .contentType(MediaType.APPLICATION_JSON)
-                                .content("{\"pagina\":145}"))
+                                .content("{\"pagina\":190}"))
                 .hasStatusOk()
                 .bodyJson()
                 .extractingPath("$.xpPaginas")
@@ -76,7 +66,7 @@ class ProgressoLeituraControllerIT {
                         mvc.post()
                                 .uri("/api/livros/{livroId}/progresso", LIVRO_DOM_CASMURRO)
                                 .contentType(MediaType.APPLICATION_JSON)
-                                .content("{\"pagina\":145}"))
+                                .content("{\"pagina\":190}"))
                 .hasStatusOk();
 
         assertThat(
@@ -97,7 +87,7 @@ class ProgressoLeituraControllerIT {
                 .hasStatusOk()
                 .bodyJson()
                 .extractingPath("$.paginaMaximaAlcancada")
-                .isEqualTo(145);
+                .isEqualTo(190);
     }
 
     @Test
@@ -110,7 +100,7 @@ class ProgressoLeituraControllerIT {
                 .hasStatusOk()
                 .bodyJson()
                 .extractingPath("$.xpTotal")
-                .isEqualTo(306);
+                .isEqualTo(261);
 
         assertThat(
                         mvc.post()
@@ -175,6 +165,29 @@ class ProgressoLeituraControllerIT {
                 .bodyJson()
                 .extractingPath("$.code")
                 .isEqualTo("LIVRO_NAO_ENCONTRADO");
+    }
+
+    @Test
+    void nao_deve_repetir_bonus_apos_retroceder_e_concluir_novamente() {
+        for (int pagina : new int[] {256, 100}) {
+            assertThat(
+                            mvc.post()
+                                    .uri("/api/livros/{livroId}/progresso", LIVRO_DOM_CASMURRO)
+                                    .contentType(MediaType.APPLICATION_JSON)
+                                    .content("{\"pagina\":" + pagina + "}"))
+                    .hasStatusOk();
+            entityManager.flush();
+            entityManager.clear();
+        }
+        assertThat(
+                        mvc.post()
+                                .uri("/api/livros/{livroId}/progresso", LIVRO_DOM_CASMURRO)
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content("{\"pagina\":256}"))
+                .hasStatusOk()
+                .bodyJson()
+                .extractingPath("$.xpTotal")
+                .isEqualTo(0);
     }
 
     @Test
