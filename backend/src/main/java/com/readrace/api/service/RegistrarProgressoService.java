@@ -5,7 +5,6 @@ import java.util.UUID;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import com.fasterxml.jackson.databind.JsonNode;
 import com.readrace.api.dto.request.RegistrarProgressoRequest;
 import com.readrace.api.dto.response.ProgressoLeituraResponse;
 import com.readrace.api.exception.PaginaInvalidaException;
@@ -96,11 +95,30 @@ public class RegistrarProgressoService {
     }
 
     private int lerPagina(RegistrarProgressoRequest request) {
-        JsonNode pagina = request == null ? null : request.pagina();
-        if (pagina == null || !pagina.isIntegralNumber() || !pagina.canConvertToInt()) {
-            throw new PaginaInvalidaException("Informe uma pagina inteira entre 1 e o total do livro.");
+        Object pagina = request == null ? null : request.pagina();
+        if (pagina instanceof Integer valor) {
+            return valor;
         }
-        return pagina.intValue();
+        if (pagina instanceof Long valor
+                && valor >= Integer.MIN_VALUE
+                && valor <= Integer.MAX_VALUE) {
+            return valor.intValue();
+        }
+        if (pagina instanceof String texto && texto.matches("\\d+")) {
+            try {
+                return Integer.parseInt(texto);
+            } catch (NumberFormatException ex) {
+                throw new PaginaInvalidaException(
+                        "Informe uma pagina inteira entre 1 e o total do livro.");
+            }
+        }
+
+        if (pagina instanceof Number) {
+            throw new PaginaInvalidaException(
+                    "Informe uma pagina inteira entre 1 e o total do livro.");
+        }
+
+        throw new PaginaInvalidaException("Informe uma pagina inteira entre 1 e o total do livro.");
     }
 
     private void validarPagina(int pagina, int totalPaginas) {
