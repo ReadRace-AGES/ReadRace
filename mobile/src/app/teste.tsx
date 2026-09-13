@@ -1,18 +1,26 @@
-import { useFocusEffect } from 'expo-router';
-import { useCallback, useRef, useState } from 'react';
-import { Pressable, ScrollView, Switch, Text, View } from 'react-native';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import Svg, { Circle, Path } from 'react-native-svg';
+import { useFocusEffect } from "expo-router";
+import { useCallback, useRef, useState } from "react";
+import {
+  Pressable,
+  ScrollView,
+  Switch,
+  Text,
+  TextInput,
+  View,
+} from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
+import Svg, { Circle, Path } from "react-native-svg";
 
-import { BookCover } from '@/components/BookCover';
-import { EmptyState, type EmptyStateIconProps } from '@/components/EmptyState';
-import { SearchIcon } from '@/components/icons/SearchIcon';
-import { SegmentedTabs } from '@/components/SegmentedTabs';
-import { colors, sizes, spacing } from '@/theme';
+import { BottomSheet } from "@/components/BottomSheet";
+import { BookCover } from "@/components/BookCover";
+import { EmptyState, type EmptyStateIconProps } from "@/components/EmptyState";
+import { SearchIcon } from "@/components/icons/SearchIcon";
+import { SegmentedTabs } from "@/components/SegmentedTabs";
+import { colors, radius, shadows, sizes, spacing, textStyles } from "@/theme";
 
-const cover = 'https://covers.openlibrary.org/b/isbn/9780451524935-L.jpg';
+const cover = "https://covers.openlibrary.org/b/isbn/9780451524935-L.jpg";
 const brokenCover =
-  'https://covers.openlibrary.org/b/isbn/readrace-inexistente-L.jpg?default=false';
+  "https://covers.openlibrary.org/b/isbn/readrace-inexistente-L.jpg?default=false";
 
 function SadFaceIcon({ size, color }: EmptyStateIconProps) {
   return (
@@ -30,11 +38,30 @@ function SadFaceIcon({ size, color }: EmptyStateIconProps) {
   );
 }
 
+function CheckIcon({ color = colors.textInverse }: { color?: string }) {
+  return (
+    <Svg
+      width={sizes.iconSmall}
+      height={sizes.iconSmall}
+      viewBox="0 0 16 16"
+      fill="none"
+    >
+      <Path
+        d="M13.333 4 6 11.333 2.667 8"
+        stroke={color}
+        strokeWidth="2"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </Svg>
+  );
+}
+
 const messages = {
-  Busca: 'Busque por leitores, comunidades ou livros',
-  'Outra lista': 'Nenhum item nesta lista de demonstração.',
-  'Texto longo':
-    'Esta lista de demonstração ainda não possui itens. Este texto propositalmente longo deve quebrar naturalmente em várias linhas, continuar centralizado e permanecer completamente legível em uma tela estreita.',
+  Busca: "Busque por leitores, comunidades ou livros",
+  "Outra lista": "Nenhum item nesta lista de demonstração.",
+  "Texto longo":
+    "Esta lista de demonstração ainda não possui itens. Este texto propositalmente longo deve quebrar naturalmente em várias linhas, continuar centralizado e permanecer completamente legível em uma tela estreita.",
 };
 
 export default function TesteScreen() {
@@ -46,10 +73,16 @@ export default function TesteScreen() {
   const insets = useSafeAreaInsets();
 
   // EmptyState (#25)
-  const [example, setExample] = useState('Busca');
+  const [example, setExample] = useState("Busca");
   const [withAction, setWithAction] = useState(false);
   const [compact, setCompact] = useState(false);
   const [actionPresses, setActionPresses] = useState(0);
+
+  // BottomSheet (#26)
+  const [sheetOpen, setSheetOpen] = useState(false);
+  const [page, setPage] = useState("");
+  const progress = Math.min(Math.max(Number(page) || 0, 0), 300);
+  const progressPercent = Math.round((progress / 300) * 100);
 
   useFocusEffect(
     useCallback(
@@ -58,8 +91,8 @@ export default function TesteScreen() {
         timer.current = null;
         setToastVisible(false);
       },
-      []
-    )
+      [],
+    ),
   );
 
   // Demonstracao local: a tela de produto passa o disparador do Toast #29.
@@ -92,7 +125,7 @@ export default function TesteScreen() {
         </Text>
         <Text className="font-inter-bold text-h3 text-text">Três tamanhos</Text>
         <View className="flex-row flex-wrap items-end gap-4">
-          {(['thumbnail', 'grid', 'featured'] as const).map((size) => (
+          {(["thumbnail", "grid", "featured"] as const).map((size) => (
             <View key={size} className="gap-2">
               <BookCover
                 size={size}
@@ -123,7 +156,7 @@ export default function TesteScreen() {
           className="rounded-sm bg-primary px-4 py-3"
         >
           <Text className="font-inter-bold text-body text-text-inverse">
-            {replacement ? 'Usar URL inválida' : 'Trocar por capa válida'}
+            {replacement ? "Usar URL inválida" : "Trocar por capa válida"}
           </Text>
         </Pressable>
         <Text className="font-inter-bold text-h3 text-text">
@@ -183,7 +216,7 @@ export default function TesteScreen() {
           }}
         >
           <EmptyState
-            icon={example === 'Busca' ? SearchIcon : SadFaceIcon}
+            icon={example === "Busca" ? SearchIcon : SadFaceIcon}
             message={messages[example as keyof typeof messages]}
             action={
               withAction ? (
@@ -200,6 +233,20 @@ export default function TesteScreen() {
             }
           />
         </View>
+
+        <Text className="font-inter-bold text-h2 text-primary">
+          BottomSheet — #26
+        </Text>
+        <Pressable
+          accessibilityRole="button"
+          onPress={() => setSheetOpen(true)}
+          className="items-center justify-center rounded-pill bg-primary px-5"
+          style={[{ height: sizes.buttonHeight }, shadows.button]}
+        >
+          <Text className="font-inter-bold text-body text-text-inverse">
+            Abrir Registrar Progresso
+          </Text>
+        </Pressable>
       </ScrollView>
       {toastVisible && (
         <View
@@ -218,6 +265,96 @@ export default function TesteScreen() {
           </View>
         </View>
       )}
+
+      <BottomSheet
+        visible={sheetOpen}
+        onClose={() => setSheetOpen(false)}
+        accessibilityLabel="Registrar progresso"
+      >
+        <View className="gap-5">
+          <View className="flex-row items-start justify-between gap-4">
+            <View className="flex-1 gap-1">
+              <Text className="font-inter-bold text-h1 text-primary">
+                Registrar Progresso
+              </Text>
+              <Text className="font-inter text-bodySmall text-text-secondary">
+                Em qual página você parou?
+              </Text>
+            </View>
+            <Pressable
+              accessibilityRole="button"
+              accessibilityLabel="Fechar"
+              onPress={() => setSheetOpen(false)}
+              hitSlop={spacing[3]}
+            >
+              <Text className="font-inter text-h1 text-text">x</Text>
+            </Pressable>
+          </View>
+
+          <TextInput
+            accessibilityLabel="Página atual"
+            keyboardType="number-pad"
+            value={page}
+            onChangeText={setPage}
+            placeholder="Ex: 145"
+            placeholderTextColor={colors.surfacePinkStrong}
+            className="text-center font-inter-bold text-display text-text"
+            style={{
+              height: spacing[10] * 2,
+              borderWidth: sizes.borderWidth,
+              borderColor: colors.primarySoft,
+              borderRadius: radius.sm,
+            }}
+          />
+
+          <View className="items-center gap-4">
+            <Text className="font-inter-bold text-body text-text">
+              / 300 páginas
+            </Text>
+            <View
+              className="self-stretch overflow-hidden rounded-pill bg-surfacePink"
+              style={{ height: sizes.progressTrackHeight }}
+            >
+              <View
+                className="h-full rounded-pill bg-primary"
+                style={{ width: `${progressPercent}%` }}
+              />
+            </View>
+            <Text
+              style={[textStyles.bodyStrong, { color: colors.textSecondary }]}
+            >
+              {progressPercent}%
+            </Text>
+          </View>
+
+          <View className="gap-2">
+            <Pressable
+              accessibilityRole="button"
+              onPress={() => setSheetOpen(false)}
+              className="flex-row items-center justify-center gap-2 rounded-pill bg-primary px-5"
+              style={[
+                { height: sizes.buttonHeight + spacing[2] },
+                shadows.button,
+              ]}
+            >
+              <CheckIcon />
+              <Text className="font-inter-bold text-body text-text-inverse">
+                Atualizar Progresso
+              </Text>
+            </Pressable>
+            <Pressable
+              accessibilityRole="button"
+              onPress={() => setSheetOpen(false)}
+              className="items-center justify-center rounded-pill border border-primary px-5"
+              style={{ height: sizes.buttonHeight + spacing[2] }}
+            >
+              <Text className="font-inter-bold text-body text-text">
+                Cancelar
+              </Text>
+            </Pressable>
+          </View>
+        </View>
+      </BottomSheet>
     </View>
   );
 }
