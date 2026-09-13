@@ -94,22 +94,22 @@ public class RegistrarProgressoService {
                 return Integer.parseInt(texto);
             } catch (NumberFormatException ex) {
                 throw new PaginaInvalidaException(
-                        "Informe uma pagina inteira entre 1 e o total do livro.");
+                        "Informe uma página inteira entre 1 e o total do livro.");
             }
         }
 
         if (pagina instanceof Number) {
             throw new PaginaInvalidaException(
-                    "Informe uma pagina inteira entre 1 e o total do livro.");
+                    "Informe uma página inteira entre 1 e o total do livro.");
         }
 
-        throw new PaginaInvalidaException("Informe uma pagina inteira entre 1 e o total do livro.");
+        throw new PaginaInvalidaException("Informe uma página inteira entre 1 e o total do livro.");
     }
 
     private void validarPagina(int pagina, int totalPaginas) {
         if (pagina <= 0 || pagina > totalPaginas) {
             throw new PaginaInvalidaException(
-                    "Informe uma pagina entre 1 e %d.".formatted(totalPaginas));
+                    "Informe uma página entre 1 e %d.".formatted(totalPaginas));
         }
     }
 }

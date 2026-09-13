@@ -94,7 +94,7 @@ export function RegistrarProgressoSheet({
       setError(
         err instanceof ApiError
           ? err.message
-          : "Nao foi possivel registrar o progresso. Tente novamente.",
+          : "Não foi possível registrar o progresso. Tente novamente.",
       );
     } finally {
       setLoading(false);
@@ -111,7 +111,7 @@ export function RegistrarProgressoSheet({
         <View style={styles.header}>
           <View style={styles.titleBlock}>
             <Text style={styles.title}>Registrar Progresso</Text>
-            <Text style={styles.subtitle}>Em qual pagina voce parou?</Text>
+            <Text style={styles.subtitle}>Em qual página você parou?</Text>
           </View>
           <Pressable
             accessibilityRole="button"
@@ -126,7 +126,7 @@ export function RegistrarProgressoSheet({
         </View>
 
         <TextInput
-          accessibilityLabel="Pagina atual"
+          accessibilityLabel="Página atual"
           editable={!loading}
           keyboardType="number-pad"
           value={page}
@@ -140,7 +140,7 @@ export function RegistrarProgressoSheet({
         />
 
         <View style={styles.progressBlock}>
-          <Text style={styles.totalLabel}>/ {totalPaginas} paginas</Text>
+          <Text style={styles.totalLabel}>/ {totalPaginas} páginas</Text>
           <View style={styles.progressTrack}>
             <View
               style={[styles.progressFill, { width: `${progressPercent}%` }]}

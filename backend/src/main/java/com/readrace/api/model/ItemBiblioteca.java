@@ -36,7 +36,7 @@ public class ItemBiblioteca {
     private Livro livro;
 
     // Tipo enumerado nativo do Postgres: o columnDefinition faz o `validate` do Hibernate aceitar a
-    // coluna, e NAMED_ENUM faz o bind como `status_leitura`, nao como varchar.
+    // coluna, e NAMED_ENUM faz o bind como `status_leitura`, não como varchar.
     @Enumerated(EnumType.STRING)
     @JdbcTypeCode(SqlTypes.NAMED_ENUM)
     @Column(name = "status_leitura", nullable = false, columnDefinition = "status_leitura")

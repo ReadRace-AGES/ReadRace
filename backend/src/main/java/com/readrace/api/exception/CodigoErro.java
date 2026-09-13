@@ -3,26 +3,26 @@ package com.readrace.api.exception;
 import org.springframework.http.HttpStatus;
 
 public enum CodigoErro {
-    RESOURCE_NOT_FOUND(HttpStatus.NOT_FOUND, "Recurso nao encontrado."),
-    ROUTE_NOT_FOUND(HttpStatus.NOT_FOUND, "Rota nao encontrada."),
-    VALIDATION_ERROR(HttpStatus.BAD_REQUEST, "Dados invalidos."),
-    MALFORMED_REQUEST(HttpStatus.BAD_REQUEST, "Requisicao malformada."),
-    PARAMETRO_INVALIDO(HttpStatus.BAD_REQUEST, "Parametro de busca invalido."),
-    PAGINA_INVALIDA(HttpStatus.UNPROCESSABLE_ENTITY, "Pagina invalida."),
-    DESAFIO_NAO_ENCONTRADO(HttpStatus.NOT_FOUND, "Desafio nao encontrado."),
-    OPONENTE_NAO_ENCONTRADO(HttpStatus.NOT_FOUND, "Oponente nao encontrado."),
-    LIVRO_NAO_ENCONTRADO(HttpStatus.NOT_FOUND, "Livro nao encontrado."),
+    RESOURCE_NOT_FOUND(HttpStatus.NOT_FOUND, "Recurso não encontrado."),
+    ROUTE_NOT_FOUND(HttpStatus.NOT_FOUND, "Rota não encontrada."),
+    VALIDATION_ERROR(HttpStatus.BAD_REQUEST, "Dados inválidos."),
+    MALFORMED_REQUEST(HttpStatus.BAD_REQUEST, "Requisição malformada."),
+    PARAMETRO_INVALIDO(HttpStatus.BAD_REQUEST, "Parâmetro de busca inválido."),
+    PAGINA_INVALIDA(HttpStatus.UNPROCESSABLE_ENTITY, "Página inválida."),
+    DESAFIO_NAO_ENCONTRADO(HttpStatus.NOT_FOUND, "Desafio não encontrado."),
+    OPONENTE_NAO_ENCONTRADO(HttpStatus.NOT_FOUND, "Oponente não encontrado."),
+    LIVRO_NAO_ENCONTRADO(HttpStatus.NOT_FOUND, "Livro não encontrado."),
     OPONENTE_NAO_E_AMIGO(
-            HttpStatus.BAD_REQUEST, "O oponente informado nao e amigo do usuario atual."),
-    META_INVALIDA(HttpStatus.BAD_REQUEST, "A meta de paginas deve estar entre 10 e 500."),
+            HttpStatus.BAD_REQUEST, "O oponente informado não é amigo do usuário atual."),
+    META_INVALIDA(HttpStatus.BAD_REQUEST, "A meta de páginas deve estar entre 10 e 500."),
     LIVRO_OBRIGATORIO(
-            HttpStatus.BAD_REQUEST, "O livro e obrigatorio para desafios com meta por livro."),
+            HttpStatus.BAD_REQUEST, "O livro é obrigatório para desafios com meta por livro."),
     PRAZO_INVALIDO(HttpStatus.BAD_REQUEST, "O prazo deve ser maior que zero."),
-    METHOD_NOT_ALLOWED(HttpStatus.METHOD_NOT_ALLOWED, "Metodo nao permitido para esta rota."),
-    UNSUPPORTED_MEDIA_TYPE(HttpStatus.UNSUPPORTED_MEDIA_TYPE, "Formato de conteudo nao suportado."),
+    METHOD_NOT_ALLOWED(HttpStatus.METHOD_NOT_ALLOWED, "Método não permitido para esta rota."),
+    UNSUPPORTED_MEDIA_TYPE(HttpStatus.UNSUPPORTED_MEDIA_TYPE, "Formato de conteúdo não suportado."),
     EXTERNAL_SERVICE_UNAVAILABLE(
             HttpStatus.SERVICE_UNAVAILABLE,
-            "Servico externo indisponivel no momento. Tente novamente mais tarde."),
+            "Serviço externo indisponível no momento. Tente novamente mais tarde."),
     INTERNAL_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, "Erro interno. Tente novamente.");
 
     private final HttpStatus status;

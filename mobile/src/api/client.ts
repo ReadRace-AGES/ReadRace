@@ -1,13 +1,13 @@
 /**
  * Cliente HTTP minimo da API do ReadRace.
  *
- * Nenhuma chamada envia identificacao do usuario: o backend resolve quem e pelo `CurrentUser`
+ * Nenhuma chamada envia identificação do usuário: o backend resolve quem é pelo `CurrentUser`
  * (#10). A URL base vem de `EXPO_PUBLIC_API_URL` (ver `.env.example`); sem ela, assume o backend
  * local na porta 8080.
  */
 const BASE_URL = (process.env.EXPO_PUBLIC_API_URL ?? "http://localhost:8080").replace(/\/+$/, "");
 
-/** Envelope padrao de erro do backend (#10): `code` estavel, `message` exibivel. */
+/** Envelope padrão de erro do backend (#10): `code` estável, `message` exibível. */
 export type ApiErrorBody = {
   code: string;
   message: string;
@@ -64,7 +64,7 @@ async function readErrorBody(response: Response): Promise<Partial<ApiErrorBody>>
   try {
     return (await response.json()) as Partial<ApiErrorBody>;
   } catch {
-    // Corpo nao-JSON (proxy, gateway): a mensagem padrao do ApiError cobre.
+    // Corpo não-JSON (proxy, gateway): a mensagem padrão do ApiError cobre.
     return {};
   }
 }

@@ -19,8 +19,8 @@ import jakarta.persistence.LockModeType;
 public interface ItemBibliotecaRepository extends JpaRepository<ItemBiblioteca, UUID> {
 
     /**
-     * Um item de uma pagina da biblioteca, na ordem da lista. A atividade e o ultimo registro de
-     * leitura ou, sem registro, a data de adicao; vem como {@link Instant} porque e assim que o
+     * Um item de uma página da biblioteca, na ordem da lista. A atividade é o último registro de
+     * leitura ou, sem registro, a data de adição; vem como {@link Instant} porque é assim que o
      * driver entrega um {@code timestamptz} em query nativa.
      */
     interface ItemPaginado {
@@ -29,8 +29,8 @@ public interface ItemBibliotecaRepository extends JpaRepository<ItemBiblioteca, 
         Instant getAtividade();
     }
 
-    // Native de proposito: RegistroLeitura tambem tem entidade na #33, mas o keyset precisa da
-    // ordenacao no banco. A pagina vem so com ids; as entidades sao carregadas depois por findByIdIn,
+    // Native de propósito: RegistroLeitura também tem entidade na #33, mas o keyset precisa da
+    // ordenação no banco. A página vem só com ids; as entidades são carregadas depois por findByIdIn,
     // com livro e autores, em uma query.
     String PAGINA_SELECT =
             """
@@ -44,8 +44,8 @@ public interface ItemBibliotecaRepository extends JpaRepository<ItemBiblioteca, 
             WHERE i.usuario_id = :usuarioId
             """;
 
-    // Ordem: atividade mais recente primeiro; empate pelo id ascendente. O cursor e o ultimo item
-    // devolvido, e a condicao pega quem vem depois dele nessa mesma ordem.
+    // Ordem: atividade mais recente primeiro; empate pelo id ascendente. O cursor é o último item
+    // devolvido, e a condição pega quem vem depois dele nessa mesma ordem.
     String PAGINA_CURSOR_E_ORDEM =
             """
               AND (
