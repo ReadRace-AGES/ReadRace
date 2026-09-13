@@ -6,6 +6,8 @@ import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
+import jakarta.persistence.LockModeType;
+
 import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Lock;
@@ -13,8 +15,6 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
 import com.readrace.api.model.ItemBiblioteca;
-
-import jakarta.persistence.LockModeType;
 
 public interface ItemBibliotecaRepository extends JpaRepository<ItemBiblioteca, UUID> {
 
@@ -30,7 +30,8 @@ public interface ItemBibliotecaRepository extends JpaRepository<ItemBiblioteca, 
     }
 
     // Native de propósito: RegistroLeitura também tem entidade na #33, mas o keyset precisa da
-    // ordenação no banco. A página vem só com ids; as entidades são carregadas depois por findByIdIn,
+    // ordenação no banco. A página vem só com ids; as entidades são carregadas depois por
+    // findByIdIn,
     // com livro e autores, em uma query.
     String PAGINA_SELECT =
             """

@@ -42,10 +42,8 @@ import com.readrace.api.TestcontainersConfiguration;
                 """)
 class ProgressoLeituraControllerIT {
 
-    private static final String LIVRO_DOM_CASMURRO =
-            "30000000-0000-0000-0000-000000000001";
-    private static final String LIVRO_FORA_DA_BIBLIOTECA =
-            "30000000-0000-0000-0000-000000000013";
+    private static final String LIVRO_DOM_CASMURRO = "30000000-0000-0000-0000-000000000001";
+    private static final String LIVRO_FORA_DA_BIBLIOTECA = "30000000-0000-0000-0000-000000000013";
 
     @Autowired private MockMvcTester mvc;
 
@@ -176,7 +174,7 @@ class ProgressoLeituraControllerIT {
                 .hasStatus(HttpStatus.NOT_FOUND)
                 .bodyJson()
                 .extractingPath("$.code")
-                .isEqualTo("RESOURCE_NOT_FOUND");
+                .isEqualTo("LIVRO_NAO_ENCONTRADO");
     }
 
     @Test

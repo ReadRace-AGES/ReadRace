@@ -42,9 +42,7 @@ public class RegistrarProgressoService {
     public ProgressoLeituraResponse registrar(UUID livroId, RegistrarProgressoRequest request) {
         int pagina = lerPagina(request);
         Livro livro =
-                livroRepository
-                        .findById(livroId)
-                        .orElseThrow(LivroNaoEncontradoException::new);
+                livroRepository.findById(livroId).orElseThrow(LivroNaoEncontradoException::new);
 
         validarPagina(pagina, livro.getTotalPaginas());
 
