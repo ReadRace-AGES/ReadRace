@@ -7,17 +7,15 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.readrace.api.dto.request.RegistrarProgressoRequest;
 import com.readrace.api.dto.response.ProgressoLeituraResponse;
+import com.readrace.api.exception.LivroNaoEncontradoException;
 import com.readrace.api.exception.PaginaInvalidaException;
-import com.readrace.api.exception.RecursoNaoEncontradoException;
 import com.readrace.api.model.ItemBiblioteca;
 import com.readrace.api.model.Livro;
 import com.readrace.api.model.RegistroLeitura;
-import com.readrace.api.model.Usuario;
 import com.readrace.api.model.UsuarioId;
 import com.readrace.api.repository.ItemBibliotecaRepository;
 import com.readrace.api.repository.LivroRepository;
 import com.readrace.api.repository.RegistroLeituraRepository;
-import com.readrace.api.repository.UsuarioRepository;
 
 @Service
 public class RegistrarProgressoService {
@@ -25,19 +23,16 @@ public class RegistrarProgressoService {
     private static final int XP_CONCLUSAO = 150;
 
     private final LivroRepository livroRepository;
-    private final UsuarioRepository usuarioRepository;
     private final ItemBibliotecaRepository itemBibliotecaRepository;
     private final RegistroLeituraRepository registroLeituraRepository;
     private final UsuarioAtualDeSeed usuarioAtual;
 
     public RegistrarProgressoService(
             LivroRepository livroRepository,
-            UsuarioRepository usuarioRepository,
             ItemBibliotecaRepository itemBibliotecaRepository,
             RegistroLeituraRepository registroLeituraRepository,
             UsuarioAtualDeSeed usuarioAtual) {
         this.livroRepository = livroRepository;
-        this.usuarioRepository = usuarioRepository;
         this.itemBibliotecaRepository = itemBibliotecaRepository;
         this.registroLeituraRepository = registroLeituraRepository;
         this.usuarioAtual = usuarioAtual;
@@ -49,29 +44,19 @@ public class RegistrarProgressoService {
         Livro livro =
                 livroRepository
                         .findById(livroId)
-                        .orElseThrow(
-                                () ->
-                                        new RecursoNaoEncontradoException(
-                                                "Livro '%s' nao encontrado".formatted(livroId)));
+                        .orElseThrow(LivroNaoEncontradoException::new);
 
         validarPagina(pagina, livro.getTotalPaginas());
 
         UsuarioId usuarioAtualId = usuarioAtual.idDoUsuarioAtual();
-        Usuario usuario =
-                usuarioRepository
-                        .findById(usuarioAtualId.valor())
-                        .orElseThrow(
-                                () ->
-                                        new RecursoNaoEncontradoException(
-                                                "Usuario atual nao encontrado"));
 
         ItemBiblioteca item =
                 itemBibliotecaRepository
-                        .findByUsuarioIdAndLivroId(usuario.getId(), livro.getId())
+                        .findByUsuarioIdAndLivro_Id(usuarioAtualId.valor(), livro.getId())
                         .orElseGet(
                                 () ->
                                         itemBibliotecaRepository.save(
-                                                new ItemBiblioteca(usuario, livro)));
+                                                new ItemBiblioteca(usuarioAtualId.valor(), livro)));
 
         int paginaMaximaAnterior = item.getPaginaMaxima();
         boolean concluidoAntes = item.estaConcluido();

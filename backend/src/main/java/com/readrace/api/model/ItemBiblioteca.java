@@ -28,14 +28,15 @@ public class ItemBiblioteca {
 
     @Id private UUID id;
 
-    @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(name = "usuario_id", nullable = false)
-    private Usuario usuario;
+    @Column(name = "usuario_id", nullable = false)
+    private UUID usuarioId;
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "livro_id", nullable = false)
     private Livro livro;
 
+    // Tipo enumerado nativo do Postgres: o columnDefinition faz o `validate` do Hibernate aceitar a
+    // coluna, e NAMED_ENUM faz o bind como `status_leitura`, nao como varchar.
     @Enumerated(EnumType.STRING)
     @JdbcTypeCode(SqlTypes.NAMED_ENUM)
     @Column(name = "status_leitura", nullable = false, columnDefinition = "status_leitura")
@@ -53,9 +54,9 @@ public class ItemBiblioteca {
     @Column(name = "adicionado_em", nullable = false)
     private OffsetDateTime adicionadoEm;
 
-    public ItemBiblioteca(Usuario usuario, Livro livro) {
+    public ItemBiblioteca(UUID usuarioId, Livro livro) {
         this.id = UUID.randomUUID();
-        this.usuario = usuario;
+        this.usuarioId = usuarioId;
         this.livro = livro;
         this.statusLeitura = StatusLeitura.lendo;
         this.favorito = false;
@@ -73,5 +74,23 @@ public class ItemBiblioteca {
 
     public boolean estaConcluido() {
         return statusLeitura == StatusLeitura.lido || paginaAtual >= livro.getTotalPaginas();
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj) {
+            return true;
+        }
+
+        if (!(obj instanceof ItemBiblioteca outro)) {
+            return false;
+        }
+
+        return id != null && id.equals(outro.id);
+    }
+
+    @Override
+    public int hashCode() {
+        return getClass().hashCode();
     }
 }

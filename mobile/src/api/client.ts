@@ -1,41 +1,70 @@
-export type ApiErrorPayload = {
-  code?: string;
-  message?: string;
+/**
+ * Cliente HTTP minimo da API do ReadRace.
+ *
+ * Nenhuma chamada envia identificacao do usuario: o backend resolve quem e pelo `CurrentUser`
+ * (#10). A URL base vem de `EXPO_PUBLIC_API_URL` (ver `.env.example`); sem ela, assume o backend
+ * local na porta 8080.
+ */
+const BASE_URL = (process.env.EXPO_PUBLIC_API_URL ?? "http://localhost:8080").replace(/\/+$/, "");
+
+/** Envelope padrao de erro do backend (#10): `code` estavel, `message` exibivel. */
+export type ApiErrorBody = {
+  code: string;
+  message: string;
 };
 
 export class ApiError extends Error {
   readonly status: number;
-  readonly code?: string;
+  readonly code: string;
 
-  constructor(status: number, payload?: ApiErrorPayload) {
-    super(payload?.message || "Nao foi possivel concluir a acao.");
+  constructor(status: number, body: Partial<ApiErrorBody>) {
+    super(body.message ?? `Erro ${status} ao chamar a API.`);
     this.name = "ApiError";
     this.status = status;
-    this.code = payload?.code;
+    this.code = body.code ?? "UNKNOWN";
   }
 }
 
-const API_URL = process.env.EXPO_PUBLIC_API_URL ?? "http://localhost:8080";
+export async function apiGet<T>(path: string, init?: RequestInit): Promise<T> {
+  return apiRequest<T>(path, {
+    ...init,
+    method: init?.method ?? "GET",
+    headers: { Accept: "application/json", ...init?.headers },
+  });
+}
 
 export async function apiRequest<T>(
   path: string,
-  options: RequestInit = {},
+  init: RequestInit = {},
 ): Promise<T> {
-  const response = await fetch(`${API_URL}${path}`, {
-    headers: {
-      Accept: "application/json",
-      "Content-Type": "application/json",
-      ...options.headers,
-    },
-    ...options,
-  });
+  const headers = new Headers(init.headers);
+  headers.set("Accept", "application/json");
 
-  const text = await response.text();
-  const body = text ? JSON.parse(text) : undefined;
-
-  if (!response.ok) {
-    throw new ApiError(response.status, body);
+  if (typeof init.body === "string" && !headers.has("Content-Type")) {
+    headers.set("Content-Type", "application/json");
   }
 
-  return body as T;
+  const response = await fetch(`${BASE_URL}${path}`, {
+    ...init,
+    headers,
+  });
+
+  if (!response.ok) {
+    throw new ApiError(response.status, await readErrorBody(response));
+  }
+
+  if (response.status === 204) {
+    return undefined as T;
+  }
+
+  return (await response.json()) as T;
+}
+
+async function readErrorBody(response: Response): Promise<Partial<ApiErrorBody>> {
+  try {
+    return (await response.json()) as Partial<ApiErrorBody>;
+  } catch {
+    // Corpo nao-JSON (proxy, gateway): a mensagem padrao do ApiError cobre.
+    return {};
+  }
 }
