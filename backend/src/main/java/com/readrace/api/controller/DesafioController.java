@@ -31,8 +31,10 @@ public class DesafioController {
     }
 
     @GetMapping
-    public ResponseEntity<DesafiosResponse> listar() {
-        return ResponseEntity.ok(desafioService.listar());
+    public ResponseEntity<DesafiosResponse> listar(
+            @RequestParam(defaultValue = "20") int limit,
+            @RequestParam(required = false) String cursor) {
+        return ResponseEntity.ok(desafioService.listar(limit, cursor));
     }
 
     @GetMapping("/{id}")

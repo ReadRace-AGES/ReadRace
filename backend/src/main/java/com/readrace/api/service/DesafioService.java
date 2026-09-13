@@ -1,14 +1,20 @@
 package com.readrace.api.service;
 
+import java.nio.charset.StandardCharsets;
+import java.time.Instant;
 import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
+import java.time.format.DateTimeParseException;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
+import java.util.Base64;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -25,6 +31,7 @@ import com.readrace.api.exception.LivroObrigatorioException;
 import com.readrace.api.exception.MetaInvalidaException;
 import com.readrace.api.exception.OponenteNaoEAmigoException;
 import com.readrace.api.exception.OponenteNaoEncontradoException;
+import com.readrace.api.exception.ParametroInvalidoException;
 import com.readrace.api.exception.PrazoInvalidoException;
 import com.readrace.api.model.DesafioAmigo;
 import com.readrace.api.model.Livro;
@@ -41,6 +48,11 @@ import com.readrace.api.repository.UsuarioRepository;
 @Service
 @Transactional(readOnly = true)
 public class DesafioService {
+
+    private static final int LIMITE_MINIMO = 1;
+    private static final int LIMITE_MAXIMO = 50;
+    private static final int TAMANHO_MAXIMO_CURSOR = 512;
+    private static final String VERSAO_CURSOR = "v1";
 
     private final DesafioAmigoRepository desafioRepository;
     private final ProgressoDesafioRepository progressoRepository;
@@ -64,14 +76,35 @@ public class DesafioService {
         this.usuarioAtual = usuarioAtual;
     }
 
-    public DesafiosResponse listar() {
-        UUID usuarioId = usuarioAtual.idDoUsuarioAtual().valor();
+    public DesafiosResponse listar(int limit, String cursor) {
+        validarLimit(limit);
 
+        UUID usuarioId = usuarioAtual.idDoUsuarioAtual().valor();
+        Pageable pageable = PageRequest.of(0, limit + 1);
+
+        List<DesafioAmigo> resultados;
+
+        if (cursor == null || cursor.isEmpty()) {
+            resultados =
+                    desafioRepository.buscarPrimeiraPaginaDoUsuario(
+                            usuarioId, StatusDesafio.RECUSADO, pageable);
+        } else {
+            CursorDesafio cursorDecodificado = decodificarCursor(cursor);
+            resultados =
+                    desafioRepository.buscarPaginaDoUsuarioApos(
+                            usuarioId,
+                            StatusDesafio.RECUSADO,
+                            cursorDecodificado.inicioEm(),
+                            cursorDecodificado.id(),
+                            pageable);
+        }
+
+        boolean temProximaPagina = resultados.size() > limit;
         List<DesafioAmigo> desafios =
-                desafioRepository.buscarDoUsuario(usuarioId, StatusDesafio.RECUSADO);
+                new ArrayList<>(resultados.subList(0, Math.min(limit, resultados.size())));
 
         if (desafios.isEmpty()) {
-            return new DesafiosResponse(List.of());
+            return new DesafiosResponse(List.of(), null);
         }
 
         List<UUID> desafioIds = new ArrayList<>();
@@ -79,6 +112,8 @@ public class DesafioService {
         for (DesafioAmigo desafio : desafios) {
             desafioIds.add(desafio.getId());
         }
+
+        desafioRepository.carregarAutoresPorIds(desafioIds);
 
         List<ProgressoDesafio> progressos = progressoRepository.buscarPorDesafios(desafioIds);
 
@@ -93,7 +128,10 @@ public class DesafioService {
             respostas.add(paraResponse(desafio, usuarioId, progressosDoDesafio));
         }
 
-        return new DesafiosResponse(respostas);
+        String nextCursor =
+                temProximaPagina ? codificarCursor(desafios.get(desafios.size() - 1)) : null;
+
+        return new DesafiosResponse(respostas, nextCursor);
     }
 
     public DesafioResponse buscar(UUID desafioId) {
@@ -187,6 +225,50 @@ public class DesafioService {
         if (prazoDias == null || prazoDias <= 0) {
             throw new PrazoInvalidoException();
         }
+    }
+
+    private void validarLimit(int limit) {
+        if (limit < LIMITE_MINIMO || limit > LIMITE_MAXIMO) {
+            throw new ParametroInvalidoException("O parâmetro 'limit' deve estar entre 1 e 50.");
+        }
+    }
+
+    private String codificarCursor(DesafioAmigo desafio) {
+        String payload =
+                "%s|%s|%s"
+                        .formatted(
+                                VERSAO_CURSOR, desafio.getInicioEm().toInstant(), desafio.getId());
+
+        return Base64.getUrlEncoder()
+                .withoutPadding()
+                .encodeToString(payload.getBytes(StandardCharsets.UTF_8));
+    }
+
+    private CursorDesafio decodificarCursor(String cursor) {
+        if (cursor.length() > TAMANHO_MAXIMO_CURSOR) {
+            throw cursorInvalido();
+        }
+
+        try {
+            byte[] bytes = Base64.getUrlDecoder().decode(cursor);
+            String payload = new String(bytes, StandardCharsets.UTF_8);
+            String[] partes = payload.split("\\|", -1);
+
+            if (partes.length != 3 || !VERSAO_CURSOR.equals(partes[0])) {
+                throw cursorInvalido();
+            }
+
+            Instant instante = Instant.parse(partes[1]);
+            UUID id = UUID.fromString(partes[2]);
+
+            return new CursorDesafio(OffsetDateTime.ofInstant(instante, ZoneOffset.UTC), id);
+        } catch (IllegalArgumentException | DateTimeParseException ex) {
+            throw cursorInvalido();
+        }
+    }
+
+    private ParametroInvalidoException cursorInvalido() {
+        return new ParametroInvalidoException("Cursor inválido.");
     }
 
     private void validarAmizade(UUID usuarioId, UUID oponenteId) {
@@ -323,4 +405,6 @@ public class DesafioService {
 
         return progressoUsuario > progressoOponente ? "concluido_ganho" : "concluido_perdido";
     }
+
+    private record CursorDesafio(OffsetDateTime inicioEm, UUID id) {}
 }

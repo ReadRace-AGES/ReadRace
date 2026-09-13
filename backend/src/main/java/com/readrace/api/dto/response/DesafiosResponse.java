@@ -2,4 +2,4 @@ package com.readrace.api.dto.response;
 
 import java.util.List;
 
-public record DesafiosResponse(List<DesafioResponse> desafios) {}
+public record DesafiosResponse(List<DesafioResponse> desafios, String nextCursor) {}
