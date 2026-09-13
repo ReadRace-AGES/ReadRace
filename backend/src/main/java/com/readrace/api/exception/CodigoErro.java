@@ -3,16 +3,17 @@ package com.readrace.api.exception;
 import org.springframework.http.HttpStatus;
 
 public enum CodigoErro {
-    RESOURCE_NOT_FOUND(HttpStatus.NOT_FOUND, "Recurso não encontrado."),
-    ROUTE_NOT_FOUND(HttpStatus.NOT_FOUND, "Rota não encontrada."),
-    VALIDATION_ERROR(HttpStatus.BAD_REQUEST, "Dados inválidos."),
-    MALFORMED_REQUEST(HttpStatus.BAD_REQUEST, "Requisição malformada."),
-    PARAMETRO_INVALIDO(HttpStatus.BAD_REQUEST, "Parâmetro de busca inválido."),
-    METHOD_NOT_ALLOWED(HttpStatus.METHOD_NOT_ALLOWED, "Método não permitido para esta rota."),
-    UNSUPPORTED_MEDIA_TYPE(HttpStatus.UNSUPPORTED_MEDIA_TYPE, "Formato de conteúdo não suportado."),
+    RESOURCE_NOT_FOUND(HttpStatus.NOT_FOUND, "Recurso nao encontrado."),
+    ROUTE_NOT_FOUND(HttpStatus.NOT_FOUND, "Rota nao encontrada."),
+    VALIDATION_ERROR(HttpStatus.BAD_REQUEST, "Dados invalidos."),
+    MALFORMED_REQUEST(HttpStatus.BAD_REQUEST, "Requisicao malformada."),
+    PARAMETRO_INVALIDO(HttpStatus.BAD_REQUEST, "Parametro de busca invalido."),
+    PAGINA_INVALIDA(HttpStatus.UNPROCESSABLE_ENTITY, "Pagina invalida."),
+    METHOD_NOT_ALLOWED(HttpStatus.METHOD_NOT_ALLOWED, "Metodo nao permitido para esta rota."),
+    UNSUPPORTED_MEDIA_TYPE(HttpStatus.UNSUPPORTED_MEDIA_TYPE, "Formato de conteudo nao suportado."),
     EXTERNAL_SERVICE_UNAVAILABLE(
             HttpStatus.SERVICE_UNAVAILABLE,
-            "Serviço externo indisponível no momento. Tente novamente mais tarde."),
+            "Servico externo indisponivel no momento. Tente novamente mais tarde."),
     INTERNAL_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, "Erro interno. Tente novamente.");
 
     private final HttpStatus status;
