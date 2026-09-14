@@ -68,12 +68,11 @@ public class ItemBiblioteca {
     public void registrarProgresso(int pagina) {
         this.paginaAtual = pagina;
         this.paginaMaxima = Math.max(this.paginaMaxima, pagina);
-        this.statusLeitura =
-                pagina >= livro.getTotalPaginas() ? StatusLeitura.lido : StatusLeitura.lendo;
+        this.statusLeitura = estaConcluido() ? StatusLeitura.lido : StatusLeitura.lendo;
     }
 
     public boolean estaConcluido() {
-        return statusLeitura == StatusLeitura.lido || paginaAtual >= livro.getTotalPaginas();
+        return statusLeitura == StatusLeitura.lido || paginaMaxima >= livro.getTotalPaginas();
     }
 
     @Override

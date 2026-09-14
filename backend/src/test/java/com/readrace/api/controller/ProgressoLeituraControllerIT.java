@@ -2,6 +2,8 @@ package com.readrace.api.controller;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import java.util.UUID;
+
 import jakarta.persistence.EntityManager;
 
 import org.junit.jupiter.api.AfterEach;
@@ -17,6 +19,8 @@ import org.springframework.test.web.servlet.assertj.MockMvcTester;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.readrace.api.TestcontainersConfiguration;
+import com.readrace.api.model.ItemBiblioteca;
+import com.readrace.api.model.StatusLeitura;
 
 @Import(TestcontainersConfiguration.class)
 @SpringBootTest
@@ -188,6 +192,42 @@ class ProgressoLeituraControllerIT {
                 .bodyJson()
                 .extractingPath("$.xpTotal")
                 .isEqualTo(0);
+    }
+
+    @Test
+    void deve_manter_livro_concluido_apos_reler_pagina_anterior() {
+        assertThat(
+                        mvc.post()
+                                .uri("/api/livros/{livroId}/progresso", LIVRO_DOM_CASMURRO)
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content("{\"pagina\":256}"))
+                .hasStatusOk();
+        entityManager.flush();
+        entityManager.clear();
+
+        assertThat(
+                        mvc.post()
+                                .uri("/api/livros/{livroId}/progresso", LIVRO_DOM_CASMURRO)
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content("{\"pagina\":100}"))
+                .hasStatusOk()
+                .bodyJson()
+                .extractingPath("$")
+                .asMap()
+                .containsEntry("concluido", true)
+                .containsEntry("paginaAtual", 100)
+                .containsEntry("paginaMaximaAlcancada", 256)
+                .containsEntry("xpTotal", 0);
+        entityManager.flush();
+        entityManager.clear();
+
+        ItemBiblioteca item =
+                entityManager.find(
+                        ItemBiblioteca.class,
+                        UUID.fromString("40000000-0000-0000-0000-000000000001"));
+        assertThat(item.getStatusLeitura()).isEqualTo(StatusLeitura.lido);
+        assertThat(item.getPaginaAtual()).isEqualTo(100);
+        assertThat(item.getPaginaMaxima()).isEqualTo(256);
     }
 
     @Test
