@@ -10,6 +10,7 @@ import { SearchIcon } from "@/components/icons/SearchIcon";
 import { SegmentedTabs } from "@/components/SegmentedTabs";
 import { RegistrarProgressoSheet } from "@/features/progresso/RegistrarProgressoSheet";
 import { colors, shadows, sizes, spacing } from "@/theme";
+import { SearchInput } from '@/components/SearchInput';
 
 const cover = "https://covers.openlibrary.org/b/isbn/9780451524935-L.jpg";
 const brokenCover =
@@ -55,6 +56,11 @@ export default function TesteScreen() {
   const [currentPage, setCurrentPage] = useState(100);
   const [maxPage, setMaxPage] = useState(100);
   const [progressPercent, setProgressPercent] = useState(39);
+  
+  // SearchInput (#68)
+  const [searchValue1, setSearchValue1] = useState('');
+  const [searchValue2, setSearchValue2] = useState('');
+  const [searchValue3, setSearchValue3] = useState('');
 
   useFocusEffect(
     useCallback(
@@ -221,6 +227,80 @@ export default function TesteScreen() {
             Abrir Registrar Progresso
           </Text>
         </Pressable>
+        
+        {/* SearchInput */}
+
+        <View className="flex-col justify-between gap-4">
+          <Text className="font-inter-bold text-h2 text-primary">
+            SearchInput — #68
+          </Text>
+
+          <View className="gap-3">
+            <Text className="text-sm font-semibold text-gray-700">Tela: Busca (Variante: default)</Text>
+            <SearchInput
+              placeholder="Nome de usuário ou comunidade"
+              variant="default"
+              value={searchValue1}
+              onChangeText={setSearchValue1}
+            />
+            <Text className="text-xs text-gray-500">
+              Notificado: <Text className="font-bold text-gray-900">{searchValue1 || '(vazio)'}</Text>
+            </Text>
+          </View>
+
+          <View className="gap-3">
+            <Text className="text-sm font-semibold text-gray-700">Tela: Desafiar (Variante: outlined)</Text>
+            <SearchInput
+              placeholder="Buscar pelo @nome..."
+              variant="outlined"
+              value={searchValue2}
+              onChangeText={setSearchValue2}
+            />
+            <Text className="text-xs text-gray-500">
+              Notificado: <Text className="font-bold text-gray-900">{searchValue2 || '(vazio)'}</Text>
+            </Text>
+          </View>
+
+          <View className="gap-3">
+            <Text className="text-sm font-semibold text-gray-700">Tela: Escolher Livro (Variante: tinted)</Text>
+            <SearchInput
+              placeholder="Buscar título ou autor..."
+              variant="tinted"
+              value={searchValue3}
+              onChangeText={setSearchValue3}
+            />
+            <Text className="text-xs text-gray-500">
+              Notificado: <Text className="font-bold text-gray-900">{searchValue3 || '(vazio)'}</Text>
+            </Text>
+          </View>
+
+          <View className="gap-3">
+            <Text className="text-sm font-semibold text-gray-700">Variante: default -Estado: Desabilitado</Text>
+            <SearchInput
+              placeholder="Desabilitado"
+              disabled={true}
+              variant="default"
+            />
+          </View>
+
+          <View className="gap-3">
+            <Text className="text-sm font-semibold text-gray-700">Variante: outlined - Estado: Desabilitado</Text>
+            <SearchInput
+              placeholder="Desabilitado"
+              disabled={true}
+              variant="outlined"
+            />
+          </View>
+
+          <View className="gap-3">
+            <Text className="text-sm font-semibold text-gray-700">Variante: tinted - Estado: Desabilitado</Text>
+            <SearchInput
+              placeholder="Desabilitado"
+              disabled={true}
+              variant="tinted"
+            />
+          </View>
+        </View>
       </ScrollView>
 
       {toastVisible && (
