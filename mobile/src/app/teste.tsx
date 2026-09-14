@@ -236,10 +236,10 @@ export default function TesteScreen() {
           </Text>
 
           <View className="gap-3">
-            <Text className="text-sm font-semibold text-gray-700">Tela: Busca (Variante: default)</Text>
+            <Text className="text-sm font-semibold text-gray-700">Tela: Busca (Variante: rounded)</Text>
             <SearchInput
               placeholder="Nome de usuário ou comunidade"
-              variant="default"
+              variant="rounded"
               value={searchValue1}
               onChangeText={setSearchValue1}
             />
@@ -275,11 +275,11 @@ export default function TesteScreen() {
           </View>
 
           <View className="gap-3">
-            <Text className="text-sm font-semibold text-gray-700">Variante: default -Estado: Desabilitado</Text>
+            <Text className="text-sm font-semibold text-gray-700">Variante: Rounded -Estado: Desabilitado</Text>
             <SearchInput
               placeholder="Desabilitado"
               disabled={true}
-              variant="default"
+              variant="rounded"
             />
           </View>
 

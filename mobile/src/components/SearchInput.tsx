@@ -2,8 +2,7 @@ import { useState } from 'react';
 import { View, TextInput, TextInputProps, Platform } from 'react-native';
 import {SearchIcon} from '@/components/icons/SearchIcon';
 
-// Nitpick: Trocado 'challenge' e 'book' por nomes de intenção visual
-type SearchVariant = 'default' | 'outlined' | 'tinted';
+type SearchVariant = 'rounded' | 'outlined' | 'tinted';
 
 export interface SearchInputProps
   extends Omit<TextInputProps, 'onChangeText' | 'value' | 'editable' | 'multiline' | 'numberOfLines'> {
@@ -12,7 +11,7 @@ export interface SearchInputProps
   onChangeText?: (text: string) => void;
   disabled?: boolean;
   variant?: SearchVariant;
-  className?: string; // Suporte nativo para estender classes se necessário (ex: margens na tela)
+  className?: string; 
 }
 
 export function SearchInput({
@@ -20,7 +19,7 @@ export function SearchInput({
   value,
   onChangeText,
   disabled = false,
-  variant = 'default',
+  variant = 'rounded',
   className = '',
   ...rest
 }: SearchInputProps) {
@@ -51,7 +50,7 @@ export function SearchInput({
             : 'bg-[#FCFAFA] border-[#DAC1C2] rounded-sm',
           iconColor: disabled ? '#A0A0A0' : '#6B5E5F',
         };
-      case 'default':
+      case 'rounded':
       default:
         return {
           containerClass: disabled 
@@ -81,7 +80,7 @@ export function SearchInput({
         {...rest}
         className={`flex-1 h-full text-[16px] ${Platform.OS === 'android' ? 'py-0' : ''} ${disabled ? 'text-gray-400' : 'text-[#374151]'}`}
         placeholder={placeholder}
-        placeholderTextColor= {disabled ? "#888888" : "#505662"} // Escurecido para WCAG AA
+        placeholderTextColor= {disabled ? "#888888" : "#505662"}
         value={currentValue}
         onChangeText={handleChangeText}
         editable={!disabled}
