@@ -8,6 +8,7 @@ import { BookCover } from '@/components/BookCover';
 import { EmptyState, type EmptyStateIconProps } from '@/components/EmptyState';
 import { SearchIcon } from '@/components/icons/SearchIcon';
 import { SegmentedTabs } from '@/components/SegmentedTabs';
+import { Slider } from '@/components/Slider';
 import { colors, sizes, spacing } from '@/theme';
 
 const cover = 'https://covers.openlibrary.org/b/isbn/9780451524935-L.jpg';
@@ -50,6 +51,9 @@ export default function TesteScreen() {
   const [withAction, setWithAction] = useState(false);
   const [compact, setCompact] = useState(false);
   const [actionPresses, setActionPresses] = useState(0);
+
+  // Slider (#28)
+  const [pages, setPages] = useState(150);
 
   useFocusEffect(
     useCallback(
@@ -200,6 +204,18 @@ export default function TesteScreen() {
             }
           />
         </View>
+
+        <Text className="font-inter-bold text-h2 text-primary">Slider — #28</Text>
+        <Text className="my-2 font-inter-bold text-h1 text-text">{pages} pág</Text>
+        <Slider
+          minimumValue={10}
+          maximumValue={500}
+          minimumLabel="10"
+          maximumLabel="500+"
+          value={pages}
+          onValueChange={setPages}
+          accessibilityLabel="Meta de páginas"
+        />
       </ScrollView>
       {toastVisible && (
         <View
