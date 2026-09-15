@@ -2,17 +2,25 @@ package com.readrace.api.controller;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import java.util.UUID;
+
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.EntityManagerFactory;
+
+import org.hibernate.SessionFactory;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.context.annotation.Import;
 import org.springframework.http.HttpStatus;
+import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.test.context.jdbc.Sql;
 import org.springframework.test.web.servlet.assertj.MockMvcTester;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.readrace.api.TestcontainersConfiguration;
+import com.readrace.api.service.LivroService;
 
 @SpringBootTest
 @AutoConfigureMockMvc
@@ -20,6 +28,91 @@ import com.readrace.api.TestcontainersConfiguration;
 class LivroControllerIT {
     private static final String DOM_CASMURRO = "/api/livros/30000000-0000-0000-0000-000000000001";
     @Autowired private MockMvcTester mvc;
+
+    @Autowired private JdbcTemplate jdbc;
+    @Autowired private EntityManager em;
+    @Autowired private EntityManagerFactory emf;
+    @Autowired private LivroService service;
+
+    @Test
+    @Transactional
+    void deve_escolher_genero_por_nome_com_multiplos_vinculos() {
+        assertThat(
+                        jdbc.queryForObject(
+                                "SELECT count(*) FROM livro_genero WHERE livro_id = '30000000-0000-0000-0000-000000000001'",
+                                Integer.class))
+                .isGreaterThan(1);
+        assertThat(mvc.get().uri(DOM_CASMURRO))
+                .hasStatusOk()
+                .bodyJson()
+                .extractingPath("$.livro.genero")
+                .isEqualTo("Clássico");
+        jdbc.update(
+                "INSERT INTO genero (id, nome) VALUES ('29000000-0000-0000-0000-000000000001', 'Aventura de teste')");
+        jdbc.update(
+                "INSERT INTO livro_genero VALUES ('30000000-0000-0000-0000-000000000001', '29000000-0000-0000-0000-000000000001')");
+        assertThat(mvc.get().uri(DOM_CASMURRO))
+                .hasStatusOk()
+                .bodyJson()
+                .extractingPath("$.livro.genero")
+                .isEqualTo("Aventura de teste");
+    }
+
+    @Test
+    @Transactional
+    void deve_manter_quantidade_de_consultas_ao_adicionar_posts() {
+        UUID livroId = UUID.fromString("30000000-0000-0000-0000-000000000001");
+        var stats = emf.unwrap(SessionFactory.class).getStatistics();
+        boolean habilitado = stats.isStatisticsEnabled();
+        stats.setStatisticsEnabled(true);
+        try {
+            em.clear();
+            stats.clear();
+            var antes = service.buscarDetalhe(livroId);
+            long consultas = stats.getPrepareStatementCount();
+            assertThat(antes.posts()).hasSizeGreaterThanOrEqualTo(2);
+            jdbc.update(
+                    """
+                INSERT INTO post (id, autor_id, livro_id, conteudo, criado_em)
+                SELECT gen_random_uuid(), id, '30000000-0000-0000-0000-000000000001', 'Post de teste em lote', now()
+                FROM usuario LIMIT 10
+                """);
+            jdbc.update(
+                    """
+                INSERT INTO curtida (id, post_id, usuario_id)
+                SELECT gen_random_uuid(), p.id, u.id FROM post p CROSS JOIN usuario u
+                WHERE p.conteudo = 'Post de teste em lote' AND u.id IN
+                ('00000000-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000002')
+                """);
+            jdbc.update(
+                    """
+                INSERT INTO post (id, autor_id, livro_id, conteudo)
+                VALUES (gen_random_uuid(), '00000000-0000-0000-0000-000000000001',
+                    '30000000-0000-0000-0000-000000000001', 'Sem curtidas')
+                """);
+            em.clear();
+            stats.clear();
+            var depois = service.buscarDetalhe(livroId);
+            assertThat(stats.getPrepareStatementCount()).isEqualTo(consultas);
+            assertThat(depois.posts().size()).isGreaterThan(antes.posts().size());
+            assertThat(depois.posts())
+                    .filteredOn(p -> p.texto().equals("Post de teste em lote"))
+                    .isNotEmpty()
+                    .allSatisfy(
+                            p -> {
+                                assertThat(p.curtidas()).isEqualTo(2);
+                                assertThat(p.autor().nome()).isNotBlank();
+                            });
+            assertThat(depois.posts())
+                    .filteredOn(p -> p.texto().equals("Sem curtidas"))
+                    .hasSize(1)
+                    .allSatisfy(p -> assertThat(p.curtidas()).isZero());
+            for (var post : antes.posts()) assertThat(depois.posts()).contains(post);
+        } finally {
+            stats.setStatisticsEnabled(habilitado);
+            stats.clear();
+        }
+    }
 
     @Test
     void deve_ler_detalhe_em_transacao_somente_leitura() {

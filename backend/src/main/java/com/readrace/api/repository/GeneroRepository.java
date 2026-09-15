@@ -18,6 +18,7 @@ public interface GeneroRepository extends JpaRepository<Genero, UUID> {
                     FROM genero g
                     JOIN livro_genero lg ON lg.genero_id = g.id
                     WHERE lg.livro_id = :livroId
+                    ORDER BY g.nome ASC, g.id ASC
                     LIMIT 1
                     """,
             nativeQuery = true)

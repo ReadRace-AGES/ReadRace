@@ -236,8 +236,13 @@ class LivroServiceTest {
                         livroId))
                 .thenReturn(List.of(post));
 
-        when(usuarioRepository.findById(autorId)).thenReturn(Optional.of(autorPost));
-        when(curtidaRepository.contarPorPostId(postId)).thenReturn(7L);
+        when(autorPost.getId()).thenReturn(autorId);
+        when(usuarioRepository.findAllById(List.of(autorId))).thenReturn(List.of(autorPost));
+        CurtidaRepository.ContagemPorPost contagem =
+                org.mockito.Mockito.mock(CurtidaRepository.ContagemPorPost.class);
+        when(contagem.getPostId()).thenReturn(postId);
+        when(contagem.getTotal()).thenReturn(7L);
+        when(curtidaRepository.contarPorPostIds(List.of(postId))).thenReturn(List.of(contagem));
 
         LivroDetalheResponse resultado = livroService.buscarDetalhe(livroId);
 
@@ -282,7 +287,7 @@ class LivroServiceTest {
                         livroId))
                 .thenReturn(List.of(post));
 
-        when(usuarioRepository.findById(autorId)).thenReturn(Optional.empty());
+        when(usuarioRepository.findAllById(List.of(autorId))).thenReturn(List.of());
 
         assertThatThrownBy(() -> livroService.buscarDetalhe(livroId))
                 .isInstanceOf(IllegalStateException.class)

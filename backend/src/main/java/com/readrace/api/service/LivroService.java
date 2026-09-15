@@ -1,7 +1,10 @@
 package com.readrace.api.service;
 
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -100,29 +103,38 @@ public class LivroService {
 
     private List<LivroDetalheResponse.Post> buscarPosts(UUID livroId) {
 
-        return postRepository
-                .findByLivroIdAndPostPaiIdIsNullAndExcluidoEmIsNullOrderByCriadoEmDesc(livroId)
-                .stream()
-                .map(this::criarPostResponse)
-                .toList();
+        List<Post> posts =
+                postRepository
+                        .findByLivroIdAndPostPaiIdIsNullAndExcluidoEmIsNullOrderByCriadoEmDesc(
+                                livroId);
+        if (posts.isEmpty()) return List.of();
+        Map<UUID, Usuario> autores =
+                usuarioRepository
+                        .findAllById(posts.stream().map(Post::getAutorId).distinct().toList())
+                        .stream()
+                        .collect(Collectors.toMap(Usuario::getId, Function.identity()));
+        Map<UUID, Long> curtidas =
+                curtidaRepository
+                        .contarPorPostIds(posts.stream().map(Post::getId).toList())
+                        .stream()
+                        .collect(
+                                Collectors.toMap(
+                                        CurtidaRepository.ContagemPorPost::getPostId,
+                                        CurtidaRepository.ContagemPorPost::getTotal));
+        return posts.stream().map(post -> criarPostResponse(post, autores, curtidas)).toList();
     }
 
-    private LivroDetalheResponse.Post criarPostResponse(Post post) {
-
-        Usuario autor =
-                usuarioRepository
-                        .findById(post.getAutorId())
-                        .orElseThrow(
-                                () ->
-                                        new IllegalStateException(
-                                                "Autor do post não encontrado: "
-                                                        + post.getAutorId()));
+    private LivroDetalheResponse.Post criarPostResponse(
+            Post post, Map<UUID, Usuario> autores, Map<UUID, Long> contagens) {
+        Usuario autor = autores.get(post.getAutorId());
+        if (autor == null)
+            throw new IllegalStateException("Autor do post não encontrado: " + post.getAutorId());
 
         LivroDetalheResponse.Autor autorResponse =
                 new LivroDetalheResponse.Autor(
                         autor.getNome(), autor.getAvatarUrl(), autor.getDiasConsecutivos());
 
-        long curtidas = curtidaRepository.contarPorPostId(post.getId());
+        long curtidas = contagens.getOrDefault(post.getId(), 0L);
 
         return new LivroDetalheResponse.Post(
                 post.getId(), autorResponse, post.getConteudo(), post.getCriadoEm(), curtidas);
