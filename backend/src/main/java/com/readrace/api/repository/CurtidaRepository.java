@@ -11,7 +11,8 @@ import com.readrace.api.model.Post;
 public interface CurtidaRepository extends Repository<Post, UUID> {
 
     @Query(
-            value = """
+            value =
+                    """
                     SELECT COUNT(*)
                     FROM curtida
                     WHERE post_id = :postId

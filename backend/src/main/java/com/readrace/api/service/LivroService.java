@@ -8,13 +8,11 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.readrace.api.dto.response.LivroDetalheResponse;
 import com.readrace.api.exception.LivroNaoEncontradoException;
-import com.readrace.api.model.Autor;
 import com.readrace.api.model.Genero;
 import com.readrace.api.model.ItemBiblioteca;
 import com.readrace.api.model.Livro;
 import com.readrace.api.model.Post;
 import com.readrace.api.model.Usuario;
-import com.readrace.api.repository.AutorRepository;
 import com.readrace.api.repository.CurtidaRepository;
 import com.readrace.api.repository.GeneroRepository;
 import com.readrace.api.repository.ItemBibliotecaRepository;
@@ -27,7 +25,6 @@ import com.readrace.api.repository.UsuarioRepository;
 public class LivroService {
 
     private final LivroRepository livroRepository;
-    private final AutorRepository autorRepository;
     private final GeneroRepository generoRepository;
     private final ItemBibliotecaRepository itemBibliotecaRepository;
     private final PostRepository postRepository;
@@ -37,7 +34,6 @@ public class LivroService {
 
     public LivroService(
             LivroRepository livroRepository,
-            AutorRepository autorRepository,
             GeneroRepository generoRepository,
             ItemBibliotecaRepository itemBibliotecaRepository,
             PostRepository postRepository,
@@ -46,7 +42,6 @@ public class LivroService {
             UsuarioAtualDeSeed usuarioAtual) {
 
         this.livroRepository = livroRepository;
-        this.autorRepository = autorRepository;
         this.generoRepository = generoRepository;
         this.itemBibliotecaRepository = itemBibliotecaRepository;
         this.postRepository = postRepository;
@@ -57,17 +52,15 @@ public class LivroService {
 
     public LivroDetalheResponse buscarDetalhe(UUID livroId) {
 
-        Livro livro = livroRepository
-                .findById(livroId)
-                .orElseThrow(() -> new LivroNaoEncontradoException(livroId));
+        Livro livro =
+                livroRepository.findById(livroId).orElseThrow(LivroNaoEncontradoException::new);
 
-        Autor autor = autorRepository
-                .buscarPrincipalPorLivroId(livroId)
-                .orElse(null);
+        String autor =
+                livro.getLivroAutores().stream()
+                        .map(vinculo -> vinculo.getAutor().getNome())
+                        .collect(java.util.stream.Collectors.joining(", "));
 
-        Genero genero = generoRepository
-                .buscarPorLivroId(livroId)
-                .orElse(null);
+        Genero genero = generoRepository.buscarPorLivroId(livroId).orElse(null);
 
         UUID usuarioId = usuarioAtual.idDoUsuarioAtual().valor();
 
@@ -75,23 +68,19 @@ public class LivroService {
 
         List<LivroDetalheResponse.Post> posts = buscarPosts(livroId);
 
-        LivroDetalheResponse.Livro livroResponse = new LivroDetalheResponse.Livro(
-                livro.getId(),
-                livro.getTitulo(),
-                autor != null ? autor.getNome() : null,
-                livro.getCapaUrl(),
-                genero != null ? genero.getNome() : null,
-                livro.getTotalPaginas());
+        LivroDetalheResponse.Livro livroResponse =
+                new LivroDetalheResponse.Livro(
+                        livro.getId(),
+                        livro.getTitulo(),
+                        autor.isEmpty() ? null : autor,
+                        livro.getCapaUrl(),
+                        genero != null ? genero.getNome() : null,
+                        livro.getTotalPaginas());
 
-        return new LivroDetalheResponse(
-                livroResponse,
-                progresso,
-                posts);
+        return new LivroDetalheResponse(livroResponse, progresso, posts);
     }
 
-    private LivroDetalheResponse.Progresso buscarProgresso(
-            UUID usuarioId,
-            Livro livro) {
+    private LivroDetalheResponse.Progresso buscarProgresso(UUID usuarioId, Livro livro) {
 
         return itemBibliotecaRepository
                 .findByUsuarioIdAndLivroId(usuarioId, livro.getId())
@@ -99,20 +88,14 @@ public class LivroService {
                 .orElse(null);
     }
 
-    private LivroDetalheResponse.Progresso criarProgresso(
-            ItemBiblioteca item,
-            Livro livro) {
+    private LivroDetalheResponse.Progresso criarProgresso(ItemBiblioteca item, Livro livro) {
 
-        int percentual = (item.getPaginaAtual() * 100)
-                / livro.getTotalPaginas();
+        int percentual = Math.round((item.getPaginaAtual() * 100f) / livro.getTotalPaginas());
 
-        boolean concluido = item.getPaginaAtual() >= livro.getTotalPaginas();
+        boolean concluido = item.estaConcluido();
 
         return new LivroDetalheResponse.Progresso(
-                item.getPaginaAtual(),
-                item.getPaginaMaxima(),
-                percentual,
-                concluido);
+                item.getPaginaAtual(), item.getPaginaMaxima(), percentual, concluido);
     }
 
     private List<LivroDetalheResponse.Post> buscarPosts(UUID livroId) {
@@ -126,25 +109,22 @@ public class LivroService {
 
     private LivroDetalheResponse.Post criarPostResponse(Post post) {
 
-        Usuario autor = usuarioRepository
-                .findById(post.getAutorId())
-                .orElseThrow(
-                        () -> new IllegalStateException(
-                                "Autor do post não encontrado: "
-                                        + post.getAutorId()));
+        Usuario autor =
+                usuarioRepository
+                        .findById(post.getAutorId())
+                        .orElseThrow(
+                                () ->
+                                        new IllegalStateException(
+                                                "Autor do post não encontrado: "
+                                                        + post.getAutorId()));
 
-        LivroDetalheResponse.Autor autorResponse = new LivroDetalheResponse.Autor(
-                autor.getNome(),
-                autor.getAvatarUrl(),
-                autor.getDiasConsecutivos());
+        LivroDetalheResponse.Autor autorResponse =
+                new LivroDetalheResponse.Autor(
+                        autor.getNome(), autor.getAvatarUrl(), autor.getDiasConsecutivos());
 
         long curtidas = curtidaRepository.contarPorPostId(post.getId());
 
         return new LivroDetalheResponse.Post(
-                post.getId(),
-                autorResponse,
-                post.getConteudo(),
-                post.getCriadoEm(),
-                curtidas);
+                post.getId(), autorResponse, post.getConteudo(), post.getCriadoEm(), curtidas);
     }
 }

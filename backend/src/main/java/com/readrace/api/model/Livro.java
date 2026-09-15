@@ -1,21 +1,27 @@
 package com.readrace.api.model;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.UUID;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
+import jakarta.persistence.OneToMany;
+import jakarta.persistence.OrderBy;
 import jakarta.persistence.Table;
 
+import lombok.AccessLevel;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+
+@Getter
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
 @Entity
 @Table(name = "livro")
 public class Livro {
 
-    @Id
-    private UUID id;
-
-    @Column(nullable = false, length = 13)
-    private String isbn;
+    @Id private UUID id;
 
     @Column(nullable = false, length = 255)
     private String titulo;
@@ -23,30 +29,12 @@ public class Livro {
     @Column(name = "total_paginas", nullable = false)
     private Integer totalPaginas;
 
-    @Column(name = "capa_url")
+    @Column(name = "capa_url", columnDefinition = "text")
     private String capaUrl;
 
-    protected Livro() {}
-
-    public UUID getId() {
-        return id;
-    }
-
-    public String getIsbn() {
-        return isbn;
-    }
-
-    public String getTitulo() {
-        return titulo;
-    }
-
-    public Integer getTotalPaginas() {
-        return totalPaginas;
-    }
-
-    public String getCapaUrl() {
-        return capaUrl;
-    }
+    @OneToMany(mappedBy = "livro")
+    @OrderBy("ordem ASC")
+    private List<LivroAutor> livroAutores = new ArrayList<>();
 
     @Override
     public boolean equals(Object obj) {

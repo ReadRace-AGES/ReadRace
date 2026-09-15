@@ -1,12 +1,8 @@
 package com.readrace.api.exception;
 
-import java.util.UUID;
-
 public class LivroNaoEncontradoException extends ExcecaoDeNegocio {
 
-    public LivroNaoEncontradoException(UUID livroId) {
-        super(
-                CodigoErro.LIVRO_NAO_ENCONTRADO,
-                "Livro %s não encontrado.".formatted(livroId));
+    public LivroNaoEncontradoException() {
+        super(CodigoErro.LIVRO_NAO_ENCONTRADO, CodigoErro.LIVRO_NAO_ENCONTRADO.mensagemPadrao());
     }
 }

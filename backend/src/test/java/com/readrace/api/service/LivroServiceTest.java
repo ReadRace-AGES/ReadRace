@@ -22,10 +22,10 @@ import com.readrace.api.model.Autor;
 import com.readrace.api.model.Genero;
 import com.readrace.api.model.ItemBiblioteca;
 import com.readrace.api.model.Livro;
+import com.readrace.api.model.LivroAutor;
 import com.readrace.api.model.Post;
 import com.readrace.api.model.Usuario;
 import com.readrace.api.model.UsuarioId;
-import com.readrace.api.repository.AutorRepository;
 import com.readrace.api.repository.CurtidaRepository;
 import com.readrace.api.repository.GeneroRepository;
 import com.readrace.api.repository.ItemBibliotecaRepository;
@@ -38,7 +38,6 @@ import com.readrace.api.repository.UsuarioRepository;
 class LivroServiceTest {
 
     @Mock private LivroRepository livroRepository;
-    @Mock private AutorRepository autorRepository;
     @Mock private GeneroRepository generoRepository;
     @Mock private ItemBibliotecaRepository itemBibliotecaRepository;
     @Mock private PostRepository postRepository;
@@ -76,7 +75,9 @@ class LivroServiceTest {
         when(genero.getNome()).thenReturn("Romance");
 
         when(livroRepository.findById(livroId)).thenReturn(Optional.of(livro));
-        when(autorRepository.buscarPrincipalPorLivroId(livroId)).thenReturn(Optional.of(autor));
+        LivroAutor vinculo = org.mockito.Mockito.mock(LivroAutor.class);
+        when(vinculo.getAutor()).thenReturn(autor);
+        when(livro.getLivroAutores()).thenReturn(List.of(vinculo));
         when(generoRepository.buscarPorLivroId(livroId)).thenReturn(Optional.of(genero));
 
         when(usuarioAtual.idDoUsuarioAtual()).thenReturn(new UsuarioId(usuarioId));
@@ -113,7 +114,6 @@ class LivroServiceTest {
         when(livro.getTotalPaginas()).thenReturn(100);
 
         when(livroRepository.findById(livroId)).thenReturn(Optional.of(livro));
-        when(autorRepository.buscarPrincipalPorLivroId(livroId)).thenReturn(Optional.empty());
         when(generoRepository.buscarPorLivroId(livroId)).thenReturn(Optional.empty());
 
         when(usuarioAtual.idDoUsuarioAtual()).thenReturn(new UsuarioId(usuarioId));
@@ -146,7 +146,6 @@ class LivroServiceTest {
         when(item.getPaginaMaxima()).thenReturn(80);
 
         when(livroRepository.findById(livroId)).thenReturn(Optional.of(livro));
-        when(autorRepository.buscarPrincipalPorLivroId(livroId)).thenReturn(Optional.empty());
         when(generoRepository.buscarPorLivroId(livroId)).thenReturn(Optional.empty());
 
         when(usuarioAtual.idDoUsuarioAtual()).thenReturn(new UsuarioId(usuarioId));
@@ -162,7 +161,7 @@ class LivroServiceTest {
 
         assertThat(resultado.progresso()).isNotNull();
         assertThat(resultado.progresso().paginaAtual()).isEqualTo(50);
-        // assertThat(resultado.progresso().paginaMaxima()).isEqualTo(80);
+        assertThat(resultado.progresso().paginaMaximaAlcancada()).isEqualTo(80);
         assertThat(resultado.progresso().percentual()).isEqualTo(25);
         assertThat(resultado.progresso().concluido()).isFalse();
     }
@@ -179,10 +178,10 @@ class LivroServiceTest {
         when(livro.getTotalPaginas()).thenReturn(200);
 
         when(item.getPaginaAtual()).thenReturn(200);
+        when(item.estaConcluido()).thenReturn(true);
         when(item.getPaginaMaxima()).thenReturn(200);
 
         when(livroRepository.findById(livroId)).thenReturn(Optional.of(livro));
-        when(autorRepository.buscarPrincipalPorLivroId(livroId)).thenReturn(Optional.empty());
         when(generoRepository.buscarPorLivroId(livroId)).thenReturn(Optional.empty());
 
         when(usuarioAtual.idDoUsuarioAtual()).thenReturn(new UsuarioId(usuarioId));
@@ -226,7 +225,6 @@ class LivroServiceTest {
         when(autorPost.getDiasConsecutivos()).thenReturn(10);
 
         when(livroRepository.findById(livroId)).thenReturn(Optional.of(livro));
-        when(autorRepository.buscarPrincipalPorLivroId(livroId)).thenReturn(Optional.empty());
         when(generoRepository.buscarPorLivroId(livroId)).thenReturn(Optional.empty());
 
         when(usuarioAtual.idDoUsuarioAtual()).thenReturn(new UsuarioId(usuarioId));
@@ -273,7 +271,6 @@ class LivroServiceTest {
         when(livroRepository.findById(livroId)).thenReturn(Optional.of(livro));
 
         when(livroRepository.findById(livroId)).thenReturn(Optional.of(livro));
-        when(autorRepository.buscarPrincipalPorLivroId(livroId)).thenReturn(Optional.empty());
         when(generoRepository.buscarPorLivroId(livroId)).thenReturn(Optional.empty());
 
         when(usuarioAtual.idDoUsuarioAtual()).thenReturn(new UsuarioId(usuarioId));
