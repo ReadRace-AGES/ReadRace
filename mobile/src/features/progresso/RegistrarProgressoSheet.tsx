@@ -1,25 +1,25 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from 'react';
+import { Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
+import Svg, { Path } from 'react-native-svg';
+
+import { ApiError } from '@/api/client';
+import { PrimaryButton } from '@/components/PrimaryButton';
+import { BottomSheet } from '@/components/BottomSheet';
+import { colors, radius, sizes, spacing, textStyles } from '@/theme';
+
 import {
-  ActivityIndicator,
-  Pressable,
-  StyleSheet,
-  Text,
-  TextInput,
-  View,
-} from "react-native";
-import Svg, { Path } from "react-native-svg";
-
-import { ApiError } from "@/api/client";
-import { BottomSheet } from "@/components/BottomSheet";
-import { colors, radius, shadows, sizes, spacing, textStyles } from "@/theme";
-
-import { registrarProgresso, type ProgressoLeituraResponse } from "./api";
+  registrarProgresso,
+  ProgressoTimeoutError,
+  type ProgressoLeituraResponse,
+} from './api';
 
 export type RegistrarProgressoSheetProps = {
   visible: boolean;
   livroId: string;
   totalPaginas: number;
   paginaAtual: number;
+  /** Contexto da leitura. O cálculo de XP continua exclusivamente no backend. */
+  paginaMaximaAlcancada?: number;
   onClose: () => void;
   onSuccess?: (progresso: ProgressoLeituraResponse) => void;
 };
@@ -50,14 +50,14 @@ export function RegistrarProgressoSheet({
   onClose,
   onSuccess,
 }: RegistrarProgressoSheetProps) {
-  const [page, setPage] = useState("");
+  const [page, setPage] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const submitting = useRef(false);
 
   useEffect(() => {
     if (visible) {
-      setPage("");
+      setPage('');
       setError(null);
     }
   }, [livroId, visible]);
@@ -95,9 +95,9 @@ export function RegistrarProgressoSheet({
       onClose();
     } catch (err) {
       setError(
-        err instanceof ApiError
+        err instanceof ApiError || err instanceof ProgressoTimeoutError
           ? err.message
-          : "Não foi possível registrar o progresso. Tente novamente.",
+          : 'Não foi possível registrar o progresso. Tente novamente.'
       );
     } finally {
       submitting.current = false;
@@ -165,35 +165,19 @@ export function RegistrarProgressoSheet({
         )}
 
         <View style={styles.actions}>
-          <Pressable
-            accessibilityRole="button"
+          <PrimaryButton
+            label="Atualizar Progresso"
+            icon={CheckIcon}
+            loading={loading}
             disabled={!canSubmit}
             onPress={submit}
-            style={[
-              styles.primaryButton,
-              shadows.button,
-              !canSubmit && styles.disabledButton,
-            ]}
-          >
-            {loading ? (
-              <ActivityIndicator color={colors.textInverse} />
-            ) : (
-              <>
-                <CheckIcon />
-                <Text style={styles.primaryButtonText}>
-                  Atualizar Progresso
-                </Text>
-              </>
-            )}
-          </Pressable>
-          <Pressable
-            accessibilityRole="button"
+          />
+          <PrimaryButton
+            label="Cancelar"
+            variant="outline"
             disabled={loading}
             onPress={onClose}
-            style={styles.secondaryButton}
-          >
-            <Text style={styles.secondaryButtonText}>Cancelar</Text>
-          </Pressable>
+          />
         </View>
       </View>
     </BottomSheet>
@@ -205,9 +189,9 @@ const styles = StyleSheet.create({
     gap: spacing[5],
   },
   header: {
-    flexDirection: "row",
-    alignItems: "flex-start",
-    justifyContent: "space-between",
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    justifyContent: 'space-between',
     gap: spacing[4],
   },
   titleBlock: {
@@ -225,8 +209,8 @@ const styles = StyleSheet.create({
   closeButton: {
     minWidth: spacing[8],
     minHeight: spacing[8],
-    alignItems: "center",
-    justifyContent: "center",
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   closeText: {
     ...textStyles.h1,
@@ -239,10 +223,10 @@ const styles = StyleSheet.create({
     borderColor: colors.primarySoft,
     borderRadius: radius.sm,
     color: colors.text,
-    textAlign: "center",
+    textAlign: 'center',
   },
   progressBlock: {
-    alignItems: "center",
+    alignItems: 'center',
     gap: spacing[4],
   },
   totalLabel: {
@@ -250,14 +234,14 @@ const styles = StyleSheet.create({
     color: colors.text,
   },
   progressTrack: {
-    alignSelf: "stretch",
+    alignSelf: 'stretch',
     height: sizes.progressTrackHeight,
-    overflow: "hidden",
+    overflow: 'hidden',
     borderRadius: radius.pill,
     backgroundColor: colors.surfacePink,
   },
   progressFill: {
-    height: "100%",
+    height: '100%',
     borderRadius: radius.pill,
     backgroundColor: colors.primary,
   },
@@ -268,39 +252,9 @@ const styles = StyleSheet.create({
   error: {
     ...textStyles.bodySmall,
     color: colors.accent,
-    textAlign: "center",
+    textAlign: 'center',
   },
   actions: {
     gap: spacing[2],
-  },
-  primaryButton: {
-    minHeight: sizes.buttonHeight + spacing[2],
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    gap: spacing[2],
-    borderRadius: radius.pill,
-    backgroundColor: colors.primary,
-    paddingHorizontal: spacing[5],
-  },
-  disabledButton: {
-    backgroundColor: colors.textMuted,
-  },
-  primaryButtonText: {
-    ...textStyles.button,
-    color: colors.textInverse,
-  },
-  secondaryButton: {
-    minHeight: sizes.buttonHeight + spacing[2],
-    alignItems: "center",
-    justifyContent: "center",
-    borderWidth: sizes.borderWidth,
-    borderColor: colors.primary,
-    borderRadius: radius.pill,
-    paddingHorizontal: spacing[5],
-  },
-  secondaryButtonText: {
-    ...textStyles.button,
-    color: colors.text,
   },
 });

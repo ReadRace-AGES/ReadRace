@@ -4,7 +4,7 @@ import { Pressable, Text, View } from 'react-native';
 
 import { bookCover } from '@/theme';
 
-export type BookCoverSize = 'grid' | 'featured' | 'thumbnail';
+export type BookCoverSize = 'grid' | 'featured' | 'thumbnail' | 'detail';
 type CoverSource = ImageSource | string | number;
 
 export type BookCoverProps =
