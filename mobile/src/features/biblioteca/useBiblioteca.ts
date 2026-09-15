@@ -1,4 +1,6 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useRef, useState } from 'react';
+
+import { useFocusEffect } from 'expo-router';
 
 import { ApiError } from '@/api/client';
 
@@ -66,23 +68,26 @@ export function useBiblioteca(): BibliotecaState {
   // Cancela as páginas em voo quando a tela recarrega ou desmonta.
   const controllers = useRef(new Set<AbortController>());
 
-  useEffect(() => {
-    const controller = new AbortController();
-    setBiblioteca({ situacao: 'carregando' });
-    buscarBiblioteca(controller.signal)
-      .then((dados) =>
-        setBiblioteca({ situacao: 'sucesso', dados: primeiraPagina(dados) })
-      )
-      .catch((erro: unknown) => {
-        if (controller.signal.aborted) return;
-        setBiblioteca({ situacao: 'erro', mensagem: mensagemDe(erro) });
-      });
-    return () => {
-      controller.abort();
-      controllers.current.forEach((c) => c.abort());
-      controllers.current.clear();
-    };
-  }, [versao]);
+  useFocusEffect(
+    useCallback(() => {
+      const controller = new AbortController();
+      setBiblioteca({ situacao: 'carregando' });
+      buscarBiblioteca(controller.signal)
+        .then((dados) => {
+          if (controller.signal.aborted) return;
+          setBiblioteca({ situacao: 'sucesso', dados: primeiraPagina(dados) });
+        })
+        .catch((erro: unknown) => {
+          if (controller.signal.aborted) return;
+          setBiblioteca({ situacao: 'erro', mensagem: mensagemDe(erro) });
+        });
+      return () => {
+        controller.abort();
+        controllers.current.forEach((c) => c.abort());
+        controllers.current.clear();
+      };
+    }, [versao])
+  );
 
   const recarregar = useCallback(() => setVersao((v) => v + 1), []);
 
@@ -118,14 +123,15 @@ export function useBiblioteca(): BibliotecaState {
       }));
 
       buscarPaginaBiblioteca(lista, atual.proximoCursor, controller.signal)
-        .then((pagina) =>
+        .then((pagina) => {
+          if (controller.signal.aborted) return;
           atualizarLista(lista, (l) => ({
             itens: [...l.itens, ...pagina.itens],
             proximoCursor: pagina.proximoCursor,
             carregandoMais: false,
             erroAoCarregarMais: false,
-          }))
-        )
+          }));
+        })
         .catch(() => {
           if (controller.signal.aborted) return;
           atualizarLista(lista, (l) => ({

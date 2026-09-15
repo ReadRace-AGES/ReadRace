@@ -1,5 +1,5 @@
-import type { ReactNode } from "react";
-import { useEffect, useMemo, useRef, useState } from "react";
+import type { ReactNode } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import {
   Animated,
   Keyboard,
@@ -8,13 +8,14 @@ import {
   PanResponder,
   Platform,
   Pressable,
+  ScrollView,
   StyleSheet,
   View,
   useWindowDimensions,
-} from "react-native";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
+} from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import { colors, radius, shadows, sizes, spacing } from "@/theme";
+import { colors, radius, shadows, sizes, spacing } from '@/theme';
 
 export type BottomSheetProps = {
   visible: boolean;
@@ -33,7 +34,7 @@ export function BottomSheet({
   visible,
   onClose,
   children,
-  accessibilityLabel = "Painel inferior",
+  accessibilityLabel = 'Painel inferior',
   dismissible = true,
 }: BottomSheetProps) {
   const insets = useSafeAreaInsets();
@@ -51,7 +52,7 @@ export function BottomSheet({
       Keyboard.dismiss();
       onClose();
     },
-    [dismissible, onClose],
+    [dismissible, onClose]
   );
 
   const panResponder = useMemo(
@@ -84,7 +85,7 @@ export function BottomSheet({
           }).start();
         },
       }),
-    [close, dismissible, dragY],
+    [close, dismissible, dragY]
   );
 
   useEffect(() => {
@@ -135,7 +136,7 @@ export function BottomSheet({
   const translateY = Animated.add(slideY, dragY);
   const maxSheetHeight = Math.max(
     height - insets.top - spacing[8],
-    height * 0.45,
+    height * 0.45
   );
 
   return (
@@ -147,7 +148,7 @@ export function BottomSheet({
       onRequestClose={close}
     >
       <KeyboardAvoidingView
-        behavior={Platform.OS === "ios" ? "padding" : "height"}
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
         style={styles.modalRoot}
       >
         <Animated.View
@@ -184,7 +185,13 @@ export function BottomSheet({
           >
             <View style={styles.handle} />
           </View>
-          {children}
+          <ScrollView
+            style={styles.content}
+            keyboardShouldPersistTaps="handled"
+            keyboardDismissMode="on-drag"
+          >
+            {children}
+          </ScrollView>
         </Animated.View>
       </KeyboardAvoidingView>
     </Modal>
@@ -194,23 +201,25 @@ export function BottomSheet({
 const styles = StyleSheet.create({
   modalRoot: {
     flex: 1,
-    justifyContent: "flex-end",
+    justifyContent: 'flex-end',
   },
   overlay: {
     ...StyleSheet.absoluteFill,
     backgroundColor: colors.overlay,
   },
   sheet: {
-    alignSelf: "stretch",
+    flexShrink: 1,
+    alignSelf: 'stretch',
     borderTopLeftRadius: radius.lg,
     borderTopRightRadius: radius.lg,
     backgroundColor: colors.surface,
     paddingHorizontal: spacing[5],
-    overflow: "hidden",
+    overflow: 'hidden',
   },
   handleArea: {
-    alignItems: "center",
-    justifyContent: "center",
+    flexShrink: 0,
+    alignItems: 'center',
+    justifyContent: 'center',
     minHeight: spacing[8],
   },
   handle: {
@@ -218,5 +227,8 @@ const styles = StyleSheet.create({
     height: sizes.borderWidth * 4,
     borderRadius: radius.pill,
     backgroundColor: colors.surfacePinkStrong,
+  },
+  content: {
+    flexShrink: 1,
   },
 });
