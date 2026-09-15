@@ -7,6 +7,7 @@ import Svg, { Circle, Path } from "react-native-svg";
 import { BookCover } from "@/components/BookCover";
 import { EmptyState, type EmptyStateIconProps } from "@/components/EmptyState";
 import { SearchIcon } from "@/components/icons/SearchIcon";
+import { PrimaryButton, type PrimaryButtonIconProps } from "@/components/PrimaryButton";
 import { SegmentedTabs } from "@/components/SegmentedTabs";
 import { RegistrarProgressoSheet } from "@/features/progresso/RegistrarProgressoSheet";
 import { colors, shadows, sizes, spacing } from "@/theme";
@@ -32,6 +33,19 @@ function SadFaceIcon({ size, color }: EmptyStateIconProps) {
   );
 }
 
+function PlusIcon({ size, color }: PrimaryButtonIconProps) {
+  return (
+    <Svg width={size} height={size} viewBox="0 0 24 24" fill="none">
+      <Path
+        d="M12 5v14M5 12h14"
+        stroke={color}
+        strokeWidth="2"
+        strokeLinecap="round"
+      />
+    </Svg>
+  );
+}
+
 const messages = {
   Busca: "Busque por leitores, comunidades ou livros",
   "Outra lista": "Nenhum item nesta lista de demonstracao.",
@@ -51,6 +65,14 @@ export default function TesteScreen() {
   const [compact, setCompact] = useState(false);
   const [actionPresses, setActionPresses] = useState(0);
 
+  const [filledPresses, setFilledPresses] = useState(0);
+  const [outlinePresses, setOutlinePresses] = useState(0);
+  const [disabledPresses, setDisabledPresses] = useState(0);
+  const [loading, setLoading] = useState(false);
+  const [loadingCalls, setLoadingCalls] = useState(0);
+  const [simulateError, setSimulateError] = useState(false);
+  const loadingTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
   const [sheetOpen, setSheetOpen] = useState(false);
   const [currentPage, setCurrentPage] = useState(100);
   const [maxPage, setMaxPage] = useState(100);
@@ -62,11 +84,23 @@ export default function TesteScreen() {
         if (timer.current) clearTimeout(timer.current);
         timer.current = null;
         setToastVisible(false);
+        if (loadingTimer.current) clearTimeout(loadingTimer.current);
+        loadingTimer.current = null;
       },
       [],
     ),
   );
 
+  function iniciarChamadaSimulada() {
+    setLoading(true);
+    loadingTimer.current = setTimeout(() => {
+      setLoading(false);
+      loadingTimer.current = null;
+      if (!simulateError) setLoadingCalls((value) => value + 1);
+    }, 2000);
+  }
+
+  // Demonstracao local: a tela de produto passa o disparador do Toast #29.
   function showToast() {
     if (timer.current) clearTimeout(timer.current);
     setToastVisible(true);
@@ -203,6 +237,86 @@ export default function TesteScreen() {
             }
           />
         </View>
+
+        <Text className="font-inter-bold text-h2 text-primary">
+          PrimaryButton — #16
+        </Text>
+        <Text className="font-inter-bold text-h3 text-text">
+          As cinco variantes
+        </Text>
+        <View className="items-start gap-3">
+          <PrimaryButton
+            label="Criar Grupo"
+            icon={PlusIcon}
+            onPress={() => setFilledPresses((value) => value + 1)}
+          />
+          <PrimaryButton
+            label="Cancelar"
+            variant="outline"
+            onPress={() => setOutlinePresses((value) => value + 1)}
+          />
+          <PrimaryButton
+            label="Revanche"
+            variant="outline"
+            icon={PlusIcon}
+            onPress={() => setOutlinePresses((value) => value + 1)}
+          />
+          <PrimaryButton
+            label="Adicionar"
+            disabled
+            onPress={() => setDisabledPresses((value) => value + 1)}
+          />
+          <PrimaryButton
+            label="Enviar Desafio"
+            loading
+            onPress={() => setDisabledPresses((value) => value + 1)}
+          />
+        </View>
+        <Text className="font-inter text-bodySmall text-text-secondary">
+          Toques preenchido/contorno: {filledPresses + outlinePresses} · Toques
+          no desabilitado ou no carregando estático: {disabledPresses}
+        </Text>
+
+        <Text className="font-inter-bold text-h3 text-text">
+          Rótulo longo demais para a largura
+        </Text>
+        <View style={{ width: 160 }}>
+          <PrimaryButton
+            label="Um rótulo bem mais longo do que o botão"
+            icon={PlusIcon}
+            onPress={() => {}}
+          />
+        </View>
+
+        <Text className="font-inter-bold text-h3 text-text">
+          Carregando — chamada simulada (2s)
+        </Text>
+        <View className="flex-row items-center justify-between gap-4">
+          <Text className="flex-1 text-body font-inter text-text">
+            Chamada termina com erro
+          </Text>
+          <Switch
+            accessibilityLabel="Chamada termina com erro"
+            value={simulateError}
+            onValueChange={setSimulateError}
+          />
+        </View>
+        <View className="items-start">
+          <PrimaryButton
+            label="Enviar Desafio"
+            icon={PlusIcon}
+            loading={loading}
+            onPress={iniciarChamadaSimulada}
+          />
+        </View>
+        <Text
+          accessibilityLiveRegion="polite"
+          className="font-inter text-bodySmall text-text-secondary"
+        >
+          {loading
+            ? "Carregando — toque várias vezes: nenhuma chamada nova deve sair."
+            : `Chamadas concluídas com sucesso: ${loadingCalls}`}
+        </Text>
 
         <Text className="font-inter-bold text-h2 text-primary">
           Registrar Progresso - #33
