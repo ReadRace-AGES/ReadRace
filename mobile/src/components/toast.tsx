@@ -42,7 +42,15 @@ export function Toast({ visible }: ToastProps) {
       style={[styles.wrapper, { bottom: insets.bottom + 24 }]}
     >
       <Animated.View style={[styles.pill, { opacity }]}>
-        <Text className="text-sm font-semibold text-white">{COPY_PADRAO}</Text>
+        {/*
+          text-sm e text-white não existem mais desde o tema (#69) — o tema
+          substituiu a escala padrão do Tailwind pelos tokens do projeto, e
+          className é string, então o CI não acusa a classe "morta". O texto
+          saía com a cor padrão (escura) em cima da pílula vinho.
+        */}
+        <Text className="text-bodySmall font-inter-semibold text-text-inverse">
+          {COPY_PADRAO}
+        </Text>
       </Animated.View>
     </View>
   );
@@ -72,12 +80,17 @@ const styles = StyleSheet.create({
 type UseToastReturn = {
   visible: boolean;
   show: () => void;
+  hide: () => void;
 };
 
 /**
  * Controla o show/hide do Toast. Chamar show() de novo enquanto ja esta
  * visivel so reinicia a contagem - nunca duplica o aviso. No unmount da
  * tela o timer e limpo, entao o aviso nao sobrevive pra proxima tela.
+ *
+ * hide() força o toast a sumir na hora e cancela o timer pendente — é o que
+ * o ToastProvider chama quando a rota muda, pra ele não ficar flutuando por
+ * cima da tela seguinte.
  */
 export function useToast(
   duracaoMs: number = DURACAO_VISIVEL_MS
@@ -85,26 +98,32 @@ export function useToast(
   const [visible, setVisible] = useState(false);
   const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  const show = useCallback(() => {
+  const limparTimer = useCallback(() => {
     if (timeoutRef.current) {
       clearTimeout(timeoutRef.current);
+      timeoutRef.current = null;
     }
+  }, []);
+
+  const show = useCallback(() => {
+    limparTimer();
     setVisible(true);
     timeoutRef.current = setTimeout(() => {
       setVisible(false);
       timeoutRef.current = null;
     }, duracaoMs);
-  }, [duracaoMs]);
+  }, [duracaoMs, limparTimer]);
+
+  const hide = useCallback(() => {
+    limparTimer();
+    setVisible(false);
+  }, [limparTimer]);
 
   useEffect(() => {
-    return () => {
-      if (timeoutRef.current) {
-        clearTimeout(timeoutRef.current);
-      }
-    };
-  }, []);
+    return limparTimer;
+  }, [limparTimer]);
 
-  return { visible, show };
+  return { visible, show, hide };
 }
 
 export default Toast;
