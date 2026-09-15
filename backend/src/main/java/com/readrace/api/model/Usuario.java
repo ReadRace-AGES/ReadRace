@@ -32,6 +32,9 @@ public class Usuario {
     @Column(nullable = false)
     private Integer nivel;
 
+    @Column(name = "dias_consecutivos", nullable = false)
+    private Integer diasConsecutivos;
+
     @Column(name = "excluido_em")
     private OffsetDateTime excluidoEm;
 

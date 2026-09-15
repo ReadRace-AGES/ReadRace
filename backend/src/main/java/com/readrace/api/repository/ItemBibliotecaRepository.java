@@ -95,6 +95,9 @@ public interface ItemBibliotecaRepository extends JpaRepository<ItemBiblioteca, 
             @Param("usuarioId") UUID usuarioId,
             @Param("livroId") UUID livroId);
 
+    // Consulta sem lock para o endpoint de detalhe, que usa transação somente leitura.
+    Optional<ItemBiblioteca> findByUsuarioIdAndLivroId(UUID usuarioId, UUID livroId);
+
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     Optional<ItemBiblioteca> findByUsuarioIdAndLivro_Id(UUID usuarioId, UUID livroId);
 }
