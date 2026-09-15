@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { View, TextInput, TextInputProps, Platform } from 'react-native';
-import {SearchIcon} from '@/components/icons/SearchIcon';
+import { SearchIcon } from '@/components/icons/SearchIcon';
+import { colors, sizes, radius, spacing, typography, shadows } from '@/theme';
 
 type SearchVariant = 'rounded' | 'outlined' | 'tinted';
 
@@ -35,52 +36,62 @@ export function SearchInput({
   };
 
   const getVariantStyles = () => {
+    let bgColor, borderColor, iconColor, borderRadius;
+
     switch (variant) {
       case 'outlined':
-        return {
-          containerClass: disabled 
-            ? 'bg-[#FFFFFF] border-[#D1D5DB] rounded-md' 
-            : 'bg-[#FFFFFF] border-[#877273] rounded-md',
-          iconColor: disabled ? '#A0A0A0' : '#6B5E5F',
-        };
+        bgColor = disabled ? colors.surfaceDisabled : colors.surface;
+        borderColor = disabled ? colors.border : colors.borderStrong;
+        iconColor = disabled ? colors.textMuted : colors.primarySoft;
+        borderRadius = radius.md;
+        break;
       case 'tinted':
-        return {
-          containerClass: disabled 
-            ? 'bg-[#FCFAFA] border-[#D1D5DB] rounded-sm' 
-            : 'bg-[#FCFAFA] border-[#DAC1C2] rounded-sm',
-          iconColor: disabled ? '#A0A0A0' : '#6B5E5F',
-        };
+        bgColor = disabled ? colors.surfaceDisabled : colors.surface;
+        borderColor = disabled ? colors.border : colors.surfacePinkStrong;
+        iconColor = disabled ? colors.textMuted : colors.primarySoft;
+        borderRadius = radius.sm;
+        break;
       case 'rounded':
       default:
-        return {
-          containerClass: disabled 
-            ? 'bg-[#FFFFFF] border-[#D1D5DB] rounded-[999px]' 
-            : 'bg-[#F9F9F9] border-[#E1E4E8] rounded-[999px]',
-          iconColor: disabled ? '#A0A0A0' : '#732634',
-        };
+        bgColor = disabled ? colors.surfaceDisabled : colors.surface;
+        borderColor = disabled ? colors.border : colors.inputBorder;
+        iconColor = disabled ? colors.textMuted : colors.primary;
+        borderRadius = radius.pill;
+        break;
     }
+
+    return { bgColor, borderColor, iconColor, borderRadius };
   };
 
-  const { containerClass, iconColor } = getVariantStyles();
+  const { bgColor, borderColor, iconColor, borderRadius } = getVariantStyles();
 
   return (
     <View
-      className={`h-[48] flex-row items-center px-4 border gap-3 ${containerClass} ${className}`}
+      className={`flex-row items-center ${className}`}
       style={{
-        shadowColor: '#000000',
-        shadowOffset: { width: 0, height: 1 },
-        shadowOpacity: 0.05,
-        shadowRadius: 2,
-        elevation: 2,
+        height: sizes.searchInputHeight,
+        paddingHorizontal: spacing[4],
+        gap: spacing[3],
+        backgroundColor: bgColor,
+        borderColor: borderColor,
+        borderWidth: sizes.borderWidth,
+        borderRadius: borderRadius,
+        ...shadows.input,
       }}
     >
-      <SearchIcon size={18} color={iconColor} />
+
+      <SearchIcon size={sizes.iconSmall} color={iconColor} />
 
       <TextInput
         {...rest}
-        className={`flex-1 h-full text-[16px] ${Platform.OS === 'android' ? 'py-0' : ''} ${disabled ? 'text-gray-400' : 'text-[#374151]'}`}
+        className={`flex-1 h-full ${Platform.OS === 'android' ? 'py-0' : ''}`}
+        style={{
+          color: disabled ? colors.textMuted : colors.text,
+          fontFamily: typography.fontFamily.regular,
+          fontSize: typography.fontSize.body,
+        }}
         placeholder={placeholder}
-        placeholderTextColor= {disabled ? "#888888" : "#505662"}
+        placeholderTextColor={colors.textSecondary}
         value={currentValue}
         onChangeText={handleChangeText}
         editable={!disabled}
