@@ -37,7 +37,7 @@ const TAB_ORDER: readonly TabDefinition[] = [
     Icon: BookTabIcon,
     accessibilityLabel: 'Meus Livros',
   },
-  { routeName: 'buscar', Icon: SearchTabIcon, accessibilityLabel: 'Buscar' },
+  { routeName: '(busca)', Icon: SearchTabIcon, accessibilityLabel: 'Buscar' },
   { routeName: 'desafios', Icon: StarTabIcon, accessibilityLabel: 'Desafios' },
   { routeName: 'perfil', Icon: PersonTabIcon, accessibilityLabel: 'Perfil' },
 ];
