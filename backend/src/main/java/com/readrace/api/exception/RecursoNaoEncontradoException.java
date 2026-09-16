@@ -1,11 +1,7 @@
 package com.readrace.api.exception;
 
-/**
- * Lance quando um id pedido pelo cliente não existe no banco. O GlobalExceptionHandler transforma
- * isso em HTTP 404.
- */
-public class RecursoNaoEncontradoException extends RuntimeException {
+public class RecursoNaoEncontradoException extends ExcecaoDeNegocio {
     public RecursoNaoEncontradoException(String mensagem) {
-        super(mensagem);
+        super(CodigoErro.RESOURCE_NOT_FOUND, mensagem);
     }
 }

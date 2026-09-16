@@ -1,4 +1,3 @@
-import React from "react";
 import Svg, { Ellipse, Rect, Path } from "react-native-svg";
 
 type ReadRaceLogoProps = {

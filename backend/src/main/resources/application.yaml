@@ -38,6 +38,9 @@ management:
 
 # ==================== ReadRace ====================
 readrace:
+  usuario-seed:
+    id: ${USUARIO_SEED_ID:00000000-0000-0000-0000-000000000001}
+
   cors:
     # Fechado por padrão. Cada ambiente declara as origens que libera —
     # ver application-dev.yaml. Esquecer de configurar em produção deixa a
