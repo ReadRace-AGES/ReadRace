@@ -1,6 +1,4 @@
-import { useCallback, useRef, useState } from 'react';
-
-import { useFocusEffect } from 'expo-router';
+import { useCallback, useEffect, useRef, useState } from 'react';
 
 import { ApiError } from '@/api/client';
 
@@ -68,26 +66,28 @@ export function useBiblioteca(): BibliotecaState {
   // Cancela as páginas em voo quando a tela recarrega ou desmonta.
   const controllers = useRef(new Set<AbortController>());
 
-  useFocusEffect(
-    useCallback(() => {
-      const controller = new AbortController();
-      setBiblioteca({ situacao: 'carregando' });
-      buscarBiblioteca(controller.signal)
-        .then((dados) => {
-          if (controller.signal.aborted) return;
-          setBiblioteca({ situacao: 'sucesso', dados: primeiraPagina(dados) });
-        })
-        .catch((erro: unknown) => {
-          if (controller.signal.aborted) return;
-          setBiblioteca({ situacao: 'erro', mensagem: mensagemDe(erro) });
-        });
-      return () => {
-        controller.abort();
-        controllers.current.forEach((c) => c.abort());
-        controllers.current.clear();
-      };
-    }, [versao])
-  );
+  // Carrega uma vez por montagem (e a cada "tentar de novo"), nao a cada foco: refazer
+  // a chamada ao voltar do detalhe descartaria as paginas ja trazidas pelo "Ver mais" e
+  // devolveria a tela ao estado de carregando. Meus Livros nao exibe progresso, entao
+  // nao ha o que atualizar no retorno.
+  useEffect(() => {
+    const controller = new AbortController();
+    setBiblioteca({ situacao: 'carregando' });
+    buscarBiblioteca(controller.signal)
+      .then((dados) => {
+        if (controller.signal.aborted) return;
+        setBiblioteca({ situacao: 'sucesso', dados: primeiraPagina(dados) });
+      })
+      .catch((erro: unknown) => {
+        if (controller.signal.aborted) return;
+        setBiblioteca({ situacao: 'erro', mensagem: mensagemDe(erro) });
+      });
+    return () => {
+      controller.abort();
+      controllers.current.forEach((c) => c.abort());
+      controllers.current.clear();
+    };
+  }, [versao]);
 
   const recarregar = useCallback(() => setVersao((v) => v + 1), []);
 
