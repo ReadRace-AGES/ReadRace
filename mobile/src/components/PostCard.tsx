@@ -1,10 +1,11 @@
-import { useState, type ReactNode } from 'react';
+import { useState } from 'react';
 import { Pressable, Text, View } from 'react-native';
 import Svg, { Path } from 'react-native-svg';
 
 import { colors, sizes } from '@/theme';
 
 import { Avatar, StreakBadge } from './avatar';
+import { Card } from './Card';
 
 // Linhas visiveis do texto recolhido, antes do "Ler mais" (`tela livro` 2011-674).
 const LINHAS_RECOLHIDO = 4;
@@ -20,12 +21,6 @@ export type PostCardProps = {
   likes: number;
   likedByMe?: boolean;
 };
-
-// TODO(#17): trocar pelo `Card` quando ele entrar na dev. Por enquanto so reproduz
-// a moldura do `card` 403-404 para o PostCard nao ficar esperando a #17.
-function CardProvisorio({ children }: { children: ReactNode }) {
-  return <View className="rounded-lg border border-border bg-surface-muted p-4">{children}</View>;
-}
 
 function HeartIcon({ filled }: { filled: boolean }) {
   return (
@@ -89,7 +84,9 @@ function PostBody({ text }: { text: string }) {
           hitSlop={8}
           className="mt-1 self-start"
         >
-          <Text className="text-caption font-inter-bold text-accent">Ler mais</Text>
+          <Text className="text-caption font-inter-bold text-accent">
+            Ler mais
+          </Text>
         </Pressable>
       )}
     </View>
@@ -115,17 +112,26 @@ export function PostCard({
   const temTexto = text.trim() !== '';
 
   return (
-    <CardProvisorio>
+    <Card>
       <View className="flex-row items-center gap-3">
-        <Avatar name={authorName} photoUrl={authorPhotoUrl} size={sizes.avatar} />
+        <Avatar
+          name={authorName}
+          photoUrl={authorPhotoUrl}
+          size={sizes.avatar}
+        />
         <View className="flex-1">
           <View className="flex-row items-center gap-2">
-            <Text numberOfLines={1} className="shrink text-body font-inter-bold text-text">
+            <Text
+              numberOfLines={1}
+              className="shrink text-body font-inter-bold text-text"
+            >
               {authorName}
             </Text>
             {temSequencia && <StreakBadge value={authorStreak} />}
           </View>
-          <Text className="text-caption font-inter text-text-secondary">{timeAgo}</Text>
+          <Text className="text-caption font-inter text-text-secondary">
+            {timeAgo}
+          </Text>
         </View>
       </View>
 
@@ -141,9 +147,11 @@ export function PostCard({
         className="mt-3 flex-row items-center gap-1"
       >
         <HeartIcon filled={likedByMe} />
-        <Text className="text-bodySmall font-inter text-text-secondary">{likes}</Text>
+        <Text className="text-bodySmall font-inter text-text-secondary">
+          {likes}
+        </Text>
       </View>
-    </CardProvisorio>
+    </Card>
   );
 }
 

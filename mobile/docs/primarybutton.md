@@ -35,7 +35,7 @@ Abra `http://localhost:8081/teste`.
 1. Em **PrimaryButton — #16**, compare as cinco variantes com as telas do Design da issue #16 (formato pílula, ícone à esquerda). No contorno, confira que "Cancelar" (sem ícone) sai neutro e "Revanche" (com ícone) sai na cor da marca — são leituras diferentes de propósito, ver tabela acima.
 2. Toque no preenchido e no contorno algumas vezes: o contador de toques sobe a cada toque.
 3. Toque no botão desabilitado (estático) e no botão carregando (estático): o contador correspondente não sobe.
-4. Em **Rótulo longo demais para a largura**, confirme que o texto trunca com reticências e o ícone continua inteiro.
+4. Em **Rótulo longo demais para a largura**, confirme que o texto quebra em linhas, o botão cresce e o ícone continua inteiro. Repita com fonte ampliada: a altura mínima vem de `sizes.buttonHeight`, sem recortar o rótulo.
 5. Em **Carregando — chamada simulada**, toque no botão: ele fica desabilitado e mostra o indicador por 2s. Toque várias vezes durante esse período — nenhuma chamada nova é disparada (o próprio botão ignora o toque). Ao terminar, o rótulo volta e o contador de chamadas concluídas sobe.
 6. Ative **Chamada termina com erro** e repita o passo 5: o botão sai de carregando e volta a aceitar toque, mas o contador de sucesso não sobe — o tratamento do erro em si é de quem usa o botão, fora do escopo desta task.
 

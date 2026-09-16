@@ -58,7 +58,8 @@ export function PrimaryButton({
           alignItems: 'center',
           justifyContent: 'center',
           gap: spacing[2],
-          height: sizes.buttonHeight,
+          minHeight: sizes.buttonHeight,
+          paddingVertical: spacing[2],
           paddingHorizontal: spacing[4],
           borderRadius: radius.pill,
           backgroundColor,
@@ -81,9 +82,10 @@ export function PrimaryButton({
             </View>
           )}
           <Text
-            numberOfLines={1}
-            ellipsizeMode="tail"
-            style={[textStyles.button, { color: contentColor, flexShrink: 1 }]}
+            style={[
+              textStyles.button,
+              { color: contentColor, flexShrink: 1, textAlign: 'center' },
+            ]}
           >
             {label}
           </Text>

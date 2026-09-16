@@ -36,6 +36,7 @@
   "devDependencies": {
     "@types/react": "~19.2.2",
     "prettier": "3.9.6",
+    "react-test-renderer": "^19.2.3",
     "typescript": "~6.0.3"
   },
   "scripts": {
@@ -44,7 +45,8 @@
     "android": "expo start --android",
     "ios": "expo start --ios",
     "web": "expo start --web",
-    "lint": "expo lint"
+    "lint": "expo lint",
+    "test": "node scripts/livro-detalhe.test.cjs && node scripts/progresso-fluxo.test.cjs"
   },
   "private": true
 }
