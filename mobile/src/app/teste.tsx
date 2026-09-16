@@ -9,6 +9,7 @@ import { EmptyState, type EmptyStateIconProps } from "@/components/EmptyState";
 import { SearchIcon } from "@/components/icons/SearchIcon";
 import { PrimaryButton, type PrimaryButtonIconProps } from "@/components/PrimaryButton";
 import { SegmentedTabs } from "@/components/SegmentedTabs";
+import { Slider } from "@/components/Slider";
 import { RegistrarProgressoSheet } from "@/features/progresso/RegistrarProgressoSheet";
 import { colors, shadows, sizes, spacing } from "@/theme";
 import { SearchInput } from '@/components/SearchInput';
@@ -83,6 +84,9 @@ export default function TesteScreen() {
   const [searchValue1, setSearchValue1] = useState('');
   const [searchValue2, setSearchValue2] = useState('');
   const [searchValue3, setSearchValue3] = useState('');
+
+  // Slider (#28)
+  const [pages, setPages] = useState(150);
 
   useFocusEffect(
     useCallback(
@@ -415,6 +419,21 @@ export default function TesteScreen() {
             />
           </View>
         </View>
+        <Text className="font-inter-bold text-h2 text-primary">
+          Slider — #28
+        </Text>
+        <Text className="my-2 font-inter-bold text-h1 text-text">
+          {pages} pág
+        </Text>
+        <Slider
+          minimumValue={10}
+          maximumValue={500}
+          minimumLabel="10"
+          maximumLabel="500+"
+          value={pages}
+          onValueChange={setPages}
+          accessibilityLabel="Meta de páginas"
+        />
       </ScrollView>
 
       {toastVisible && (
