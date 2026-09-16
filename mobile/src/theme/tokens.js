@@ -102,11 +102,19 @@ const shadows = {
     shadowOffset: { width: 0, height: 2 },
     elevation: 6,
   },
+  input: {
+    shadowColor: '#000000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.05,
+    shadowRadius: 2,
+    elevation: 2, 
+  },
 };
 
 const sizes = {
   buttonHeight: 40,
   inputHeight: 40,
+  searchInputHeight: 48,
   navHeight: 76,
   navIcon: 28,
   navIndicatorWidth: 24,
