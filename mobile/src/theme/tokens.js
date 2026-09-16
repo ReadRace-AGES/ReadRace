@@ -131,4 +131,22 @@ const gradients = {
   rankBronze: [colors.rankBronzeStart, colors.rankBronzeEnd],
 };
 
-module.exports = { colors, typography, spacing, radius, shadows, sizes, gradients };
+// BookCover: composicao da escala existente, sem novas medidas extraidas do
+// Figma. Centralizado para o tema ajustar as tres variantes em conjunto.
+const bookCover = {
+  grid: { width: spacing[10] * 2, height: sizes.avatarLarge * 2 },
+  featured: { width: spacing[10] * 3, height: sizes.avatarLarge * 3 },
+  thumbnail: { width: spacing[10], height: sizes.avatarLarge },
+  borderRadius: radius.md,
+};
+
+module.exports = {
+  colors,
+  typography,
+  spacing,
+  radius,
+  shadows,
+  sizes,
+  gradients,
+  bookCover,
+};
