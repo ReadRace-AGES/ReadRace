@@ -2,7 +2,13 @@ import type { BottomTabBarProps } from 'expo-router/js-tabs';
 import type { ComponentType } from 'react';
 import { Pressable, View } from 'react-native';
 
-import { BookTabIcon, HomeTabIcon, PersonTabIcon, SearchTabIcon, StarTabIcon } from '@/components/TabIcons';
+import {
+  BookTabIcon,
+  HomeTabIcon,
+  PersonTabIcon,
+  SearchTabIcon,
+  StarTabIcon,
+} from '@/components/TabIcons';
 import { colors, shadows, sizes, spacing } from '@/theme';
 
 // A pill tem paddingHorizontal: spacing[6] e columnGap: spacing[6] entre ícones.
@@ -26,13 +32,19 @@ type TabDefinition = {
 
 const TAB_ORDER: readonly TabDefinition[] = [
   { routeName: 'feed', Icon: HomeTabIcon, accessibilityLabel: 'Feed' },
-  { routeName: 'meus-livros', Icon: BookTabIcon, accessibilityLabel: 'Meus Livros' },
+  {
+    routeName: '(biblioteca)',
+    Icon: BookTabIcon,
+    accessibilityLabel: 'Meus Livros',
+  },
   { routeName: 'buscar', Icon: SearchTabIcon, accessibilityLabel: 'Buscar' },
   { routeName: 'desafios', Icon: StarTabIcon, accessibilityLabel: 'Desafios' },
   { routeName: 'perfil', Icon: PersonTabIcon, accessibilityLabel: 'Perfil' },
 ];
 
-type RouteOf<Props> = Props extends { state: { routes: readonly (infer R)[] } } ? R : never;
+type RouteOf<Props> = Props extends { state: { routes: readonly (infer R)[] } }
+  ? R
+  : never;
 type TabWithRoute = TabDefinition & { route: RouteOf<BottomTabBarProps> };
 
 export function BottomTabBar({ state, navigation, insets }: BottomTabBarProps) {
@@ -46,7 +58,10 @@ export function BottomTabBar({ state, navigation, insets }: BottomTabBarProps) {
   return (
     <View
       className="items-center px-5"
-      style={{ paddingTop: spacing[3], paddingBottom: insets.bottom || spacing[6] }}
+      style={{
+        paddingTop: spacing[3],
+        paddingBottom: insets.bottom || spacing[6],
+      }}
     >
       <View
         className="flex-row items-center justify-center rounded-pill border border-border bg-surface"
@@ -57,51 +72,53 @@ export function BottomTabBar({ state, navigation, insets }: BottomTabBarProps) {
           ...shadows.floating,
         }}
       >
-        {visibleTabs.map(({ route, Icon, accessibilityLabel, routeName }, index) => {
-          const isFocused = focusedRouteName === routeName;
-          const isFirst = index === 0;
-          const isLast = index === visibleTabs.length - 1;
+        {visibleTabs.map(
+          ({ route, Icon, accessibilityLabel, routeName }, index) => {
+            const isFocused = focusedRouteName === routeName;
+            const isFirst = index === 0;
+            const isLast = index === visibleTabs.length - 1;
 
-          const onPress = () => {
-            const event = navigation.emit({
-              type: 'tabPress',
-              target: route.key,
-              canPreventDefault: true,
-            });
+            const onPress = () => {
+              const event = navigation.emit({
+                type: 'tabPress',
+                target: route.key,
+                canPreventDefault: true,
+              });
 
-            if (!isFocused && !event.defaultPrevented) {
-              navigation.navigate(routeName, route.params);
-            }
-          };
+              if (!isFocused && !event.defaultPrevented) {
+                navigation.navigate(routeName, route.params);
+              }
+            };
 
-          return (
-            <Pressable
-              key={route.key}
-              onPress={onPress}
-              hitSlop={{
-                top: VERTICAL_HIT_SLOP,
-                bottom: VERTICAL_HIT_SLOP,
-                left: isFirst ? EDGE_HIT_SLOP : GAP_HIT_SLOP,
-                right: isLast ? EDGE_HIT_SLOP : GAP_HIT_SLOP,
-              }}
-              accessibilityRole="button"
-              accessibilityState={isFocused ? { selected: true } : {}}
-              accessibilityLabel={accessibilityLabel}
-              className="items-center justify-center"
-              style={{ height: sizes.navHeight }}
-            >
-              <Icon active={isFocused} size={sizes.navIcon} />
-              <View
-                className="mt-1 rounded-pill"
-                style={{
-                  width: sizes.navIndicatorWidth,
-                  height: sizes.navIndicatorHeight,
-                  backgroundColor: isFocused ? colors.primary : 'transparent',
+            return (
+              <Pressable
+                key={route.key}
+                onPress={onPress}
+                hitSlop={{
+                  top: VERTICAL_HIT_SLOP,
+                  bottom: VERTICAL_HIT_SLOP,
+                  left: isFirst ? EDGE_HIT_SLOP : GAP_HIT_SLOP,
+                  right: isLast ? EDGE_HIT_SLOP : GAP_HIT_SLOP,
                 }}
-              />
-            </Pressable>
-          );
-        })}
+                accessibilityRole="button"
+                accessibilityState={isFocused ? { selected: true } : {}}
+                accessibilityLabel={accessibilityLabel}
+                className="items-center justify-center"
+                style={{ height: sizes.navHeight }}
+              >
+                <Icon active={isFocused} size={sizes.navIcon} />
+                <View
+                  className="mt-1 rounded-pill"
+                  style={{
+                    width: sizes.navIndicatorWidth,
+                    height: sizes.navIndicatorHeight,
+                    backgroundColor: isFocused ? colors.primary : 'transparent',
+                  }}
+                />
+              </Pressable>
+            );
+          }
+        )}
       </View>
     </View>
   );

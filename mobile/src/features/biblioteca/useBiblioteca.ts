@@ -66,13 +66,18 @@ export function useBiblioteca(): BibliotecaState {
   // Cancela as páginas em voo quando a tela recarrega ou desmonta.
   const controllers = useRef(new Set<AbortController>());
 
+  // Carrega uma vez por montagem (e a cada "tentar de novo"), nao a cada foco: refazer
+  // a chamada ao voltar do detalhe descartaria as paginas ja trazidas pelo "Ver mais" e
+  // devolveria a tela ao estado de carregando. Meus Livros nao exibe progresso, entao
+  // nao ha o que atualizar no retorno.
   useEffect(() => {
     const controller = new AbortController();
     setBiblioteca({ situacao: 'carregando' });
     buscarBiblioteca(controller.signal)
-      .then((dados) =>
-        setBiblioteca({ situacao: 'sucesso', dados: primeiraPagina(dados) })
-      )
+      .then((dados) => {
+        if (controller.signal.aborted) return;
+        setBiblioteca({ situacao: 'sucesso', dados: primeiraPagina(dados) });
+      })
       .catch((erro: unknown) => {
         if (controller.signal.aborted) return;
         setBiblioteca({ situacao: 'erro', mensagem: mensagemDe(erro) });
@@ -118,14 +123,15 @@ export function useBiblioteca(): BibliotecaState {
       }));
 
       buscarPaginaBiblioteca(lista, atual.proximoCursor, controller.signal)
-        .then((pagina) =>
+        .then((pagina) => {
+          if (controller.signal.aborted) return;
           atualizarLista(lista, (l) => ({
             itens: [...l.itens, ...pagina.itens],
             proximoCursor: pagina.proximoCursor,
             carregandoMais: false,
             erroAoCarregarMais: false,
-          }))
-        )
+          }));
+        })
         .catch(() => {
           if (controller.signal.aborted) return;
           atualizarLista(lista, (l) => ({

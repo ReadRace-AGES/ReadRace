@@ -3,10 +3,15 @@ package com.readrace.api.repository;
 import java.time.Instant;
 import java.util.Collection;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
+
+import jakarta.persistence.LockModeType;
 
 import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Lock;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
@@ -25,9 +30,10 @@ public interface ItemBibliotecaRepository extends JpaRepository<ItemBiblioteca, 
         Instant getAtividade();
     }
 
-    // Native de propósito: RegistroLeitura não tem entidade ainda (é escopo da #33), e o keyset
-    // precisa da ordenação no banco. A página vem só com ids; as entidades são carregadas depois
-    // por findByIdIn, com livro e autores, em uma query.
+    // Native de propósito: RegistroLeitura também tem entidade na #33, mas o keyset precisa da
+    // ordenação no banco. A página vem só com ids; as entidades são carregadas depois por
+    // findByIdIn,
+    // com livro e autores, em uma query.
     String PAGINA_SELECT =
             """
             SELECT i.id AS itemId, GREATEST(r.ultima, i.adicionado_em) AS atividade
@@ -74,4 +80,24 @@ public interface ItemBibliotecaRepository extends JpaRepository<ItemBiblioteca, 
 
     @EntityGraph(attributePaths = {"livro", "livro.livroAutores", "livro.livroAutores.autor"})
     List<ItemBiblioteca> findByIdIn(Collection<UUID> ids);
+
+    @Modifying
+    @Query(
+            value =
+                    """
+            INSERT INTO item_biblioteca (id, usuario_id, livro_id, status_leitura)
+            VALUES (:id, :usuarioId, :livroId, 'lendo')
+            ON CONFLICT (usuario_id, livro_id) DO NOTHING
+            """,
+            nativeQuery = true)
+    void criarSeAusente(
+            @Param("id") UUID id,
+            @Param("usuarioId") UUID usuarioId,
+            @Param("livroId") UUID livroId);
+
+    // Consulta sem lock para o endpoint de detalhe, que usa transação somente leitura.
+    Optional<ItemBiblioteca> findByUsuarioIdAndLivroId(UUID usuarioId, UUID livroId);
+
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
+    Optional<ItemBiblioteca> findByUsuarioIdAndLivro_Id(UUID usuarioId, UUID livroId);
 }

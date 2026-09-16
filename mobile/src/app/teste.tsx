@@ -1,19 +1,22 @@
-import { useFocusEffect } from 'expo-router';
-import { useCallback, useRef, useState } from 'react';
-import { Pressable, ScrollView, Switch, Text, View } from 'react-native';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import Svg, { Circle, Path } from 'react-native-svg';
+import { useFocusEffect } from "expo-router";
+import { useCallback, useRef, useState } from "react";
+import { Pressable, ScrollView, Switch, Text, View } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
+import Svg, { Circle, Path } from "react-native-svg";
 
-import { BookCover } from '@/components/BookCover';
-import { EmptyState, type EmptyStateIconProps } from '@/components/EmptyState';
-import { SearchIcon } from '@/components/icons/SearchIcon';
-import { SegmentedTabs } from '@/components/SegmentedTabs';
-import { Slider } from '@/components/Slider';
-import { colors, sizes, spacing } from '@/theme';
+import { BookCover } from "@/components/BookCover";
+import { EmptyState, type EmptyStateIconProps } from "@/components/EmptyState";
+import { SearchIcon } from "@/components/icons/SearchIcon";
+import { PrimaryButton, type PrimaryButtonIconProps } from "@/components/PrimaryButton";
+import { SegmentedTabs } from "@/components/SegmentedTabs";
+import { Slider } from "@/components/Slider";
+import { RegistrarProgressoSheet } from "@/features/progresso/RegistrarProgressoSheet";
+import { colors, shadows, sizes, spacing } from "@/theme";
 
-const cover = 'https://covers.openlibrary.org/b/isbn/9780451524935-L.jpg';
+const cover = "https://covers.openlibrary.org/b/isbn/9780451524935-L.jpg";
 const brokenCover =
-  'https://covers.openlibrary.org/b/isbn/readrace-inexistente-L.jpg?default=false';
+  "https://covers.openlibrary.org/b/isbn/readrace-inexistente-L.jpg?default=false";
+const progressBookId = "30000000-0000-0000-0000-000000000001";
 
 function SadFaceIcon({ size, color }: EmptyStateIconProps) {
   return (
@@ -31,26 +34,50 @@ function SadFaceIcon({ size, color }: EmptyStateIconProps) {
   );
 }
 
+function PlusIcon({ size, color }: PrimaryButtonIconProps) {
+  return (
+    <Svg width={size} height={size} viewBox="0 0 24 24" fill="none">
+      <Path
+        d="M12 5v14M5 12h14"
+        stroke={color}
+        strokeWidth="2"
+        strokeLinecap="round"
+      />
+    </Svg>
+  );
+}
+
 const messages = {
-  Busca: 'Busque por leitores, comunidades ou livros',
-  'Outra lista': 'Nenhum item nesta lista de demonstração.',
-  'Texto longo':
-    'Esta lista de demonstração ainda não possui itens. Este texto propositalmente longo deve quebrar naturalmente em várias linhas, continuar centralizado e permanecer completamente legível em uma tela estreita.',
+  Busca: "Busque por leitores, comunidades ou livros",
+  "Outra lista": "Nenhum item nesta lista de demonstracao.",
+  "Texto longo":
+    "Esta lista de demonstracao ainda nao possui itens. Este texto propositalmente longo deve quebrar naturalmente em varias linhas, continuar centralizado e permanecer completamente legivel em uma tela estreita.",
 };
 
 export default function TesteScreen() {
-  // BookCover (#19)
   const [presses, setPresses] = useState(0);
   const [replacement, setReplacement] = useState(false);
   const [toastVisible, setToastVisible] = useState(false);
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const insets = useSafeAreaInsets();
 
-  // EmptyState (#25)
-  const [example, setExample] = useState('Busca');
+  const [example, setExample] = useState("Busca");
   const [withAction, setWithAction] = useState(false);
   const [compact, setCompact] = useState(false);
   const [actionPresses, setActionPresses] = useState(0);
+
+  const [filledPresses, setFilledPresses] = useState(0);
+  const [outlinePresses, setOutlinePresses] = useState(0);
+  const [disabledPresses, setDisabledPresses] = useState(0);
+  const [loading, setLoading] = useState(false);
+  const [loadingCalls, setLoadingCalls] = useState(0);
+  const [simulateError, setSimulateError] = useState(false);
+  const loadingTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const [sheetOpen, setSheetOpen] = useState(false);
+  const [currentPage, setCurrentPage] = useState(100);
+  const [maxPage, setMaxPage] = useState(100);
+  const [progressPercent, setProgressPercent] = useState(39);
 
   // Slider (#28)
   const [pages, setPages] = useState(150);
@@ -61,10 +88,21 @@ export default function TesteScreen() {
         if (timer.current) clearTimeout(timer.current);
         timer.current = null;
         setToastVisible(false);
+        if (loadingTimer.current) clearTimeout(loadingTimer.current);
+        loadingTimer.current = null;
       },
-      []
-    )
+      [],
+    ),
   );
+
+  function iniciarChamadaSimulada() {
+    setLoading(true);
+    loadingTimer.current = setTimeout(() => {
+      setLoading(false);
+      loadingTimer.current = null;
+      if (!simulateError) setLoadingCalls((value) => value + 1);
+    }, 2000);
+  }
 
   // Demonstracao local: a tela de produto passa o disparador do Toast #29.
   function showToast() {
@@ -88,20 +126,20 @@ export default function TesteScreen() {
           Tela de teste
         </Text>
         <Text className="font-inter text-body text-text-secondary">
-          A pilha de navegação está funcionando.
+          A pilha de navegacao esta funcionando.
         </Text>
 
         <Text className="font-inter-bold text-h2 text-primary">
-          BookCover — #19
+          BookCover - #19
         </Text>
-        <Text className="font-inter-bold text-h3 text-text">Três tamanhos</Text>
+        <Text className="font-inter-bold text-h3 text-text">Tres tamanhos</Text>
         <View className="flex-row flex-wrap items-end gap-4">
-          {(['thumbnail', 'grid', 'featured'] as const).map((size) => (
+          {(["thumbnail", "grid", "featured"] as const).map((size) => (
             <View key={size} className="gap-2">
               <BookCover
                 size={size}
                 source={cover}
-                accessibilityLabel={`1984 — ${size}`}
+                accessibilityLabel={`1984 - ${size}`}
                 onPress={() => setPresses((count) => count + 1)}
               />
               <Text className="font-inter text-caption text-text">{size}</Text>
@@ -127,7 +165,7 @@ export default function TesteScreen() {
           className="rounded-sm bg-primary px-4 py-3"
         >
           <Text className="font-inter-bold text-body text-text-inverse">
-            {replacement ? 'Usar URL inválida' : 'Trocar por capa válida'}
+            {replacement ? "Usar URL invalida" : "Trocar por capa valida"}
           </Text>
         </Pressable>
         <Text className="font-inter-bold text-h3 text-text">
@@ -147,25 +185,25 @@ export default function TesteScreen() {
         </ScrollView>
 
         <Text className="font-inter-bold text-h2 text-primary">
-          EmptyState — #25
+          EmptyState - #25
         </Text>
         <SegmentedTabs options={Object.keys(messages)} onChange={setExample} />
         <View className="flex-row items-center justify-between gap-4">
           <Text className="flex-1 text-body font-inter text-text">
-            Mostrar ação de teste
+            Mostrar acao de teste
           </Text>
           <Switch
-            accessibilityLabel="Mostrar ação de teste"
+            accessibilityLabel="Mostrar acao de teste"
             value={withAction}
             onValueChange={setWithAction}
           />
         </View>
         <View className="flex-row items-center justify-between gap-4">
           <Text className="flex-1 text-body font-inter text-text">
-            Área compacta
+            Area compacta
           </Text>
           <Switch
-            accessibilityLabel="Área compacta"
+            accessibilityLabel="Area compacta"
             value={compact}
             onValueChange={setCompact}
           />
@@ -175,10 +213,9 @@ export default function TesteScreen() {
             accessibilityLiveRegion="polite"
             className="text-bodySmall font-inter text-text-secondary"
           >
-            Toques na ação: {actionPresses}
+            Toques na acao: {actionPresses}
           </Text>
         )}
-        {/* Fora do modo compacto, a area simula a altura que uma lista deixaria livre. */}
         <View
           style={{
             minHeight: compact ? undefined : spacing[10] * 8,
@@ -187,7 +224,7 @@ export default function TesteScreen() {
           }}
         >
           <EmptyState
-            icon={example === 'Busca' ? SearchIcon : SadFaceIcon}
+            icon={example === "Busca" ? SearchIcon : SadFaceIcon}
             message={messages[example as keyof typeof messages]}
             action={
               withAction ? (
@@ -197,7 +234,7 @@ export default function TesteScreen() {
                   className="rounded-pill bg-primary px-4 py-3"
                 >
                   <Text className="text-center text-body font-inter-bold text-text-inverse">
-                    Ação de teste
+                    Acao de teste
                   </Text>
                 </Pressable>
               ) : undefined
@@ -205,8 +242,110 @@ export default function TesteScreen() {
           />
         </View>
 
-        <Text className="font-inter-bold text-h2 text-primary">Slider — #28</Text>
-        <Text className="my-2 font-inter-bold text-h1 text-text">{pages} pág</Text>
+        <Text className="font-inter-bold text-h2 text-primary">
+          PrimaryButton — #16
+        </Text>
+        <Text className="font-inter-bold text-h3 text-text">
+          As cinco variantes
+        </Text>
+        <View className="items-start gap-3">
+          <PrimaryButton
+            label="Criar Grupo"
+            icon={PlusIcon}
+            onPress={() => setFilledPresses((value) => value + 1)}
+          />
+          <PrimaryButton
+            label="Cancelar"
+            variant="outline"
+            onPress={() => setOutlinePresses((value) => value + 1)}
+          />
+          <PrimaryButton
+            label="Revanche"
+            variant="outline"
+            icon={PlusIcon}
+            onPress={() => setOutlinePresses((value) => value + 1)}
+          />
+          <PrimaryButton
+            label="Adicionar"
+            disabled
+            onPress={() => setDisabledPresses((value) => value + 1)}
+          />
+          <PrimaryButton
+            label="Enviar Desafio"
+            loading
+            onPress={() => setDisabledPresses((value) => value + 1)}
+          />
+        </View>
+        <Text className="font-inter text-bodySmall text-text-secondary">
+          Toques preenchido/contorno: {filledPresses + outlinePresses} · Toques
+          no desabilitado ou no carregando estático: {disabledPresses}
+        </Text>
+
+        <Text className="font-inter-bold text-h3 text-text">
+          Rótulo longo demais para a largura
+        </Text>
+        <View style={{ width: 160 }}>
+          <PrimaryButton
+            label="Um rótulo bem mais longo do que o botão"
+            icon={PlusIcon}
+            onPress={() => {}}
+          />
+        </View>
+
+        <Text className="font-inter-bold text-h3 text-text">
+          Carregando — chamada simulada (2s)
+        </Text>
+        <View className="flex-row items-center justify-between gap-4">
+          <Text className="flex-1 text-body font-inter text-text">
+            Chamada termina com erro
+          </Text>
+          <Switch
+            accessibilityLabel="Chamada termina com erro"
+            value={simulateError}
+            onValueChange={setSimulateError}
+          />
+        </View>
+        <View className="items-start">
+          <PrimaryButton
+            label="Enviar Desafio"
+            icon={PlusIcon}
+            loading={loading}
+            onPress={iniciarChamadaSimulada}
+          />
+        </View>
+        <Text
+          accessibilityLiveRegion="polite"
+          className="font-inter text-bodySmall text-text-secondary"
+        >
+          {loading
+            ? "Carregando — toque várias vezes: nenhuma chamada nova deve sair."
+            : `Chamadas concluídas com sucesso: ${loadingCalls}`}
+        </Text>
+
+        <Text className="font-inter-bold text-h2 text-primary">
+          Registrar Progresso - #33
+        </Text>
+        <Text className="font-inter text-bodySmall text-text-secondary">
+          Dom Casmurro: {currentPage} de 256 paginas ({progressPercent}%).
+          Maxima alcancada: {maxPage}.
+        </Text>
+        <Pressable
+          accessibilityRole="button"
+          onPress={() => setSheetOpen(true)}
+          className="items-center justify-center rounded-pill bg-primary px-5"
+          style={[{ height: sizes.buttonHeight }, shadows.button]}
+        >
+          <Text className="font-inter-bold text-body text-text-inverse">
+            Abrir Registrar Progresso
+          </Text>
+        </Pressable>
+
+        <Text className="font-inter-bold text-h2 text-primary">
+          Slider — #28
+        </Text>
+        <Text className="my-2 font-inter-bold text-h1 text-text">
+          {pages} pág
+        </Text>
         <Slider
           minimumValue={10}
           maximumValue={500}
@@ -217,6 +356,7 @@ export default function TesteScreen() {
           accessibilityLabel="Meta de páginas"
         />
       </ScrollView>
+
       {toastVisible && (
         <View
           pointerEvents="none"
@@ -234,6 +374,19 @@ export default function TesteScreen() {
           </View>
         </View>
       )}
+
+      <RegistrarProgressoSheet
+        visible={sheetOpen}
+        livroId={progressBookId}
+        totalPaginas={256}
+        paginaAtual={currentPage}
+        onClose={() => setSheetOpen(false)}
+        onSuccess={(progresso) => {
+          setCurrentPage(progresso.paginaAtual);
+          setMaxPage(progresso.paginaMaximaAlcancada);
+          setProgressPercent(progresso.percentual);
+        }}
+      />
     </View>
   );
 }

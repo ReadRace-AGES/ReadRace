@@ -8,6 +8,7 @@ public enum CodigoErro {
     VALIDATION_ERROR(HttpStatus.BAD_REQUEST, "Dados inválidos."),
     MALFORMED_REQUEST(HttpStatus.BAD_REQUEST, "Requisição malformada."),
     PARAMETRO_INVALIDO(HttpStatus.BAD_REQUEST, "Parâmetro de busca inválido."),
+    PAGINA_INVALIDA(HttpStatus.UNPROCESSABLE_ENTITY, "Página inválida."),
     DESAFIO_NAO_ENCONTRADO(HttpStatus.NOT_FOUND, "Desafio não encontrado."),
     OPONENTE_NAO_ENCONTRADO(HttpStatus.NOT_FOUND, "Oponente não encontrado."),
     LIVRO_NAO_ENCONTRADO(HttpStatus.NOT_FOUND, "Livro não encontrado."),

@@ -35,8 +35,8 @@ public class ItemBiblioteca {
     @JoinColumn(name = "livro_id", nullable = false)
     private Livro livro;
 
-    // Tipo enumerado nativo do Postgres: o columnDefinition faz o `validate` do Hibernate
-    // aceitar a coluna, e NAMED_ENUM faz o bind como `status_leitura`, não como varchar.
+    // Tipo enumerado nativo do Postgres: o columnDefinition faz o `validate` do Hibernate aceitar a
+    // coluna, e NAMED_ENUM faz o bind como `status_leitura`, não como varchar.
     @Enumerated(EnumType.STRING)
     @JdbcTypeCode(SqlTypes.NAMED_ENUM)
     @Column(name = "status_leitura", nullable = false, columnDefinition = "status_leitura")
@@ -53,6 +53,27 @@ public class ItemBiblioteca {
 
     @Column(name = "adicionado_em", nullable = false)
     private OffsetDateTime adicionadoEm;
+
+    public ItemBiblioteca(UUID usuarioId, Livro livro) {
+        this.id = UUID.randomUUID();
+        this.usuarioId = usuarioId;
+        this.livro = livro;
+        this.statusLeitura = StatusLeitura.lendo;
+        this.favorito = false;
+        this.paginaAtual = 0;
+        this.paginaMaxima = 0;
+        this.adicionadoEm = OffsetDateTime.now();
+    }
+
+    public void registrarProgresso(int pagina) {
+        this.paginaAtual = pagina;
+        this.paginaMaxima = Math.max(this.paginaMaxima, pagina);
+        this.statusLeitura = estaConcluido() ? StatusLeitura.lido : StatusLeitura.lendo;
+    }
+
+    public boolean estaConcluido() {
+        return statusLeitura == StatusLeitura.lido || paginaMaxima >= livro.getTotalPaginas();
+    }
 
     @Override
     public boolean equals(Object obj) {

@@ -5,7 +5,14 @@ import { useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Svg, { Path } from 'react-native-svg';
 
-import { colors, radius, sizes, spacing, textStyles, typography } from '@/theme';
+import {
+  colors,
+  radius,
+  sizes,
+  spacing,
+  textStyles,
+  typography,
+} from '@/theme';
 
 const CHAMA_PATH =
   'M4.5 12.5C5.16304 12.5 5.79893 12.2366 6.26777 11.7678C6.73661 11.2989 7 10.6631 7 10C7 8.62002 6.5 8.00002 6 7.00002C4.928 4.85702 5.776 2.94602 8 1.00002C8.5 3.50002 10 5.90002 12 7.50002C14 9.10002 15 11 15 13C15 13.9193 14.8189 14.8295 14.4672 15.6788C14.1154 16.5281 13.5998 17.2998 12.9497 17.9498C12.2997 18.5998 11.5281 19.1154 10.6788 19.4672C9.82951 19.819 8.91925 20 8 20C7.08075 20 6.17049 19.819 5.32122 19.4672C4.47194 19.1154 3.70026 18.5998 3.05025 17.9498C2.40024 17.2998 1.88463 16.5281 1.53284 15.6788C1.18106 14.8295 1 13.9193 1 13C1 11.847 1.433 10.706 2 10C2 10.6631 2.26339 11.2989 2.73223 11.7678C3.20107 12.2366 3.83696 12.5 4.5 12.5Z';
@@ -15,7 +22,9 @@ const VOLTAR_PATH = 'M7.42497 1.0083L1.0083 7.42497L7.42497 13.8416';
 // O token `lineHeight.heading` (0.9) vem da caixa de texto do Figma e fica menor que a
 // fonte, o que corta acentos e aperta titulos quebrados. Vale para uma linha; a partir
 // de duas usamos `tight`.
-const ALTURA_LINHA_TITULO = Math.round(typography.fontSize.h1 * typography.lineHeight.tight);
+const ALTURA_LINHA_TITULO = Math.round(
+  typography.fontSize.h1 * typography.lineHeight.tight
+);
 
 type AppHeaderProps = {
   title: string;
@@ -28,6 +37,7 @@ type AppHeaderProps = {
   streakDays?: number;
   streakActive?: boolean;
   coverUrl?: string;
+  compact?: boolean;
 };
 
 export function AppHeader({
@@ -41,6 +51,7 @@ export function AppHeader({
   streakDays,
   streakActive = false,
   coverUrl,
+  compact = false,
 }: AppHeaderProps) {
   const router = useRouter();
   const insets = useSafeAreaInsets();
@@ -86,8 +97,13 @@ export function AppHeader({
 
   return (
     <View
-      className="rounded-b-xl bg-primary px-6 pb-6"
-      style={{ paddingTop: insets.top + spacing[6], minHeight: sizes.headerHeight }}
+      className={
+        compact ? 'bg-primary px-6 pb-4' : 'rounded-b-xl bg-primary px-6 pb-6'
+      }
+      style={{
+        paddingTop: insets.top + (compact ? spacing[4] : spacing[6]),
+        minHeight: compact ? undefined : sizes.headerHeight,
+      }}
     >
       {coverUrl && (
         <View className="mb-4 items-center">
@@ -131,16 +147,29 @@ export function AppHeader({
             showsHorizontalScrollIndicator={false}
             className="min-w-0 flex-1"
             contentContainerStyle={
-              centralizado ? { flexGrow: 1, justifyContent: 'center' } : undefined
+              centralizado
+                ? { flexGrow: 1, justifyContent: 'center' }
+                : undefined
             }
           >
-            <Text numberOfLines={1} className={classesTitulo} style={estiloTitulo}>
+            <Text
+              numberOfLines={1}
+              className={classesTitulo}
+              style={estiloTitulo}
+            >
               {title}
             </Text>
           </ScrollView>
         ) : titleOverflow === 'expand' ? (
-          <Pressable className="min-w-0 flex-1" onPress={() => setExpandido(!expandido)}>
-            <Text numberOfLines={linhas} className={classesTitulo} style={estiloTitulo}>
+          <Pressable
+            className="min-w-0 flex-1"
+            onPress={() => setExpandido(!expandido)}
+          >
+            <Text
+              numberOfLines={linhas}
+              className={classesTitulo}
+              style={estiloTitulo}
+            >
               {title}
             </Text>
           </Pressable>
@@ -192,7 +221,11 @@ export function AppHeader({
       {subtitle && (
         <Text
           className={`mt-1 text-body font-inter text-text-inverse ${centralizado ? 'text-center' : ''}`}
-          style={!centralizado && showBack ? { paddingLeft: larguraEsquerda } : undefined}
+          style={
+            !centralizado && showBack
+              ? { paddingLeft: larguraEsquerda }
+              : undefined
+          }
         >
           {subtitle}
         </Text>
