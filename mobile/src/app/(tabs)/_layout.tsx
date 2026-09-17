@@ -8,7 +8,7 @@ export default function TabsLayout() {
       tabBar={(props) => <BottomTabBar {...props} />}
       screenOptions={{ headerShown: false }}
     >
-      <Tabs.Screen name="feed" options={{ title: 'Feed' }} />
+      <Tabs.Screen name="(feed)" options={{ title: 'Feed' }} />
       <Tabs.Screen name="(biblioteca)" options={{ title: 'Meus Livros' }} />
       <Tabs.Screen name="(busca)" options={{ title: 'Buscar' }} />
       <Tabs.Screen name="desafios" options={{ title: 'Desafios' }} />

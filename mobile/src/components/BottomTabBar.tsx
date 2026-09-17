@@ -31,7 +31,7 @@ type TabDefinition = {
 };
 
 const TAB_ORDER: readonly TabDefinition[] = [
-  { routeName: 'feed', Icon: HomeTabIcon, accessibilityLabel: 'Feed' },
+  { routeName: '(feed)', Icon: HomeTabIcon, accessibilityLabel: 'Feed' },
   {
     routeName: '(biblioteca)',
     Icon: BookTabIcon,
