@@ -32,6 +32,9 @@ public class Usuario {
     @Column(nullable = false)
     private Integer nivel;
 
+    @Column(name = "xp_total", nullable = false)
+    private Integer xpTotal;
+
     @Column(name = "dias_consecutivos", nullable = false)
     private Integer diasConsecutivos;
 
