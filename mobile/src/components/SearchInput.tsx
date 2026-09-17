@@ -89,6 +89,8 @@ export function SearchInput({
           color: disabled ? colors.textMuted : colors.text,
           fontFamily: typography.fontFamily.regular,
           fontSize: typography.fontSize.body,
+          outlineStyle: 'solid',
+          outlineWidth: 0,
         }}
         placeholder={placeholder}
         placeholderTextColor={colors.textSecondary}

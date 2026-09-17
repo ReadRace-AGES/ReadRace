@@ -2,6 +2,7 @@ import { Stack } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import { useEffect } from 'react';
 
+import { ToastProvider } from '@/components/toast-provider';
 import { colors, useAppFonts } from '@/theme';
 
 import '../../global.css';
@@ -22,14 +23,19 @@ export default function RootLayout() {
   }
 
   return (
-    <Stack
-      screenOptions={{
-        headerShown: false,
-        contentStyle: { backgroundColor: colors.surface },
-      }}
-    >
-      <Stack.Screen name="(tabs)" />
-      <Stack.Screen name="teste" options={{ headerShown: true, title: 'Tela de teste' }} />
-    </Stack>
+    <ToastProvider>
+      <Stack
+        screenOptions={{
+          headerShown: false,
+          contentStyle: { backgroundColor: colors.surface },
+        }}
+      >
+        <Stack.Screen name="(tabs)" />
+        <Stack.Screen
+          name="teste"
+          options={{ headerShown: true, title: 'Tela de teste' }}
+        />
+      </Stack>
+    </ToastProvider>
   );
 }
