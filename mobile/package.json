@@ -47,7 +47,8 @@
     "ios": "expo start --ios",
     "web": "expo start --web",
     "lint": "expo lint",
-    "test": "node scripts/livro-detalhe.test.cjs && node scripts/progresso-fluxo.test.cjs"
+    "test": "node scripts/livro-detalhe.test.cjs && node scripts/progresso-fluxo.test.cjs && npm run test:listitem",
+    "test:listitem": "node scripts/listitem.test.cjs"
   },
   "private": true
 }

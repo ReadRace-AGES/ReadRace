@@ -1,13 +1,13 @@
-import { Children, Fragment, isValidElement, type ReactNode } from "react";
+import { Children, Fragment, isValidElement, type ReactNode } from 'react';
 import {
   Pressable,
   StyleSheet,
   View,
   type StyleProp,
   type ViewStyle,
-} from "react-native";
+} from 'react-native';
 
-import { colors, radius, shadows, spacing } from "@/theme";
+import { colors, radius, shadows, spacing } from '@/theme';
 
 export type CardProps = {
   children?: ReactNode;
@@ -15,12 +15,14 @@ export type CardProps = {
   accessibilityLabel?: string;
   /** Layout externo, como margem e largura. O espaçamento interno vem do tema. */
   style?: StyleProp<ViewStyle>;
+  /** Estilo da superfície interna, preservando o recorte e a sombra externa. */
+  surfaceStyle?: StyleProp<ViewStyle>;
   testID?: string;
 };
 
 function temConteudo(children: ReactNode): boolean {
   return Children.toArray(children).some((child) => {
-    if (typeof child === "string") return child.trim().length > 0;
+    if (typeof child === 'string') return child.trim().length > 0;
     if (
       isValidElement<{ children?: ReactNode }>(child) &&
       child.type === Fragment
@@ -37,6 +39,7 @@ export function Card({
   onPress,
   accessibilityLabel,
   style,
+  surfaceStyle,
   testID,
 }: CardProps) {
   if (!temConteudo(children)) return null;
@@ -49,12 +52,16 @@ export function Card({
           accessibilityRole="button"
           accessibilityLabel={accessibilityLabel}
           onPress={onPress}
-          style={({ pressed }) => [styles.surface, pressed && styles.pressed]}
+          style={({ pressed }) => [
+            styles.surface,
+            surfaceStyle,
+            pressed && styles.pressed,
+          ]}
         >
           {children}
         </Pressable>
       ) : (
-        <View style={styles.surface}>{children}</View>
+        <View style={[styles.surface, surfaceStyle]}>{children}</View>
       )}
     </View>
   );
@@ -63,7 +70,7 @@ export function Card({
 const styles = StyleSheet.create({
   shadow: {
     ...shadows.floating,
-    alignSelf: "stretch",
+    alignSelf: 'stretch',
     minWidth: 0,
     flexShrink: 1,
     backgroundColor: colors.surfaceMuted,
@@ -73,7 +80,7 @@ const styles = StyleSheet.create({
     padding: spacing[4],
     borderRadius: radius.lg,
     backgroundColor: colors.surfaceMuted,
-    overflow: "hidden",
+    overflow: 'hidden',
   },
   pressed: {
     backgroundColor: colors.surfaceAlt,
