@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, type ReactNode } from 'react';
 import { Pressable, ScrollView, Text, View } from 'react-native';
 import { Image } from 'expo-image';
 import { useRouter } from 'expo-router';
@@ -28,7 +28,16 @@ const ALTURA_LINHA_TITULO = Math.round(
 
 type AppHeaderProps = {
   title: string;
-  subtitle?: string;
+  /**
+   * Aceita nós, e não só texto, para a tela poder destacar parte do subtítulo — como a Página
+   * do clube, que traz o título do livro em negrito seguido do autor em regular.
+   */
+  subtitle?: ReactNode;
+  /**
+   * `primary` é a faixa vinho das telas raiz. `surface` é o cabeçalho claro sobre o fundo da
+   * tela, usado onde o design não desenha a faixa (`menu - clube do livro` 3-6).
+   */
+  variant?: 'primary' | 'surface';
   titleAlign?: 'center' | 'left';
   titleOverflow?: 'truncate' | 'wrap' | 'scroll' | 'expand';
   titleNumberOfLines?: number;
@@ -43,6 +52,7 @@ type AppHeaderProps = {
 export function AppHeader({
   title,
   subtitle,
+  variant = 'primary',
   titleAlign = 'left',
   titleOverflow = 'truncate',
   titleNumberOfLines = 1,
@@ -70,7 +80,16 @@ export function AppHeader({
   const centralizado = titleAlign === 'center';
   const temBadge = streakDays !== undefined;
   const larguraLateral = Math.max(larguraEsquerda, larguraDireita);
-  const classesTitulo = `text-text-inverse ${centralizado ? 'text-center' : ''}`;
+  const emSuperficie = variant === 'surface';
+  // O cabeçalho claro não tem faixa para arredondar: ele é o próprio fundo da tela.
+  const classesFundo = emSuperficie
+    ? 'bg-surface px-6 pb-4'
+    : compact
+      ? 'bg-primary px-6 pb-4'
+      : 'rounded-b-xl bg-primary px-6 pb-6';
+  const corDoTexto = emSuperficie ? colors.text : colors.textInverse;
+  const classesCorDoTexto = emSuperficie ? 'text-text' : 'text-text-inverse';
+  const classesTitulo = `${classesCorDoTexto} ${centralizado ? 'text-center' : ''}`;
 
   function linhasDoTitulo() {
     if (titleOverflow === 'wrap') return titleNumberOfLines;
@@ -97,12 +116,11 @@ export function AppHeader({
 
   return (
     <View
-      className={
-        compact ? 'bg-primary px-6 pb-4' : 'rounded-b-xl bg-primary px-6 pb-6'
-      }
+      className={classesFundo}
       style={{
-        paddingTop: insets.top + (compact ? spacing[4] : spacing[6]),
-        minHeight: compact ? undefined : sizes.headerHeight,
+        paddingTop:
+          insets.top + (compact || emSuperficie ? spacing[4] : spacing[6]),
+        minHeight: compact || emSuperficie ? undefined : sizes.headerHeight,
       }}
     >
       {coverUrl && (
@@ -130,7 +148,7 @@ export function AppHeader({
                 <Svg width={9} height={15} viewBox="0 0 9 15" fill="none">
                   <Path
                     d={VOLTAR_PATH}
-                    stroke={colors.textInverse}
+                    stroke={corDoTexto}
                     strokeWidth={2.01667}
                     strokeLinecap="round"
                     strokeLinejoin="round"
@@ -220,7 +238,7 @@ export function AppHeader({
 
       {subtitle && (
         <Text
-          className={`mt-1 text-body font-inter text-text-inverse ${centralizado ? 'text-center' : ''}`}
+          className={`mt-1 text-body font-inter ${classesCorDoTexto} ${centralizado ? 'text-center' : ''}`}
           style={
             !centralizado && showBack
               ? { paddingLeft: larguraEsquerda }

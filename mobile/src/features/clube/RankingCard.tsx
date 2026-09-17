@@ -17,8 +17,8 @@ import type { LinhaRanking } from './api';
 
 const COPY = {
   verTodos: 'Ver todos',
-  // Sem copy aprovada no Figma para o ranking vazio (pendencia de design registrada com a
-  // gestao). Com o seed de #13 este estado nao aparece em uso normal: existe como defesa.
+  // O Figma nao desenha o ranking vazio e nao ha copy aprovada; o texto abaixo foi definido
+  // com a gestao. Com o seed de #13 o estado nao aparece em uso normal: existe como defesa.
   semRanking: 'Este clube ainda não tem membros no ranking.',
 } as const;
 

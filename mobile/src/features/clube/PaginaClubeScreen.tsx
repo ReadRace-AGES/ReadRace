@@ -14,7 +14,7 @@ import {
 import { useToastContext } from '@/components/toast-provider';
 import { buscarDetalhe, type LivroDetalhe } from '@/features/livro/api';
 import { RegistrarProgressoSheet } from '@/features/progresso/RegistrarProgressoSheet';
-import { colors, spacing, textStyles } from '@/theme';
+import { colors, spacing, textStyles, typography } from '@/theme';
 
 import { RankingCard } from './RankingCard';
 import { useClube } from './useClube';
@@ -137,11 +137,13 @@ export function PaginaClubeScreen({ clubeId }: { clubeId: string }) {
     }
   }
 
-  const subtitulo = dados
-    ? [dados.livroAtual.titulo, dados.livroAtual.autor]
-        .filter(Boolean)
-        .join(' - ')
-    : undefined;
+  // Título do livro em negrito seguido do autor em regular, como a definição travada pede.
+  const subtitulo = dados ? (
+    <>
+      <Text style={styles.tituloDoLivro}>{dados.livroAtual.titulo}</Text>
+      {dados.livroAtual.autor ? ` - ${dados.livroAtual.autor}` : ''}
+    </>
+  ) : undefined;
 
   if (clube.situacao === 'erro') {
     return (
@@ -172,7 +174,8 @@ export function PaginaClubeScreen({ clubeId }: { clubeId: string }) {
     <View style={styles.tela}>
       <ScrollView contentContainerStyle={styles.rolagem}>
         <AppHeader
-          compact
+          variant="surface"
+          titleAlign="center"
           showBack
           onBackPress={voltar}
           title={dados?.nome ?? ''}
@@ -237,6 +240,7 @@ export function PaginaClubeScreen({ clubeId }: { clubeId: string }) {
 
 const styles = StyleSheet.create({
   tela: { flex: 1, backgroundColor: colors.surface },
+  tituloDoLivro: { fontFamily: typography.fontFamily.bold },
   rolagem: { flexGrow: 1, paddingBottom: spacing[10] },
   conteudo: { padding: spacing[6], gap: spacing[4] },
   acoes: { gap: spacing[4] },
