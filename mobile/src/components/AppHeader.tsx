@@ -20,8 +20,8 @@ const CHAMA_PATH =
 const VOLTAR_PATH = 'M7.42497 1.0083L1.0083 7.42497L7.42497 13.8416';
 
 // O token `lineHeight.heading` (0.9) vem da caixa de texto do Figma e fica menor que a
-// fonte, o que corta acentos e aperta titulos quebrados. Vale para uma linha; a partir
-// de duas usamos `tight`.
+// fonte: no dispositivo isso corta o topo dos acentos (no web o glifo transborda e nao
+// corta). Por isso o titulo do cabecalho usa `tight`, com ou sem quebra de linha.
 const ALTURA_LINHA_TITULO = Math.round(
   typography.fontSize.h1 * typography.lineHeight.tight
 );
@@ -81,7 +81,7 @@ export function AppHeader({
   const linhas = linhasDoTitulo();
   const estiloTitulo = [
     textStyles.headerTitle,
-    (linhas === undefined || linhas > 1) && { lineHeight: ALTURA_LINHA_TITULO },
+    { lineHeight: ALTURA_LINHA_TITULO },
   ];
 
   // `onLayout` dispara a cada render; so guardamos larguras novas para nao entrar em
