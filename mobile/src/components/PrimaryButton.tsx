@@ -1,5 +1,5 @@
-import type { ComponentType } from 'react';
-import { ActivityIndicator, Pressable, Text, View } from 'react-native';
+import { useState, type ComponentType } from 'react';
+import { ActivityIndicator, Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { colors, radius, shadows, sizes, spacing, textStyles } from '@/theme';
 
@@ -22,23 +22,32 @@ export function PrimaryButton({
   disabled = false,
   loading = false,
 }: PrimaryButtonProps) {
+  const [pressed, setPressed] = useState(false);
   const inactive = disabled || loading;
   const filled = variant === 'filled';
   const hasIcon = Boolean(Icon);
 
-  const outlineColor = hasIcon ? colors.primary : colors.text;
-  const outlineBorderColor = hasIcon ? colors.primary : colors.borderStrong;
-
-  const backgroundColor = inactive
-    ? colors.surfaceDisabled
+  const backgroundStyle = filled
+    ? inactive
+      ? styles.filledInactive
+      : styles.filledActive
+    : inactive
+      ? styles.outlineInactive
+      : [styles.outlineBase, hasIcon ? styles.outlineIcon : styles.outlineNoIcon];
+  const textColorStyle = inactive
+    ? styles.textInactive
     : filled
-      ? colors.primary
-      : colors.surface;
+      ? styles.textFilledActive
+      : hasIcon
+        ? styles.textOutlineIcon
+        : styles.textOutlineNoIcon;
   const contentColor = inactive
     ? colors.textMuted
     : filled
       ? colors.textInverse
-      : outlineColor;
+      : hasIcon
+        ? colors.primary
+        : colors.text;
 
   function handlePress() {
     if (inactive) return;
@@ -52,24 +61,12 @@ export function PrimaryButton({
       accessibilityState={{ disabled: inactive, busy: loading }}
       disabled={inactive}
       onPress={handlePress}
-      style={({ pressed }) => [
-        {
-          flexDirection: 'row',
-          alignItems: 'center',
-          justifyContent: 'center',
-          gap: spacing[2],
-          minHeight: sizes.buttonHeight,
-          paddingVertical: spacing[2],
-          paddingHorizontal: spacing[4],
-          borderRadius: radius.pill,
-          backgroundColor,
-        },
-        !filled && {
-          borderWidth: sizes.borderWidth,
-          borderColor: inactive ? colors.surfaceDisabled : outlineBorderColor,
-        },
-        filled && !inactive && shadows.button,
-        pressed && !inactive && { opacity: 0.8 },
+      onPressIn={() => setPressed(true)}
+      onPressOut={() => setPressed(false)}
+      style={[
+        styles.base,
+        backgroundStyle,
+        pressed && !inactive && styles.pressed,
       ]}
     >
       {loading ? (
@@ -77,16 +74,11 @@ export function PrimaryButton({
       ) : (
         <>
           {Icon && (
-            <View style={{ flexShrink: 0 }}>
+            <View style={styles.iconWrap}>
               <Icon size={sizes.iconSmall} color={contentColor} />
             </View>
           )}
-          <Text
-            style={[
-              textStyles.button,
-              { color: contentColor, flexShrink: 1, textAlign: 'center' },
-            ]}
-          >
+          <Text style={[textStyles.button, styles.text, textColorStyle]}>
             {label}
           </Text>
         </>
@@ -94,5 +86,35 @@ export function PrimaryButton({
     </Pressable>
   );
 }
+
+const styles = StyleSheet.create({
+  base: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: spacing[2],
+    minHeight: sizes.buttonHeight,
+    paddingVertical: spacing[2],
+    paddingHorizontal: spacing[4],
+    borderRadius: radius.pill,
+  },
+  filledActive: { backgroundColor: colors.primary, ...shadows.button },
+  filledInactive: { backgroundColor: colors.surfaceDisabled },
+  outlineBase: { backgroundColor: colors.surface, borderWidth: sizes.borderWidth },
+  outlineIcon: { borderColor: colors.primary },
+  outlineNoIcon: { borderColor: colors.borderStrong },
+  outlineInactive: {
+    backgroundColor: colors.surfaceDisabled,
+    borderWidth: sizes.borderWidth,
+    borderColor: colors.surfaceDisabled,
+  },
+  pressed: { opacity: 0.8 },
+  iconWrap: { flexShrink: 0 },
+  text: { flexShrink: 1, textAlign: 'center' },
+  textFilledActive: { color: colors.textInverse },
+  textInactive: { color: colors.textMuted },
+  textOutlineIcon: { color: colors.primary },
+  textOutlineNoIcon: { color: colors.text },
+});
 
 export default PrimaryButton;

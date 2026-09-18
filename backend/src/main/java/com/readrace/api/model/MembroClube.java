@@ -29,6 +29,10 @@ public class MembroClube {
     @Column(name = "usuario_id", nullable = false)
     private UUID usuarioId;
 
+    /** `Pontos` do membro dentro deste clube — a moeda do ranking (#35). Nunca XP. */
+    @Column(nullable = false)
+    private Integer pontos;
+
     @Override
     public boolean equals(Object obj) {
         if (this == obj) {
