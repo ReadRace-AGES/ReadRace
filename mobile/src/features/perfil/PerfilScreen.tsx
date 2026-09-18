@@ -34,9 +34,8 @@ function IconeConquista({
   return uri && !falhou ? (
     <Image
       source={{ uri }}
-      style={styles.icon}
+      style={[styles.icon, bloqueada && styles.lockedImage]}
       contentFit="contain"
-      tintColor={bloqueada ? colors.textMuted : undefined}
       onError={() => setFalhou(true)}
     />
   ) : (
@@ -144,6 +143,7 @@ export function PerfilConteudo({
             accessibilityLabel={`${conquista.nome}. ${conquista.descricao}. ${conquista.desbloqueada ? 'Desbloqueada' : 'Bloqueada'}`}
           >
             <Card
+              style={styles.achievementCard}
               surfaceStyle={[
                 styles.achievement,
                 !conquista.desbloqueada && styles.locked,
@@ -328,7 +328,9 @@ const styles = StyleSheet.create({
     borderColor: colors.border,
   },
   statValue: { ...textStyles.h1, color: colors.primary },
+  achievementCard: { flexGrow: 1 },
   achievement: {
+    flexGrow: 1,
     alignItems: 'center',
     gap: spacing[2],
     backgroundColor: colors.surface,
@@ -342,6 +344,7 @@ const styles = StyleSheet.create({
   },
   achievementName: {
     ...textStyles.bodySmallStrong,
+    flexGrow: 1,
     color: colors.text,
     textAlign: 'center',
   },
@@ -361,6 +364,8 @@ const styles = StyleSheet.create({
   locked: { backgroundColor: colors.surfaceDisabled },
   muted: { color: colors.textMuted },
   icon: { width: sizes.icon, height: sizes.icon },
+  // As imagens da API podem ter fundo opaco; tintColor apagaria seu conteúdo.
+  lockedImage: { opacity: 0.5 },
   favorites: { gap: spacing[4], paddingBottom: spacing[2] },
   favorite: { width: bookCover.grid.width, gap: spacing[2] },
   favoriteTitle: { ...textStyles.captionStrong, color: colors.text },
