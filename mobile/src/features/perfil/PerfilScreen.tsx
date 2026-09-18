@@ -86,6 +86,8 @@ export function PerfilConteudo({
           <Fragment key={label}>
             {index > 0 && <View style={styles.socialDivider} />}
             <Pressable
+              // Preserva o callback de estilo nativo, sem a conversão do NativeWind.
+              cssInterop={false}
               accessibilityRole="button"
               onPress={onPlaceholder}
               style={({ pressed }) => [
@@ -124,6 +126,7 @@ export function PerfilConteudo({
           Conquistas
         </Text>
         <Pressable
+          cssInterop={false}
           accessibilityRole="button"
           accessibilityLabel="Ver mais conquistas"
           onPress={onPlaceholder}
