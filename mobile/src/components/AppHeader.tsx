@@ -19,7 +19,9 @@ const CHAMA_PATH =
 
 const VOLTAR_PATH = 'M7.42497 1.0083L1.0083 7.42497L7.42497 13.8416';
 
-// A altura da linha precisa acomodar os acentos, inclusive em títulos de uma linha.
+// O token `lineHeight.heading` (0.9) vem da caixa de texto do Figma e fica menor que a
+// fonte: no dispositivo isso corta o topo dos acentos (no web o glifo transborda e nao
+// corta). Por isso o titulo do cabecalho usa `tight`, com ou sem quebra de linha.
 const ALTURA_LINHA_TITULO = Math.round(
   typography.fontSize.h1 * typography.lineHeight.tight
 );
@@ -95,16 +97,12 @@ export function AppHeader({
 
   return (
     <View
+      className={
+        compact ? 'bg-primary px-6 pb-4' : 'rounded-b-xl bg-primary px-6 pb-6'
+      }
       style={{
-        backgroundColor: colors.primary,
-        borderBottomLeftRadius: radius.xl,
-        borderBottomRightRadius: radius.xl,
-        paddingHorizontal: spacing[6],
         paddingTop: insets.top + (compact ? spacing[4] : spacing[6]),
-        paddingBottom: compact ? spacing[4] : spacing[6],
         minHeight: compact ? undefined : sizes.headerHeight,
-        justifyContent: 'center',
-        flexShrink: 0,
       }}
     >
       {coverUrl && (
@@ -128,12 +126,7 @@ export function AppHeader({
             onLayout={(e) => medirEsquerda(e.nativeEvent.layout.width)}
           >
             {showBack && (
-              <Pressable
-                accessibilityRole="button"
-                accessibilityLabel="Voltar"
-                onPress={voltar}
-                hitSlop={spacing[3]}
-              >
+              <Pressable onPress={voltar} hitSlop={12}>
                 <Svg width={9} height={15} viewBox="0 0 9 15" fill="none">
                   <Path
                     d={VOLTAR_PATH}
@@ -227,7 +220,7 @@ export function AppHeader({
 
       {subtitle && (
         <Text
-          className={`mt-2 text-bodySmall font-inter text-text-inverse ${centralizado ? 'text-center' : ''}`}
+          className={`mt-1 text-body font-inter text-text-inverse ${centralizado ? 'text-center' : ''}`}
           style={
             !centralizado && showBack
               ? { paddingLeft: larguraEsquerda }
