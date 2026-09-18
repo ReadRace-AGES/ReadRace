@@ -20,6 +20,12 @@ public class Post {
     @Column(name = "livro_id")
     private UUID livroId;
 
+    /**
+     * Escopo do post quando ele é de um clube. Um post é de clube OU de comunidade, nunca dos dois.
+     */
+    @Column(name = "clube_id")
+    private UUID clubeId;
+
     @Column(name = "post_pai_id")
     private UUID postPaiId;
 
@@ -44,6 +50,10 @@ public class Post {
 
     public UUID getLivroId() {
         return livroId;
+    }
+
+    public UUID getClubeId() {
+        return clubeId;
     }
 
     public UUID getPostPaiId() {
