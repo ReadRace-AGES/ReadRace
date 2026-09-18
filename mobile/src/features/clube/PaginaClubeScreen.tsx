@@ -89,13 +89,16 @@ export function PaginaClubeScreen({ clubeId }: { clubeId: string }) {
   const { showToast } = useToastContext();
   const { clube, recarregar } = useClube(clubeId);
   const [livroDoModal, setLivroDoModal] = useState<LivroDetalhe | null>(null);
+  const [modalAberto, setModalAberto] = useState(false);
   const [abrindoModal, setAbrindoModal] = useState(false);
   const [erroDoModal, setErroDoModal] = useState<string | null>(null);
   const buscaDoLivro = useRef<AbortController | null>(null);
 
+  // Fechar só baixa a bandeira: o `BottomSheet` precisa continuar montado para rodar a
+  // animação de saída — desmontar de uma vez faz o painel sumir de estalo.
   const fecharModal = useCallback(() => {
     buscaDoLivro.current?.abort();
-    setLivroDoModal(null);
+    setModalAberto(false);
   }, []);
   // Sair da tela fecha o modal e cancela uma busca em voo, para ele não subir depois.
   useFocusEffect(useCallback(() => () => fecharModal(), [fecharModal]));
@@ -125,7 +128,10 @@ export function PaginaClubeScreen({ clubeId }: { clubeId: string }) {
         dados.livroAtual.id,
         controller.signal
       );
-      if (!controller.signal.aborted) setLivroDoModal(detalhe);
+      if (!controller.signal.aborted) {
+        setLivroDoModal(detalhe);
+        setModalAberto(true);
+      }
     } catch (erro: unknown) {
       if (!controller.signal.aborted) {
         setErroDoModal(
@@ -223,7 +229,7 @@ export function PaginaClubeScreen({ clubeId }: { clubeId: string }) {
 
       {livroDoModal && (
         <RegistrarProgressoSheet
-          visible
+          visible={modalAberto}
           livroId={livroDoModal.livro.id}
           totalPaginas={livroDoModal.livro.totalPaginas}
           paginaAtual={livroDoModal.progresso?.paginaAtual ?? 0}
