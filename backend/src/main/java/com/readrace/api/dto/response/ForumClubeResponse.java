@@ -18,13 +18,18 @@ public record ForumClubeResponse(Clube clube, List<Post> posts) {
 
     public record LivroAtual(String titulo, String autor, String capaUrl) {}
 
-    /** {@code texto} vem inteiro: o corte e o "Ler mais" são decisão do {@code PostCard} (#22). */
-    public record Post(
-            UUID id, Autor autor, OffsetDateTime publicadoEm, String texto, long totalCurtidas) {}
-
     /**
-     * {@code sequenciaDias} é {@code usuario.dias_consecutivos} e alimenta o badge de chama. Não há
-     * campo dizendo se eu curti, porque não há ação de curtir nesta sprint (decisão 4).
+     * {@code texto} vem inteiro: o corte e o "Ler mais" são decisão do {@code PostCard} (#22).
+     * {@code curtidoPorMim} reflete a curtida do usuário atual neste post (#101).
      */
+    public record Post(
+            UUID id,
+            Autor autor,
+            OffsetDateTime publicadoEm,
+            String texto,
+            long totalCurtidas,
+            boolean curtidoPorMim) {}
+
+    /** {@code sequenciaDias} é {@code usuario.dias_consecutivos} e alimenta o badge de chama. */
     public record Autor(UUID id, String nome, String avatarUrl, Integer sequenciaDias) {}
 }
