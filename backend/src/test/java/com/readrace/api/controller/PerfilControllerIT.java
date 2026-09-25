@@ -15,6 +15,7 @@ import org.springframework.test.web.servlet.assertj.MockMvcTester;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.readrace.api.TestcontainersConfiguration;
+import com.readrace.api.model.CurvaDeNivel;
 import com.readrace.api.service.PerfilService;
 
 @SpringBootTest
@@ -97,5 +98,19 @@ class PerfilControllerIT {
         jdbc.update("UPDATE usuario SET excluido_em = now() WHERE id = ?", FIXO);
         assertThat(mvc.get().uri("/api/usuarios/" + FIXO + "/perfil"))
                 .hasStatus(HttpStatus.NOT_FOUND);
+    }
+
+    @Test
+    void meuPerfilResolveOUsuarioAtualSemReceberId() {
+        assertThat(mvc.get().uri("/api/me/perfil"))
+                .hasStatusOk()
+                .bodyJson()
+                .extractingPath("$.id")
+                .isEqualTo(FIXO.toString());
+
+        var perfil = service.buscarDoUsuarioAtual();
+        assertThat(perfil.xpDoNivel()).isEqualTo(CurvaDeNivel.xpDoNivel(perfil.nivel()));
+        assertThat(perfil.xpNoNivel())
+                .isEqualTo(CurvaDeNivel.xpNoNivel(perfil.xpAtual(), perfil.nivel()));
     }
 }
