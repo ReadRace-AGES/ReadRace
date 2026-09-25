@@ -1,4 +1,6 @@
 import { useEffect, useState } from 'react';
+//import { useRouter } from 'expo-router';
+
 import {
   ActivityIndicator,
   ScrollView,
@@ -146,6 +148,8 @@ function DesafioCard({ desafio }: { desafio: Desafio }) {
 }
 
 export function DesafiosScreen() {
+  // const router = useRouter();
+
   const [estado, setEstado] = useState<Estado>({
     situacao: 'carregando',
   });
@@ -178,8 +182,7 @@ export function DesafiosScreen() {
   }, []);
 
   function desafiarAmigo() {
-    // A navegação será ligada quando a rota da Task #38
-    // estiver disponível no projeto.
+   // router.push('/desafiar-amigo');
   }
 
   const listaVazia =
@@ -245,7 +248,7 @@ export function DesafiosScreen() {
         {listaVazia && (
           <EmptyState
             icon={UsersIcon}
-            message=""
+            message="Você ainda não possui desafios com amigos."
           />
         )}
 
