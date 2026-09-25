@@ -8,9 +8,9 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.Repository;
 import org.springframework.data.repository.query.Param;
 
-import com.readrace.api.model.Post;
+import com.readrace.api.model.Curtida;
 
-public interface CurtidaRepository extends Repository<Post, UUID> {
+public interface CurtidaRepository extends Repository<Curtida, UUID> {
 
     interface ContagemPorPost {
         UUID getPostId();

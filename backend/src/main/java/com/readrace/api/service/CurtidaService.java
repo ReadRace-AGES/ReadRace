@@ -6,7 +6,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.readrace.api.dto.response.CurtidaResponse;
-import com.readrace.api.exception.RecursoNaoEncontradoException;
+import com.readrace.api.exception.PostNaoEncontradoException;
 import com.readrace.api.repository.CurtidaRepository;
 import com.readrace.api.repository.PostRepository;
 
@@ -49,8 +49,8 @@ public class CurtidaService {
     }
 
     private void garantirQuePostExiste(UUID postId) {
-        if (!postRepository.existsById(postId)) {
-            throw new RecursoNaoEncontradoException("Post não encontrado.");
+        if (!postRepository.existsByIdAndExcluidoEmIsNull(postId)) {
+            throw new PostNaoEncontradoException();
         }
     }
 }

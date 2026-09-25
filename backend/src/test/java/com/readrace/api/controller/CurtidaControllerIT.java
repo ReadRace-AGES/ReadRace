@@ -142,7 +142,7 @@ class CurtidaControllerIT {
                 .hasStatus(HttpStatus.NOT_FOUND)
                 .bodyJson()
                 .extractingPath("$.code")
-                .isEqualTo("RESOURCE_NOT_FOUND");
+                .isEqualTo("POST_NAO_ENCONTRADO");
     }
 
     @Test
@@ -152,6 +152,32 @@ class CurtidaControllerIT {
                 .hasStatus(HttpStatus.NOT_FOUND)
                 .bodyJson()
                 .extractingPath("$.code")
-                .isEqualTo("RESOURCE_NOT_FOUND");
+                .isEqualTo("POST_NAO_ENCONTRADO");
+    }
+
+    @Test
+    @DisplayName("curtir post apagado devolve 404")
+    void deve_devolver_404_ao_curtir_post_apagado() {
+        UUID postId = criarPostSemCurtidas();
+        jdbc.update("UPDATE post SET excluido_em = now() WHERE id = ?", postId);
+
+        assertThat(mvc.post().uri(url(postId)))
+                .hasStatus(HttpStatus.NOT_FOUND)
+                .bodyJson()
+                .extractingPath("$.code")
+                .isEqualTo("POST_NAO_ENCONTRADO");
+    }
+
+    @Test
+    @DisplayName("descurtir post apagado devolve 404")
+    void deve_devolver_404_ao_descurtir_post_apagado() {
+        UUID postId = criarPostSemCurtidas();
+        jdbc.update("UPDATE post SET excluido_em = now() WHERE id = ?", postId);
+
+        assertThat(mvc.delete().uri(url(postId)))
+                .hasStatus(HttpStatus.NOT_FOUND)
+                .bodyJson()
+                .extractingPath("$.code")
+                .isEqualTo("POST_NAO_ENCONTRADO");
     }
 }
