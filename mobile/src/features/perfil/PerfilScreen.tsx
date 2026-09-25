@@ -1,6 +1,5 @@
-import { Image } from 'expo-image';
 import { useRouter } from 'expo-router';
-import { Fragment, useState } from 'react';
+import { Fragment } from 'react';
 import {
   ActivityIndicator,
   Pressable,
@@ -17,41 +16,22 @@ import { EmptyState } from '@/components/EmptyState';
 import { BookIcon } from '@/components/icons/BookIcon';
 import { PrimaryButton } from '@/components/PrimaryButton';
 import { useToastContext } from '@/components/toast-provider';
+import { IconeConquista } from '@/features/conquistas/IconeConquista';
 import { bookCover, colors, radius, sizes, spacing, textStyles } from '@/theme';
 import type { Perfil } from './api';
 import { usePerfil } from './usePerfil';
 
 const numero = (valor: number) => valor.toLocaleString('pt-BR');
 
-function IconeConquista({
-  uri,
-  bloqueada,
-}: {
-  uri: string | null;
-  bloqueada: boolean;
-}) {
-  const [falhou, setFalhou] = useState(false);
-  return uri && !falhou ? (
-    <Image
-      source={{ uri }}
-      style={[styles.icon, bloqueada && styles.lockedImage]}
-      contentFit="contain"
-      onError={() => setFalhou(true)}
-    />
-  ) : (
-    <BookIcon
-      size={sizes.icon}
-      color={bloqueada ? colors.textMuted : colors.primary}
-    />
-  );
-}
-
 export function PerfilConteudo({
   perfil,
   onPlaceholder,
+  onVerMaisConquistas = onPlaceholder,
 }: {
   perfil: Perfil;
   onPlaceholder: () => void;
+  /** Só o próprio perfil abre "Minhas Conquistas"; no de outro usuário segue o aviso. */
+  onVerMaisConquistas?: () => void;
 }) {
   const stats = perfil.estatisticas;
   return (
@@ -128,7 +108,7 @@ export function PerfilConteudo({
           cssInterop={false}
           accessibilityRole="button"
           accessibilityLabel="Ver mais conquistas"
-          onPress={onPlaceholder}
+          onPress={onVerMaisConquistas}
           style={({ pressed }) => [styles.link, pressed && styles.pressed]}
         >
           <Text style={styles.linkText}>Ver mais</Text>
@@ -363,9 +343,6 @@ const styles = StyleSheet.create({
   linkText: { ...textStyles.bodySmallStrong, color: colors.accent },
   locked: { backgroundColor: colors.surfaceDisabled },
   muted: { color: colors.textMuted },
-  icon: { width: sizes.icon, height: sizes.icon },
-  // As imagens da API podem ter fundo opaco; tintColor apagaria seu conteúdo.
-  lockedImage: { opacity: 0.5 },
   favorites: { gap: spacing[4], paddingBottom: spacing[2] },
   favorite: { width: bookCover.grid.width, gap: spacing[2] },
   favoriteTitle: { ...textStyles.captionStrong, color: colors.text },
