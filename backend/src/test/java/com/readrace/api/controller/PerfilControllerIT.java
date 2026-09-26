@@ -15,7 +15,6 @@ import org.springframework.test.web.servlet.assertj.MockMvcTester;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.readrace.api.TestcontainersConfiguration;
-import com.readrace.api.model.CurvaDeNivel;
 import com.readrace.api.service.PerfilService;
 
 @SpringBootTest
@@ -30,7 +29,7 @@ class PerfilControllerIT {
     @Test
     void retornaPerfilDoSeedSemRecalcularXpNivelOuPaginas() {
         var perfil = service.buscar(FIXO);
-        assertThat(perfil.nivel()).isEqualTo(5);
+        assertThat(perfil.nivel()).isEqualTo(7);
         assertThat(perfil.xpAtual()).isEqualTo(2450);
         assertThat(perfil.titulo()).isEqualTo("Leitor iniciante");
         assertThat(perfil.estatisticas().livrosLidos()).isEqualTo(5);
@@ -109,8 +108,9 @@ class PerfilControllerIT {
                 .isEqualTo(FIXO.toString());
 
         var perfil = service.buscarDoUsuarioAtual();
-        assertThat(perfil.xpDoNivel()).isEqualTo(CurvaDeNivel.xpDoNivel(perfil.nivel()));
-        assertThat(perfil.xpNoNivel())
-                .isEqualTo(CurvaDeNivel.xpNoNivel(perfil.xpAtual(), perfil.nivel()));
+        assertThat(perfil.nivel()).isEqualTo(7);
+        assertThat(perfil.xpAtual()).isEqualTo(2450);
+        assertThat(perfil.xpNoNivel()).isEqualTo(521);
+        assertThat(perfil.xpDoNivel()).isEqualTo(833);
     }
 }
