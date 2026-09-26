@@ -38,7 +38,7 @@ class SeedMigrationIT {
                 VALUES (gen_random_uuid(), '40000000-0000-0000-0000-000000000006', 400)
                 """);
 
-        Flyway flyway = Flyway.configure().dataSource(dataSource).load();
+        Flyway flyway = Flyway.configure().dataSource(dataSource).target("5").load();
         assertThat(flyway.migrate().migrationsExecuted).isEqualTo(1);
         flyway.validate();
 
