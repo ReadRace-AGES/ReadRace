@@ -53,7 +53,7 @@ class ForumClubeControllerIT {
         assertThat(mvc.get().uri(URL))
                 .bodyJson()
                 .extractingPath("$.clube.livroAtual.capaUrl")
-                .isEqualTo("https://covers.openlibrary.org/b/isbn/9788535910663-L.jpg");
+                .isEqualTo("https://covers.openlibrary.org/b/id/647501-L.jpg");
     }
 
     @Test
