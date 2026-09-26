@@ -7,6 +7,7 @@ import Svg, { Circle, Path } from "react-native-svg";
 import { BookCover } from "@/components/BookCover";
 import { EmptyState, type EmptyStateIconProps } from "@/components/EmptyState";
 import { SearchIcon } from "@/components/icons/SearchIcon";
+import { PostCard } from "@/components/PostCard";
 import { PrimaryButton, type PrimaryButtonIconProps } from "@/components/PrimaryButton";
 import { SegmentedTabs } from "@/components/SegmentedTabs";
 import { Slider } from "@/components/Slider";
@@ -88,6 +89,25 @@ export default function TesteScreen() {
   // Slider (#28)
   const [pages, setPages] = useState(150);
 
+  // PostCard / curtir e descurtir (#101)
+  const [curtidoDemo, setCurtidoDemo] = useState(false);
+  const [curtidasDemo, setCurtidasDemo] = useState(5);
+  const [curtindoDemo, setCurtindoDemo] = useState(false);
+  const curtidaDemoTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  // Simula a chamada de rede (que na tela real é o POST/DELETE /curtida) para
+  // demonstrar a atualização otimista e o estado desabilitado durante o toque.
+  function alternarCurtidaDemo() {
+    if (curtindoDemo) return;
+    setCurtindoDemo(true);
+    setCurtidoDemo((atual) => {
+      const proximo = !atual;
+      setCurtidasDemo((contagem) => contagem + (proximo ? 1 : -1));
+      return proximo;
+    });
+    curtidaDemoTimer.current = setTimeout(() => setCurtindoDemo(false), 500);
+  }
+
   useFocusEffect(
     useCallback(
       () => () => {
@@ -96,6 +116,8 @@ export default function TesteScreen() {
         setToastVisible(false);
         if (loadingTimer.current) clearTimeout(loadingTimer.current);
         loadingTimer.current = null;
+        if (curtidaDemoTimer.current) clearTimeout(curtidaDemoTimer.current);
+        curtidaDemoTimer.current = null;
       },
       [],
     ),
@@ -433,6 +455,25 @@ export default function TesteScreen() {
           value={pages}
           onValueChange={setPages}
           accessibilityLabel="Meta de páginas"
+        />
+
+        <Text className="font-inter-bold text-h2 text-primary">
+          Curtir posts — #101
+        </Text>
+        <Text className="font-inter text-bodySmall text-text-secondary">
+          Toque no coração: atualiza na hora (otimista) e trava o toque por
+          meio segundo, simulando a chamada ao servidor.
+        </Text>
+        <PostCard
+          authorName="Ana Beatriz"
+          authorPhotoUrl={null}
+          authorStreak={5}
+          timeAgo="2h atrás"
+          text="Terminando o capítulo 12 de Dom Casmurro — a narração do Bentinho está cada vez mais desconfiada."
+          likes={curtidasDemo}
+          likedByMe={curtidoDemo}
+          likeDisabled={curtindoDemo}
+          onLikePress={alternarCurtidaDemo}
         />
       </ScrollView>
 
