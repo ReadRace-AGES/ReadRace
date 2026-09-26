@@ -23,7 +23,7 @@ jobs:
               - '.github/workflows/mobile-ci.yml'
 
   build:
-    name: Typecheck
+    name: Typecheck e testes
     needs: detecta-mudancas
     runs-on: ubuntu-latest
 
@@ -55,3 +55,11 @@ jobs:
       - name: Verificação de tipos
         if: needs.detecta-mudancas.outputs.mobile == 'true'
         run: npx tsc --noEmit
+
+      - name: Testes
+        if: needs.detecta-mudancas.outputs.mobile == 'true'
+        run: npm test
+
+      - name: Teste do slider
+        if: needs.detecta-mudancas.outputs.mobile == 'true'
+        run: npm run test:slider
