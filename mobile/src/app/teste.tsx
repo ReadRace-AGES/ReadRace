@@ -100,11 +100,8 @@ export default function TesteScreen() {
   function alternarCurtidaDemo() {
     if (curtindoDemo) return;
     setCurtindoDemo(true);
-    setCurtidoDemo((atual) => {
-      const proximo = !atual;
-      setCurtidasDemo((contagem) => contagem + (proximo ? 1 : -1));
-      return proximo;
-    });
+    setCurtidoDemo(!curtidoDemo);
+    setCurtidasDemo((contagem) => contagem + (curtidoDemo ? -1 : 1));
     curtidaDemoTimer.current = setTimeout(() => setCurtindoDemo(false), 500);
   }
 
