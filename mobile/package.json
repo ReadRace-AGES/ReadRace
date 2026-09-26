@@ -47,7 +47,7 @@
     "ios": "expo start --ios",
     "web": "expo start --web",
     "lint": "expo lint",
-    "test": "node scripts/livro-detalhe.test.cjs && node scripts/progresso-fluxo.test.cjs && npm run test:listitem && npm run test:perfil",
+    "test": "node scripts/livro-detalhe.test.cjs && node scripts/progresso-fluxo.test.cjs && node scripts/curtida-fluxo.test.cjs && npm run test:listitem && npm run test:perfil",
     "test:perfil": "node scripts/perfil.test.cjs",
     "test:listitem": "node scripts/listitem.test.cjs"
   },

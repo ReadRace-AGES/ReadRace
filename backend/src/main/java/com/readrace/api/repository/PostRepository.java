@@ -9,6 +9,8 @@ import com.readrace.api.model.Post;
 
 public interface PostRepository extends JpaRepository<Post, UUID> {
 
+    boolean existsByIdAndExcluidoEmIsNull(UUID id);
+
     List<Post> findByLivroIdAndPostPaiIdIsNullAndExcluidoEmIsNullOrderByCriadoEmDesc(UUID livroId);
 
     /**

@@ -15,17 +15,20 @@ export type LivroDetalhe = {
     percentual: number;
     concluido: boolean;
   } | null;
-  posts: {
-    id: string;
-    autor: {
-      nome: string;
-      avatarUrl: string | null;
-      sequenciaDias: number | null;
-    };
-    texto: string;
-    criadoEm: string;
-    curtidas: number;
-  }[];
+  posts: PostLivro[];
+};
+
+export type PostLivro = {
+  id: string;
+  autor: {
+    nome: string;
+    avatarUrl: string | null;
+    sequenciaDias: number | null;
+  };
+  texto: string;
+  criadoEm: string;
+  curtidas: number;
+  curtidoPorMim: boolean;
 };
 
 export function buscarDetalhe(livroId: string, signal: AbortSignal) {

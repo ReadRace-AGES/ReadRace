@@ -81,6 +81,10 @@ test('detalhe abre modal, valida, bloqueia toque duplo, preserva erro e aplica s
   const model = load('src/features/livro/model.ts');
   const { useLivroDetalhe } = load('src/features/livro/useLivroDetalhe.ts', {
     '@/api/client': { ApiError },
+    '@/features/posts/api': {
+      curtir: async () => ({ curtidoPorMim: true, totalCurtidas: 1 }),
+      descurtir: async () => ({ curtidoPorMim: false, totalCurtidas: 0 }),
+    },
     './model': model,
     './api': {
       buscarDetalhe: async () => {
@@ -103,6 +107,12 @@ test('detalhe abre modal, valida, bloqueia toque duplo, preserva erro e aplica s
       useFocusEffect: (callback) => React.useEffect(callback, [callback]),
     },
     '@/components/icons/BookIcon': { BookIcon: 'BookIcon' },
+    '@/components/toast-provider': {
+      useToastContext: () => ({
+        showToast: () => {},
+        showErrorToast: () => {},
+      }),
+    },
     '@/features/progresso/RegistrarProgressoSheet': { RegistrarProgressoSheet },
   };
   for (const name of [

@@ -10,9 +10,10 @@ const DURACAO_FADE_MS = 200;
 
 type ToastProps = {
   visible: boolean;
+  message?: string;
 };
 
-export function Toast({ visible }: ToastProps) {
+export function Toast({ visible, message = COPY_PADRAO }: ToastProps) {
   const opacity = useRef(new Animated.Value(0)).current;
   const [renderizado, setRenderizado] = useState(visible);
   const insets = useSafeAreaInsets();
@@ -45,7 +46,7 @@ export function Toast({ visible }: ToastProps) {
     >
       <Animated.View style={[styles.pill, shadows.floating, { opacity }]}>
         <Text className="text-bodySmall font-inter-semibold text-text-inverse">
-          {COPY_PADRAO}
+          {message}
         </Text>
       </Animated.View>
     </View>
@@ -70,7 +71,8 @@ const styles = StyleSheet.create({
 
 type UseToastReturn = {
   visible: boolean;
-  show: () => void;
+  message: string;
+  show: (message?: string) => void;
   hide: () => void;
 };
 
@@ -78,6 +80,7 @@ export function useToast(
   duracaoMs: number = DURACAO_VISIVEL_MS
 ): UseToastReturn {
   const [visible, setVisible] = useState(false);
+  const [message, setMessage] = useState(COPY_PADRAO);
   const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const limparTimer = useCallback(() => {
@@ -87,14 +90,18 @@ export function useToast(
     }
   }, []);
 
-  const show = useCallback(() => {
-    limparTimer();
-    setVisible(true);
-    timeoutRef.current = setTimeout(() => {
-      setVisible(false);
-      timeoutRef.current = null;
-    }, duracaoMs);
-  }, [duracaoMs, limparTimer]);
+  const show = useCallback(
+    (mensagem?: string) => {
+      limparTimer();
+      setMessage(mensagem ?? COPY_PADRAO);
+      setVisible(true);
+      timeoutRef.current = setTimeout(() => {
+        setVisible(false);
+        timeoutRef.current = null;
+      }, duracaoMs);
+    },
+    [duracaoMs, limparTimer]
+  );
 
   const hide = useCallback(() => {
     limparTimer();
@@ -105,7 +112,7 @@ export function useToast(
     return limparTimer;
   }, [limparTimer]);
 
-  return { visible, show, hide };
+  return { visible, message, show, hide };
 }
 
 export default Toast;

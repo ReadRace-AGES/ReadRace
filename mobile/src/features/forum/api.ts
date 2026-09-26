@@ -27,8 +27,8 @@ export type PostForum = {
   };
   publicadoEm: string;
   texto: string;
-  /** Só exibição: não há ação de curtir nesta sprint. */
   totalCurtidas: number;
+  curtidoPorMim: boolean;
 };
 
 /** `GET /api/clubes/{clubeId}/posts` — já ordenado do mais recente para o mais antigo. */

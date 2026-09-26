@@ -20,6 +20,10 @@ export type PostCardProps = {
   text: string;
   likes: number;
   likedByMe?: boolean;
+  /** Sem handler, o coração fica só exibição (ex.: quem ainda não tem postId). */
+  onLikePress?: () => void;
+  /** Desabilita o toque enquanto a curtida/descurtida deste post está em andamento. */
+  likeDisabled?: boolean;
 };
 
 function HeartIcon({ filled }: { filled: boolean }) {
@@ -96,8 +100,8 @@ function PostBody({ text }: { text: string }) {
 /**
  * Cartao de post do Forum do clube, do Detalhe do livro e do Feed (#22).
  *
- * Curtida e so exibicao (decisao do gestor de 2026-08-21): o coracao e o numero
- * nao sao tocaveis - nao e botao sem destino, e informacao.
+ * Curtir e descurtir (#101): com `onLikePress`, o coracao e o numero viram um
+ * botao. Sem handler, continuam so exibicao.
  */
 export function PostCard({
   authorName,
@@ -107,6 +111,8 @@ export function PostCard({
   text,
   likes,
   likedByMe = false,
+  onLikePress,
+  likeDisabled = false,
 }: PostCardProps) {
   const temSequencia = authorStreak != null && authorStreak !== '';
   const temTexto = text.trim() !== '';
@@ -141,16 +147,33 @@ export function PostCard({
         </View>
       )}
 
-      <View
-        accessible
-        accessibilityLabel={`${likes} curtidas${likedByMe ? ', curtido por você' : ''}`}
-        className="mt-3 flex-row items-center gap-1"
-      >
-        <HeartIcon filled={likedByMe} />
-        <Text className="text-bodySmall font-inter text-text-secondary">
-          {likes}
-        </Text>
-      </View>
+      {onLikePress ? (
+        <Pressable
+          accessibilityRole="button"
+          accessibilityState={{ disabled: likeDisabled, selected: likedByMe }}
+          accessibilityLabel={`${likes} curtidas${likedByMe ? ', curtido por você' : ''}`}
+          disabled={likeDisabled}
+          onPress={onLikePress}
+          hitSlop={8}
+          className="mt-3 flex-row items-center gap-1 self-start"
+        >
+          <HeartIcon filled={likedByMe} />
+          <Text className="text-bodySmall font-inter text-text-secondary">
+            {likes}
+          </Text>
+        </Pressable>
+      ) : (
+        <View
+          accessible
+          accessibilityLabel={`${likes} curtidas${likedByMe ? ', curtido por você' : ''}`}
+          className="mt-3 flex-row items-center gap-1"
+        >
+          <HeartIcon filled={likedByMe} />
+          <Text className="text-bodySmall font-inter text-text-secondary">
+            {likes}
+          </Text>
+        </View>
+      )}
     </Card>
   );
 }
