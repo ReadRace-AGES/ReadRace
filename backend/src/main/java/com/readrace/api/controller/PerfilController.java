@@ -26,4 +26,10 @@ public class PerfilController {
     public PerfilResponse buscar(@PathVariable UUID usuarioId) {
         return service.buscar(usuarioId);
     }
+
+    @GetMapping("/api/me/perfil")
+    @Operation(summary = "Consulta o perfil do usuário atual, resolvido pelo backend")
+    public PerfilResponse meuPerfil() {
+        return service.buscarDoUsuarioAtual();
+    }
 }

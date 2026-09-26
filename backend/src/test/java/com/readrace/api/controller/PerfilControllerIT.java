@@ -29,7 +29,7 @@ class PerfilControllerIT {
     @Test
     void retornaPerfilDoSeedSemRecalcularXpNivelOuPaginas() {
         var perfil = service.buscar(FIXO);
-        assertThat(perfil.nivel()).isEqualTo(5);
+        assertThat(perfil.nivel()).isEqualTo(7);
         assertThat(perfil.xpAtual()).isEqualTo(2450);
         assertThat(perfil.titulo()).isEqualTo("Leitor iniciante");
         assertThat(perfil.estatisticas().livrosLidos()).isEqualTo(5);
@@ -97,5 +97,20 @@ class PerfilControllerIT {
         jdbc.update("UPDATE usuario SET excluido_em = now() WHERE id = ?", FIXO);
         assertThat(mvc.get().uri("/api/usuarios/" + FIXO + "/perfil"))
                 .hasStatus(HttpStatus.NOT_FOUND);
+    }
+
+    @Test
+    void meuPerfilResolveOUsuarioAtualSemReceberId() {
+        assertThat(mvc.get().uri("/api/me/perfil"))
+                .hasStatusOk()
+                .bodyJson()
+                .extractingPath("$.id")
+                .isEqualTo(FIXO.toString());
+
+        var perfil = service.buscarDoUsuarioAtual();
+        assertThat(perfil.nivel()).isEqualTo(7);
+        assertThat(perfil.xpAtual()).isEqualTo(2450);
+        assertThat(perfil.xpNoNivel()).isEqualTo(521);
+        assertThat(perfil.xpDoNivel()).isEqualTo(833);
     }
 }
