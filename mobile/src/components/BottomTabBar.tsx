@@ -39,7 +39,7 @@ const TAB_ORDER: readonly TabDefinition[] = [
   },
   { routeName: '(busca)', Icon: SearchTabIcon, accessibilityLabel: 'Buscar' },
   { routeName: 'desafios', Icon: StarTabIcon, accessibilityLabel: 'Desafios' },
-  { routeName: 'perfil', Icon: PersonTabIcon, accessibilityLabel: 'Perfil' },
+  { routeName: '(perfil)', Icon: PersonTabIcon, accessibilityLabel: 'Perfil' },
 ];
 
 type RouteOf<Props> = Props extends { state: { routes: readonly (infer R)[] } }
