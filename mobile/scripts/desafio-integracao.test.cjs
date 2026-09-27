@@ -79,7 +79,7 @@ test('aba navega, recarrega ao foco e ignora respostas antigas', async () => {
   const desafio = (id) => ({
     id,
     status: 'pendente',
-    descricao: '150 páginas',
+    descricao: `150 páginas (${id})`,
     diasRestantes: 7,
     oponente: { id: 'amigo', username: 'Aninha07', avatarUrl: null },
     progresso: { voce: 0, oponente: 0 },
@@ -98,6 +98,7 @@ test('aba navega, recarrega ao foco e ignora respostas antigas', async () => {
     'signal',
   ]);
   assert.equal(requests[0].options.method, 'GET');
+  assert.equal(tree.root.findAllByType('ActivityIndicator').length, 1);
   await receive(0, [], 'proxima-pagina');
   assert.equal(tree.root.findAllByType('EmptyState').length, 1);
   assert.equal(requests.length, 1);
@@ -125,7 +126,10 @@ test('aba navega, recarrega ao foco e ignora respostas antigas', async () => {
   assert.equal(requests[2].options.signal.aborted, true);
   assert.equal(requests.length, 4);
   await receive(2, [desafio('antigo')]);
-  assert.equal(tree.root.findAllByType('ActivityIndicator').length, 1);
+  assert.match(JSON.stringify(tree.toJSON()), /150 páginas \(novo\)/);
+  assert.doesNotMatch(JSON.stringify(tree.toJSON()), /150 páginas \(antigo\)/);
+  assert.equal(tree.root.findAllByType('ActivityIndicator').length, 0);
+  assert.equal(tree.root.findAllByType('Card').length, 1);
   await receive(3, [desafio('atual')]);
   assert.equal(tree.root.findAllByType('Card').length, 1);
   assert.equal(tree.root.findAllByType('ActivityIndicator').length, 0);
@@ -136,11 +140,35 @@ test('aba navega, recarrega ao foco e ignora respostas antigas', async () => {
   });
   await act(async () => requests[4].reject(new Error('offline')));
   assert.ok(button('Tentar de novo'));
+  assert.equal(tree.root.findAllByType('Card').length, 1);
+  assert.equal(tree.root.findAllByType('ActivityIndicator').length, 0);
   act(() => {
     button('Tentar de novo').props.onPress();
   });
   assert.equal(requests.length, 6);
   await receive(5, [desafio('recuperado')]);
   assert.equal(tree.root.findAllByType('Card').length, 1);
+  const post = api.criarDesafio({
+    oponenteId: 'amigo',
+    tipoMeta: 'paginas',
+    meta: 150,
+    prazoDias: 7,
+  });
+  assert.equal(requests[6].options.method, 'POST');
+  requests[6].resolve(desafio('criado'));
+  await post;
+  act(() => {
+    desfocar();
+    desfocar = focar();
+  });
+  assert.equal(tree.root.findAllByType('ActivityIndicator').length, 0);
+  assert.equal(tree.root.findAllByType('Card').length, 1);
+  await receive(
+    7,
+    [desafio('recuperado'), desafio('criado')],
+    'proxima-pagina'
+  );
+  assert.equal(tree.root.findAllByType('Card').length, 2);
+  assert.equal(requests.length, 8);
   act(() => tree.unmount());
 });

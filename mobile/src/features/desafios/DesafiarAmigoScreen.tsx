@@ -173,6 +173,7 @@ export function DesafiarAmigoScreen() {
   }, [estadoOponentes, oponenteId, oponenteSelecionado]);
 
   const prazoAtual = prazoValido(prazoDigitado);
+  const unidadePrazo = prazoDias === 1 ? 'dia corrido' : 'dias corridos';
   const podeEnviar =
     oponenteSelecionado &&
     tipoMeta === 'paginas' &&
@@ -181,7 +182,8 @@ export function DesafiarAmigoScreen() {
     estadoEnvio.situacao !== 'enviando';
 
   function voltarParaDesafios() {
-    router.replace('/desafios');
+    // Retorna ao destino existente; sem ele na pilha, substitui a tela atual.
+    router.dismissTo('/desafios');
   }
 
   function alterarTermo(valor: string) {
@@ -231,7 +233,7 @@ export function DesafiarAmigoScreen() {
       prazoDias: prazoAtual,
     });
 
-    if (sucesso) router.replace('/desafios');
+    if (sucesso) voltarParaDesafios();
   }
 
   return (
@@ -366,18 +368,20 @@ export function DesafiarAmigoScreen() {
                         selectTextOnFocus
                         style={styles.campoPrazo}
                       />
-                      <Text style={styles.textoPrazo}>dias corridos</Text>
+                      <Text style={styles.textoPrazo}>
+                        {prazoAtual === 1 ? 'dia corrido' : 'dias corridos'}
+                      </Text>
                     </View>
                   ) : (
                     <Pressable
                       accessibilityRole="button"
-                      accessibilityLabel={`Editar prazo. Em ${prazoDias} dias corridos`}
+                      accessibilityLabel={`Editar prazo. Em ${prazoDias} ${unidadePrazo}`}
                       onPress={() => setEditandoPrazo(true)}
                       hitSlop={spacing[2]}
                       style={styles.prazo}
                     >
                       <Text style={styles.textoPrazo}>
-                        Em {prazoDias} dias corridos
+                        Em {prazoDias} {unidadePrazo}
                       </Text>
                       <PencilIcon
                         size={sizes.iconSmall}

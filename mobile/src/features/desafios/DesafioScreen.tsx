@@ -17,7 +17,7 @@ import { listarDesafios, type Desafio } from './api';
 type Estado =
   | { situacao: 'carregando' }
   | { situacao: 'sucesso'; desafios: Desafio[] }
-  | { situacao: 'erro'; mensagem: string };
+  | { situacao: 'erro'; mensagem: string; desafios?: Desafio[] };
 
 function DesafioCard({ desafio }: { desafio: Desafio }) {
   const voceEstaNaFrente = desafio.progresso.voce > desafio.progresso.oponente;
@@ -127,7 +127,12 @@ export function DesafiosScreen() {
     requisicao.current?.abort();
     const controller = new AbortController();
     requisicao.current = controller;
-    setEstado({ situacao: 'carregando' });
+    setEstado((atual) =>
+      atual.situacao === 'sucesso' ||
+      (atual.situacao === 'erro' && atual.desafios !== undefined)
+        ? atual
+        : { situacao: 'carregando' }
+    );
 
     try {
       const resposta = await listarDesafios(controller.signal);
@@ -141,15 +146,16 @@ export function DesafiosScreen() {
     } catch (erro: unknown) {
       if (controller.signal.aborted) return;
 
-      setEstado({
+      setEstado((atual) => ({
         situacao: 'erro',
+        desafios: atual.situacao === 'carregando' ? undefined : atual.desafios,
         mensagem:
           erro instanceof ApiError
             ? erro.message
             : erro instanceof Error
               ? erro.message
               : '',
-      });
+      }));
     } finally {
       if (requisicao.current === controller) requisicao.current = null;
     }
@@ -169,8 +175,9 @@ export function DesafiosScreen() {
     router.push('/desafiar-amigo');
   }
 
-  const listaVazia =
-    estado.situacao === 'sucesso' && estado.desafios.length === 0;
+  const desafios =
+    estado.situacao === 'carregando' ? undefined : estado.desafios;
+  const listaVazia = estado.situacao === 'sucesso' && desafios?.length === 0;
 
   return (
     <View className="flex-1 bg-surface">
@@ -230,10 +237,9 @@ export function DesafiosScreen() {
           />
         )}
 
-        {estado.situacao === 'sucesso' &&
-          estado.desafios.map((desafio) => (
-            <DesafioCard key={desafio.id} desafio={desafio} />
-          ))}
+        {desafios?.map((desafio) => (
+          <DesafioCard key={desafio.id} desafio={desafio} />
+        ))}
 
         <PrimaryButton
           label="Desafiar Amigo"

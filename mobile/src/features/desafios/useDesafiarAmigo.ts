@@ -5,6 +5,7 @@ import { ApiError } from '@/api/client';
 import {
   buscarOponentes,
   criarDesafio,
+  normalizarTermoOponente,
   type CriarDesafioRequest,
   type Oponente,
 } from './api';
@@ -28,7 +29,7 @@ function mensagemDe(erro: unknown, mensagemPadrao: string) {
 
 export function useOponentes(termo: string) {
   const [versao, setVersao] = useState(0);
-  const termoLimpo = termo.trim();
+  const termoLimpo = normalizarTermoOponente(termo);
   const [resultado, setResultado] = useState<{
     termo: string;
     versao: number;

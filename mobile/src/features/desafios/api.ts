@@ -71,8 +71,12 @@ export type DesafioResponse = DesafioBase &
     | { tipoMeta: 'livro'; meta?: never; livro: LivroDesafio }
   );
 
+export function normalizarTermoOponente(termo: string) {
+  return termo.trim().replace(/^@+/, '').trim();
+}
+
 export function buscarOponentes(termo: string, signal?: AbortSignal) {
-  const termoLimpo = termo.trim();
+  const termoLimpo = normalizarTermoOponente(termo);
   const query = termoLimpo ? `?q=${encodeURIComponent(termoLimpo)}` : '';
 
   return apiGet<OponentesResponse>(`/api/desafios/oponentes${query}`, {

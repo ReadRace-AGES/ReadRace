@@ -27,11 +27,17 @@ function load(file, dependencies) {
   return module.exports;
 }
 
+const { normalizarTermoOponente } = load('features/desafios/api.ts', {
+  '@/api/client': {},
+});
+
 test('busca reconcilia seleção e bloqueia envio durante loading e erro', async () => {
   const requests = [];
   const posts = [];
   const routes = [];
+  let anterior = '/desafios';
   const api = {
+    normalizarTermoOponente,
     buscarOponentes: (termo, signal) =>
       new Promise((resolve, reject) =>
         requests.push({ termo, signal, resolve, reject })
@@ -47,7 +53,12 @@ test('busca reconcilia seleção e bloqueia envio durante loading e erro', async
   });
   const dependencies = {
     'expo-router': {
-      useRouter: () => ({ replace: (route) => routes.push(route) }),
+      useRouter: () => ({
+        canGoBack: () => anterior !== null,
+        back: () => assert.fail('back pode voltar para outra tela'),
+        replace: () => assert.fail('replace pode duplicar as abas'),
+        dismissTo: (route) => routes.push(route),
+      }),
     },
     'react-native': {
       ActivityIndicator: 'ActivityIndicator',
@@ -115,14 +126,22 @@ test('busca reconcilia seleção e bloqueia envio durante loading e erro', async
   assert.equal(posts.length, 0);
   act(() => tree.root.findByType('AppHeader').props.onBackPress());
   assert.deepEqual(routes, ['/desafios']);
+  for (const origem of [null, '/perfil']) {
+    anterior = origem;
+    act(() => tree.root.findByType('AppHeader').props.onBackPress());
+    assert.equal(routes.at(-1), '/desafios');
+  }
+  routes.splice(1);
 
   act(() => tree.root.findAllByType('Pressable')[0].props.onPress());
   assert.equal(button().props.disabled, false);
   assert.equal(hint().length, 0);
 
-  search('Ani');
+  search('@ana');
+  assert.equal(tree.root.findByType('SearchInput').props.value, '@ana');
   assert.equal(button().props.disabled, true);
   await waitForSearch();
+  assert.equal(requests[1].termo, 'ana');
   await receive(1, [amigo]);
   assert.equal(button().props.disabled, false);
 
@@ -159,8 +178,33 @@ test('busca reconcilia seleção e bloqueia envio durante loading e erro', async
 
   await act(async () => button().props.onPress());
   assert.equal(posts.length, 1);
+  assert.equal(posts[0].prazoDias, 7);
+  const prazo = () =>
+    tree.root
+      .findAllByType('Pressable')
+      .find((node) =>
+        node.props.accessibilityLabel?.startsWith('Editar prazo.')
+      );
+  assert.equal(
+    prazo().props.accessibilityLabel,
+    'Editar prazo. Em 7 dias corridos'
+  );
+  act(() => prazo().props.onPress());
+  for (const invalido of ['0', '-1', '1.5', '2147483648', '']) {
+    act(() => tree.root.findByType('TextInput').props.onChangeText(invalido));
+    assert.equal(button().props.disabled, true);
+  }
+  act(() => tree.root.findByType('TextInput').props.onChangeText('1'));
+  assert.equal(button().props.disabled, false);
+  act(() => tree.root.findByType('TextInput').props.onBlur());
+  assert.equal(
+    prazo().props.accessibilityLabel,
+    'Editar prazo. Em 1 dia corrido'
+  );
+  await act(async () => button().props.onPress());
+  assert.equal(posts[1].prazoDias, 1);
   assert.equal(posts[0].oponenteId, outro.id);
-  assert.deepEqual(routes, ['/desafios', '/desafios']);
+  assert.deepEqual(routes, ['/desafios', '/desafios', '/desafios']);
   act(() => tree.unmount());
 });
 
@@ -169,6 +213,7 @@ test('resposta antiga e debounce não tornam a lista anterior válida', async ()
   const { useOponentes } = load('features/desafios/useDesafiarAmigo.ts', {
     '@/api/client': { ApiError: class ApiError extends Error {} },
     './api': {
+      normalizarTermoOponente,
       buscarOponentes: (termo, signal) =>
         new Promise((resolve) => requests.push({ termo, signal, resolve })),
     },
@@ -199,5 +244,31 @@ test('resposta antiga e debounce não tornam a lista anterior válida', async ()
     situacao: 'sucesso',
     oponentes: [{ id: 'atual' }],
   });
+  act(() => tree.update(React.createElement(Busca, { termo: '@ana' })));
+  act(() => tree.update(React.createElement(Busca, { termo: '@' })));
+  await act(async () => new Promise((resolve) => setTimeout(resolve, 320)));
+  assert.equal(requests.length, 3);
+  assert.equal(requests[2].termo, '');
+  assert.equal(requests[1].signal.aborted, true);
+  await act(async () => requests[2].resolve({ oponentes: [] }));
+  assert.deepEqual(estado, { situacao: 'sucesso', oponentes: [] });
   act(() => tree.unmount());
+});
+
+test('HTTP normaliza arrobas iniciais, espaços e busca vazia', async () => {
+  const urls = [];
+  const { buscarOponentes } = load('features/desafios/api.ts', {
+    '@/api/client': { apiGet: async (url) => urls.push(url) },
+  });
+  for (const termo of ['@ana', '  @@ana  ', '@', ' @@ ', '', '  ', 'ana@nome'])
+    await buscarOponentes(termo);
+  assert.deepEqual(urls, [
+    '/api/desafios/oponentes?q=ana',
+    '/api/desafios/oponentes?q=ana',
+    '/api/desafios/oponentes',
+    '/api/desafios/oponentes',
+    '/api/desafios/oponentes',
+    '/api/desafios/oponentes',
+    '/api/desafios/oponentes?q=ana%40nome',
+  ]);
 });
