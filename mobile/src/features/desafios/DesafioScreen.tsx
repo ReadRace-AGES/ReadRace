@@ -1,5 +1,4 @@
 import { useEffect, useState } from 'react';
-//import { useRouter } from 'expo-router';
 
 import {
   ActivityIndicator,
@@ -13,9 +12,13 @@ import { AppHeader } from '@/components/AppHeader';
 import { Avatar } from '@/components/avatar';
 import { Card } from '@/components/Card';
 import { EmptyState } from '@/components/EmptyState';
+import { RematchIcon } from '@/components/icons/RematchIcon';
+import { SadFaceIcon } from '@/components/icons/SadFaceIcon';
+import { TrophyIcon } from '@/components/icons/TrophyIcon';
 import { UsersIcon } from '@/components/icons/UsersIcon';
 import { PrimaryButton } from '@/components/PrimaryButton';
-import { colors, spacing, textStyles } from '@/theme';
+import { useToastContext } from '@/components/toast-provider';
+import { colors, sizes, spacing, textStyles } from '@/theme';
 
 import { listarDesafios, type Desafio } from './api';
 
@@ -24,12 +27,96 @@ type Estado =
   | { situacao: 'sucesso'; desafios: Desafio[] }
   | { situacao: 'erro'; mensagem: string };
 
-function DesafioCard({ desafio }: { desafio: Desafio }) {
+type DesafioCardProps = {
+  desafio: Desafio;
+  onRevanche: () => void;
+};
+
+function desafioFinalizado(desafio: Desafio) {
+  return (
+    desafio.status === 'concluido_ganho' ||
+    desafio.status === 'concluido_perdido' ||
+    desafio.status === 'concluido_empate'
+  );
+}
+
+function DesafioCard({
+  desafio,
+  onRevanche,
+}: DesafioCardProps) {
+  const finalizado = desafioFinalizado(desafio);
+
   const voceEstaNaFrente =
     desafio.progresso.voce > desafio.progresso.oponente;
 
   const oponenteEstaNaFrente =
     desafio.progresso.oponente > desafio.progresso.voce;
+
+  const destacarVoce = finalizado
+    ? desafio.status === 'concluido_ganho'
+    : voceEstaNaFrente;
+
+  const destacarOponente = finalizado
+    ? desafio.status === 'concluido_perdido'
+    : oponenteEstaNaFrente;
+
+  function renderizarPilha() {
+    if (!finalizado) {
+      return (
+        <Text
+          style={[
+            textStyles.micro,
+            { color: colors.text },
+          ]}
+        >
+          {desafio.diasRestantes} dias
+        </Text>
+      );
+    }
+
+    if (desafio.status === 'concluido_ganho') {
+      return (
+        <View className="flex-row items-center" style={{ gap: spacing[1] }}>
+          <TrophyIcon
+            size={sizes.iconSmall}
+            color={colors.primary}
+          />
+
+          <Text
+            style={[
+              textStyles.micro,
+              { color: colors.primary },
+            ]}
+          >
+            Vitória
+          </Text>
+        </View>
+      );
+    }
+
+    if (desafio.status === 'concluido_perdido') {
+      return (
+        <View className="flex-row items-center" style={{ gap: spacing[1] }}>
+          <SadFaceIcon
+            size={sizes.iconSmall}
+            color={colors.textSecondary}
+          />
+
+          <Text
+            style={[
+              textStyles.micro,
+              { color: colors.textSecondary },
+            ]}
+          >
+            Derrota
+          </Text>
+        </View>
+      );
+    }
+
+    // A task determina que o Figma não possui copy para empate.
+    return null;
+  }
 
   return (
     <Card>
@@ -65,24 +152,19 @@ function DesafioCard({ desafio }: { desafio: Desafio }) {
             </Text>
           </View>
 
-          <View
-            style={{
-              borderWidth: 1,
-              borderColor: colors.borderStrong,
-              borderRadius: 9999,
-              paddingHorizontal: spacing[2],
-              paddingVertical: spacing[1],
-            }}
-          >
-            <Text
-              style={[
-                textStyles.micro,
-                { color: colors.text },
-              ]}
+          {desafio.status !== 'concluido_empate' && (
+            <View
+              style={{
+                borderWidth: 1,
+                borderColor: colors.borderStrong,
+                borderRadius: 9999,
+                paddingHorizontal: spacing[2],
+                paddingVertical: spacing[1],
+              }}
             >
-              {desafio.diasRestantes} dias
-            </Text>
-          </View>
+              {renderizarPilha()}
+            </View>
+          )}
         </View>
 
         <View
@@ -98,7 +180,7 @@ function DesafioCard({ desafio }: { desafio: Desafio }) {
               style={[
                 textStyles.h2,
                 {
-                  color: voceEstaNaFrente
+                  color: destacarVoce
                     ? colors.primary
                     : colors.text,
                 },
@@ -122,7 +204,7 @@ function DesafioCard({ desafio }: { desafio: Desafio }) {
               style={[
                 textStyles.h2,
                 {
-                  color: oponenteEstaNaFrente
+                  color: destacarOponente
                     ? colors.primary
                     : colors.text,
                 },
@@ -142,13 +224,22 @@ function DesafioCard({ desafio }: { desafio: Desafio }) {
             </Text>
           </View>
         </View>
+
+        {finalizado && (
+          <PrimaryButton
+            label="Revanche"
+            variant="outline"
+            icon={RematchIcon}
+            onPress={onRevanche}
+          />
+        )}
       </View>
     </Card>
   );
 }
 
 export function DesafiosScreen() {
-  // const router = useRouter();
+  const { showToast } = useToastContext();
 
   const [estado, setEstado] = useState<Estado>({
     situacao: 'carregando',
@@ -182,7 +273,7 @@ export function DesafiosScreen() {
   }, []);
 
   function desafiarAmigo() {
-   // router.push('/desafiar-amigo');
+    // Navegação pertence ao fluxo de "Desafiar Amigo".
   }
 
   const listaVazia =
@@ -257,6 +348,7 @@ export function DesafiosScreen() {
             <DesafioCard
               key={desafio.id}
               desafio={desafio}
+              onRevanche={showToast}
             />
           ))}
 

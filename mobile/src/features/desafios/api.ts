@@ -1,8 +1,15 @@
 import { apiRequest } from '@/api/client';
 
+export type DesafioStatus =
+  | 'pendente'
+  | 'ativo'
+  | 'concluido_ganho'
+  | 'concluido_perdido'
+  | 'concluido_empate';
+
 export type Desafio = {
   id: string;
-  status: string;
+  status: DesafioStatus;
   descricao: string;
   diasRestantes: number;
   oponente: {
