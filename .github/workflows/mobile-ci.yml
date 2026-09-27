@@ -23,7 +23,7 @@ jobs:
               - '.github/workflows/mobile-ci.yml'
 
   build:
-    name: Testes e Typecheck
+    name: Typecheck e testes
     needs: detecta-mudancas
     runs-on: ubuntu-latest
 

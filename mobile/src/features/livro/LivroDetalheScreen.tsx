@@ -16,6 +16,7 @@ import { BookIcon } from '@/components/icons/BookIcon';
 import { PostCard } from '@/components/PostCard';
 import { PrimaryButton } from '@/components/PrimaryButton';
 import { ProgressBar } from '@/components/ProgressBar';
+import { useToastContext } from '@/components/toast-provider';
 import { RegistrarProgressoSheet } from '@/features/progresso/RegistrarProgressoSheet';
 import { bookCover, colors, radius, sizes, spacing, textStyles } from '@/theme';
 import { tempoRelativo } from './model';
@@ -23,7 +24,12 @@ import { useLivroDetalhe } from './useLivroDetalhe';
 
 export function LivroDetalheScreen({ livroId }: { livroId: string }) {
   const router = useRouter();
-  const { estado, recarregar, atualizarProgresso } = useLivroDetalhe(livroId);
+  const { estado, recarregar, atualizarProgresso, alternarCurtida } =
+    useLivroDetalhe(livroId);
+  const { showErrorToast } = useToastContext();
+  const [curtidasPendentes, setCurtidasPendentes] = useState<Set<string>>(
+    new Set()
+  );
   const [modalAberto, setModalAberto] = useState(false);
   useFocusEffect(
     useCallback(
@@ -37,6 +43,26 @@ export function LivroDetalheScreen({ livroId }: { livroId: string }) {
     router.canGoBack() ? router.back() : router.replace('/meus-livros');
   const detalhe = estado.situacao === 'sucesso' ? estado.dados : null;
   const progresso = detalhe?.progresso;
+
+  async function curtirPost(postId: string) {
+    if (curtidasPendentes.has(postId)) return;
+    setCurtidasPendentes((atual) => new Set(atual).add(postId));
+    try {
+      await alternarCurtida(postId);
+    } catch (erro) {
+      showErrorToast(
+        erro instanceof Error
+          ? erro.message
+          : 'Não foi possível registrar sua curtida. Tente novamente.'
+      );
+    } finally {
+      setCurtidasPendentes((atual) => {
+        const proximo = new Set(atual);
+        proximo.delete(postId);
+        return proximo;
+      });
+    }
+  }
 
   return (
     <View style={styles.screen}>
@@ -136,6 +162,9 @@ export function LivroDetalheScreen({ livroId }: { livroId: string }) {
                   timeAgo={tempoRelativo(post.criadoEm)}
                   text={post.texto}
                   likes={post.curtidas}
+                  likedByMe={post.curtidoPorMim}
+                  likeDisabled={curtidasPendentes.has(post.id)}
+                  onLikePress={() => curtirPost(post.id)}
                 />
               ))
             )}

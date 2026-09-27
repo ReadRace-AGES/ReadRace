@@ -2,6 +2,7 @@ package com.readrace.api.service;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -28,16 +29,19 @@ public class ForumClubeService {
     private final PostRepository postRepository;
     private final CurtidaRepository curtidaRepository;
     private final UsuarioRepository usuarioRepository;
+    private final UsuarioAtualDeSeed usuarioAtual;
 
     public ForumClubeService(
             ClubeDoLivroRepository clubeRepository,
             PostRepository postRepository,
             CurtidaRepository curtidaRepository,
-            UsuarioRepository usuarioRepository) {
+            UsuarioRepository usuarioRepository,
+            UsuarioAtualDeSeed usuarioAtual) {
         this.clubeRepository = clubeRepository;
         this.postRepository = postRepository;
         this.curtidaRepository = curtidaRepository;
         this.usuarioRepository = usuarioRepository;
+        this.usuarioAtual = usuarioAtual;
     }
 
     /** Leitura pura: nada é criado, alterado ou apagado, e nenhuma curtida é gerada. */
@@ -74,6 +78,8 @@ public class ForumClubeService {
             return List.of();
         }
 
+        List<UUID> postIds = posts.stream().map(Post::getId).toList();
+
         Map<UUID, Usuario> autores =
                 usuarioRepository
                         .findAllById(posts.stream().map(Post::getAutorId).distinct().toList())
@@ -81,19 +87,26 @@ public class ForumClubeService {
                         .collect(Collectors.toMap(Usuario::getId, Function.identity()));
 
         Map<UUID, Long> curtidas =
-                curtidaRepository
-                        .contarPorPostIds(posts.stream().map(Post::getId).toList())
-                        .stream()
+                curtidaRepository.contarPorPostIds(postIds).stream()
                         .collect(
                                 Collectors.toMap(
                                         CurtidaRepository.ContagemPorPost::getPostId,
                                         CurtidaRepository.ContagemPorPost::getTotal));
 
-        return posts.stream().map(post -> paraPost(post, autores, curtidas)).toList();
+        UUID usuarioId = usuarioAtual.idDoUsuarioAtual().valor();
+        Set<UUID> curtidosPorMim =
+                Set.copyOf(curtidaRepository.postsCurtidosPorUsuario(usuarioId, postIds));
+
+        return posts.stream()
+                .map(post -> paraPost(post, autores, curtidas, curtidosPorMim))
+                .toList();
     }
 
     private static ForumClubeResponse.Post paraPost(
-            Post post, Map<UUID, Usuario> autores, Map<UUID, Long> curtidas) {
+            Post post,
+            Map<UUID, Usuario> autores,
+            Map<UUID, Long> curtidas,
+            Set<UUID> curtidosPorMim) {
         Usuario autor = autores.get(post.getAutorId());
 
         return new ForumClubeResponse.Post(
@@ -105,6 +118,7 @@ public class ForumClubeService {
                         autor == null ? null : autor.getDiasConsecutivos()),
                 post.getCriadoEm(),
                 post.getConteudo(),
-                curtidas.getOrDefault(post.getId(), 0L));
+                curtidas.getOrDefault(post.getId(), 0L),
+                curtidosPorMim.contains(post.getId()));
     }
 }

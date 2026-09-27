@@ -101,6 +101,17 @@ class ForumClubeControllerIT {
     }
 
     @Test
+    @DisplayName("curtidoPorMim reflete a curtida do usuário atual (curtiu tudo no seed) (#101)")
+    void deve_marcar_curtidoPorMim_para_o_usuario_atual() {
+        assertThat(mvc.get().uri(URL))
+                .hasStatusOk()
+                .bodyJson()
+                .extractingPath("$.posts[*].curtidoPorMim")
+                .asList()
+                .containsOnly(true);
+    }
+
+    @Test
     @DisplayName("o backend não trunca: o corte é decisão do PostCard")
     void deve_devolver_o_texto_inteiro() {
         String esperado =

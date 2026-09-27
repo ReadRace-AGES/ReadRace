@@ -67,8 +67,17 @@ function renderDetalhe(dados) {
     'ProgressBar',
   ];
   const dependencies = {
-    react: { useCallback: (fn) => fn, useState: () => [false, () => {}] },
+    react: {
+      useCallback: (fn) => fn,
+      useState: (inicial) => [inicial, () => {}],
+    },
     'expo-router': { useFocusEffect: () => {}, useRouter: () => ({}) },
+    '@/components/toast-provider': {
+      useToastContext: () => ({
+        showToast: () => {},
+        showErrorToast: () => {},
+      }),
+    },
     'react-native': {
       ActivityIndicator: 'ActivityIndicator',
       Pressable: 'Pressable',
