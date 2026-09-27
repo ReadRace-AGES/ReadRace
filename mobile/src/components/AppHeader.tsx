@@ -144,7 +144,12 @@ export function AppHeader({
             onLayout={(e) => medirEsquerda(e.nativeEvent.layout.width)}
           >
             {showBack && (
-              <Pressable onPress={voltar} hitSlop={12}>
+              <Pressable
+                accessibilityRole="button"
+                accessibilityLabel="Voltar"
+                onPress={voltar}
+                hitSlop={12}
+              >
                 <Svg width={9} height={15} viewBox="0 0 9 15" fill="none">
                   <Path
                     d={VOLTAR_PATH}

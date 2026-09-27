@@ -1,12 +1,7 @@
-import { useEffect, useState } from 'react';
-//import { useRouter } from 'expo-router';
+import { useCallback, useRef, useState } from 'react';
+import { useFocusEffect, useRouter } from 'expo-router';
 
-import {
-  ActivityIndicator,
-  ScrollView,
-  Text,
-  View,
-} from 'react-native';
+import { ActivityIndicator, ScrollView, Text, View } from 'react-native';
 
 import { ApiError } from '@/api/client';
 import { AppHeader } from '@/components/AppHeader';
@@ -22,11 +17,10 @@ import { listarDesafios, type Desafio } from './api';
 type Estado =
   | { situacao: 'carregando' }
   | { situacao: 'sucesso'; desafios: Desafio[] }
-  | { situacao: 'erro'; mensagem: string };
+  | { situacao: 'erro'; mensagem: string; desafios?: Desafio[] };
 
 function DesafioCard({ desafio }: { desafio: Desafio }) {
-  const voceEstaNaFrente =
-    desafio.progresso.voce > desafio.progresso.oponente;
+  const voceEstaNaFrente = desafio.progresso.voce > desafio.progresso.oponente;
 
   const oponenteEstaNaFrente =
     desafio.progresso.oponente > desafio.progresso.voce;
@@ -40,26 +34,17 @@ function DesafioCard({ desafio }: { desafio: Desafio }) {
             photoUrl={desafio.oponente.avatarUrl}
           />
 
-          <View
-            className="min-w-0 flex-1"
-            style={{ marginLeft: spacing[3] }}
-          >
+          <View className="min-w-0 flex-1" style={{ marginLeft: spacing[3] }}>
             <Text
               numberOfLines={1}
-              style={[
-                textStyles.bodyStrong,
-                { color: colors.text },
-              ]}
+              style={[textStyles.bodyStrong, { color: colors.text }]}
             >
               {desafio.oponente.username}
             </Text>
 
             <Text
               numberOfLines={2}
-              style={[
-                textStyles.caption,
-                { color: colors.textSecondary },
-              ]}
+              style={[textStyles.caption, { color: colors.textSecondary }]}
             >
               {desafio.descricao}
             </Text>
@@ -74,12 +59,7 @@ function DesafioCard({ desafio }: { desafio: Desafio }) {
               paddingVertical: spacing[1],
             }}
           >
-            <Text
-              style={[
-                textStyles.micro,
-                { color: colors.text },
-              ]}
-            >
+            <Text style={[textStyles.micro, { color: colors.text }]}>
               {desafio.diasRestantes} dias
             </Text>
           </View>
@@ -98,21 +78,14 @@ function DesafioCard({ desafio }: { desafio: Desafio }) {
               style={[
                 textStyles.h2,
                 {
-                  color: voceEstaNaFrente
-                    ? colors.primary
-                    : colors.text,
+                  color: voceEstaNaFrente ? colors.primary : colors.text,
                 },
               ]}
             >
               {desafio.progresso.voce}
             </Text>
 
-            <Text
-              style={[
-                textStyles.caption,
-                { color: colors.textSecondary },
-              ]}
-            >
+            <Text style={[textStyles.caption, { color: colors.textSecondary }]}>
               Você
             </Text>
           </View>
@@ -122,9 +95,7 @@ function DesafioCard({ desafio }: { desafio: Desafio }) {
               style={[
                 textStyles.h2,
                 {
-                  color: oponenteEstaNaFrente
-                    ? colors.primary
-                    : colors.text,
+                  color: oponenteEstaNaFrente ? colors.primary : colors.text,
                 },
               ]}
             >
@@ -133,10 +104,7 @@ function DesafioCard({ desafio }: { desafio: Desafio }) {
 
             <Text
               numberOfLines={1}
-              style={[
-                textStyles.caption,
-                { color: colors.textSecondary },
-              ]}
+              style={[textStyles.caption, { color: colors.textSecondary }]}
             >
               {desafio.oponente.username}
             </Text>
@@ -148,46 +116,68 @@ function DesafioCard({ desafio }: { desafio: Desafio }) {
 }
 
 export function DesafiosScreen() {
-  // const router = useRouter();
+  const router = useRouter();
+  const requisicao = useRef<AbortController | null>(null);
 
   const [estado, setEstado] = useState<Estado>({
     situacao: 'carregando',
   });
 
-  async function carregarDesafios() {
-    setEstado({ situacao: 'carregando' });
+  const carregarDesafios = useCallback(async () => {
+    requisicao.current?.abort();
+    const controller = new AbortController();
+    requisicao.current = controller;
+    setEstado((atual) =>
+      atual.situacao === 'sucesso' ||
+      (atual.situacao === 'erro' && atual.desafios !== undefined)
+        ? atual
+        : { situacao: 'carregando' }
+    );
 
     try {
-      const resposta = await listarDesafios();
+      const resposta = await listarDesafios(controller.signal);
+
+      if (controller.signal.aborted) return;
 
       setEstado({
         situacao: 'sucesso',
         desafios: resposta.desafios,
       });
     } catch (erro: unknown) {
-      setEstado({
+      if (controller.signal.aborted) return;
+
+      setEstado((atual) => ({
         situacao: 'erro',
+        desafios: atual.situacao === 'carregando' ? undefined : atual.desafios,
         mensagem:
           erro instanceof ApiError
             ? erro.message
             : erro instanceof Error
               ? erro.message
               : '',
-      });
+      }));
+    } finally {
+      if (requisicao.current === controller) requisicao.current = null;
     }
-  }
-
-  useEffect(() => {
-    carregarDesafios();
   }, []);
 
+  useFocusEffect(
+    useCallback(() => {
+      carregarDesafios();
+      return () => {
+        requisicao.current?.abort();
+        requisicao.current = null;
+      };
+    }, [carregarDesafios])
+  );
+
   function desafiarAmigo() {
-   // router.push('/desafiar-amigo');
+    router.push('/desafiar-amigo');
   }
 
-  const listaVazia =
-    estado.situacao === 'sucesso' &&
-    estado.desafios.length === 0;
+  const desafios =
+    estado.situacao === 'carregando' ? undefined : estado.desafios;
+  const listaVazia = estado.situacao === 'sucesso' && desafios?.length === 0;
 
   return (
     <View className="flex-1 bg-surface">
@@ -203,12 +193,7 @@ export function DesafiosScreen() {
           gap: spacing[4],
         }}
       >
-        <Text
-          style={[
-            textStyles.h3,
-            { color: colors.text },
-          ]}
-        >
+        <Text style={[textStyles.h3, { color: colors.text }]}>
           Desafio com amigos
         </Text>
 
@@ -252,13 +237,9 @@ export function DesafiosScreen() {
           />
         )}
 
-        {estado.situacao === 'sucesso' &&
-          estado.desafios.map((desafio) => (
-            <DesafioCard
-              key={desafio.id}
-              desafio={desafio}
-            />
-          ))}
+        {desafios?.map((desafio) => (
+          <DesafioCard key={desafio.id} desafio={desafio} />
+        ))}
 
         <PrimaryButton
           label="Desafiar Amigo"

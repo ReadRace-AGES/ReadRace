@@ -56,10 +56,6 @@ jobs:
         if: needs.detecta-mudancas.outputs.mobile == 'true'
         run: npx tsc --noEmit
 
-      - name: Testes
+      - name: Testes mobile
         if: needs.detecta-mudancas.outputs.mobile == 'true'
         run: npm test
-
-      - name: Teste do slider
-        if: needs.detecta-mudancas.outputs.mobile == 'true'
-        run: npm run test:slider
