@@ -1,5 +1,6 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useRef, useState } from 'react';
 
+import { useFocusEffect, useRouter } from 'expo-router';
 import { ActivityIndicator, ScrollView, Text, View } from 'react-native';
 
 import { ApiError } from '@/api/client';
@@ -20,7 +21,7 @@ import { listarDesafios, type Desafio } from './api';
 type Estado =
   | { situacao: 'carregando' }
   | { situacao: 'sucesso'; desafios: Desafio[] }
-  | { situacao: 'erro'; mensagem: string };
+  | { situacao: 'erro'; mensagem: string; desafios?: Desafio[] };
 
 type DesafioCardProps = {
   desafio: Desafio;
@@ -201,44 +202,73 @@ function DesafioCard({ desafio, onRevanche }: DesafioCardProps) {
 
 export function DesafiosScreen() {
   const { showToast } = useToastContext();
+  const router = useRouter();
+  const requisicao = useRef<AbortController | null>(null);
 
   const [estado, setEstado] = useState<Estado>({
     situacao: 'carregando',
   });
 
-  async function carregarDesafios() {
-    setEstado({ situacao: 'carregando' });
+  const carregarDesafios = useCallback(async () => {
+    requisicao.current?.abort();
+    const controller = new AbortController();
+    requisicao.current = controller;
+
+    setEstado((atual) =>
+      atual.situacao === 'sucesso' ||
+      (atual.situacao === 'erro' && atual.desafios !== undefined)
+        ? atual
+        : { situacao: 'carregando' }
+    );
 
     try {
-      const resposta = await listarDesafios();
+      const resposta = await listarDesafios(controller.signal);
+
+      if (controller.signal.aborted) return;
 
       setEstado({
         situacao: 'sucesso',
         desafios: resposta.desafios,
       });
     } catch (erro: unknown) {
-      setEstado({
+      if (controller.signal.aborted) return;
+
+      setEstado((atual) => ({
         situacao: 'erro',
+        desafios: atual.situacao === 'carregando' ? undefined : atual.desafios,
         mensagem:
           erro instanceof ApiError
             ? erro.message
             : erro instanceof Error
               ? erro.message
               : '',
-      });
+      }));
+    } finally {
+      if (requisicao.current === controller) {
+        requisicao.current = null;
+      }
     }
-  }
-
-  useEffect(() => {
-    carregarDesafios();
   }, []);
 
+  useFocusEffect(
+    useCallback(() => {
+      carregarDesafios();
+
+      return () => {
+        requisicao.current?.abort();
+        requisicao.current = null;
+      };
+    }, [carregarDesafios])
+  );
+
   function desafiarAmigo() {
-    // Navegação pertence ao fluxo de "Desafiar Amigo".
+    router.push('/desafiar-amigo');
   }
 
-  const listaVazia =
-    estado.situacao === 'sucesso' && estado.desafios.length === 0;
+  const desafios =
+    estado.situacao === 'carregando' ? undefined : estado.desafios;
+
+  const listaVazia = estado.situacao === 'sucesso' && desafios?.length === 0;
 
   return (
     <View className="flex-1 bg-surface">
@@ -298,14 +328,13 @@ export function DesafiosScreen() {
           />
         )}
 
-        {estado.situacao === 'sucesso' &&
-          estado.desafios.map((desafio) => (
-            <DesafioCard
-              key={desafio.id}
-              desafio={desafio}
-              onRevanche={showToast}
-            />
-          ))}
+        {desafios?.map((desafio) => (
+          <DesafioCard
+            key={desafio.id}
+            desafio={desafio}
+            onRevanche={showToast}
+          />
+        ))}
 
         <PrimaryButton
           label="Desafiar Amigo"

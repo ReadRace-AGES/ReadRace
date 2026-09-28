@@ -86,9 +86,24 @@ public class DesafioAmigo {
         this.descricao = descricao;
         this.tipoMeta = tipoMeta;
         this.metaValor = metaValor;
-        this.status = StatusDesafio.PENDENTE;
+        // Nasce ativo: não existe fluxo de aceite (decisão do gestor em 2026-09-18).
+        this.status = StatusDesafio.ATIVO;
         this.inicioEm = inicioEm;
         this.fimEm = fimEm;
+    }
+
+    public boolean estaEmAndamento(OffsetDateTime agora) {
+        return status == StatusDesafio.ATIVO && !agora.isBefore(inicioEm) && !agora.isAfter(fimEm);
+    }
+
+    public void finalizarSePrazoEncerrado(OffsetDateTime agora) {
+        if (status == StatusDesafio.ATIVO && agora.isAfter(fimEm)) {
+            finalizar();
+        }
+    }
+
+    public void finalizar() {
+        this.status = StatusDesafio.FINALIZADO;
     }
 
     @Override

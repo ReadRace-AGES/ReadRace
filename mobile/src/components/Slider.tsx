@@ -35,7 +35,9 @@ export function Slider({
     maximumValue <= minimumValue ||
     !Number.isFinite(value)
   ) {
-    throw new Error('Slider exige limites inteiros, máximo maior que mínimo e valor finito.');
+    throw new Error(
+      'Slider exige limites inteiros, máximo maior que mínimo e valor finito.'
+    );
   }
 
   const selected = clampSliderValue(value, minimumValue, maximumValue);
@@ -77,30 +79,41 @@ export function Slider({
         accessible
         accessibilityRole="adjustable"
         accessibilityLabel={accessibilityLabel}
-        accessibilityValue={{ min: minimumValue, max: maximumValue, now: selected }}
+        accessibilityValue={{
+          min: minimumValue,
+          max: maximumValue,
+          now: selected,
+        }}
         accessibilityActions={[{ name: 'increment' }, { name: 'decrement' }]}
         onAccessibilityAction={({ nativeEvent }) => {
-          if (!['increment', 'decrement'].includes(nativeEvent.actionName)) return;
+          if (!['increment', 'decrement'].includes(nativeEvent.actionName))
+            return;
           const direction = nativeEvent.actionName === 'increment' ? 1 : -1;
           lastNotified.current = null;
-          notify(clampSliderValue(selected + direction, minimumValue, maximumValue));
+          notify(
+            clampSliderValue(selected + direction, minimumValue, maximumValue)
+          );
         }}
         className="h-button-height justify-center"
         onLayout={({ nativeEvent }) => setWidth(nativeEvent.layout.width)}
         onStartShouldSetResponder={() => travel > 0}
         onMoveShouldSetResponder={() => travel > 0}
         onResponderGrant={(event) => {
-          origin.current = event.nativeEvent.pageX - event.nativeEvent.locationX;
+          origin.current =
+            event.nativeEvent.pageX - event.nativeEvent.locationX;
           lastNotified.current = null;
           updateFromTouch(event);
         }}
         onResponderMove={updateFromTouch}
         onResponderRelease={updateFromTouch}
-        onResponderTerminationRequest={() => false}
+        onResponderTerminationRequest={() => true}
       >
         <View pointerEvents="none" style={{ marginHorizontal: thumbSize / 2 }}>
           <View className="h-progress-track-height overflow-hidden rounded-pill bg-progress-track">
-            <View className="h-full rounded-pill bg-primary" style={{ width: `${fraction * 100}%` }} />
+            <View
+              className="h-full rounded-pill bg-primary"
+              style={{ width: `${fraction * 100}%` }}
+            />
           </View>
         </View>
         <View
@@ -114,8 +127,12 @@ export function Slider({
         accessibilityElementsHidden
         importantForAccessibility="no-hide-descendants"
       >
-        <Text className="font-inter text-bodySmall text-text-secondary">{minimumLabel}</Text>
-        <Text className="font-inter text-bodySmall text-text-secondary">{maximumLabel}</Text>
+        <Text className="font-inter text-bodySmall text-text-secondary">
+          {minimumLabel}
+        </Text>
+        <Text className="font-inter text-bodySmall text-text-secondary">
+          {maximumLabel}
+        </Text>
       </View>
     </View>
   );

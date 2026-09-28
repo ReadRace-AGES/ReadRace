@@ -6,8 +6,11 @@ import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
+import jakarta.persistence.LockModeType;
+
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Lock;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
@@ -94,4 +97,21 @@ public interface DesafioAmigoRepository extends JpaRepository<DesafioAmigo, UUID
             @Param("desafioId") UUID desafioId,
             @Param("usuarioId") UUID usuarioId,
             @Param("statusExcluido") StatusDesafio statusExcluido);
+
+    // Lock em ordem de id: serializa registros simultâneos dos dois participantes sem deadlock, e
+    // quem espera o lock relê o status e deixa de fora o desafio que o outro acabou de finalizar.
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
+    @Query(
+            """
+            SELECT desafio
+            FROM DesafioAmigo desafio
+            WHERE (
+                desafio.criador.id = :usuarioId
+                OR desafio.oponente.id = :usuarioId
+            )
+              AND desafio.status = :status
+            ORDER BY desafio.id
+            """)
+    List<DesafioAmigo> buscarDoUsuarioComLock(
+            @Param("usuarioId") UUID usuarioId, @Param("status") StatusDesafio status);
 }

@@ -76,6 +76,7 @@ public class DesafioService {
         this.usuarioAtual = usuarioAtual;
     }
 
+    @Transactional
     public DesafiosResponse listar(int limit, String cursor) {
         validarLimit(limit);
 
@@ -108,8 +109,11 @@ public class DesafioService {
         }
 
         List<UUID> desafioIds = new ArrayList<>();
+        OffsetDateTime agora = OffsetDateTime.now(ZoneOffset.UTC);
 
         for (DesafioAmigo desafio : desafios) {
+            // Não há agendador: o desafio que passou do prazo é finalizado quando é observado.
+            desafio.finalizarSePrazoEncerrado(agora);
             desafioIds.add(desafio.getId());
         }
 
@@ -134,6 +138,7 @@ public class DesafioService {
         return new DesafiosResponse(respostas, nextCursor);
     }
 
+    @Transactional
     public DesafioResponse buscar(UUID desafioId) {
         UUID usuarioId = usuarioAtual.idDoUsuarioAtual().valor();
 
@@ -141,6 +146,8 @@ public class DesafioService {
                 desafioRepository
                         .buscarPorIdEUsuario(desafioId, usuarioId, StatusDesafio.RECUSADO)
                         .orElseThrow(DesafioNaoEncontradoException::new);
+
+        desafio.finalizarSePrazoEncerrado(OffsetDateTime.now(ZoneOffset.UTC));
 
         List<ProgressoDesafio> progressos =
                 progressoRepository.buscarPorDesafios(List.of(desafioId));
@@ -219,6 +226,69 @@ public class DesafioService {
         progressoRepository.saveAll(progressos);
 
         return paraResponse(desafio, usuarioId, progressos);
+    }
+
+    @Transactional
+    public void avancarDesafios(
+            UUID usuarioId, Livro livro, int paginasNovas, boolean concluiuLivro) {
+        List<DesafioAmigo> desafios =
+                desafioRepository.buscarDoUsuarioComLock(usuarioId, StatusDesafio.ATIVO);
+
+        if (desafios.isEmpty()) {
+            return;
+        }
+
+        List<UUID> desafioIds = new ArrayList<>();
+
+        for (DesafioAmigo desafio : desafios) {
+            desafioIds.add(desafio.getId());
+        }
+
+        Map<UUID, List<ProgressoDesafio>> progressosPorDesafio =
+                agruparProgressos(progressoRepository.buscarPorDesafios(desafioIds));
+        OffsetDateTime agora = OffsetDateTime.now(ZoneOffset.UTC);
+
+        for (DesafioAmigo desafio : desafios) {
+            desafio.finalizarSePrazoEncerrado(agora);
+
+            if (desafio.estaEmAndamento(agora)) {
+                ProgressoDesafio progresso =
+                        progressoDoUsuario(
+                                progressosPorDesafio.getOrDefault(desafio.getId(), List.of()),
+                                usuarioId);
+
+                avancar(desafio, progresso, livro, paginasNovas, concluiuLivro);
+            }
+        }
+    }
+
+    private void avancar(
+            DesafioAmigo desafio,
+            ProgressoDesafio progresso,
+            Livro livro,
+            int paginasNovas,
+            boolean concluiuLivro) {
+        if (desafio.getTipoMeta() == TipoMetaDesafio.PAGINAS) {
+            progresso.avancar(paginasNovas);
+
+            if (progresso.getValorAtual() >= desafio.getMetaValor()) {
+                desafio.finalizar();
+            }
+
+            return;
+        }
+
+        // No tipo livro a meta é concluir o livro: metaValor é sempre 1 e não serve de comparação.
+        if (!desafio.getLivro().getId().equals(livro.getId())) {
+            return;
+        }
+
+        if (concluiuLivro) {
+            progresso.concluirLivro(livro.getTotalPaginas());
+            desafio.finalizar();
+        } else {
+            progresso.avancar(paginasNovas);
+        }
     }
 
     private void validarPrazo(Integer prazoDias) {
@@ -358,9 +428,13 @@ public class DesafioService {
     }
 
     private int encontrarProgresso(List<ProgressoDesafio> progressos, UUID usuarioId) {
+        return progressoDoUsuario(progressos, usuarioId).getValorAtual();
+    }
+
+    private ProgressoDesafio progressoDoUsuario(List<ProgressoDesafio> progressos, UUID usuarioId) {
         for (ProgressoDesafio progresso : progressos) {
             if (progresso.getUsuario().getId().equals(usuarioId)) {
-                return progresso.getValorAtual();
+                return progresso;
             }
         }
 
@@ -399,8 +473,7 @@ public class DesafioService {
 
     private String resolverResultado(int progressoUsuario, int progressoOponente) {
         if (progressoUsuario == progressoOponente) {
-            throw new IllegalStateException(
-                    "Não existe regra de resultado para desafios empatados.");
+            return "concluido_empate";
         }
 
         return progressoUsuario > progressoOponente ? "concluido_ganho" : "concluido_perdido";

@@ -3,6 +3,7 @@ import {
   Pressable,
   StyleSheet,
   View,
+  type AccessibilityState,
   type StyleProp,
   type ViewStyle,
 } from 'react-native';
@@ -13,6 +14,7 @@ export type CardProps = {
   children?: ReactNode;
   onPress?: () => void;
   accessibilityLabel?: string;
+  accessibilityState?: AccessibilityState;
   /** Layout externo, como margem e largura. O espaçamento interno vem do tema. */
   style?: StyleProp<ViewStyle>;
   /** Estilo da superfície interna, preservando o recorte e a sombra externa. */
@@ -38,6 +40,7 @@ export function Card({
   children,
   onPress,
   accessibilityLabel,
+  accessibilityState,
   style,
   surfaceStyle,
   testID,
@@ -51,6 +54,7 @@ export function Card({
         <Pressable
           accessibilityRole="button"
           accessibilityLabel={accessibilityLabel}
+          accessibilityState={accessibilityState}
           onPress={onPress}
           style={({ pressed }) => [
             styles.surface,

@@ -88,7 +88,7 @@ class DesafioControllerIT {
                 .hasStatus(HttpStatus.CREATED)
                 .bodyJson()
                 .extractingPath("$.status")
-                .isEqualTo("pendente");
+                .isEqualTo("em_andamento");
 
         assertThat(desafioRepository.count()).isEqualTo(quantidadeDesafiosAntes + 1);
         assertThat(progressoRepository.count()).isEqualTo(quantidadeProgressosAntes + 2);
@@ -326,7 +326,7 @@ class DesafioControllerIT {
                 .bodyJson()
                 .extractingPath("$.livro.capaUrl")
                 .isEqualTo("https://covers.openlibrary.org/b/isbn/9780805209990-L.jpg");
-        assertThat(resultado).bodyJson().extractingPath("$.status").isEqualTo("pendente");
+        assertThat(resultado).bodyJson().extractingPath("$.status").isEqualTo("em_andamento");
         assertThat(resultado).bodyJson().extractingPath("$.progresso.voce").isEqualTo(0);
         assertThat(resultado).bodyJson().extractingPath("$.progresso.oponente").isEqualTo(0);
         assertThat(resultado).bodyJson().extractingPath("$").asMap().doesNotContainKey("meta");

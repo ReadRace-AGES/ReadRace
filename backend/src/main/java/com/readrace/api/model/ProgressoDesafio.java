@@ -1,5 +1,6 @@
 package com.readrace.api.model;
 
+import java.time.OffsetDateTime;
 import java.util.UUID;
 
 import jakarta.persistence.Column;
@@ -37,10 +38,30 @@ public class ProgressoDesafio {
     @Column(name = "valor_atual", nullable = false)
     private Integer valorAtual;
 
+    @Column(name = "atualizado_em", nullable = false)
+    private OffsetDateTime atualizadoEm;
+
     public ProgressoDesafio(DesafioAmigo desafio, Usuario usuario) {
         this.desafio = desafio;
         this.usuario = usuario;
         this.valorAtual = 0;
+        this.atualizadoEm = OffsetDateTime.now();
+    }
+
+    public void avancar(int paginas) {
+        if (paginas <= 0) {
+            return;
+        }
+
+        valorAtual += paginas;
+        atualizadoEm = OffsetDateTime.now();
+    }
+
+    // Concluir vale o livro inteiro, e não só as páginas novas: como o resultado sai da comparação
+    // dos placares, quem terminou primeiro fica na frente mesmo tendo começado antes do desafio.
+    public void concluirLivro(int totalPaginas) {
+        valorAtual = totalPaginas;
+        atualizadoEm = OffsetDateTime.now();
     }
 
     @Override
