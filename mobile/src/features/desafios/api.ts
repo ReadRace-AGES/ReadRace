@@ -2,7 +2,7 @@ import { apiRequest } from '@/api/client';
 
 export type DesafioStatus =
   | 'pendente'
-  | 'ativo'
+  | 'em_andamento'
   | 'concluido_ganho'
   | 'concluido_perdido'
   | 'concluido_empate';

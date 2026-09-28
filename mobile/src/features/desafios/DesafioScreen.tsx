@@ -1,11 +1,6 @@
 import { useEffect, useState } from 'react';
 
-import {
-  ActivityIndicator,
-  ScrollView,
-  Text,
-  View,
-} from 'react-native';
+import { ActivityIndicator, ScrollView, Text, View } from 'react-native';
 
 import { ApiError } from '@/api/client';
 import { AppHeader } from '@/components/AppHeader';
@@ -40,14 +35,10 @@ function desafioFinalizado(desafio: Desafio) {
   );
 }
 
-function DesafioCard({
-  desafio,
-  onRevanche,
-}: DesafioCardProps) {
+function DesafioCard({ desafio, onRevanche }: DesafioCardProps) {
   const finalizado = desafioFinalizado(desafio);
 
-  const voceEstaNaFrente =
-    desafio.progresso.voce > desafio.progresso.oponente;
+  const voceEstaNaFrente = desafio.progresso.voce > desafio.progresso.oponente;
 
   const oponenteEstaNaFrente =
     desafio.progresso.oponente > desafio.progresso.voce;
@@ -63,12 +54,7 @@ function DesafioCard({
   function renderizarPilha() {
     if (!finalizado) {
       return (
-        <Text
-          style={[
-            textStyles.micro,
-            { color: colors.text },
-          ]}
-        >
+        <Text style={[textStyles.micro, { color: colors.text }]}>
           {desafio.diasRestantes} dias
         </Text>
       );
@@ -77,17 +63,9 @@ function DesafioCard({
     if (desafio.status === 'concluido_ganho') {
       return (
         <View className="flex-row items-center" style={{ gap: spacing[1] }}>
-          <TrophyIcon
-            size={sizes.iconSmall}
-            color={colors.primary}
-          />
+          <TrophyIcon size={sizes.iconSmall} color={colors.success} />
 
-          <Text
-            style={[
-              textStyles.micro,
-              { color: colors.primary },
-            ]}
-          >
+          <Text style={[textStyles.micro, { color: colors.success }]}>
             Vitória
           </Text>
         </View>
@@ -97,17 +75,9 @@ function DesafioCard({
     if (desafio.status === 'concluido_perdido') {
       return (
         <View className="flex-row items-center" style={{ gap: spacing[1] }}>
-          <SadFaceIcon
-            size={sizes.iconSmall}
-            color={colors.textSecondary}
-          />
+          <SadFaceIcon size={sizes.iconSmall} color={colors.danger} />
 
-          <Text
-            style={[
-              textStyles.micro,
-              { color: colors.textSecondary },
-            ]}
-          >
+          <Text style={[textStyles.micro, { color: colors.danger }]}>
             Derrota
           </Text>
         </View>
@@ -116,6 +86,18 @@ function DesafioCard({
 
     // A task determina que o Figma não possui copy para empate.
     return null;
+  }
+
+  function corBordaPilha() {
+    if (desafio.status === 'concluido_ganho') {
+      return colors.success;
+    }
+
+    if (desafio.status === 'concluido_perdido') {
+      return colors.danger;
+    }
+
+    return colors.borderStrong;
   }
 
   return (
@@ -127,26 +109,17 @@ function DesafioCard({
             photoUrl={desafio.oponente.avatarUrl}
           />
 
-          <View
-            className="min-w-0 flex-1"
-            style={{ marginLeft: spacing[3] }}
-          >
+          <View className="min-w-0 flex-1" style={{ marginLeft: spacing[3] }}>
             <Text
               numberOfLines={1}
-              style={[
-                textStyles.bodyStrong,
-                { color: colors.text },
-              ]}
+              style={[textStyles.bodyStrong, { color: colors.text }]}
             >
               {desafio.oponente.username}
             </Text>
 
             <Text
               numberOfLines={2}
-              style={[
-                textStyles.caption,
-                { color: colors.textSecondary },
-              ]}
+              style={[textStyles.caption, { color: colors.textSecondary }]}
             >
               {desafio.descricao}
             </Text>
@@ -156,7 +129,7 @@ function DesafioCard({
             <View
               style={{
                 borderWidth: 1,
-                borderColor: colors.borderStrong,
+                borderColor: corBordaPilha(),
                 borderRadius: 9999,
                 paddingHorizontal: spacing[2],
                 paddingVertical: spacing[1],
@@ -180,21 +153,14 @@ function DesafioCard({
               style={[
                 textStyles.h2,
                 {
-                  color: destacarVoce
-                    ? colors.primary
-                    : colors.text,
+                  color: destacarVoce ? colors.primary : colors.text,
                 },
               ]}
             >
               {desafio.progresso.voce}
             </Text>
 
-            <Text
-              style={[
-                textStyles.caption,
-                { color: colors.textSecondary },
-              ]}
-            >
+            <Text style={[textStyles.caption, { color: colors.textSecondary }]}>
               Você
             </Text>
           </View>
@@ -204,9 +170,7 @@ function DesafioCard({
               style={[
                 textStyles.h2,
                 {
-                  color: destacarOponente
-                    ? colors.primary
-                    : colors.text,
+                  color: destacarOponente ? colors.primary : colors.text,
                 },
               ]}
             >
@@ -215,10 +179,7 @@ function DesafioCard({
 
             <Text
               numberOfLines={1}
-              style={[
-                textStyles.caption,
-                { color: colors.textSecondary },
-              ]}
+              style={[textStyles.caption, { color: colors.textSecondary }]}
             >
               {desafio.oponente.username}
             </Text>
@@ -277,8 +238,7 @@ export function DesafiosScreen() {
   }
 
   const listaVazia =
-    estado.situacao === 'sucesso' &&
-    estado.desafios.length === 0;
+    estado.situacao === 'sucesso' && estado.desafios.length === 0;
 
   return (
     <View className="flex-1 bg-surface">
@@ -294,12 +254,7 @@ export function DesafiosScreen() {
           gap: spacing[4],
         }}
       >
-        <Text
-          style={[
-            textStyles.h3,
-            { color: colors.text },
-          ]}
-        >
+        <Text style={[textStyles.h3, { color: colors.text }]}>
           Desafio com amigos
         </Text>
 

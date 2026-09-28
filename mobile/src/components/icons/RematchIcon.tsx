@@ -5,17 +5,9 @@ type RematchIconProps = {
   color: string;
 };
 
-export function RematchIcon({
-  size,
-  color,
-}: RematchIconProps) {
+export function RematchIcon({ size, color }: RematchIconProps) {
   return (
-    <Svg
-      width={size}
-      height={size}
-      viewBox="0 0 24 24"
-      fill="none"
-    >
+    <Svg width={size} height={size} viewBox="0 0 24 24" fill="none">
       <Path
         d="M20 6v5h-5M4 18v-5h5"
         stroke={color}
