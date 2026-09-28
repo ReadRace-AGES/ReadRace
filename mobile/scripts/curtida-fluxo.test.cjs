@@ -124,7 +124,10 @@ test('LivroDetalheScreen: curtir é otimista, ignora toque duplo em andamento, r
   let renderer;
   await act(async () => {
     renderer = create(
-      React.createElement(LivroDetalheScreen, { livroId: '1' })
+      React.createElement(LivroDetalheScreen, {
+        livroId: '1',
+        origem: '/meus-livros',
+      })
     );
   });
   try {
