@@ -1,5 +1,5 @@
-import { TabPlaceholder } from '@/components/TabPlaceholder';
+import { DesafiosScreen } from '@/features/desafios/DesafioScreen';
 
-export default function DesafiosScreen() {
-  return <TabPlaceholder title="Desafios" />;
+export default function DesafiosRoute() {
+  return <DesafiosScreen />;
 }

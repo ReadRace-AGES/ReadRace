@@ -26,16 +26,19 @@ public class RegistrarProgressoService {
     private final ItemBibliotecaRepository itemBibliotecaRepository;
     private final RegistroLeituraRepository registroLeituraRepository;
     private final UsuarioAtualDeSeed usuarioAtual;
+    private final DesafioService desafioService;
 
     public RegistrarProgressoService(
             LivroRepository livroRepository,
             ItemBibliotecaRepository itemBibliotecaRepository,
             RegistroLeituraRepository registroLeituraRepository,
-            UsuarioAtualDeSeed usuarioAtual) {
+            UsuarioAtualDeSeed usuarioAtual,
+            DesafioService desafioService) {
         this.livroRepository = livroRepository;
         this.itemBibliotecaRepository = itemBibliotecaRepository;
         this.registroLeituraRepository = registroLeituraRepository;
         this.usuarioAtual = usuarioAtual;
+        this.desafioService = desafioService;
     }
 
     @Transactional
@@ -57,13 +60,17 @@ public class RegistrarProgressoService {
 
         int paginaMaximaAnterior = item.getPaginaMaxima();
         boolean concluidoAntes = paginaMaximaAnterior >= livro.getTotalPaginas();
-        int xpPaginas = Math.max(0, pagina - paginaMaximaAnterior);
+        int paginasNovas = Math.max(0, pagina - paginaMaximaAnterior);
+        int xpPaginas = paginasNovas;
 
         item.registrarProgresso(pagina);
         registroLeituraRepository.save(new RegistroLeitura(item, pagina));
 
-        int xpConclusao = !concluidoAntes && item.estaConcluido() ? XP_CONCLUSAO : 0;
+        boolean concluiuAgora = !concluidoAntes && item.estaConcluido();
+        int xpConclusao = concluiuAgora ? XP_CONCLUSAO : 0;
         int percentual = Math.round((pagina * 100f) / livro.getTotalPaginas());
+
+        desafioService.avancarDesafios(usuarioAtualId.valor(), livro, paginasNovas, concluiuAgora);
 
         return new ProgressoLeituraResponse(
                 item.getPaginaAtual(),
