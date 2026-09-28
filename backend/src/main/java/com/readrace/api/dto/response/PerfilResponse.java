@@ -12,6 +12,8 @@ public record PerfilResponse(
         String titulo,
         int nivel,
         int xpAtual,
+        int xpNoNivel,
+        int xpDoNivel,
         long seguidores,
         long seguindo,
         Estatisticas estatisticas,

@@ -7,6 +7,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.readrace.api.dto.response.PerfilResponse;
 import com.readrace.api.exception.UsuarioNaoEncontradoException;
+import com.readrace.api.model.CurvaDeNivel;
 import com.readrace.api.repository.PerfilRepository;
 import com.readrace.api.repository.UsuarioRepository;
 
@@ -15,10 +16,17 @@ import com.readrace.api.repository.UsuarioRepository;
 public class PerfilService {
     private final UsuarioRepository usuarios;
     private final PerfilRepository perfis;
+    private final UsuarioAtualDeSeed usuarioAtual;
 
-    public PerfilService(UsuarioRepository usuarios, PerfilRepository perfis) {
+    public PerfilService(
+            UsuarioRepository usuarios, PerfilRepository perfis, UsuarioAtualDeSeed usuarioAtual) {
         this.usuarios = usuarios;
         this.perfis = perfis;
+        this.usuarioAtual = usuarioAtual;
+    }
+
+    public PerfilResponse buscarDoUsuarioAtual() {
+        return buscar(usuarioAtual.idDoUsuarioAtual().valor());
     }
 
     public PerfilResponse buscar(UUID id) {
@@ -27,14 +35,18 @@ public class PerfilService {
                         .orElseThrow(UsuarioNaoEncontradoException::new);
         var resumo = perfis.resumo(id);
         var conquistas = perfis.conquistas(id);
+        int nivel = usuario.getNivel();
+        int xpTotal = usuario.getXpTotal();
         return new PerfilResponse(
                 usuario.getId(),
                 usuario.getNome(),
                 usuario.getNomeUsuario(),
                 usuario.getAvatarUrl(),
                 usuario.getTitulo(),
-                usuario.getNivel(),
-                usuario.getXpTotal(),
+                nivel,
+                xpTotal,
+                CurvaDeNivel.xpNoNivel(xpTotal, nivel),
+                CurvaDeNivel.xpDoNivel(nivel),
                 resumo.seguidores(),
                 resumo.seguindo(),
                 new PerfilResponse.Estatisticas(
