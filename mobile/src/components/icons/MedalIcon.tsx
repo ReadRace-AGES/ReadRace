@@ -1,35 +1,27 @@
-import Svg, { Circle, Path } from 'react-native-svg';
+import Svg, { Path } from 'react-native-svg';
 
 import { colors, sizes } from '@/theme';
 
 export type MedalIconProps = {
   size?: number;
   color?: string;
-  strokeWidth?: number;
 };
 
-/** Medalha de traço fino, ao lado do título "Conquistas Desbloqueadas". */
+const GLIFO = { x: 280, y: -880, largura: 400, altura: 800 };
+const MEDALHA_PATH =
+  'M280-880h400v314q0 23-10 41t-28 29l-142 84 28 92h152l-124 88 48 152-124-94-124 94 48-152-124-88h152l28-92-142-84q-18-11-28-29t-10-41v-314Zm160 80v282l40 24 40-24v-282h-80Z';
+
 export function MedalIcon({
   size = sizes.icon,
   color = colors.primary,
-  strokeWidth = 2,
 }: MedalIconProps) {
   return (
-    <Svg width={size} height={size} viewBox="0 0 24 24" fill="none">
-      <Path
-        d="M7.5 2.5h3l2 5M16.5 2.5h-3l-1 2.5"
-        stroke={color}
-        strokeWidth={strokeWidth}
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-      <Circle cx={12} cy={14.5} r={6} stroke={color} strokeWidth={strokeWidth} />
-      <Path
-        d="M12 12v5"
-        stroke={color}
-        strokeWidth={strokeWidth}
-        strokeLinecap="round"
-      />
+    <Svg
+      width={(size * GLIFO.largura) / 960}
+      height={(size * GLIFO.altura) / 960}
+      viewBox={`${GLIFO.x} ${GLIFO.y} ${GLIFO.largura} ${GLIFO.altura}`}
+    >
+      <Path d={MEDALHA_PATH} fill={color} />
     </Svg>
   );
 }

@@ -1,36 +1,27 @@
-import Svg, { Path, Rect } from 'react-native-svg';
+import Svg, { Path } from 'react-native-svg';
 
 import { colors, sizes } from '@/theme';
 
 export type LockIconProps = {
   size?: number;
   color?: string;
-  strokeWidth?: number;
 };
 
-/** Cadeado de traço fino, ao lado do título "Próximas Conquistas". */
+const GLIFO = { x: 160, y: -920, largura: 640, altura: 840 };
+const CADEADO_PATH =
+  'M240-80q-33 0-56.5-23.5T160-160v-400q0-33 23.5-56.5T240-640h40v-80q0-83 58.5-141.5T480-920q83 0 141.5 58.5T680-720v80h40q33 0 56.5 23.5T800-560v400q0 33-23.5 56.5T720-80H240Zm0-80h480v-400H240v400Zm296.5-143.5Q560-327 560-360t-23.5-56.5Q513-440 480-440t-56.5 23.5Q400-393 400-360t23.5 56.5Q447-280 480-280t56.5-23.5ZM360-640h240v-80q0-50-35-85t-85-35q-50 0-85 35t-35 85v80ZM240-160v-400 400Z';
+
 export function LockIcon({
   size = sizes.icon,
   color = colors.primary,
-  strokeWidth = 2,
 }: LockIconProps) {
   return (
-    <Svg width={size} height={size} viewBox="0 0 24 24" fill="none">
-      <Rect
-        x={4.5}
-        y={10.5}
-        width={15}
-        height={10}
-        rx={2}
-        stroke={color}
-        strokeWidth={strokeWidth}
-      />
-      <Path
-        d="M8 10.5V7a4 4 0 0 1 8 0v3.5"
-        stroke={color}
-        strokeWidth={strokeWidth}
-        strokeLinecap="round"
-      />
+    <Svg
+      width={(size * GLIFO.largura) / 960}
+      height={(size * GLIFO.altura) / 960}
+      viewBox={`${GLIFO.x} ${GLIFO.y} ${GLIFO.largura} ${GLIFO.altura}`}
+    >
+      <Path d={CADEADO_PATH} fill={color} />
     </Svg>
   );
 }

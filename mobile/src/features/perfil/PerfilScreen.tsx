@@ -30,7 +30,6 @@ export function PerfilConteudo({
 }: {
   perfil: Perfil;
   onPlaceholder: () => void;
-  /** Só o próprio perfil abre "Minhas Conquistas"; no de outro usuário segue o aviso. */
   onVerMaisConquistas?: () => void;
 }) {
   const stats = perfil.estatisticas;

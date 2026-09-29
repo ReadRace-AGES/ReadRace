@@ -1,18 +1,33 @@
 import { useRouter } from 'expo-router';
 import type { ComponentType } from 'react';
-import { ActivityIndicator, ScrollView, StyleSheet, Text, View } from 'react-native';
+import {
+  ActivityIndicator,
+  ScrollView,
+  StyleSheet,
+  Text,
+  View,
+} from 'react-native';
 import { AppHeader } from '@/components/AppHeader';
-import { Card } from '@/components/Card';
 import { EmptyState } from '@/components/EmptyState';
 import { BookIcon } from '@/components/icons/BookIcon';
 import { LockIcon } from '@/components/icons/LockIcon';
 import { MedalIcon } from '@/components/icons/MedalIcon';
 import { PrimaryButton } from '@/components/PrimaryButton';
-import { colors, radius, sizes, spacing, textStyles } from '@/theme';
+import {
+  colors,
+  radius,
+  shadows,
+  sizes,
+  spacing,
+  textStyles,
+  typography,
+} from '@/theme';
 import type { Conquista } from './api';
 import { IconeConquista } from './IconeConquista';
 import { formatarData, separarConquistas } from './model';
 import { useMinhasConquistas } from './useMinhasConquistas';
+
+const TAMANHO_ICONE = spacing[10] + spacing[6];
 
 function CardConquista({ conquista }: { conquista: Conquista }) {
   const bloqueada = !conquista.desbloqueada;
@@ -30,18 +45,19 @@ function CardConquista({ conquista }: { conquista: Conquista }) {
         .filter(Boolean)
         .join('. ')}
     >
-      <Card surfaceStyle={[styles.card, bloqueada && styles.locked]}>
-        <View style={[styles.icon, bloqueada && styles.lockedIcon]}>
+      <View style={[styles.card, !bloqueada && styles.cardEarned]}>
+        <View style={[styles.icon, bloqueada && styles.iconLocked]}>
           <IconeConquista
             key={conquista.icone}
             uri={conquista.icone}
             bloqueada={bloqueada}
+            size={TAMANHO_ICONE}
           />
         </View>
         <View style={styles.copy}>
           <Text
             numberOfLines={1}
-            style={[styles.name, bloqueada && styles.muted]}
+            style={[styles.name, bloqueada && styles.nameLocked]}
           >
             {conquista.nome}
           </Text>
@@ -53,13 +69,13 @@ function CardConquista({ conquista }: { conquista: Conquista }) {
           {linha ? (
             <Text
               numberOfLines={2}
-              style={[styles.detail, bloqueada && styles.muted]}
+              style={bloqueada ? styles.description : styles.date}
             >
               {linha}
             </Text>
           ) : null}
         </View>
-      </Card>
+      </View>
     </View>
   );
 }
@@ -68,23 +84,31 @@ function Secao({
   titulo,
   icone: Icone,
   conquistas,
+  bloqueadas = false,
 }: {
   titulo: string;
   icone: ComponentType<{ size?: number; color?: string }>;
   conquistas: Conquista[];
+  bloqueadas?: boolean;
 }) {
   if (conquistas.length === 0) return null;
+  const cor = bloqueadas ? colors.textSecondary : colors.primarySoft;
   return (
     <View style={styles.section}>
       <View style={styles.sectionHeader}>
-        <Icone size={sizes.icon} color={colors.primary} />
-        <Text accessibilityRole="header" style={styles.heading}>
+        <Icone size={sizes.icon} color={cor} />
+        <Text
+          accessibilityRole="header"
+          style={[styles.heading, bloqueadas && styles.headingLocked]}
+        >
           {titulo}
         </Text>
       </View>
-      {conquistas.map((conquista) => (
-        <CardConquista key={conquista.id} conquista={conquista} />
-      ))}
+      <View style={[styles.cards, bloqueadas && styles.cardsLocked]}>
+        {conquistas.map((conquista) => (
+          <CardConquista key={conquista.id} conquista={conquista} />
+        ))}
+      </View>
     </View>
   );
 }
@@ -96,14 +120,18 @@ export function MinhasConquistasScreen() {
     estado.situacao === 'sucesso' ? separarConquistas(estado.dados) : null;
   return (
     <ScrollView style={styles.screen} contentContainerStyle={styles.scroll}>
-      <AppHeader
-        title="Minhas Conquistas"
-        subtitle="Visualize seu progresso e medalhas"
-        showBack
-        onBackPress={() =>
-          router.canGoBack() ? router.back() : router.replace('/perfil')
-        }
-      />
+      <View style={styles.header}>
+        <AppHeader
+          compact
+          titleAlign="center"
+          title="Minhas Conquistas"
+          subtitle="Visualize seu progresso e medalhas"
+          showBack
+          onBackPress={() =>
+            router.canGoBack() ? router.back() : router.replace('/perfil')
+          }
+        />
+      </View>
       {estado.situacao === 'carregando' && (
         <ActivityIndicator
           style={styles.content}
@@ -131,6 +159,7 @@ export function MinhasConquistasScreen() {
             titulo="Próximas Conquistas"
             icone={LockIcon}
             conquistas={secoes.proximas}
+            bloqueadas
           />
         </View>
       )}
@@ -141,28 +170,62 @@ export function MinhasConquistasScreen() {
 const styles = StyleSheet.create({
   screen: { flex: 1, backgroundColor: colors.surface },
   scroll: { flexGrow: 1, paddingBottom: sizes.navHeight + spacing[6] },
-  content: { padding: spacing[4], gap: spacing[6] },
-  section: { gap: spacing[3] },
-  sectionHeader: { flexDirection: 'row', alignItems: 'center', gap: spacing[2] },
-  heading: { ...textStyles.h3, color: colors.text },
+  header: {
+    borderBottomLeftRadius: radius.xl,
+    borderBottomRightRadius: radius.xl,
+    overflow: 'hidden',
+  },
+  content: {
+    paddingTop: spacing[6],
+    paddingHorizontal: spacing[5],
+    gap: spacing[10],
+  },
+  section: { gap: spacing[4] },
+  sectionHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing[2],
+  },
+  heading: {
+    ...textStyles.h2,
+    fontFamily: typography.fontFamily.semibold,
+    color: colors.text,
+  },
+  headingLocked: { color: colors.textSecondary },
+  cards: { gap: spacing[4] },
+  cardsLocked: { opacity: 0.7 },
   card: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: spacing[3],
-    backgroundColor: colors.surface,
+    gap: spacing[4],
+    padding: spacing[4],
+    borderRadius: radius.md,
     borderWidth: sizes.borderWidth,
-    borderColor: colors.border,
-  },
-  icon: {
-    padding: spacing[3],
-    borderRadius: radius.pill,
+    borderColor: colors.surfacePinkStrong,
     backgroundColor: colors.surfacePink,
   },
+  cardEarned: shadows.input,
+  icon: {
+    width: TAMANHO_ICONE,
+    height: TAMANHO_ICONE,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderRadius: radius.sm,
+    backgroundColor: colors.surfacePinkStrong,
+    overflow: 'hidden',
+  },
+  iconLocked: { backgroundColor: colors.surfaceAlt },
   copy: { flex: 1, minWidth: 0, gap: spacing[1] },
-  name: { ...textStyles.bodyStrong, color: colors.text },
-  description: { ...textStyles.bodySmall, color: colors.text },
-  detail: { ...textStyles.caption, color: colors.textSecondary },
-  locked: { backgroundColor: colors.surfaceDisabled },
-  lockedIcon: { backgroundColor: colors.surfaceAlt },
-  muted: { color: colors.textMuted },
+  name: {
+    ...textStyles.bodySmall,
+    fontFamily: typography.fontFamily.semibold,
+    color: colors.primary,
+  },
+  nameLocked: { color: colors.text },
+  description: { ...textStyles.bodySmall, color: colors.textSecondary },
+  date: {
+    ...textStyles.caption,
+    paddingTop: spacing[1],
+    color: colors.primarySoft,
+  },
 });
