@@ -185,15 +185,16 @@ export function PerfilConteudo({
   );
 }
 
-export function PerfilScreen({ usuarioId }: { usuarioId: string }) {
+export function PerfilScreen({ usuarioId }: { usuarioId?: string }) {
   const { estado, recarregar } = usePerfil(usuarioId);
   const router = useRouter();
   const { showToast } = useToastContext();
+  const proprio = usuarioId === undefined;
   return (
     <ScrollView style={styles.screen} contentContainerStyle={styles.scroll}>
       <AppHeader
         title="Perfil"
-        showBack
+        showBack={!proprio}
         onBackPress={() =>
           router.canGoBack() ? router.back() : router.replace('/buscar')
         }
@@ -215,7 +216,13 @@ export function PerfilScreen({ usuarioId }: { usuarioId: string }) {
         />
       )}
       {estado.situacao === 'sucesso' && (
-        <PerfilConteudo perfil={estado.dados} onPlaceholder={showToast} />
+        <PerfilConteudo
+          perfil={estado.dados}
+          onPlaceholder={showToast}
+          onVerMaisConquistas={
+            proprio ? () => router.push('/conquistas') : undefined
+          }
+        />
       )}
     </ScrollView>
   );

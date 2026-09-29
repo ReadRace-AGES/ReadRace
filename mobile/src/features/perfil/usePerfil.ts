@@ -7,9 +7,9 @@ export type EstadoPerfil =
   | { situacao: 'erro'; mensagem: string }
   | { situacao: 'sucesso'; dados: Perfil };
 
-export function usePerfil(usuarioId: string) {
+export function usePerfil(usuarioId?: string) {
   const [resultado, setResultado] = useState<{
-    id: string;
+    id: string | undefined;
     estado: EstadoPerfil;
   }>({ id: usuarioId, estado: { situacao: 'carregando' } });
   const [tentativa, setTentativa] = useState(0);

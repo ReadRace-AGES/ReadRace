@@ -1,5 +1,5 @@
-import { TabPlaceholder } from '@/components/TabPlaceholder';
+import { PerfilScreen } from '@/features/perfil/PerfilScreen';
 
-export default function PerfilScreen() {
-  return <TabPlaceholder title="Perfil" />;
+export default function MeuPerfilRoute() {
+  return <PerfilScreen />;
 }
