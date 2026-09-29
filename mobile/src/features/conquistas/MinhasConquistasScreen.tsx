@@ -46,13 +46,13 @@ function CardConquista({ conquista }: { conquista: Conquista }) {
             {conquista.nome}
           </Text>
           {!bloqueada && (
-            <Text numberOfLines={1} style={styles.description}>
+            <Text numberOfLines={2} style={styles.description}>
               {conquista.descricao}
             </Text>
           )}
           {linha ? (
             <Text
-              numberOfLines={1}
+              numberOfLines={2}
               style={[styles.detail, bloqueada && styles.muted]}
             >
               {linha}

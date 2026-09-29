@@ -68,6 +68,7 @@ const dependencies = {
   '@/theme': { ...require('../src/theme/tokens'), textStyles: {} },
   '@/components/avatar': { Avatar: 'Avatar' },
   '@/components/icons/BookIcon': { BookIcon: 'BookIcon' },
+  '@/features/conquistas/IconeConquista': { IconeConquista: 'IconeConquista' },
   '@/components/toast-provider': {},
   './usePerfil': {},
 };
