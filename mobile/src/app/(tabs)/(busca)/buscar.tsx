@@ -11,7 +11,7 @@ import {
 import { useBusca } from '@/features/busca/useBusca';
 
 function rotaDoLivro(livroId: string): Href {
-  return `/livro/${livroId}` as Href;
+  return `/buscar-livro/${encodeURIComponent(livroId)}` as Href;
 }
 
 function rotaDoUsuario(usuarioId: string): Href {

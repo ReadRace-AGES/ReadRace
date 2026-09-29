@@ -22,7 +22,13 @@ import { bookCover, colors, radius, sizes, spacing, textStyles } from '@/theme';
 import { tempoRelativo } from './model';
 import { useLivroDetalhe } from './useLivroDetalhe';
 
-export function LivroDetalheScreen({ livroId }: { livroId: string }) {
+export function LivroDetalheScreen({
+  livroId,
+  origem,
+}: {
+  livroId: string;
+  origem: '/buscar' | '/meus-livros';
+}) {
   const router = useRouter();
   const { estado, recarregar, atualizarProgresso, alternarCurtida } =
     useLivroDetalhe(livroId);
@@ -40,7 +46,7 @@ export function LivroDetalheScreen({ livroId }: { livroId: string }) {
     )
   );
   const voltar = () =>
-    router.canGoBack() ? router.back() : router.replace('/meus-livros');
+    router.canGoBack() ? router.back() : router.replace(origem);
   const detalhe = estado.situacao === 'sucesso' ? estado.dados : null;
   const progresso = detalhe?.progresso;
 

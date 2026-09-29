@@ -5,7 +5,7 @@ import { useBiblioteca } from '@/features/biblioteca/useBiblioteca';
 
 // O detalhe é empilhado dentro da aba, mantendo a barra de navegação.
 function rotaDoDetalhe(livroId: string): Href {
-  return `/livro/${livroId}` as Href;
+  return `/biblioteca-livro/${encodeURIComponent(livroId)}` as Href;
 }
 
 export default function MeusLivrosScreen() {

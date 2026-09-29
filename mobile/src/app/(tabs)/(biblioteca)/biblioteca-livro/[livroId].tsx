@@ -3,5 +3,7 @@ import { LivroDetalheScreen } from '@/features/livro/LivroDetalheScreen';
 
 export default function LivroRoute() {
   const { livroId } = useLocalSearchParams<{ livroId: string }>();
-  return <LivroDetalheScreen key={livroId} livroId={livroId} />;
+  return (
+    <LivroDetalheScreen key={livroId} livroId={livroId} origem="/meus-livros" />
+  );
 }
