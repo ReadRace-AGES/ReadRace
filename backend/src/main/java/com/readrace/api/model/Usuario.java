@@ -41,6 +41,11 @@ public class Usuario {
     @Column(name = "excluido_em")
     private OffsetDateTime excluidoEm;
 
+    public void receberXp(int xp) {
+        xpTotal += xp;
+        nivel = CurvaDeNivel.nivelDoXp(xpTotal);
+    }
+
     @Override
     public boolean equals(Object obj) {
         if (this == obj) {

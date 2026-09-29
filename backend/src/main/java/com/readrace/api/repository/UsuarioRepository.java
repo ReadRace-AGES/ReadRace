@@ -4,7 +4,12 @@ import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
+import jakarta.persistence.LockModeType;
+
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Lock;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 
 import com.readrace.api.model.Usuario;
 
@@ -15,4 +20,14 @@ public interface UsuarioRepository extends JpaRepository<Usuario, UUID> {
                     String nome, String nomeUsuario);
 
     Optional<Usuario> findByIdAndExcluidoEmIsNull(UUID id);
+
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
+    @Query(
+            """
+            SELECT usuario
+            FROM Usuario usuario
+            WHERE usuario.id = :id
+              AND usuario.excluidoEm IS NULL
+            """)
+    Optional<Usuario> buscarAtivoComLock(@Param("id") UUID id);
 }

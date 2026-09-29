@@ -27,18 +27,21 @@ public class RegistrarProgressoService {
     private final RegistroLeituraRepository registroLeituraRepository;
     private final UsuarioAtualDeSeed usuarioAtual;
     private final DesafioService desafioService;
+    private final ConquistaService conquistaService;
 
     public RegistrarProgressoService(
             LivroRepository livroRepository,
             ItemBibliotecaRepository itemBibliotecaRepository,
             RegistroLeituraRepository registroLeituraRepository,
             UsuarioAtualDeSeed usuarioAtual,
-            DesafioService desafioService) {
+            DesafioService desafioService,
+            ConquistaService conquistaService) {
         this.livroRepository = livroRepository;
         this.itemBibliotecaRepository = itemBibliotecaRepository;
         this.registroLeituraRepository = registroLeituraRepository;
         this.usuarioAtual = usuarioAtual;
         this.desafioService = desafioService;
+        this.conquistaService = conquistaService;
     }
 
     @Transactional
@@ -71,6 +74,7 @@ public class RegistrarProgressoService {
         int percentual = Math.round((pagina * 100f) / livro.getTotalPaginas());
 
         desafioService.avancarDesafios(usuarioAtualId.valor(), livro, paginasNovas, concluiuAgora);
+        conquistaService.avaliar(usuarioAtualId.valor());
 
         return new ProgressoLeituraResponse(
                 item.getPaginaAtual(),
