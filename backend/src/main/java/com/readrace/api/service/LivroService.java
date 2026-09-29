@@ -1,5 +1,6 @@
 package com.readrace.api.service;
 
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -16,6 +17,7 @@ import com.readrace.api.model.Genero;
 import com.readrace.api.model.ItemBiblioteca;
 import com.readrace.api.model.Livro;
 import com.readrace.api.model.Post;
+import com.readrace.api.model.SequenciaDeLeitura;
 import com.readrace.api.model.Usuario;
 import com.readrace.api.repository.CurtidaRepository;
 import com.readrace.api.repository.GeneroRepository;
@@ -125,9 +127,10 @@ public class LivroService {
                                         CurtidaRepository.ContagemPorPost::getTotal));
         Set<UUID> curtidosPorMim =
                 Set.copyOf(curtidaRepository.postsCurtidosPorUsuario(usuarioId, postIds));
+        LocalDate hoje = SequenciaDeLeitura.hoje();
 
         return posts.stream()
-                .map(post -> criarPostResponse(post, autores, curtidas, curtidosPorMim))
+                .map(post -> criarPostResponse(post, autores, curtidas, curtidosPorMim, hoje))
                 .toList();
     }
 
@@ -135,14 +138,15 @@ public class LivroService {
             Post post,
             Map<UUID, Usuario> autores,
             Map<UUID, Long> contagens,
-            Set<UUID> curtidosPorMim) {
+            Set<UUID> curtidosPorMim,
+            LocalDate hoje) {
         Usuario autor = autores.get(post.getAutorId());
         if (autor == null)
             throw new IllegalStateException("Autor do post não encontrado: " + post.getAutorId());
 
         LivroDetalheResponse.Autor autorResponse =
                 new LivroDetalheResponse.Autor(
-                        autor.getNome(), autor.getAvatarUrl(), autor.getDiasConsecutivos());
+                        autor.getNome(), autor.getAvatarUrl(), autor.sequenciaExibida(hoje));
 
         long curtidas = contagens.getOrDefault(post.getId(), 0L);
 

@@ -8,6 +8,7 @@ import org.springframework.transaction.annotation.Transactional;
 import com.readrace.api.dto.response.PerfilResponse;
 import com.readrace.api.exception.UsuarioNaoEncontradoException;
 import com.readrace.api.model.CurvaDeNivel;
+import com.readrace.api.model.SequenciaDeLeitura;
 import com.readrace.api.repository.PerfilRepository;
 import com.readrace.api.repository.UsuarioRepository;
 
@@ -52,7 +53,7 @@ public class PerfilService {
                 new PerfilResponse.Estatisticas(
                         resumo.livrosLidos(),
                         resumo.paginasLidas(),
-                        usuario.getDiasConsecutivos(),
+                        usuario.sequenciaExibida(SequenciaDeLeitura.hoje()),
                         conquistas.stream().filter(PerfilResponse.Conquista::desbloqueada).count()),
                 conquistas,
                 perfis.favoritos(id));
