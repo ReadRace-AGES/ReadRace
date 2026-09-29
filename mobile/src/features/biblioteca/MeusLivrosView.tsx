@@ -1,4 +1,3 @@
-import { useEffect, useRef, useState } from 'react';
 import {
   ActivityIndicator,
   type NativeScrollEvent,
@@ -8,12 +7,12 @@ import {
   Text,
   View,
 } from 'react-native';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { AppHeader } from '@/components/AppHeader';
 import { BookCover } from '@/components/BookCover';
 import { EmptyState } from '@/components/EmptyState';
 import { BookIcon } from '@/components/icons/BookIcon';
+import { useToastContext } from '@/components/toast-provider';
 import {
   bookCover,
   colors,
@@ -51,10 +50,8 @@ const COPY = {
   semLendo: 'Nenhum livro em leitura.',
   semLidos: 'Nenhum livro lido ainda.',
   tentarDeNovo: 'Tentar de novo',
-  emDesenvolvimento: 'Funcionalidade em desenvolvimento',
 } as const;
 
-const AVISO_VISIVEL_MS = 2500;
 // A lista do fim da página carrega sozinha quando faltam menos que isto para o fim do scroll.
 const MARGEM_SCROLL_INFINITO = bookCover.grid.height * 2;
 
@@ -216,55 +213,6 @@ function GradeDeCapas({ lista, onLivroPress, onVerMais }: ListaProps) {
   );
 }
 
-/**
- * Aviso local com a copy do Toast (#29). Substituir pelo `Toast` quando o
- * PR #66 entrar em dev: a tela só precisa trocar `avisar()` por `showToast()`.
- */
-function useAvisoEmDesenvolvimento() {
-  const [visivel, setVisivel] = useState(false);
-  const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
-
-  useEffect(
-    () => () => {
-      if (timer.current) clearTimeout(timer.current);
-    },
-    []
-  );
-
-  function avisar() {
-    if (timer.current) clearTimeout(timer.current);
-    setVisivel(true);
-    timer.current = setTimeout(() => {
-      setVisivel(false);
-      timer.current = null;
-    }, AVISO_VISIVEL_MS);
-  }
-
-  return { visivel, avisar };
-}
-
-function AvisoEmDesenvolvimento({ bottom }: { bottom: number }) {
-  return (
-    <View
-      pointerEvents="none"
-      className="absolute left-0 right-0 items-center px-6"
-      style={{ bottom }}
-      accessibilityLiveRegion="polite"
-    >
-      <View
-        className="rounded-pill bg-primary px-5 py-3"
-        style={shadows.floating}
-      >
-        <Text
-          style={[textStyles.bodySmallStrong, { color: colors.textInverse }]}
-        >
-          {COPY.emDesenvolvimento}
-        </Text>
-      </View>
-    </View>
-  );
-}
-
 function Secoes({
   dados,
   onLivroPress,
@@ -360,8 +308,7 @@ export function MeusLivrosView({
   carregarMais,
   onLivroPress,
 }: MeusLivrosViewProps) {
-  const insets = useSafeAreaInsets();
-  const aviso = useAvisoEmDesenvolvimento();
+  const { showToast } = useToastContext();
 
   // "Livros lidos" é a lista que cresce sem limite e fica no fim da página, então ela
   // carrega sozinha no scroll. As outras pedem página com "Ver mais", senão duas listas
@@ -407,13 +354,13 @@ export function MeusLivrosView({
             dados={biblioteca.dados}
             onLivroPress={onLivroPress}
             onVerMais={carregarMais}
-            onAdicionarFavorito={aviso.avisar}
+            onAdicionarFavorito={showToast}
           />
         )}
 
         <Pressable
           accessibilityRole="button"
-          onPress={aviso.avisar}
+          onPress={showToast}
           className="items-center justify-center rounded-pill bg-primary"
           style={[{ height: sizes.buttonHeight }, shadows.button]}
         >
@@ -422,10 +369,6 @@ export function MeusLivrosView({
           </Text>
         </Pressable>
       </ScrollView>
-
-      {aviso.visivel && (
-        <AvisoEmDesenvolvimento bottom={insets.bottom + spacing[6]} />
-      )}
     </View>
   );
 }
