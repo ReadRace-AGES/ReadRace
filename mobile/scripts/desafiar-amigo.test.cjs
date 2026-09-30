@@ -53,6 +53,7 @@ test('busca reconcilia seleção e bloqueia envio durante loading e erro', async
   });
   const dependencies = {
     'expo-router': {
+      useLocalSearchParams: () => ({}),
       useRouter: () => ({
         canGoBack: () => anterior !== null,
         back: () => assert.fail('back pode voltar para outra tela'),
@@ -77,6 +78,7 @@ test('busca reconcilia seleção e bloqueia envio durante loading e erro', async
     '@/theme': { ...require('../src/theme/tokens'), textStyles: {} },
     '@/components/AppHeader': { AppHeader: 'AppHeader' },
     '@/components/avatar': { Avatar: 'Avatar' },
+    '@/components/BookCover': { BookCover: 'BookCover' },
     '@/components/Card': { Card: 'Card' },
     '@/components/EmptyState': { EmptyState: 'EmptyState' },
     '@/components/icons/BookIcon': { BookIcon: 'BookIcon' },
