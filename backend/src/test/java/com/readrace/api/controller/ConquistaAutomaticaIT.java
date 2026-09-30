@@ -70,7 +70,8 @@ class ConquistaAutomaticaIT {
 
         assertThat(conquistas(DANIEL_ID)).hasSize(5);
         assertThat(linhasDeConquista(DANIEL_ID)).isEqualTo(5);
-        assertThat(xp(DANIEL_ID)).isEqualTo(xpAntes);
+        // Nenhuma recompensa de conquista é paga; só as 5 páginas novas (145 -> 150) rendem XP.
+        assertThat(xp(DANIEL_ID)).isEqualTo(xpAntes + 5);
     }
 
     @Test
@@ -83,7 +84,8 @@ class ConquistaAutomaticaIT {
 
         assertThat(conquistas(DANIEL_ID))
                 .containsExactlyInAnyOrder(PRIMEIROS_PASSOS, MIL_PAGINAS, COMPETIDOR);
-        assertThat(xp(DANIEL_ID)).isEqualTo(xpAntes + 50 + 200 + 100);
+        // 1 de XP da página nova (210 -> 211) mais as recompensas das 3 conquistas.
+        assertThat(xp(DANIEL_ID)).isEqualTo(xpAntes + 1 + 50 + 200 + 100);
         assertThat(nivel(DANIEL_ID)).isEqualTo(8);
         assertThat(
                         mvc.get()
@@ -106,7 +108,8 @@ class ConquistaAutomaticaIT {
 
         assertThat(conquistas(DANIEL_ID)).contains(MIL_PAGINAS);
         assertThat(obtidaEm(DANIEL_ID, MIL_PAGINAS)).isAfter(OffsetDateTime.now().minusMinutes(5));
-        assertThat(xp(DANIEL_ID)).isEqualTo(xpAntes + 200);
+        // 50 de XP das páginas novas (210 -> 260) mais 200 da recompensa de Mil Páginas.
+        assertThat(xp(DANIEL_ID)).isEqualTo(xpAntes + 50 + 200);
     }
 
     @Test
@@ -117,7 +120,8 @@ class ConquistaAutomaticaIT {
 
         registrar(LIVRO_1984_ID, 212);
 
-        assertThat(xp(DANIEL_ID)).isEqualTo(xpDepoisDoDesbloqueio);
+        // A recompensa de 200 não se repete; só a página nova (211 -> 212) rende 1 de XP.
+        assertThat(xp(DANIEL_ID)).isEqualTo(xpDepoisDoDesbloqueio + 1);
         assertThat(linhasDeConquista(DANIEL_ID)).isEqualTo(5);
     }
 
@@ -131,7 +135,9 @@ class ConquistaAutomaticaIT {
 
         assertThat(conquistas(DANIEL_ID)).contains(PRIMEIROS_PASSOS, LEITOR_DEDICADO);
         assertThat(linhasDeConquista(DANIEL_ID)).isEqualTo(5);
-        assertThat(xp(DANIEL_ID)).isEqualTo(xpAntes + 150);
+        // 111 de XP das páginas novas (145 -> 256), 150 de bônus de conclusão do livro e 150 da
+        // recompensa de Leitor Dedicado.
+        assertThat(xp(DANIEL_ID)).isEqualTo(xpAntes + 111 + 150 + 150);
     }
 
     @Test

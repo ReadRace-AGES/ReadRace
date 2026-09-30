@@ -79,7 +79,7 @@ public class Usuario {
 
     public void somarXp(int xp) {
         this.xpTotal += xp;
-        this.nivel = CurvaDeNivel.nivelParaXp(this.xpTotal);
+        this.nivel = CurvaDeNivel.nivelDoXp(this.xpTotal);
     }
 
     public String getTitulo() {
