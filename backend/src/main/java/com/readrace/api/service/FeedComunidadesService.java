@@ -13,6 +13,7 @@ import com.readrace.api.exception.RecursoNaoEncontradoException;
 import com.readrace.api.model.ClubeDoLivro;
 import com.readrace.api.model.Comunidade;
 import com.readrace.api.model.Livro;
+import com.readrace.api.model.SequenciaDeLeitura;
 import com.readrace.api.model.Usuario;
 import com.readrace.api.repository.ContagemMembros;
 import com.readrace.api.repository.MembroClubeRepository;
@@ -67,7 +68,7 @@ public class FeedComunidadesService {
 
         return new FeedComunidadesResponse(
                 new FeedComunidadesResponse.Usuario(
-                        usuario.getNome(), usuario.getDiasConsecutivos()),
+                        usuario.getNome(), usuario.sequenciaExibida(SequenciaDeLeitura.hoje())),
                 clubes,
                 comunidades);
     }

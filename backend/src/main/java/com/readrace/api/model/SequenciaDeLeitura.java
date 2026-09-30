@@ -1,0 +1,49 @@
+package com.readrace.api.model;
+
+import java.time.LocalDate;
+import java.time.ZoneId;
+import java.time.temporal.ChronoUnit;
+
+// Sequência de dias com leitura (decisão do gestor em 2026-09-18): pausas de até 7 dias não a
+// quebram; 8 dias ou mais desde a última leitura a encerram.
+public final class SequenciaDeLeitura {
+
+    // O dia é o de São Paulo para todo mundo, até existir fuso por usuário.
+    public static final ZoneId FUSO = ZoneId.of("America/Sao_Paulo");
+
+    private static final int DIAS_PARA_PERDER = 8;
+
+    private SequenciaDeLeitura() {}
+
+    public static LocalDate hoje() {
+        return LocalDate.now(FUSO);
+    }
+
+    public static int aposLeitura(int sequencia, LocalDate ultimaLeitura, LocalDate hoje) {
+        if (ultimaLeitura == null) {
+            return 1;
+        }
+
+        long dias = diasDesde(ultimaLeitura, hoje);
+
+        if (dias == 0) {
+            return sequencia;
+        }
+
+        return dias >= DIAS_PARA_PERDER ? 1 : sequencia + 1;
+    }
+
+    // A coluna só é escrita ao registrar leitura: quem exibe é que zera a sequência encerrada.
+    public static int exibida(int sequencia, LocalDate ultimaLeitura, LocalDate hoje) {
+        if (ultimaLeitura == null || diasDesde(ultimaLeitura, hoje) >= DIAS_PARA_PERDER) {
+            return 0;
+        }
+
+        return sequencia;
+    }
+
+    // A sequência nunca conta o futuro: uma data depois de hoje vale como hoje.
+    private static long diasDesde(LocalDate ultimaLeitura, LocalDate hoje) {
+        return Math.max(0, ChronoUnit.DAYS.between(ultimaLeitura, hoje));
+    }
+}

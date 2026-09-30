@@ -2,6 +2,7 @@ package com.readrace.api.service;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
 
 import java.time.OffsetDateTime;
@@ -222,7 +223,7 @@ class LivroServiceTest {
 
         when(autorPost.getNome()).thenReturn("Leitor");
         when(autorPost.getAvatarUrl()).thenReturn("avatar.jpg");
-        when(autorPost.getDiasConsecutivos()).thenReturn(10);
+        when(autorPost.sequenciaExibida(any())).thenReturn(10);
 
         when(livroRepository.findById(livroId)).thenReturn(Optional.of(livro));
         when(generoRepository.buscarPorLivroId(livroId)).thenReturn(Optional.empty());

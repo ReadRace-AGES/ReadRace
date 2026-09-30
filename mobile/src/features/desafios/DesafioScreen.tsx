@@ -1,6 +1,6 @@
 import { useCallback, useRef, useState } from 'react';
-import { useFocusEffect, useRouter } from 'expo-router';
 
+import { useFocusEffect, useRouter } from 'expo-router';
 import { ActivityIndicator, ScrollView, Text, View } from 'react-native';
 
 import { ApiError } from '@/api/client';
@@ -8,9 +8,13 @@ import { AppHeader } from '@/components/AppHeader';
 import { Avatar } from '@/components/avatar';
 import { Card } from '@/components/Card';
 import { EmptyState } from '@/components/EmptyState';
+import { RematchIcon } from '@/components/icons/RematchIcon';
+import { SadFaceIcon } from '@/components/icons/SadFaceIcon';
+import { TrophyIcon } from '@/components/icons/TrophyIcon';
 import { UsersIcon } from '@/components/icons/UsersIcon';
 import { PrimaryButton } from '@/components/PrimaryButton';
-import { colors, spacing, textStyles } from '@/theme';
+import { useToastContext } from '@/components/toast-provider';
+import { colors, sizes, spacing, textStyles } from '@/theme';
 
 import { listarDesafios, type Desafio } from './api';
 
@@ -19,11 +23,83 @@ type Estado =
   | { situacao: 'sucesso'; desafios: Desafio[] }
   | { situacao: 'erro'; mensagem: string; desafios?: Desafio[] };
 
-function DesafioCard({ desafio }: { desafio: Desafio }) {
+type DesafioCardProps = {
+  desafio: Desafio;
+  onRevanche: () => void;
+};
+
+function desafioFinalizado(desafio: Desafio) {
+  return (
+    desafio.status === 'concluido_ganho' ||
+    desafio.status === 'concluido_perdido' ||
+    desafio.status === 'concluido_empate'
+  );
+}
+
+function DesafioCard({ desafio, onRevanche }: DesafioCardProps) {
+  const finalizado = desafioFinalizado(desafio);
+
   const voceEstaNaFrente = desafio.progresso.voce > desafio.progresso.oponente;
 
   const oponenteEstaNaFrente =
     desafio.progresso.oponente > desafio.progresso.voce;
+
+  const destacarVoce = finalizado
+    ? desafio.status === 'concluido_ganho'
+    : voceEstaNaFrente;
+
+  const destacarOponente = finalizado
+    ? desafio.status === 'concluido_perdido'
+    : oponenteEstaNaFrente;
+
+  function renderizarPilha() {
+    if (!finalizado) {
+      return (
+        <Text style={[textStyles.micro, { color: colors.text }]}>
+          {desafio.diasRestantes} dias
+        </Text>
+      );
+    }
+
+    if (desafio.status === 'concluido_ganho') {
+      return (
+        <View className="flex-row items-center" style={{ gap: spacing[1] }}>
+          <TrophyIcon size={sizes.iconSmall} color={colors.success} />
+
+          <Text style={[textStyles.micro, { color: colors.success }]}>
+            Vitória
+          </Text>
+        </View>
+      );
+    }
+
+    if (desafio.status === 'concluido_perdido') {
+      return (
+        <View className="flex-row items-center" style={{ gap: spacing[1] }}>
+          <SadFaceIcon size={sizes.iconSmall} color={colors.danger} />
+
+          <Text style={[textStyles.micro, { color: colors.danger }]}>
+            Derrota
+          </Text>
+        </View>
+      );
+    }
+
+    // A task determina que o Figma não possui copy para empate.
+    return null;
+  }
+
+  function corBordaPilha() {
+    if (desafio.status === 'concluido_ganho') {
+      return colors.success;
+    }
+
+    if (desafio.status === 'concluido_perdido') {
+      return colors.danger;
+    }
+
+    return colors.borderStrong;
+  }
 
   return (
     <Card>
@@ -50,19 +126,19 @@ function DesafioCard({ desafio }: { desafio: Desafio }) {
             </Text>
           </View>
 
-          <View
-            style={{
-              borderWidth: 1,
-              borderColor: colors.borderStrong,
-              borderRadius: 9999,
-              paddingHorizontal: spacing[2],
-              paddingVertical: spacing[1],
-            }}
-          >
-            <Text style={[textStyles.micro, { color: colors.text }]}>
-              {desafio.diasRestantes} dias
-            </Text>
-          </View>
+          {desafio.status !== 'concluido_empate' && (
+            <View
+              style={{
+                borderWidth: 1,
+                borderColor: corBordaPilha(),
+                borderRadius: 9999,
+                paddingHorizontal: spacing[2],
+                paddingVertical: spacing[1],
+              }}
+            >
+              {renderizarPilha()}
+            </View>
+          )}
         </View>
 
         <View
@@ -78,7 +154,7 @@ function DesafioCard({ desafio }: { desafio: Desafio }) {
               style={[
                 textStyles.h2,
                 {
-                  color: voceEstaNaFrente ? colors.primary : colors.text,
+                  color: destacarVoce ? colors.primary : colors.text,
                 },
               ]}
             >
@@ -95,7 +171,7 @@ function DesafioCard({ desafio }: { desafio: Desafio }) {
               style={[
                 textStyles.h2,
                 {
-                  color: oponenteEstaNaFrente ? colors.primary : colors.text,
+                  color: destacarOponente ? colors.primary : colors.text,
                 },
               ]}
             >
@@ -110,12 +186,22 @@ function DesafioCard({ desafio }: { desafio: Desafio }) {
             </Text>
           </View>
         </View>
+
+        {finalizado && (
+          <PrimaryButton
+            label="Revanche"
+            variant="outline"
+            icon={RematchIcon}
+            onPress={onRevanche}
+          />
+        )}
       </View>
     </Card>
   );
 }
 
 export function DesafiosScreen() {
+  const { showToast } = useToastContext();
   const router = useRouter();
   const requisicao = useRef<AbortController | null>(null);
 
@@ -127,6 +213,7 @@ export function DesafiosScreen() {
     requisicao.current?.abort();
     const controller = new AbortController();
     requisicao.current = controller;
+
     setEstado((atual) =>
       atual.situacao === 'sucesso' ||
       (atual.situacao === 'erro' && atual.desafios !== undefined)
@@ -157,13 +244,16 @@ export function DesafiosScreen() {
               : '',
       }));
     } finally {
-      if (requisicao.current === controller) requisicao.current = null;
+      if (requisicao.current === controller) {
+        requisicao.current = null;
+      }
     }
   }, []);
 
   useFocusEffect(
     useCallback(() => {
       carregarDesafios();
+
       return () => {
         requisicao.current?.abort();
         requisicao.current = null;
@@ -177,6 +267,7 @@ export function DesafiosScreen() {
 
   const desafios =
     estado.situacao === 'carregando' ? undefined : estado.desafios;
+
   const listaVazia = estado.situacao === 'sucesso' && desafios?.length === 0;
 
   return (
@@ -238,7 +329,11 @@ export function DesafiosScreen() {
         )}
 
         {desafios?.map((desafio) => (
-          <DesafioCard key={desafio.id} desafio={desafio} />
+          <DesafioCard
+            key={desafio.id}
+            desafio={desafio}
+            onRevanche={showToast}
+          />
         ))}
 
         <PrimaryButton
