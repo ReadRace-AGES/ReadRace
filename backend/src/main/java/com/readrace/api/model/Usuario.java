@@ -1,5 +1,6 @@
 package com.readrace.api.model;
 
+import java.time.LocalDate;
 import java.time.OffsetDateTime;
 import java.util.UUID;
 
@@ -40,6 +41,23 @@ public class Usuario {
 
     @Column(name = "excluido_em")
     private OffsetDateTime excluidoEm;
+
+    @Column(name = "ultima_leitura_em")
+    private LocalDate ultimaLeituraEm;
+
+    public void receberXp(int xp) {
+        xpTotal += xp;
+        nivel = CurvaDeNivel.nivelDoXp(xpTotal);
+    }
+
+    public void registrarLeitura(LocalDate hoje) {
+        diasConsecutivos = SequenciaDeLeitura.aposLeitura(diasConsecutivos, ultimaLeituraEm, hoje);
+        ultimaLeituraEm = hoje;
+    }
+
+    public int sequenciaExibida(LocalDate hoje) {
+        return SequenciaDeLeitura.exibida(diasConsecutivos, ultimaLeituraEm, hoje);
+    }
 
     @Override
     public boolean equals(Object obj) {

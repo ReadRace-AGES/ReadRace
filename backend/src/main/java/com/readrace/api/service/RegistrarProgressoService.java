@@ -9,10 +9,12 @@ import com.readrace.api.dto.request.RegistrarProgressoRequest;
 import com.readrace.api.dto.response.ProgressoLeituraResponse;
 import com.readrace.api.exception.LivroNaoEncontradoException;
 import com.readrace.api.exception.PaginaInvalidaException;
+import com.readrace.api.exception.UsuarioNaoEncontradoException;
 import com.readrace.api.model.CurvaDeNivel;
 import com.readrace.api.model.ItemBiblioteca;
 import com.readrace.api.model.Livro;
 import com.readrace.api.model.RegistroLeitura;
+import com.readrace.api.model.SequenciaDeLeitura;
 import com.readrace.api.model.Usuario;
 import com.readrace.api.model.UsuarioId;
 import com.readrace.api.repository.ItemBibliotecaRepository;
@@ -31,6 +33,7 @@ public class RegistrarProgressoService {
     private final UsuarioRepository usuarioRepository;
     private final UsuarioAtualDeSeed usuarioAtual;
     private final DesafioService desafioService;
+    private final ConquistaService conquistaService;
 
     public RegistrarProgressoService(
             LivroRepository livroRepository,
@@ -38,13 +41,15 @@ public class RegistrarProgressoService {
             RegistroLeituraRepository registroLeituraRepository,
             UsuarioRepository usuarioRepository,
             UsuarioAtualDeSeed usuarioAtual,
-            DesafioService desafioService) {
+            DesafioService desafioService,
+            ConquistaService conquistaService) {
         this.livroRepository = livroRepository;
         this.itemBibliotecaRepository = itemBibliotecaRepository;
         this.registroLeituraRepository = registroLeituraRepository;
         this.usuarioRepository = usuarioRepository;
         this.usuarioAtual = usuarioAtual;
         this.desafioService = desafioService;
+        this.conquistaService = conquistaService;
     }
 
     @Transactional
@@ -72,6 +77,13 @@ public class RegistrarProgressoService {
         item.registrarProgresso(pagina);
         registroLeituraRepository.save(new RegistroLeitura(item, pagina));
 
+        // Um único lock pessimista no usuário cobre a sequência de leitura e a soma de XP.
+        Usuario usuario =
+                usuarioRepository
+                        .buscarAtivoComLock(usuarioAtualId.valor())
+                        .orElseThrow(UsuarioNaoEncontradoException::new);
+        usuario.registrarLeitura(SequenciaDeLeitura.hoje());
+
         boolean concluiuAgora = !concluidoAntes && item.estaConcluido();
         int xpConclusao = concluiuAgora ? XP_CONCLUSAO : 0;
         int xpGanho = xpPaginas + xpConclusao;
@@ -79,12 +91,14 @@ public class RegistrarProgressoService {
 
         desafioService.avancarDesafios(usuarioAtualId.valor(), livro, paginasNovas, concluiuAgora);
 
-        Usuario usuario = usuarioRepository.buscarComLock(usuarioAtualId.valor()).orElseThrow();
         int nivelAnterior = usuario.getNivel();
         usuario.somarXp(xpGanho);
         boolean subiuDeNivel = usuario.getNivel() != nivelAnterior;
         int xpNoNivel = CurvaDeNivel.xpNoNivel(usuario.getXpTotal(), usuario.getNivel());
         int xpDoNivel = CurvaDeNivel.xpDoNivel(usuario.getNivel());
+
+        // Depois da soma de XP, para a avaliação já enxergar o XP e o nível atualizados.
+        conquistaService.avaliar(usuarioAtualId.valor());
 
         return new ProgressoLeituraResponse(
                 item.getPaginaAtual(),
@@ -95,6 +109,7 @@ public class RegistrarProgressoService {
                 xpConclusao,
                 xpGanho,
                 item.estaConcluido(),
+                usuario.getDiasConsecutivos(),
                 usuario.getNivel(),
                 usuario.getXpTotal(),
                 xpNoNivel,

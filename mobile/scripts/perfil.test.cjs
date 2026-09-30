@@ -68,6 +68,7 @@ const dependencies = {
   '@/theme': { ...require('../src/theme/tokens'), textStyles: {} },
   '@/components/avatar': { Avatar: 'Avatar' },
   '@/components/icons/BookIcon': { BookIcon: 'BookIcon' },
+  '@/features/conquistas/IconeConquista': { IconeConquista: 'IconeConquista' },
   '@/components/toast-provider': {},
   './usePerfil': {},
 };
@@ -163,6 +164,44 @@ test('carregamento e erro mantêm voltar e permitem nova tentativa', () => {
   act(() => tree.unmount());
 });
 
+test('próprio perfil fica sem voltar e "Ver mais" abre Minhas Conquistas', () => {
+  const rotas = [];
+  let avisos = 0,
+    tree;
+  const { PerfilScreen } = load('features/perfil/PerfilScreen.tsx', {
+    ...dependencies,
+    'expo-router': { useRouter: () => ({ push: (rota) => rotas.push(rota) }) },
+    '@/components/toast-provider': {
+      useToastContext: () => ({ showToast: () => avisos++ }),
+    },
+    './usePerfil': {
+      usePerfil: () => ({
+        estado: { situacao: 'sucesso', dados: perfil },
+        recarregar: () => {},
+      }),
+    },
+  });
+  const verMais = () =>
+    tree.root
+      .findAllByType('Pressable')
+      .find(
+        (botao) => botao.props.accessibilityLabel === 'Ver mais conquistas'
+      );
+  act(() => {
+    tree = create(React.createElement(PerfilScreen));
+  });
+  assert.equal(tree.root.findByType('AppHeader').props.showBack, false);
+  act(() => verMais().props.onPress());
+  assert.deepEqual(rotas, ['/conquistas']);
+  assert.equal(avisos, 0);
+  act(() => tree.update(React.createElement(PerfilScreen, { usuarioId: '1' })));
+  assert.equal(tree.root.findByType('AppHeader').props.showBack, true);
+  act(() => verMais().props.onPress());
+  assert.deepEqual(rotas, ['/conquistas']);
+  assert.equal(avisos, 1);
+  act(() => tree.unmount());
+});
+
 test('API usa somente o usuário exibido e encaminha cancelamento', async () => {
   let request;
   const { buscarPerfil } = load('features/perfil/api.ts', {
@@ -177,6 +216,8 @@ test('API usa somente o usuário exibido e encaminha cancelamento', async () => 
   await buscarPerfil('outro/id', controller.signal);
   assert.equal(request[0], '/api/usuarios/outro%2Fid/perfil');
   assert.deepEqual(request[1], { signal: controller.signal });
+  await buscarPerfil(undefined, controller.signal);
+  assert.equal(request[0], '/api/me/perfil');
 });
 
 test('hook cancela perfil antigo, ignora resposta atrasada e permite tentar novamente', async () => {

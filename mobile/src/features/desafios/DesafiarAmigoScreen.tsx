@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { useRouter } from 'expo-router';
+import { useLocalSearchParams, useRouter, type Href } from 'expo-router';
 import {
   ActivityIndicator,
   KeyboardAvoidingView,
@@ -15,6 +15,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { AppHeader } from '@/components/AppHeader';
 import { Avatar } from '@/components/avatar';
+import { BookCover } from '@/components/BookCover';
 import { Card } from '@/components/Card';
 import { EmptyState } from '@/components/EmptyState';
 import { BookIcon } from '@/components/icons/BookIcon';
@@ -31,6 +32,7 @@ import {
 } from '@/theme';
 
 import type { Oponente } from './api';
+import type { LivroBiblioteca } from '@/features/biblioteca/api';
 import { CrossedSwordsIcon, PencilIcon } from './DesafiarAmigoIcons';
 import { useCriarDesafio, useOponentes } from './useDesafiarAmigo';
 
@@ -146,6 +148,9 @@ function CartaoTipoMeta({
 
 export function DesafiarAmigoScreen() {
   const router = useRouter();
+  const { livroSelecionado: livroSelecionadoParam } = useLocalSearchParams<{
+    livroSelecionado?: string | string[];
+  }>();
   const insets = useSafeAreaInsets();
   const [termo, setTermo] = useState('');
   const [oponenteId, setOponenteId] = useState<string | null>(null);
@@ -154,8 +159,24 @@ export function DesafiarAmigoScreen() {
   const [prazoDias, setPrazoDias] = useState(PRAZO_INICIAL);
   const [prazoDigitado, setPrazoDigitado] = useState(String(PRAZO_INICIAL));
   const [editandoPrazo, setEditandoPrazo] = useState(false);
+  const [livroSelecionado, setLivroSelecionado] =
+    useState<LivroBiblioteca | null>(null);
   const { estado: estadoOponentes, recarregar } = useOponentes(termo);
   const { estado: estadoEnvio, enviar, limparErro } = useCriarDesafio();
+
+  useEffect(() => {
+    const valor = Array.isArray(livroSelecionadoParam)
+      ? livroSelecionadoParam[0]
+      : livroSelecionadoParam;
+    if (!valor) return;
+
+    try {
+      const livro = JSON.parse(valor) as LivroBiblioteca;
+      if (livro.livroId && livro.titulo) setLivroSelecionado(livro);
+    } catch {
+      setLivroSelecionado(null);
+    }
+  }, [livroSelecionadoParam]);
 
   const oponenteSelecionado =
     oponenteId !== null &&
@@ -176,14 +197,22 @@ export function DesafiarAmigoScreen() {
   const unidadePrazo = prazoDias === 1 ? 'dia corrido' : 'dias corridos';
   const podeEnviar =
     oponenteSelecionado &&
-    tipoMeta === 'paginas' &&
-    metaValida(meta) &&
+    (tipoMeta === 'paginas'
+      ? metaValida(meta)
+      : livroSelecionado !== null) &&
     prazoAtual !== null &&
     estadoEnvio.situacao !== 'enviando';
 
   function voltarParaDesafios() {
     // Retorna ao destino existente; sem ele na pilha, substitui a tela atual.
     router.dismissTo('/desafios');
+  }
+
+  function trocarLivro() {
+    router.push({
+      pathname: '/escolher-livro',
+      params: { livroId: livroSelecionado?.livroId ?? '' },
+    } as unknown as Href);
   }
 
   function alterarTermo(valor: string) {
@@ -226,12 +255,23 @@ export function DesafiarAmigoScreen() {
   async function enviarDesafio() {
     if (!podeEnviar || !oponenteId || prazoAtual === null) return;
 
-    const sucesso = await enviar({
-      oponenteId,
-      tipoMeta: 'paginas',
-      meta,
-      prazoDias: prazoAtual,
-    });
+    let sucesso: boolean;
+    if (tipoMeta === 'paginas') {
+      sucesso = await enviar({
+        oponenteId,
+        tipoMeta: 'paginas',
+        meta,
+        prazoDias: prazoAtual,
+      });
+    } else {
+      if (!livroSelecionado) return;
+      sucesso = await enviar({
+        oponenteId,
+        tipoMeta: 'livro',
+        livroId: livroSelecionado.livroId,
+        prazoDias: prazoAtual,
+      });
+    }
 
     if (sucesso) voltarParaDesafios();
   }
@@ -411,6 +451,42 @@ export function DesafiarAmigoScreen() {
             </Card>
           )}
 
+            {tipoMeta === 'livro' && (
+              <View style={styles.secao}>
+                <Text style={styles.tituloSecao}>Livro do desafio</Text>
+                <Card surfaceStyle={styles.superficieLivro}>
+                  <View style={styles.linhaLivro}>
+                    {livroSelecionado ? (
+                      <BookCover
+                        size="thumbnail"
+                        source={livroSelecionado.capaUrl}
+                        accessibilityLabel={`Capa de ${livroSelecionado.titulo}`}
+                      />
+                    ) : (
+                      <View style={styles.capaVazia}>
+                        <BookIcon size={sizes.icon} color={colors.textMuted} />
+                      </View>
+                    )}
+                    <View style={styles.detalhesLivro}>
+                      <Text numberOfLines={2} style={styles.tituloLivro}>
+                        {livroSelecionado?.titulo ?? 'Nenhum livro escolhido'}
+                      </Text>
+                      {!!livroSelecionado?.autor && (
+                        <Text numberOfLines={2} style={styles.autorLivro}>
+                          {livroSelecionado.autor}
+                        </Text>
+                      )}
+                    </View>
+                  </View>
+                  <PrimaryButton
+                    label={livroSelecionado ? 'Trocar Livro' : 'Escolher Livro'}
+                    onPress={trocarLivro}
+                    variant="outline"
+                  />
+                </Card>
+              </View>
+            )}
+
           {estadoEnvio.situacao === 'erro' && (
             <Text accessibilityRole="alert" style={styles.erroEnvio}>
               {estadoEnvio.mensagem}
@@ -510,6 +586,30 @@ const styles = StyleSheet.create({
     elevation: spacing[0],
     backgroundColor: colors.surface,
   },
+  superficieLivro: {
+    padding: spacing[4],
+    gap: spacing[4],
+    backgroundColor: colors.surface,
+    borderWidth: sizes.borderWidth,
+    borderColor: colors.surfacePinkStrong,
+  },
+  linhaLivro: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing[3],
+    minHeight: sizes.avatarLarge,
+  },
+  capaVazia: {
+    width: sizes.avatarLarge,
+    height: sizes.avatarLarge,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderRadius: radius.sm,
+    backgroundColor: colors.surfaceMuted,
+  },
+  detalhesLivro: { flex: 1, minWidth: 0, gap: spacing[1] },
+  tituloLivro: { ...textStyles.bodyStrong, color: colors.text },
+  autorLivro: { ...textStyles.bodySmall, color: colors.textSecondary },
   superficieVolume: {
     padding: spacing[6],
     gap: spacing[4],

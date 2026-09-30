@@ -21,7 +21,7 @@ public final class CurvaDeNivel {
         return xpTotal - xpParaChegarNoNivel(nivel);
     }
 
-    public static int nivelParaXp(int xpTotal) {
+    public static int nivelDoXp(int xpTotal) {
         int nivel = 1;
         int acumulado = 0;
         while (acumulado + xpDoNivel(nivel) <= xpTotal) {

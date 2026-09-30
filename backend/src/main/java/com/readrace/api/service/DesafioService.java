@@ -60,6 +60,7 @@ public class DesafioService {
     private final UsuarioRepository usuarioRepository;
     private final LivroRepository livroRepository;
     private final UsuarioAtualDeSeed usuarioAtual;
+    private final ConquistaService conquistaService;
 
     public DesafioService(
             DesafioAmigoRepository desafioRepository,
@@ -67,13 +68,15 @@ public class DesafioService {
             SeguirRepository seguirRepository,
             UsuarioRepository usuarioRepository,
             LivroRepository livroRepository,
-            UsuarioAtualDeSeed usuarioAtual) {
+            UsuarioAtualDeSeed usuarioAtual,
+            ConquistaService conquistaService) {
         this.desafioRepository = desafioRepository;
         this.progressoRepository = progressoRepository;
         this.seguirRepository = seguirRepository;
         this.usuarioRepository = usuarioRepository;
         this.livroRepository = livroRepository;
         this.usuarioAtual = usuarioAtual;
+        this.conquistaService = conquistaService;
     }
 
     @Transactional
@@ -113,7 +116,9 @@ public class DesafioService {
 
         for (DesafioAmigo desafio : desafios) {
             // Não há agendador: o desafio que passou do prazo é finalizado quando é observado.
-            desafio.finalizarSePrazoEncerrado(agora);
+            if (desafio.finalizarSePrazoEncerrado(agora)) {
+                conquistaService.avaliarParticipantes(desafio);
+            }
             desafioIds.add(desafio.getId());
         }
 
@@ -147,7 +152,9 @@ public class DesafioService {
                         .buscarPorIdEUsuario(desafioId, usuarioId, StatusDesafio.RECUSADO)
                         .orElseThrow(DesafioNaoEncontradoException::new);
 
-        desafio.finalizarSePrazoEncerrado(OffsetDateTime.now(ZoneOffset.UTC));
+        if (desafio.finalizarSePrazoEncerrado(OffsetDateTime.now(ZoneOffset.UTC))) {
+            conquistaService.avaliarParticipantes(desafio);
+        }
 
         List<ProgressoDesafio> progressos =
                 progressoRepository.buscarPorDesafios(List.of(desafioId));
@@ -258,6 +265,10 @@ public class DesafioService {
                                 usuarioId);
 
                 avancar(desafio, progresso, livro, paginasNovas, concluiuLivro);
+            }
+
+            if (desafio.estaFinalizado()) {
+                conquistaService.avaliarParticipantes(desafio);
             }
         }
     }

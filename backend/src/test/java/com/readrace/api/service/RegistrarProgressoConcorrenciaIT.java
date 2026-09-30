@@ -2,6 +2,7 @@ package com.readrace.api.service;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
@@ -22,6 +23,7 @@ import org.springframework.jdbc.core.JdbcTemplate;
 import com.readrace.api.TestcontainersConfiguration;
 import com.readrace.api.dto.request.RegistrarProgressoRequest;
 import com.readrace.api.dto.response.ProgressoLeituraResponse;
+import com.readrace.api.model.SequenciaDeLeitura;
 
 @SpringBootTest
 @AutoConfigureMockMvc
@@ -38,17 +40,27 @@ class RegistrarProgressoConcorrenciaIT {
     private int placarAntes;
     private int xpUsuarioAntes;
     private int nivelUsuarioAntes;
+    private int sequenciaAntes;
+    private LocalDate ultimaLeituraAntes;
 
     @BeforeEach
-    void guardar_placar_do_desafio_ativo() {
+    void guardar_estado_do_usuario() {
         placarAntes = placarDoDesafioAtivo();
         xpUsuarioAntes = xpDoUsuario();
         nivelUsuarioAntes = nivelDoUsuario();
+        sequenciaAntes = sequencia();
+        ultimaLeituraAntes = ultimaLeitura();
+
+        // Parte de um estado conhecido: leu ontem e está com sequência 12.
+        jdbc.update(
+                "UPDATE usuario SET dias_consecutivos = 12, ultima_leitura_em = ? WHERE id = ?",
+                SequenciaDeLeitura.hoje().minusDays(1),
+                USUARIO);
     }
 
     @AfterEach
     void limpar_registros_confirmados() {
-        // Os registros também avançam o desafio ativo e o XP do usuário do seed, e aqui são
+        // Os registros também avançam o desafio ativo, o XP e a sequência do usuário e, aqui, são
         // confirmados de verdade — sem isso, os testes seguintes herdariam o estado sujo.
         jdbc.update(
                 "UPDATE progresso_desafio SET valor_atual = ?"
@@ -57,9 +69,12 @@ class RegistrarProgressoConcorrenciaIT {
                 DESAFIO_ATIVO,
                 USUARIO);
         jdbc.update(
-                "UPDATE usuario SET xp_total = ?, nivel = ? WHERE id = ?",
+                "UPDATE usuario SET xp_total = ?, nivel = ?, dias_consecutivos = ?,"
+                        + " ultima_leitura_em = ? WHERE id = ?",
                 xpUsuarioAntes,
                 nivelUsuarioAntes,
+                sequenciaAntes,
+                ultimaLeituraAntes,
                 USUARIO);
         jdbc.update(
                 """
@@ -114,6 +129,19 @@ class RegistrarProgressoConcorrenciaIT {
         // As 24 chamadas somam exatamente os mesmos 20 de XP que o item e o desafio pagaram —
         // se o lock pessimista do Usuario não estivesse lá, esse valor viria menor que 20.
         assertThat(xpDoUsuario()).isEqualTo(xpUsuarioAntes + 20);
+        // Vinte e quatro registros no mesmo dia contam um dia só.
+        assertThat(sequencia()).isEqualTo(13);
+        assertThat(ultimaLeitura()).isEqualTo(SequenciaDeLeitura.hoje());
+    }
+
+    private int sequencia() {
+        return jdbc.queryForObject(
+                "SELECT dias_consecutivos FROM usuario WHERE id = ?", Integer.class, USUARIO);
+    }
+
+    private LocalDate ultimaLeitura() {
+        return jdbc.queryForObject(
+                "SELECT ultima_leitura_em FROM usuario WHERE id = ?", LocalDate.class, USUARIO);
     }
 
     private int placarDoDesafioAtivo() {
@@ -161,6 +189,7 @@ class RegistrarProgressoConcorrenciaIT {
                 var resposta = chamada.get(30, TimeUnit.SECONDS);
                 assertThat(resposta.paginaAtual()).isEqualTo(pagina);
                 assertThat(resposta.paginaMaximaAlcancada()).isEqualTo(pagina);
+                assertThat(resposta.sequenciaDias()).isEqualTo(13);
                 xpTotal += resposta.xpTotal();
             }
             assertThat(xpTotal).isEqualTo(xpEsperado);

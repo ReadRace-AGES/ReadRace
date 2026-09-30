@@ -1,5 +1,6 @@
 package com.readrace.api.service;
 
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -15,6 +16,7 @@ import com.readrace.api.exception.RecursoNaoEncontradoException;
 import com.readrace.api.model.ClubeDoLivro;
 import com.readrace.api.model.Livro;
 import com.readrace.api.model.Post;
+import com.readrace.api.model.SequenciaDeLeitura;
 import com.readrace.api.model.Usuario;
 import com.readrace.api.repository.ClubeDoLivroRepository;
 import com.readrace.api.repository.CurtidaRepository;
@@ -96,9 +98,10 @@ public class ForumClubeService {
         UUID usuarioId = usuarioAtual.idDoUsuarioAtual().valor();
         Set<UUID> curtidosPorMim =
                 Set.copyOf(curtidaRepository.postsCurtidosPorUsuario(usuarioId, postIds));
+        LocalDate hoje = SequenciaDeLeitura.hoje();
 
         return posts.stream()
-                .map(post -> paraPost(post, autores, curtidas, curtidosPorMim))
+                .map(post -> paraPost(post, autores, curtidas, curtidosPorMim, hoje))
                 .toList();
     }
 
@@ -106,7 +109,8 @@ public class ForumClubeService {
             Post post,
             Map<UUID, Usuario> autores,
             Map<UUID, Long> curtidas,
-            Set<UUID> curtidosPorMim) {
+            Set<UUID> curtidosPorMim,
+            LocalDate hoje) {
         Usuario autor = autores.get(post.getAutorId());
 
         return new ForumClubeResponse.Post(
@@ -115,7 +119,7 @@ public class ForumClubeService {
                         post.getAutorId(),
                         autor == null ? null : autor.getNome(),
                         autor == null ? null : autor.getAvatarUrl(),
-                        autor == null ? null : autor.getDiasConsecutivos()),
+                        autor == null ? null : autor.sequenciaExibida(hoje)),
                 post.getCriadoEm(),
                 post.getConteudo(),
                 curtidas.getOrDefault(post.getId(), 0L),

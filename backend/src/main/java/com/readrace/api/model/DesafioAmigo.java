@@ -96,14 +96,20 @@ public class DesafioAmigo {
         return status == StatusDesafio.ATIVO && !agora.isBefore(inicioEm) && !agora.isAfter(fimEm);
     }
 
-    public void finalizarSePrazoEncerrado(OffsetDateTime agora) {
+    public boolean finalizarSePrazoEncerrado(OffsetDateTime agora) {
         if (status == StatusDesafio.ATIVO && agora.isAfter(fimEm)) {
             finalizar();
+            return true;
         }
+        return false;
     }
 
     public void finalizar() {
         this.status = StatusDesafio.FINALIZADO;
+    }
+
+    public boolean estaFinalizado() {
+        return status == StatusDesafio.FINALIZADO;
     }
 
     @Override

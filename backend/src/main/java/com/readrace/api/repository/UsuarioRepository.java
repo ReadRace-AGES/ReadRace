@@ -21,9 +21,13 @@ public interface UsuarioRepository extends JpaRepository<Usuario, UUID> {
 
     Optional<Usuario> findByIdAndExcluidoEmIsNull(UUID id);
 
-    // Lock pessimista: serializa somas de XP concorrentes do mesmo usuário, para uma transação
-    // nunca sobrescrever o xp_total que a outra acabou de gravar.
     @Lock(LockModeType.PESSIMISTIC_WRITE)
-    @Query("SELECT u FROM Usuario u WHERE u.id = :id")
-    Optional<Usuario> buscarComLock(@Param("id") UUID id);
+    @Query(
+            """
+            SELECT usuario
+            FROM Usuario usuario
+            WHERE usuario.id = :id
+              AND usuario.excluidoEm IS NULL
+            """)
+    Optional<Usuario> buscarAtivoComLock(@Param("id") UUID id);
 }
