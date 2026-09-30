@@ -1,8 +1,15 @@
 import { apiGet, apiRequest } from '@/api/client';
 
+export type DesafioStatus =
+  | 'pendente'
+  | 'em_andamento'
+  | 'concluido_ganho'
+  | 'concluido_perdido'
+  | 'concluido_empate';
+
 export type Desafio = {
   id: string;
-  status: string;
+  status: DesafioStatus;
   descricao: string;
   diasRestantes: number;
   oponente: {
@@ -46,7 +53,7 @@ type DesafioBase = {
   descricao: string;
   prazoDias: number;
   diasRestantes: number;
-  status: 'pendente' | 'em_andamento' | 'concluido_ganho' | 'concluido_perdido';
+  status: DesafioStatus;
   progresso: {
     voce: number;
     oponente: number;

@@ -24,6 +24,10 @@ const colors = {
   textMuted: '#A3A3A3',
   textInverse: '#FEFEFE',
 
+  // Cores de estado dos desafios
+  success: '#4CAF50',
+  danger: '#E53935',
+
   navInactiveStart: '#D98B9A',
   navInactiveEnd: '#AE7E86',
   navInactive: '#C1848F',
@@ -107,7 +111,7 @@ const shadows = {
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.05,
     shadowRadius: 2,
-    elevation: 2, 
+    elevation: 2,
   },
 };
 
