@@ -1,0 +1,27 @@
+import Svg, { Path } from 'react-native-svg';
+
+import { colors, sizes } from '@/theme';
+
+export type MedalIconProps = {
+  size?: number;
+  color?: string;
+};
+
+const GLIFO = { x: 280, y: -880, largura: 400, altura: 800 };
+const MEDALHA_PATH =
+  'M280-880h400v314q0 23-10 41t-28 29l-142 84 28 92h152l-124 88 48 152-124-94-124 94 48-152-124-88h152l28-92-142-84q-18-11-28-29t-10-41v-314Zm160 80v282l40 24 40-24v-282h-80Z';
+
+export function MedalIcon({
+  size = sizes.icon,
+  color = colors.primary,
+}: MedalIconProps) {
+  return (
+    <Svg
+      width={(size * GLIFO.largura) / 960}
+      height={(size * GLIFO.altura) / 960}
+      viewBox={`${GLIFO.x} ${GLIFO.y} ${GLIFO.largura} ${GLIFO.altura}`}
+    >
+      <Path d={MEDALHA_PATH} fill={color} />
+    </Svg>
+  );
+}

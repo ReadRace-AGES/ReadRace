@@ -33,9 +33,13 @@ export type Perfil = {
   }[];
 };
 
-export function buscarPerfil(usuarioId: string, signal: AbortSignal) {
-  return apiGet<Perfil>(
-    `/api/usuarios/${encodeURIComponent(usuarioId)}/perfil`,
-    { signal }
-  );
+export function buscarPerfil(
+  usuarioId: string | undefined,
+  signal: AbortSignal
+) {
+  const caminho =
+    usuarioId === undefined
+      ? '/api/me/perfil'
+      : `/api/usuarios/${encodeURIComponent(usuarioId)}/perfil`;
+  return apiGet<Perfil>(caminho, { signal });
 }

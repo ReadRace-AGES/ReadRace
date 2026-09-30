@@ -22,4 +22,10 @@ class CurvaDeNivelTest {
     void xpNoNivelEORestoDentroDoNivel() {
         assertThat(CurvaDeNivel.xpNoNivel(2505, 7)).isEqualTo(576);
     }
+
+    @ParameterizedTest(name = "{0} de XP é nível {1}")
+    @CsvSource({"0, 1", "44, 1", "45, 2", "171, 2", "172, 3", "2761, 7", "2762, 8", "2800, 8"})
+    void derivaONivelDoXpTotal(int xpTotal, int nivel) {
+        assertThat(CurvaDeNivel.nivelDoXp(xpTotal)).isEqualTo(nivel);
+    }
 }

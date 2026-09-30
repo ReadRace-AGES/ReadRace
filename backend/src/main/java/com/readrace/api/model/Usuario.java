@@ -45,6 +45,11 @@ public class Usuario {
     @Column(name = "ultima_leitura_em")
     private LocalDate ultimaLeituraEm;
 
+    public void receberXp(int xp) {
+        xpTotal += xp;
+        nivel = CurvaDeNivel.nivelDoXp(xpTotal);
+    }
+
     public void registrarLeitura(LocalDate hoje) {
         diasConsecutivos = SequenciaDeLeitura.aposLeitura(diasConsecutivos, ultimaLeituraEm, hoje);
         ultimaLeituraEm = hoje;
