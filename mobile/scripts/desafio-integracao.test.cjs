@@ -108,6 +108,10 @@ test('aba navega, recarrega ao foco e ignora respostas antigas', async () => {
       PrimaryButton: 'PrimaryButton',
     },
 
+    '@/components/toast-provider': {
+      useToastContext: () => ({ showToast: () => {} }),
+    },
+
     '@/theme': {
       ...require('../src/theme/tokens'),
       textStyles: {},
@@ -208,10 +212,7 @@ test('aba navega, recarrega ao foco e ignora respostas antigas', async () => {
 
   assert.match(JSON.stringify(tree.toJSON()), /150 páginas \(novo\)/);
 
-  assert.doesNotMatch(
-    JSON.stringify(tree.toJSON()),
-    /150 páginas \(antigo\)/
-  );
+  assert.doesNotMatch(JSON.stringify(tree.toJSON()), /150 páginas \(antigo\)/);
 
   assert.equal(tree.root.findAllByType('ActivityIndicator').length, 0);
   assert.equal(tree.root.findAllByType('Card').length, 1);
