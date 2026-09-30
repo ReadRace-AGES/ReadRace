@@ -8,4 +8,9 @@ public record ProgressoLeituraResponse(
         Integer xpPaginas,
         Integer xpConclusao,
         Integer xpTotal,
-        Boolean concluido) {}
+        Boolean concluido,
+        Integer nivel,
+        Integer xpDoUsuario,
+        Integer xpNoNivel,
+        Integer xpDoNivel,
+        Boolean subiuDeNivel) {}

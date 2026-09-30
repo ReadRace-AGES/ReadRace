@@ -9,13 +9,16 @@ import com.readrace.api.dto.request.RegistrarProgressoRequest;
 import com.readrace.api.dto.response.ProgressoLeituraResponse;
 import com.readrace.api.exception.LivroNaoEncontradoException;
 import com.readrace.api.exception.PaginaInvalidaException;
+import com.readrace.api.model.CurvaDeNivel;
 import com.readrace.api.model.ItemBiblioteca;
 import com.readrace.api.model.Livro;
 import com.readrace.api.model.RegistroLeitura;
+import com.readrace.api.model.Usuario;
 import com.readrace.api.model.UsuarioId;
 import com.readrace.api.repository.ItemBibliotecaRepository;
 import com.readrace.api.repository.LivroRepository;
 import com.readrace.api.repository.RegistroLeituraRepository;
+import com.readrace.api.repository.UsuarioRepository;
 
 @Service
 public class RegistrarProgressoService {
@@ -25,6 +28,7 @@ public class RegistrarProgressoService {
     private final LivroRepository livroRepository;
     private final ItemBibliotecaRepository itemBibliotecaRepository;
     private final RegistroLeituraRepository registroLeituraRepository;
+    private final UsuarioRepository usuarioRepository;
     private final UsuarioAtualDeSeed usuarioAtual;
     private final DesafioService desafioService;
 
@@ -32,11 +36,13 @@ public class RegistrarProgressoService {
             LivroRepository livroRepository,
             ItemBibliotecaRepository itemBibliotecaRepository,
             RegistroLeituraRepository registroLeituraRepository,
+            UsuarioRepository usuarioRepository,
             UsuarioAtualDeSeed usuarioAtual,
             DesafioService desafioService) {
         this.livroRepository = livroRepository;
         this.itemBibliotecaRepository = itemBibliotecaRepository;
         this.registroLeituraRepository = registroLeituraRepository;
+        this.usuarioRepository = usuarioRepository;
         this.usuarioAtual = usuarioAtual;
         this.desafioService = desafioService;
     }
@@ -68,9 +74,17 @@ public class RegistrarProgressoService {
 
         boolean concluiuAgora = !concluidoAntes && item.estaConcluido();
         int xpConclusao = concluiuAgora ? XP_CONCLUSAO : 0;
+        int xpGanho = xpPaginas + xpConclusao;
         int percentual = Math.round((pagina * 100f) / livro.getTotalPaginas());
 
         desafioService.avancarDesafios(usuarioAtualId.valor(), livro, paginasNovas, concluiuAgora);
+
+        Usuario usuario = usuarioRepository.buscarComLock(usuarioAtualId.valor()).orElseThrow();
+        int nivelAnterior = usuario.getNivel();
+        usuario.somarXp(xpGanho);
+        boolean subiuDeNivel = usuario.getNivel() != nivelAnterior;
+        int xpNoNivel = CurvaDeNivel.xpNoNivel(usuario.getXpTotal(), usuario.getNivel());
+        int xpDoNivel = CurvaDeNivel.xpDoNivel(usuario.getNivel());
 
         return new ProgressoLeituraResponse(
                 item.getPaginaAtual(),
@@ -79,8 +93,13 @@ public class RegistrarProgressoService {
                 percentual,
                 xpPaginas,
                 xpConclusao,
-                xpPaginas + xpConclusao,
-                item.estaConcluido());
+                xpGanho,
+                item.estaConcluido(),
+                usuario.getNivel(),
+                usuario.getXpTotal(),
+                xpNoNivel,
+                xpDoNivel,
+                subiuDeNivel);
     }
 
     private int lerPagina(RegistrarProgressoRequest request) {

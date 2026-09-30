@@ -59,6 +59,11 @@ public class Usuario {
         return getClass().hashCode();
     }
 
+    public void somarXp(int xp) {
+        this.xpTotal += xp;
+        this.nivel = CurvaDeNivel.nivelParaXp(this.xpTotal);
+    }
+
     public String getTitulo() {
         if (nivel <= 10) {
             return "Leitor iniciante";

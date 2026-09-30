@@ -36,20 +36,30 @@ class RegistrarProgressoConcorrenciaIT {
     @Autowired private JdbcTemplate jdbc;
 
     private int placarAntes;
+    private int xpUsuarioAntes;
+    private int nivelUsuarioAntes;
 
     @BeforeEach
     void guardar_placar_do_desafio_ativo() {
         placarAntes = placarDoDesafioAtivo();
+        xpUsuarioAntes = xpDoUsuario();
+        nivelUsuarioAntes = nivelDoUsuario();
     }
 
     @AfterEach
     void limpar_registros_confirmados() {
-        // Os registros também avançam o desafio ativo do seed e, aqui, são confirmados de verdade.
+        // Os registros também avançam o desafio ativo e o XP do usuário do seed, e aqui são
+        // confirmados de verdade — sem isso, os testes seguintes herdariam o estado sujo.
         jdbc.update(
                 "UPDATE progresso_desafio SET valor_atual = ?"
                         + " WHERE desafio_id = ? AND usuario_id = ?",
                 placarAntes,
                 DESAFIO_ATIVO,
+                USUARIO);
+        jdbc.update(
+                "UPDATE usuario SET xp_total = ?, nivel = ? WHERE id = ?",
+                xpUsuarioAntes,
+                nivelUsuarioAntes,
                 USUARIO);
         jdbc.update(
                 """
@@ -101,6 +111,9 @@ class RegistrarProgressoConcorrenciaIT {
                                 LIVRO))
                 .isEqualTo(24);
         assertThat(placarDoDesafioAtivo()).isEqualTo(placarAntes + 20);
+        // As 24 chamadas somam exatamente os mesmos 20 de XP que o item e o desafio pagaram —
+        // se o lock pessimista do Usuario não estivesse lá, esse valor viria menor que 20.
+        assertThat(xpDoUsuario()).isEqualTo(xpUsuarioAntes + 20);
     }
 
     private int placarDoDesafioAtivo() {
@@ -110,6 +123,16 @@ class RegistrarProgressoConcorrenciaIT {
                 Integer.class,
                 DESAFIO_ATIVO,
                 USUARIO);
+    }
+
+    private int xpDoUsuario() {
+        return jdbc.queryForObject(
+                "SELECT xp_total FROM usuario WHERE id = ?", Integer.class, USUARIO);
+    }
+
+    private int nivelDoUsuario() {
+        return jdbc.queryForObject(
+                "SELECT nivel FROM usuario WHERE id = ?", Integer.class, USUARIO);
     }
 
     private void verificarChamadasConcorrentes(int pagina, int xpEsperado) throws Exception {

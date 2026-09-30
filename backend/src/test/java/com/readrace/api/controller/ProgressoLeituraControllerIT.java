@@ -21,6 +21,7 @@ import org.springframework.transaction.annotation.Transactional;
 import com.readrace.api.TestcontainersConfiguration;
 import com.readrace.api.model.ItemBiblioteca;
 import com.readrace.api.model.StatusLeitura;
+import com.readrace.api.model.Usuario;
 
 @Import(TestcontainersConfiguration.class)
 @SpringBootTest
@@ -32,6 +33,8 @@ class ProgressoLeituraControllerIT {
     // O seed inicia Dom Casmurro na página 145; cada teste desfaz suas alterações por rollback.
     private static final String LIVRO_DOM_CASMURRO = "30000000-0000-0000-0000-000000000001";
     private static final String LIVRO_FORA_DA_BIBLIOTECA = "30000000-0000-0000-0000-000000000013";
+    private static final UUID USUARIO_FIXO =
+            UUID.fromString("00000000-0000-0000-0000-000000000001");
 
     @Autowired private MockMvcTester mvc;
     @Autowired private EntityManager entityManager;
@@ -96,6 +99,8 @@ class ProgressoLeituraControllerIT {
 
     @Test
     void deve_pagar_bonus_de_conclusao_uma_unica_vez() {
+        // 111 de páginas novas (256 - 145) + 150 de bônus = 261, somado ao usuário na mesma
+        // transação do registro: 2450 + 261 = 2711, ainda dentro do nível 7 (fecha em 2762).
         assertThat(
                         mvc.post()
                                 .uri("/api/livros/{livroId}/progresso", LIVRO_DOM_CASMURRO)
@@ -103,8 +108,12 @@ class ProgressoLeituraControllerIT {
                                 .content("{\"pagina\":256}"))
                 .hasStatusOk()
                 .bodyJson()
-                .extractingPath("$.xpTotal")
-                .isEqualTo(261);
+                .extractingPath("$")
+                .asMap()
+                .containsEntry("xpTotal", 261)
+                .containsEntry("xpDoUsuario", 2711)
+                .containsEntry("nivel", 7)
+                .containsEntry("subiuDeNivel", false);
 
         assertThat(
                         mvc.post()
@@ -128,6 +137,12 @@ class ProgressoLeituraControllerIT {
                 .bodyJson()
                 .extractingPath("$.code")
                 .isEqualTo("PAGINA_INVALIDA");
+
+        // A transação inteira volta atrás: nem o registro, nem o XP, nem o nível são gravados.
+        entityManager.clear();
+        Usuario usuario = entityManager.find(Usuario.class, USUARIO_FIXO);
+        assertThat(usuario.getXpTotal()).isEqualTo(2450);
+        assertThat(usuario.getNivel()).isEqualTo(7);
     }
 
     @Test
@@ -228,6 +243,75 @@ class ProgressoLeituraControllerIT {
         assertThat(item.getStatusLeitura()).isEqualTo(StatusLeitura.lido);
         assertThat(item.getPaginaAtual()).isEqualTo(100);
         assertThat(item.getPaginaMaxima()).isEqualTo(256);
+    }
+
+    @Test
+    void deve_somar_xp_ao_usuario_sem_subir_de_nivel() {
+        // Usuário fixo do seed: 2450 de XP, nível 7 (recalculado pela V7). 145 -> 200 em
+        // Dom Casmurro paga 55 de XP, os mesmos números do exemplo da issue #95.
+        assertThat(
+                        mvc.post()
+                                .uri("/api/livros/{livroId}/progresso", LIVRO_DOM_CASMURRO)
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content("{\"pagina\":200}"))
+                .hasStatusOk()
+                .bodyJson()
+                .extractingPath("$")
+                .asMap()
+                .containsEntry("xpPaginas", 55)
+                .containsEntry("xpDoUsuario", 2505)
+                .containsEntry("nivel", 7)
+                .containsEntry("xpNoNivel", 576)
+                .containsEntry("xpDoNivel", 833)
+                .containsEntry("subiuDeNivel", false);
+    }
+
+    @Test
+    void deve_subir_de_nivel_quando_xp_total_ultrapassa_o_limite() {
+        String livroCrimeECastigo = "30000000-0000-0000-0000-000000000006";
+
+        assertThat(
+                        mvc.post()
+                                .uri("/api/livros/{livroId}/progresso", LIVRO_DOM_CASMURRO)
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content("{\"pagina\":200}"))
+                .hasStatusOk();
+        entityManager.flush();
+        entityManager.clear();
+
+        // 2505 (depois do registro acima) + 310 (620 - pagina_maxima 310 do seed) = 2815,
+        // que passa dos 2762 que fecham o nível 7.
+        assertThat(
+                        mvc.post()
+                                .uri("/api/livros/{livroId}/progresso", livroCrimeECastigo)
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content("{\"pagina\":620}"))
+                .hasStatusOk()
+                .bodyJson()
+                .extractingPath("$")
+                .asMap()
+                .containsEntry("xpPaginas", 310)
+                .containsEntry("xpDoUsuario", 2815)
+                .containsEntry("nivel", 8)
+                .containsEntry("xpNoNivel", 53)
+                .containsEntry("xpDoNivel", 1018)
+                .containsEntry("subiuDeNivel", true);
+    }
+
+    @Test
+    void nao_deve_alterar_xp_do_usuario_quando_pagina_ja_foi_lida() {
+        assertThat(
+                        mvc.post()
+                                .uri("/api/livros/{livroId}/progresso", LIVRO_DOM_CASMURRO)
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content("{\"pagina\":100}"))
+                .hasStatusOk()
+                .bodyJson()
+                .extractingPath("$")
+                .asMap()
+                .containsEntry("xpDoUsuario", 2450)
+                .containsEntry("nivel", 7)
+                .containsEntry("subiuDeNivel", false);
     }
 
     @Test

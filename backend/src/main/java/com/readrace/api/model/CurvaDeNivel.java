@@ -20,4 +20,14 @@ public final class CurvaDeNivel {
     public static int xpNoNivel(int xpTotal, int nivel) {
         return xpTotal - xpParaChegarNoNivel(nivel);
     }
+
+    public static int nivelParaXp(int xpTotal) {
+        int nivel = 1;
+        int acumulado = 0;
+        while (acumulado + xpDoNivel(nivel) <= xpTotal) {
+            acumulado += xpDoNivel(nivel);
+            nivel++;
+        }
+        return nivel;
+    }
 }
