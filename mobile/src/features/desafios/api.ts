@@ -33,12 +33,16 @@ export type OponentesResponse = {
   oponentes: Oponente[];
 };
 
-export type CriarDesafioRequest = {
+type CriarDesafioBaseRequest = {
   oponenteId: string;
-  tipoMeta: 'paginas';
-  meta: number;
   prazoDias: number;
 };
+
+export type CriarDesafioRequest = CriarDesafioBaseRequest &
+  (
+    | { tipoMeta: 'paginas'; meta: number; livroId?: never }
+    | { tipoMeta: 'livro'; livroId: string; meta?: never }
+  );
 
 export type LivroDesafio = {
   id: string;
