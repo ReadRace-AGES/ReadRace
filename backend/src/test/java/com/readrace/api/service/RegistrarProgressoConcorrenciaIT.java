@@ -11,6 +11,7 @@ import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 
 import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -28,12 +29,28 @@ import com.readrace.api.dto.response.ProgressoLeituraResponse;
 class RegistrarProgressoConcorrenciaIT {
     private static final UUID LIVRO = UUID.fromString("30000000-0000-0000-0000-000000000013");
     private static final UUID USUARIO = UUID.fromString("00000000-0000-0000-0000-000000000001");
+    private static final UUID DESAFIO_ATIVO =
+            UUID.fromString("90000000-0000-0000-0000-000000000001");
 
     @Autowired private RegistrarProgressoService service;
     @Autowired private JdbcTemplate jdbc;
 
+    private int placarAntes;
+
+    @BeforeEach
+    void guardar_placar_do_desafio_ativo() {
+        placarAntes = placarDoDesafioAtivo();
+    }
+
     @AfterEach
     void limpar_registros_confirmados() {
+        // Os registros também avançam o desafio ativo do seed e, aqui, são confirmados de verdade.
+        jdbc.update(
+                "UPDATE progresso_desafio SET valor_atual = ?"
+                        + " WHERE desafio_id = ? AND usuario_id = ?",
+                placarAntes,
+                DESAFIO_ATIVO,
+                USUARIO);
         jdbc.update(
                 """
                 DELETE FROM registro_leitura WHERE item_biblioteca_id IN
@@ -83,6 +100,16 @@ class RegistrarProgressoConcorrenciaIT {
                                 USUARIO,
                                 LIVRO))
                 .isEqualTo(24);
+        assertThat(placarDoDesafioAtivo()).isEqualTo(placarAntes + 20);
+    }
+
+    private int placarDoDesafioAtivo() {
+        return jdbc.queryForObject(
+                "SELECT valor_atual FROM progresso_desafio"
+                        + " WHERE desafio_id = ? AND usuario_id = ?",
+                Integer.class,
+                DESAFIO_ATIVO,
+                USUARIO);
     }
 
     private void verificarChamadasConcorrentes(int pagina, int xpEsperado) throws Exception {

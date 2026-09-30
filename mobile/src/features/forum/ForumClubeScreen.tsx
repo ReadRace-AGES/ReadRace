@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import {
   ActivityIndicator,
   ScrollView,
@@ -12,6 +13,7 @@ import { EmptyState } from '@/components/EmptyState';
 import { BookIcon } from '@/components/icons/BookIcon';
 import { PostCard } from '@/components/PostCard';
 import { PrimaryButton } from '@/components/PrimaryButton';
+import { useToastContext } from '@/components/toast-provider';
 import { tempoRelativo } from '@/features/livro/model';
 import { colors, spacing, typography } from '@/theme';
 
@@ -31,9 +33,33 @@ function rotaDoClube(clubeId: string): Href {
 
 export function ForumClubeScreen({ clubeId }: { clubeId: string }) {
   const router = useRouter();
-  const { forum, recarregar } = useForumClube(clubeId);
+  const { forum, recarregar, alternarCurtida } = useForumClube(clubeId);
+  const { showErrorToast } = useToastContext();
+  const [curtidasPendentes, setCurtidasPendentes] = useState<Set<string>>(
+    new Set()
+  );
 
   const dados = forum.situacao === 'sucesso' ? forum.dados : null;
+
+  async function curtirPost(postId: string) {
+    if (curtidasPendentes.has(postId)) return;
+    setCurtidasPendentes((atual) => new Set(atual).add(postId));
+    try {
+      await alternarCurtida(postId);
+    } catch (erro) {
+      showErrorToast(
+        erro instanceof Error
+          ? erro.message
+          : 'Não foi possível registrar sua curtida. Tente novamente.'
+      );
+    } finally {
+      setCurtidasPendentes((atual) => {
+        const proximo = new Set(atual);
+        proximo.delete(postId);
+        return proximo;
+      });
+    }
+  }
 
   function voltar() {
     if (router.canGoBack()) {
@@ -111,6 +137,9 @@ export function ForumClubeScreen({ clubeId }: { clubeId: string }) {
                 timeAgo={tempoRelativo(post.publicadoEm)}
                 text={post.texto}
                 likes={post.totalCurtidas}
+                likedByMe={post.curtidoPorMim}
+                likeDisabled={curtidasPendentes.has(post.id)}
+                onLikePress={() => curtirPost(post.id)}
               />
             ))
           )}

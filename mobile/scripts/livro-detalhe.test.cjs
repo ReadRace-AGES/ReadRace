@@ -56,7 +56,7 @@ test('primeiro registro usa percentual do servidor e preserva livro e posts', ()
   assert.equal('xpTotal' in atualizado.progresso, false);
 });
 
-function renderDetalhe(dados) {
+function renderDetalhe(dados, options = {}) {
   const componentNames = [
     'AppHeader',
     'BookCover',
@@ -67,8 +67,20 @@ function renderDetalhe(dados) {
     'ProgressBar',
   ];
   const dependencies = {
-    react: { useCallback: (fn) => fn, useState: () => [false, () => {}] },
-    'expo-router': { useFocusEffect: () => {}, useRouter: () => ({}) },
+    react: {
+      useCallback: (fn) => fn,
+      useState: (inicial) => [inicial, () => {}],
+    },
+    'expo-router': {
+      useFocusEffect: () => {},
+      useRouter: () => options.router ?? {},
+    },
+    '@/components/toast-provider': {
+      useToastContext: () => ({
+        showToast: () => {},
+        showErrorToast: () => {},
+      }),
+    },
     'react-native': {
       ActivityIndicator: 'ActivityIndicator',
       Pressable: 'Pressable',
@@ -91,7 +103,9 @@ function renderDetalhe(dados) {
     },
     './model': { tempoRelativo },
     './useLivroDetalhe': {
-      useLivroDetalhe: () => ({ estado: { situacao: 'sucesso', dados } }),
+      useLivroDetalhe: () => ({
+        estado: options.estado ?? { situacao: 'sucesso', dados },
+      }),
     },
   };
   for (const name of componentNames)
@@ -107,9 +121,103 @@ function renderDetalhe(dados) {
     elements.push(node);
     visit(node.props?.children);
   }
-  visit(LivroDetalheScreen({ livroId: dados.livro.id }));
+  visit(
+    LivroDetalheScreen({
+      livroId: dados?.livro.id ?? '1',
+      origem: options.origem ?? '/meus-livros',
+    })
+  );
   return elements;
 }
+
+for (const origem of ['/buscar', '/meus-livros']) {
+  for (const situacao of ['carregando', 'erro', 'sucesso']) {
+    test(`voltar de ${situacao} preserva a pilha de ${origem}`, () => {
+      const chamadas = [];
+      const elements = renderDetalhe(null, {
+        origem,
+        estado: {
+          situacao,
+          mensagem: 'Falha ao carregar',
+          dados: { livro: { id: '1', totalPaginas: 100 }, posts: [] },
+        },
+        router: {
+          canGoBack: () => true,
+          back: () => chamadas.push('back'),
+          replace: (destino) => chamadas.push(destino),
+        },
+      });
+      elements.find((e) => e.type === 'AppHeader').props.onBackPress();
+      if (situacao === 'erro') {
+        elements.find((e) => e.props.label === 'Voltar').props.onPress();
+      }
+      assert.deepEqual(
+        chamadas,
+        situacao === 'erro' ? ['back', 'back'] : ['back']
+      );
+    });
+  }
+
+  test(`detalhe sem histórico retorna para ${origem}`, () => {
+    const chamadas = [];
+    const elements = renderDetalhe(null, {
+      origem,
+      estado: { situacao: 'carregando' },
+      router: {
+        canGoBack: () => false,
+        back: () => assert.fail('Não há histórico'),
+        replace: (destino) => chamadas.push(destino),
+      },
+    });
+    elements.find((e) => e.type === 'AppHeader').props.onBackPress();
+    assert.deepEqual(chamadas, [origem]);
+  });
+}
+
+test('cada entrada abre um caminho exclusivo dentro da própria aba', () => {
+  const destinos = [];
+  const dependencies = {
+    react: { useState: (inicial) => [inicial, () => {}] },
+    'expo-router': {
+      router: { push: (destino) => destinos.push(destino) },
+      useLocalSearchParams: () => ({ livroId: '1' }),
+    },
+    '@/components/toast-provider': { useToastContext: () => ({}) },
+    '@/features/busca/BuscaView': {
+      BuscaView: 'BuscaView',
+      ABA_INICIAL: 'Livros',
+      TIPO_POR_ABA: { Livros: 'LIVROS' },
+    },
+    '@/features/busca/useBusca': { useBusca: () => ({}) },
+    '@/features/biblioteca/MeusLivrosView': {
+      MeusLivrosView: 'MeusLivrosView',
+    },
+    '@/features/biblioteca/useBiblioteca': { useBiblioteca: () => ({}) },
+    '@/features/livro/LivroDetalheScreen': {
+      LivroDetalheScreen: 'LivroDetalheScreen',
+    },
+  };
+  for (const [aba, entrada, detalhe, origem] of [
+    ['(busca)', 'buscar', 'buscar-livro', '/buscar'],
+    ['(biblioteca)', 'meus-livros', 'biblioteca-livro', '/meus-livros'],
+  ]) {
+    const base = `src/app/(tabs)/${aba}`;
+    const { default: Entrada } = load(`${base}/${entrada}.tsx`, dependencies);
+    Entrada().props.onLivroPress({ id: '1', livroId: '1' });
+    assert.equal(destinos.at(-1), `/${detalhe}/1`);
+    const { default: Detalhe } = load(
+      `${base}/${detalhe}/[livroId].tsx`,
+      dependencies
+    );
+    assert.equal(Detalhe().props.origem, origem);
+    assert.equal(Detalhe().props.livroId, '1');
+    assert.equal(
+      fs.existsSync(path.join(__dirname, '..', base, 'livro/[livroId].tsx')),
+      false
+    );
+  }
+  assert.equal(new Set(destinos).size, 2);
+});
 
 test('tela preserva gênero, ordem, autores e curtidas da resposta agregada', async () => {
   const dados = {

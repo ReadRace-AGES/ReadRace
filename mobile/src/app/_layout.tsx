@@ -31,10 +31,6 @@ export default function RootLayout() {
         }}
       >
         <Stack.Screen name="(tabs)" />
-        <Stack.Screen
-          name="teste"
-          options={{ headerShown: true, title: 'Tela de teste' }}
-        />
       </Stack>
     </ToastProvider>
   );

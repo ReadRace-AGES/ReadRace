@@ -53,7 +53,7 @@ class ForumClubeControllerIT {
         assertThat(mvc.get().uri(URL))
                 .bodyJson()
                 .extractingPath("$.clube.livroAtual.capaUrl")
-                .isEqualTo("https://covers.openlibrary.org/b/isbn/9788535910663-L.jpg");
+                .isEqualTo("https://covers.openlibrary.org/b/id/647501-L.jpg");
     }
 
     @Test
@@ -98,6 +98,17 @@ class ForumClubeControllerIT {
                 .extractingPath("$.posts[*].totalCurtidas")
                 .asList()
                 .containsExactly(3, 4, 5, 6, 7, 1);
+    }
+
+    @Test
+    @DisplayName("curtidoPorMim reflete a curtida do usuário atual (curtiu tudo no seed) (#101)")
+    void deve_marcar_curtidoPorMim_para_o_usuario_atual() {
+        assertThat(mvc.get().uri(URL))
+                .hasStatusOk()
+                .bodyJson()
+                .extractingPath("$.posts[*].curtidoPorMim")
+                .asList()
+                .containsOnly(true);
     }
 
     @Test

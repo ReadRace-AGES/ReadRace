@@ -8,6 +8,7 @@ import jakarta.persistence.EntityManager;
 import jakarta.persistence.EntityManagerFactory;
 
 import org.hibernate.SessionFactory;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -112,6 +113,35 @@ class LivroControllerIT {
             stats.setStatisticsEnabled(habilitado);
             stats.clear();
         }
+    }
+
+    @Test
+    @DisplayName("curtidoPorMim vem falso quando o usuário atual não curtiu (#101)")
+    void deve_devolver_curtidoPorMim_falso_por_padrao() {
+        assertThat(mvc.get().uri(DOM_CASMURRO))
+                .hasStatusOk()
+                .bodyJson()
+                .extractingPath("$.posts[*].curtidoPorMim")
+                .asList()
+                .containsOnly(false);
+    }
+
+    @Test
+    @Transactional
+    @DisplayName("curtidoPorMim reflete a curtida do usuário atual (#101)")
+    void deve_refletir_a_curtida_do_usuario_atual() {
+        jdbc.update(
+                "INSERT INTO curtida (id, post_id, usuario_id) VALUES (gen_random_uuid(),"
+                        + " '72000000-0000-0000-0000-000000000001',"
+                        + " '00000000-0000-0000-0000-000000000001')");
+
+        assertThat(mvc.get().uri(DOM_CASMURRO))
+                .hasStatusOk()
+                .bodyJson()
+                .extractingPath(
+                        "$.posts[?(@.id=='72000000-0000-0000-0000-000000000001')].curtidoPorMim")
+                .asList()
+                .containsExactly(true);
     }
 
     @Test

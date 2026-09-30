@@ -49,6 +49,7 @@ const { ProgressoTimeoutError } = load('src/features/progresso/api.ts', {
 
 test('detalhe abre modal, valida, bloqueia toque duplo, preserva erro e aplica sucesso sem novo GET', async () => {
   let resolvePost, rejectPost;
+  const navegacoes = [];
   let posts = 0,
     gets = 0;
   const progressoApi = {
@@ -81,6 +82,10 @@ test('detalhe abre modal, valida, bloqueia toque duplo, preserva erro e aplica s
   const model = load('src/features/livro/model.ts');
   const { useLivroDetalhe } = load('src/features/livro/useLivroDetalhe.ts', {
     '@/api/client': { ApiError },
+    '@/features/posts/api': {
+      curtir: async () => ({ curtidoPorMim: true, totalCurtidas: 1 }),
+      descurtir: async () => ({ curtidoPorMim: false, totalCurtidas: 0 }),
+    },
     './model': model,
     './api': {
       buscarDetalhe: async () => {
@@ -99,10 +104,20 @@ test('detalhe abre modal, valida, bloqueia toque duplo, preserva erro e aplica s
     './model': model,
     './useLivroDetalhe': { useLivroDetalhe },
     'expo-router': {
-      useRouter: () => ({}),
+      useRouter: () => ({
+        canGoBack: () => true,
+        back: () => navegacoes.push('back'),
+        replace: (destino) => navegacoes.push(destino),
+      }),
       useFocusEffect: (callback) => React.useEffect(callback, [callback]),
     },
     '@/components/icons/BookIcon': { BookIcon: 'BookIcon' },
+    '@/components/toast-provider': {
+      useToastContext: () => ({
+        showToast: () => {},
+        showErrorToast: () => {},
+      }),
+    },
     '@/features/progresso/RegistrarProgressoSheet': { RegistrarProgressoSheet },
   };
   for (const name of [
@@ -122,7 +137,10 @@ test('detalhe abre modal, valida, bloqueia toque duplo, preserva erro e aplica s
   let renderer;
   await act(async () => {
     renderer = create(
-      React.createElement(LivroDetalheScreen, { livroId: '1' })
+      React.createElement(LivroDetalheScreen, {
+        livroId: '1',
+        origem: '/buscar',
+      })
     );
   });
   try {
@@ -194,6 +212,8 @@ test('detalhe abre modal, valida, bloqueia toque duplo, preserva erro e aplica s
     assert.equal(renderer.root.findAllByType('BottomSheet').length, 0);
     assert.equal(renderer.root.findByType('ProgressBar').props.progress, 73);
     assert.equal(gets, 1);
+    renderer.root.findByType('AppHeader').props.onBackPress();
+    assert.deepEqual(navegacoes, ['back']);
     await act(async () =>
       renderer.root
         .findAllByType('Pressable')
