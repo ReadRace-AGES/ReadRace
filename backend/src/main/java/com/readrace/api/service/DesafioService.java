@@ -1,6 +1,7 @@
 package com.readrace.api.service;
 
 import java.nio.charset.StandardCharsets;
+import java.time.Duration;
 import java.time.Instant;
 import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
@@ -51,6 +52,7 @@ public class DesafioService {
 
     private static final int LIMITE_MINIMO = 1;
     private static final int LIMITE_MAXIMO = 50;
+    private static final int PRAZO_MAXIMO_DIAS = 365;
     private static final int TAMANHO_MAXIMO_CURSOR = 512;
     private static final String VERSAO_CURSOR = "v1";
 
@@ -236,8 +238,7 @@ public class DesafioService {
     }
 
     @Transactional
-    public void avancarDesafios(
-            UUID usuarioId, Livro livro, int paginasNovas, boolean concluiuLivro) {
+    public void avancarDesafios(UUID usuarioId, Livro livro, int pagina, int paginasNovas) {
         List<DesafioAmigo> desafios =
                 desafioRepository.buscarDoUsuarioComLock(usuarioId, StatusDesafio.ATIVO);
 
@@ -264,7 +265,7 @@ public class DesafioService {
                                 progressosPorDesafio.getOrDefault(desafio.getId(), List.of()),
                                 usuarioId);
 
-                avancar(desafio, progresso, livro, paginasNovas, concluiuLivro);
+                avancar(desafio, progresso, livro, pagina, paginasNovas);
             }
 
             if (desafio.estaFinalizado()) {
@@ -277,8 +278,8 @@ public class DesafioService {
             DesafioAmigo desafio,
             ProgressoDesafio progresso,
             Livro livro,
-            int paginasNovas,
-            boolean concluiuLivro) {
+            int pagina,
+            int paginasNovas) {
         if (desafio.getTipoMeta() == TipoMetaDesafio.PAGINAS) {
             progresso.avancar(paginasNovas);
 
@@ -294,16 +295,16 @@ public class DesafioService {
             return;
         }
 
-        if (concluiuLivro) {
+        if (pagina >= livro.getTotalPaginas()) {
             progresso.concluirLivro(livro.getTotalPaginas());
             desafio.finalizar();
         } else {
-            progresso.avancar(paginasNovas);
+            progresso.alcancarPagina(pagina);
         }
     }
 
     private void validarPrazo(Integer prazoDias) {
-        if (prazoDias == null || prazoDias <= 0) {
+        if (prazoDias == null || prazoDias <= 0 || prazoDias > PRAZO_MAXIMO_DIAS) {
             throw new PrazoInvalidoException();
         }
     }
@@ -461,14 +462,14 @@ public class DesafioService {
     }
 
     private int calcularDiasRestantes(DesafioAmigo desafio) {
-        OffsetDateTime agora = OffsetDateTime.now(ZoneOffset.UTC);
+        Duration restante =
+                Duration.between(OffsetDateTime.now(ZoneOffset.UTC), desafio.getFimEm());
 
-        long dias =
-                ChronoUnit.DAYS.between(
-                        agora.toLocalDate(),
-                        desafio.getFimEm().withOffsetSameInstant(ZoneOffset.UTC).toLocalDate());
+        if (restante.isNegative() || restante.isZero()) {
+            return 0;
+        }
 
-        return Math.toIntExact(Math.max(dias, 0));
+        return Math.toIntExact(restante.minusNanos(1).toDays() + 1);
     }
 
     private String resolverStatus(

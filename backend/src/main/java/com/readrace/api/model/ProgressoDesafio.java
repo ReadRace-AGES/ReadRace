@@ -57,6 +57,15 @@ public class ProgressoDesafio {
         atualizadoEm = OffsetDateTime.now();
     }
 
+    public void alcancarPagina(int pagina) {
+        if (pagina <= valorAtual) {
+            return;
+        }
+
+        valorAtual = pagina;
+        atualizadoEm = OffsetDateTime.now();
+    }
+
     // Concluir vale o livro inteiro, e não só as páginas novas: como o resultado sai da comparação
     // dos placares, quem terminou primeiro fica na frente mesmo tendo começado antes do desafio.
     public void concluirLivro(int totalPaginas) {

@@ -81,6 +81,24 @@ public interface ItemBibliotecaRepository extends JpaRepository<ItemBiblioteca, 
     @EntityGraph(attributePaths = {"livro", "livro.livroAutores", "livro.livroAutores.autor"})
     List<ItemBiblioteca> findByIdIn(Collection<UUID> ids);
 
+    interface GeneroDoLivro {
+        UUID getLivroId();
+
+        String getNome();
+    }
+
+    @Query(
+            value =
+                    """
+                    SELECT DISTINCT ON (lg.livro_id) lg.livro_id AS livroId, g.nome AS nome
+                    FROM livro_genero lg
+                    JOIN genero g ON g.id = lg.genero_id
+                    WHERE lg.livro_id IN (:livroIds)
+                    ORDER BY lg.livro_id, g.nome ASC, g.id ASC
+                    """,
+            nativeQuery = true)
+    List<GeneroDoLivro> buscarPrimeiroGeneroDosLivros(@Param("livroIds") Collection<UUID> livroIds);
+
     @Modifying
     @Query(
             value =
