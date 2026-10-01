@@ -1,0 +1,70 @@
+# Produção na EC2 (t3.small, 2 GB). Diferente do docker-compose.yml da raiz, que é
+# para desenvolvimento local: aqui a imagem vem pronta do ECR, os segredos vêm do
+# Parameter Store e só o Caddy recebe tráfego de fora.
+#
+# Não suba à mão com "docker compose up": use ./subir.sh, que busca os segredos.
+
+services:
+
+  db:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: readrace
+      POSTGRES_USER: readrace
+      POSTGRES_PASSWORD: ${DB_PASSWORD:?subir.sh não exportou DB_PASSWORD}
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    # Sem "ports": o banco só é alcançável pela rede interna do compose.
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U readrace -d readrace"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+    mem_limit: 384m
+
+  api:
+    image: "${IMAGEM_API:?informe a imagem, ex.: <ecr>/readrace-api:<commit>}"
+    restart: unless-stopped
+    environment:
+      SPRING_PROFILES_ACTIVE: prod
+      DB_URL: jdbc:postgresql://db:5432/readrace
+      DB_USER: readrace
+      DB_PASSWORD: ${DB_PASSWORD:?subir.sh não exportou DB_PASSWORD}
+      GOOGLE_BOOKS_API_KEY: ${GOOGLE_BOOKS_API_KEY:?subir.sh não exportou GOOGLE_BOOKS_API_KEY}
+      SERVER_PORT: 8080
+    depends_on:
+      db:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "curl -fs http://localhost:8080/actuator/health || exit 1"]
+      interval: 15s
+      timeout: 5s
+      start_period: 60s
+      retries: 5
+    # O Dockerfile usa MaxRAMPercentage=75, então 768 MB deixam ~576 MB de heap.
+    # Medido localmente: a API sobrevive a carga com 512 MB e é morta com 384 MB.
+    mem_limit: 768m
+
+  caddy:
+    image: caddy:2-alpine
+    restart: unless-stopped
+    ports:
+      - "80:80"   # desafio do Let's Encrypt e redirecionamento para HTTPS
+      - "443:443"
+    environment:
+      HOST_API: "${HOST_API:?informe o host, ex.: 3-19-247-112.sslip.io}"
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      # Guarda o certificado emitido. Sem esse volume, cada recriação do container
+      # pediria um certificado novo e esbarraria no limite de emissões do Let's Encrypt.
+      - caddy_data:/data
+      - caddy_config:/config
+    depends_on:
+      - api
+    mem_limit: 128m
+
+volumes:
+  pgdata:
+  caddy_data:
+  caddy_config:
