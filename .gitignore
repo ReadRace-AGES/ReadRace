@@ -21,3 +21,16 @@ CLAUDE.md
 AGENTS.md
 GEMINI.md
 .claude/
+
+# Terraform
+# O state guarda valores sensíveis em texto puro e vive no S3, nunca no git.
+# tfvars e backend.hcl têm valores reais da conta; só os .example são versionados.
+**/.terraform/
+*.tfstate
+*.tfstate.*
+*.tfvars
+*.tfvars.json
+!*.tfvars.example
+infra/terraform/backend.hcl
+crash.log
+crash.*.log

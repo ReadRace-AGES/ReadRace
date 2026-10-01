@@ -1,0 +1,2 @@
+# Copie para terraform.tfvars (ignorado pelo git) e preencha.
+regiao = "<regiao>"
