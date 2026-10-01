@@ -27,13 +27,13 @@ public class FeedComunidadesService {
     private final MembroClubeRepository membroClubeRepository;
     private final MembroComunidadeRepository membroComunidadeRepository;
     private final UsuarioRepository usuarioRepository;
-    private final UsuarioAtualDeSeed usuarioAtual;
+    private final UsuarioAtual usuarioAtual;
 
     public FeedComunidadesService(
             MembroClubeRepository membroClubeRepository,
             MembroComunidadeRepository membroComunidadeRepository,
             UsuarioRepository usuarioRepository,
-            UsuarioAtualDeSeed usuarioAtual) {
+            UsuarioAtual usuarioAtual) {
         this.membroClubeRepository = membroClubeRepository;
         this.membroComunidadeRepository = membroComunidadeRepository;
         this.usuarioRepository = usuarioRepository;

@@ -38,6 +38,7 @@ class SeedMigrationIT {
                 VALUES (gen_random_uuid(), '40000000-0000-0000-0000-000000000006', 400)
                 """);
 
+        // Alvo fixo na V5: o teste cobre a V5 e não pode quebrar a cada migration nova.
         Flyway flyway = Flyway.configure().dataSource(dataSource).target("5").load();
         assertThat(flyway.migrate().migrationsExecuted).isEqualTo(1);
         flyway.validate();

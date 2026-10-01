@@ -21,6 +21,12 @@ public interface UsuarioRepository extends JpaRepository<Usuario, UUID> {
 
     Optional<Usuario> findByIdAndExcluidoEmIsNull(UUID id);
 
+    Optional<Usuario> findByCognitoSubAndExcluidoEmIsNull(String cognitoSub);
+
+    Optional<Usuario> findByEmailAndExcluidoEmIsNull(String email);
+
+    boolean existsByNomeUsuario(String nomeUsuario);
+
     // O registro de leitura escreve nesta linha. O lock serializa registros simultâneos do mesmo
     // usuário, para um não sobrescrever o que o outro gravou.
     @Lock(LockModeType.PESSIMISTIC_WRITE)

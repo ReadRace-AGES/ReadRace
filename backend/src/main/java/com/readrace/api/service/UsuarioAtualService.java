@@ -6,9 +6,9 @@ import com.readrace.api.dto.response.UsuarioAtualResponse;
 
 @Service
 public class UsuarioAtualService {
-    private final UsuarioAtualDeSeed usuarioAtual;
+    private final UsuarioAtual usuarioAtual;
 
-    public UsuarioAtualService(UsuarioAtualDeSeed usuarioAtual) {
+    public UsuarioAtualService(UsuarioAtual usuarioAtual) {
         this.usuarioAtual = usuarioAtual;
     }
 

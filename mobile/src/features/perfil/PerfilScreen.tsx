@@ -1,5 +1,5 @@
 import { useRouter } from 'expo-router';
-import { Fragment } from 'react';
+import { Fragment, type ReactNode } from 'react';
 import {
   ActivityIndicator,
   Pressable,
@@ -185,7 +185,13 @@ export function PerfilConteudo({
   );
 }
 
-export function PerfilScreen({ usuarioId }: { usuarioId?: string }) {
+export function PerfilScreen({
+  usuarioId,
+  rodape,
+}: {
+  usuarioId?: string;
+  rodape?: ReactNode;
+}) {
   const { estado, recarregar } = usePerfil(usuarioId);
   const router = useRouter();
   const { showToast } = useToastContext();
@@ -224,6 +230,7 @@ export function PerfilScreen({ usuarioId }: { usuarioId?: string }) {
           }
         />
       )}
+      {rodape}
     </ScrollView>
   );
 }

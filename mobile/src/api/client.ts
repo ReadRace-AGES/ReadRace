@@ -1,11 +1,29 @@
 /**
  * Cliente HTTP minimo da API do ReadRace.
  *
- * Nenhuma chamada envia identificação do usuário: o backend resolve quem é pelo `CurrentUser`
- * (#10). A URL base vem de `EXPO_PUBLIC_API_URL` (ver `.env.example`); sem ela, assume o backend
- * local na porta 8080.
+ * Com login ligado, toda chamada envia o access token do Cognito (`Authorization: Bearer`) e o
+ * backend descobre o usuário por ele. Sem login (backend em modo seed), nada é enviado e o backend
+ * usa o usuário de seed. A URL base vem de `EXPO_PUBLIC_API_URL` (ver `mobile/.env.example`); sem
+ * ela, assume o backend local na porta 8080.
  */
 const BASE_URL = (process.env.EXPO_PUBLIC_API_URL ?? "http://localhost:8080").replace(/\/+$/, "");
+
+/** Quem fornece o token de acesso. Registrado por `src/auth/session.ts`. */
+export type ProvedorDeToken = {
+  obterToken: () => Promise<string | null>;
+  renovarToken: () => Promise<string | null>;
+  aoPerderSessao: () => Promise<void>;
+};
+
+let provedorDeToken: ProvedorDeToken | null = null;
+
+/**
+ * O client não importa a sessão diretamente: assim continua carregável pelos testes em Node, que
+ * não têm os módulos nativos do Expo.
+ */
+export function configurarAutenticacao(provedor: ProvedorDeToken | null): void {
+  provedorDeToken = provedor;
+}
 
 /** Envelope padrão de erro do backend (#10): `code` estável, `message` exibível. */
 export type ApiErrorBody = {
@@ -44,10 +62,28 @@ export async function apiRequest<T>(
     headers.set("Content-Type", "application/json");
   }
 
-  const response = await fetch(`${BASE_URL}${path}`, {
+  const token = provedorDeToken ? await provedorDeToken.obterToken() : null;
+  if (token) {
+    headers.set("Authorization", `Bearer ${token}`);
+  }
+
+  let response = await fetch(`${BASE_URL}${path}`, {
     ...init,
     headers,
   });
+
+  // Token revogado ou expirado antes do previsto: renova uma vez e repete a chamada.
+  if (response.status === 401 && token && provedorDeToken) {
+    const novoToken = await provedorDeToken.renovarToken();
+    if (novoToken) {
+      headers.set("Authorization", `Bearer ${novoToken}`);
+      response = await fetch(`${BASE_URL}${path}`, { ...init, headers });
+    }
+    if (response.status === 401) {
+      // Volta para a tela de login.
+      await provedorDeToken.aoPerderSessao();
+    }
+  }
 
   if (!response.ok) {
     throw new ApiError(response.status, await readErrorBody(response));
