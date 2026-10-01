@@ -27,7 +27,7 @@ export function LivroDetalheScreen({
   origem,
 }: {
   livroId: string;
-  origem: '/buscar' | '/meus-livros';
+    origem: '/buscar' | '/meus-livros' | '/perfil';
 }) {
   const router = useRouter();
   const { estado, recarregar, atualizarProgresso, alternarCurtida } =

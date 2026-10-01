@@ -1,4 +1,4 @@
-import { useRouter } from 'expo-router';
+import { useRouter, type Href } from 'expo-router';
 import { Fragment } from 'react';
 import {
   ActivityIndicator,
@@ -14,11 +14,14 @@ import { BookCover } from '@/components/BookCover';
 import { Card } from '@/components/Card';
 import { EmptyState } from '@/components/EmptyState';
 import { BookIcon } from '@/components/icons/BookIcon';
+import { PawIcon } from '@/components/icons/PawIcon';
 import { PrimaryButton } from '@/components/PrimaryButton';
 import { useToastContext } from '@/components/toast-provider';
 import { IconeConquista } from '@/features/conquistas/IconeConquista';
 import { bookCover, colors, radius, sizes, spacing, textStyles } from '@/theme';
 import type { Perfil } from './api';
+import { NivelAnel } from './NivelAnel';
+import { PerfilTopo } from './PerfilTopo';
 import { usePerfil } from './usePerfil';
 
 const numero = (valor: number) => valor.toLocaleString('pt-BR');
@@ -27,37 +30,52 @@ export function PerfilConteudo({
   perfil,
   onPlaceholder,
   onVerMaisConquistas = onPlaceholder,
+  proprio = false,
+  onAbrirLivro,
 }: {
   perfil: Perfil;
   onPlaceholder: () => void;
   onVerMaisConquistas?: () => void;
+  proprio?: boolean;
+  onAbrirLivro?: (livroId: string) => void;
 }) {
   const stats = perfil.estatisticas;
+  const mostrarFavoritos = proprio || perfil.livrosFavoritos.length > 0;
   return (
     <View style={styles.content}>
       <View style={styles.identity}>
-        <View style={styles.avatarFrame}>
-          <Avatar
-            name={perfil.nome}
-            photoUrl={perfil.avatar}
-            size={sizes.avatarLarge}
+        {proprio ? (
+          <NivelAnel
+            nivel={perfil.nivel}
+            xpNoNivel={perfil.xpNoNivel}
+            xpDoNivel={perfil.xpDoNivel}
           />
-        </View>
+        ) : (
+          <View style={styles.avatarFrame}>
+            <Avatar
+              name={perfil.nome}
+              photoUrl={perfil.avatar}
+              size={sizes.avatarLarge}
+            />
+          </View>
+        )}
         <Text style={styles.profileName}>{perfil.nome}</Text>
         <Text style={styles.profileTitle}>“{perfil.titulo}”</Text>
-        <View style={styles.progressSummary}>
-          <View
-            style={styles.level}
-            accessible
-            accessibilityLabel={`Nível ${perfil.nivel}`}
-          >
-            <Text style={styles.levelValue}>{perfil.nivel}</Text>
+        {!proprio && (
+          <View style={styles.progressSummary}>
+            <View
+              style={styles.level}
+              accessible
+              accessibilityLabel={`Nível ${perfil.nivel}`}
+            >
+              <Text style={styles.levelValue}>{perfil.nivel}</Text>
+            </View>
+            <View style={styles.levelCopy}>
+              <Text style={styles.caption}>Nível de leitura</Text>
+              <Text style={styles.xp}>{numero(perfil.xpAtual)} XP</Text>
+            </View>
           </View>
-          <View style={styles.levelCopy}>
-            <Text style={styles.caption}>Nível de leitura</Text>
-            <Text style={styles.xp}>{numero(perfil.xpAtual)} XP</Text>
-          </View>
-        </View>
+        )}
       </View>
       <View style={styles.social}>
         {(['Seguidores', 'Seguindo'] as const).map((label, index) => (
@@ -81,6 +99,9 @@ export function PerfilConteudo({
           </Fragment>
         ))}
       </View>
+      {proprio && (
+        <PrimaryButton label="Mascotes" icon={PawIcon} onPress={onPlaceholder} />
+      )}
       <Text accessibilityRole="header" style={styles.heading}>
         Estatísticas
       </Text>
@@ -155,7 +176,7 @@ export function PerfilConteudo({
           </View>
         ))}
       </View>
-      {perfil.livrosFavoritos.length > 0 && (
+      {mostrarFavoritos && (
         <>
           <Text accessibilityRole="header" style={styles.heading}>
             Livros favoritos
@@ -171,13 +192,24 @@ export function PerfilConteudo({
                   size="grid"
                   source={livro.capa}
                   accessibilityLabel={`${livro.titulo}${livro.autor ? `, ${livro.autor}` : ''}`}
-                  onPress={onPlaceholder}
+                  onPress={
+                    onAbrirLivro ? () => onAbrirLivro(livro.id) : onPlaceholder
+                  }
                 />
                 <Text numberOfLines={2} style={styles.favoriteTitle}>
                   {livro.titulo}
                 </Text>
               </View>
             ))}
+            {proprio && (
+              <View style={styles.favorite}>
+                <BookCover
+                  variant="add-favorite"
+                  accessibilityLabel="Adicionar favorito"
+                  onPress={onPlaceholder}
+                />
+              </View>
+            )}
           </ScrollView>
         </>
       )}
@@ -190,15 +222,24 @@ export function PerfilScreen({ usuarioId }: { usuarioId?: string }) {
   const router = useRouter();
   const { showToast } = useToastContext();
   const proprio = usuarioId === undefined;
+  const dados = estado.situacao === 'sucesso' ? estado.dados : undefined;
   return (
     <ScrollView style={styles.screen} contentContainerStyle={styles.scroll}>
-      <AppHeader
-        title="Perfil"
-        showBack={!proprio}
-        onBackPress={() =>
-          router.canGoBack() ? router.back() : router.replace('/buscar')
-        }
-      />
+      {proprio ? (
+        <PerfilTopo
+          nome={dados?.nome}
+          avatar={dados?.avatar}
+          onConfiguracoes={showToast}
+        />
+      ) : (
+        <AppHeader
+          title="Perfil"
+          showBack
+          onBackPress={() =>
+            router.canGoBack() ? router.back() : router.replace('/buscar')
+          }
+        />
+      )}
       {estado.situacao === 'carregando' && (
         <ActivityIndicator
           style={styles.content}
@@ -218,9 +259,18 @@ export function PerfilScreen({ usuarioId }: { usuarioId?: string }) {
       {estado.situacao === 'sucesso' && (
         <PerfilConteudo
           perfil={estado.dados}
+          proprio={proprio}
           onPlaceholder={showToast}
           onVerMaisConquistas={
-            proprio ? () => router.push('/conquistas') : undefined
+            proprio ? () => router.push('/conquistas' as Href) : undefined
+          }
+          onAbrirLivro={
+            proprio
+              ? (livroId) =>
+                  router.push(
+                    `/perfil-livro/${encodeURIComponent(livroId)}` as Href
+                  )
+              : undefined
           }
         />
       )}

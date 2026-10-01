@@ -68,8 +68,11 @@ const dependencies = {
   '@/theme': { ...require('../src/theme/tokens'), textStyles: {} },
   '@/components/avatar': { Avatar: 'Avatar' },
   '@/components/icons/BookIcon': { BookIcon: 'BookIcon' },
+  '@/components/icons/PawIcon': { PawIcon: 'PawIcon' },
   '@/features/conquistas/IconeConquista': { IconeConquista: 'IconeConquista' },
   '@/components/toast-provider': {},
+  './NivelAnel': { NivelAnel: 'NivelAnel' },
+  './PerfilTopo': { PerfilTopo: 'PerfilTopo' },
   './usePerfil': {},
 };
 for (const name of [
@@ -190,7 +193,8 @@ test('próprio perfil fica sem voltar e "Ver mais" abre Minhas Conquistas', () =
   act(() => {
     tree = create(React.createElement(PerfilScreen));
   });
-  assert.equal(tree.root.findByType('AppHeader').props.showBack, false);
+  assert.equal(tree.root.findAllByType('AppHeader').length, 0);
+  assert.equal(tree.root.findAllByType('PerfilTopo').length, 1);
   act(() => verMais().props.onPress());
   assert.deepEqual(rotas, ['/conquistas']);
   assert.equal(avisos, 0);
@@ -199,6 +203,58 @@ test('próprio perfil fica sem voltar e "Ver mais" abre Minhas Conquistas', () =
   act(() => verMais().props.onPress());
   assert.deepEqual(rotas, ['/conquistas']);
   assert.equal(avisos, 1);
+  act(() => tree.unmount());
+});
+
+test('próprio perfil mostra anel, Mascotes, engrenagem e slot de favorito', () => {
+  const rotas = [];
+  let avisos = 0,
+    tree,
+    dados = { ...perfil, xpNoNivel: 521, xpDoNivel: 833 };
+  const { PerfilScreen } = load('features/perfil/PerfilScreen.tsx', {
+    ...dependencies,
+    'expo-router': { useRouter: () => ({ push: (rota) => rotas.push(rota) }) },
+    '@/components/toast-provider': {
+      useToastContext: () => ({ showToast: () => avisos++ }),
+    },
+    './usePerfil': {
+      usePerfil: () => ({
+        estado: { situacao: 'sucesso', dados },
+        recarregar: () => {},
+      }),
+    },
+  });
+  act(() => {
+    tree = create(React.createElement(PerfilScreen));
+  });
+  const anel = tree.root.findByType('NivelAnel');
+  assert.equal(anel.props.xpNoNivel, 521);
+  assert.equal(anel.props.xpDoNivel, 833);
+  const mascotes = tree.root
+    .findAllByType('PrimaryButton')
+    .find((botao) => botao.props.label === 'Mascotes');
+  const botoesDeAviso = tree.root
+    .findAllByType('Pressable')
+    .filter(
+      (botao) => botao.props.accessibilityLabel !== 'Ver mais conquistas'
+    );
+  const [capa, adicionar] = tree.root.findAllByType('BookCover');
+  assert.equal(adicionar.props.variant, 'add-favorite');
+  act(() => {
+    botoesDeAviso.forEach((botao) => botao.props.onPress());
+    mascotes.props.onPress();
+    adicionar.props.onPress();
+    tree.root.findByType('PerfilTopo').props.onConfiguracoes();
+  });
+  assert.equal(avisos, 5);
+  act(() => capa.props.onPress());
+  assert.deepEqual(rotas, ['/perfil-livro/livro']);
+  dados = { ...dados, livrosFavoritos: [] };
+  act(() => tree.update(React.createElement(PerfilScreen)));
+  assert.match(JSON.stringify(tree.toJSON()), /Livros favoritos/);
+  const capas = tree.root.findAllByType('BookCover');
+  assert.equal(capas.length, 1);
+  assert.equal(capas[0].props.variant, 'add-favorite');
   act(() => tree.unmount());
 });
 
