@@ -26,3 +26,21 @@ resource "aws_security_group" "api" {
     prevent_destroy = true
   }
 }
+
+# IP fixo da API. Sem ele o IP público muda a cada parada da instância, e o endereço
+# sslip.io e o certificado HTTPS dependem dele. Associado, substitui o IP público
+# automático (que é liberado), então continua sendo um único IPv4 cobrado.
+# Atenção: Elastic IP solto, sem instância, é cobrado do mesmo jeito.
+resource "aws_eip" "api" {
+  domain   = "vpc"
+  instance = aws_instance.api.id
+
+  tags = {
+    Name = "ReadRace"
+  }
+
+  # Liberar o IP perde o endereço para sempre: o nome sslip.io e o certificado mudam.
+  lifecycle {
+    prevent_destroy = true
+  }
+}
