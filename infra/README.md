@@ -26,7 +26,8 @@ Endereço da API: `https://3-19-247-112.sslip.io` (sem domínio comprado; o
 
 Gerenciado pelo Terraform: EC2 (importada do console), security group (80 e 443;
 sem 22), Elastic IP, role e instance profile da EC2, ECR `readrace-api`, provedor
-OIDC do GitHub, role `readrace-deploy-github` e documento SSM `readrace-deploy`.
+OIDC do GitHub, role `readrace-deploy-github`, documento SSM `readrace-deploy` e o
+Cognito (user pool, app client e domínio, importados do console).
 
 Fora do Terraform, de propósito:
 
@@ -34,7 +35,6 @@ Fora do Terraform, de propósito:
 |---|---|
 | Bucket `readrace-terraform-state-<conta>` | Guarda o state do próprio Terraform; criado uma vez pelo CLI |
 | Parâmetros do Parameter Store | Se o Terraform os gerenciasse, o valor real iria para o state |
-| Cognito (user pool e app client) | Ainda não importado |
 
 ### Segredos (Parameter Store, SecureString)
 
@@ -45,6 +45,57 @@ Fora do Terraform, de propósito:
 
 Os valores são criados e trocados pelo console da AWS. Não vão para o git, para o
 Terraform nem para arquivos na EC2: o `subir.sh` lê a cada execução.
+
+## Cognito (login)
+
+User pool `us-east-2_MEVIpejhy`, app client `5f06kagodbku0mvveakmsim8qu` (sem secret),
+em `infra/terraform/cognito.tf`. Login por e-mail e senha pelo próprio app; a API só
+valida o token (épico #131).
+
+- Cadastro pelo próprio usuário, com código de confirmação por e-mail em português.
+- Fluxo de login do app: `USER_PASSWORD_AUTH`. Token de acesso de 1 hora, renovação de
+  30 dias, revogação ligada.
+- Envio de e-mail pelo próprio Cognito: gratuito, cerca de **50 por dia**. Se passar disso
+  (cadastros em massa numa apresentação, por exemplo), os códigos param de chegar até o
+  dia seguinte; a saída é configurar o SES.
+- `name` e `email` são atributos obrigatórios desde a criação do pool e **não podem
+  mudar**. O Terraform ignora o `schema` de propósito: uma diferença ali faria o plan
+  propor recriar o pool, o que apaga todas as contas.
+- Política de senha: em aberto, decisão do time. Mudar é in-place.
+
+### Ligar a autenticação na API
+
+A API recebe a configuração pelo `infra/producao/docker-compose.yml`
+(`READRACE_COGNITO_*`, valores públicos). A autenticação fica **desligada**
+(`READRACE_AUTH_ENABLED` com padrão `false`) até o app com as telas de login ser lançado.
+Para ligar, trocar o padrão para `true` no compose, num PR, e fazer o deploy: desligada,
+a API atende todo mundo como o usuário do seed.
+
+### Conta de demonstração
+
+Liga o usuário fixo do seed (Daniel Ribeiro, com histórico, XP e conquistas) a uma conta
+do Cognito, para as apresentações. Depende da coluna `cognito_sub` (#132). Usar um e-mail
+do projeto: o código de confirmação e a recuperação de senha chegam nele.
+
+```bash
+# 1. criar o usuário com senha definitiva, sem e-mail de convite
+aws cognito-idp admin-create-user --region us-east-2 --user-pool-id us-east-2_MEVIpejhy \
+  --username <e-mail do projeto> --message-action SUPPRESS \
+  --user-attributes Name=email,Value=<e-mail do projeto> Name=email_verified,Value=true Name="name",Value="Daniel Ribeiro"
+aws cognito-idp admin-set-user-password --region us-east-2 --user-pool-id us-east-2_MEVIpejhy \
+  --username <e-mail do projeto> --password '<senha>' --permanent
+
+# 2. ler o sub
+aws cognito-idp admin-get-user --region us-east-2 --user-pool-id us-east-2_MEVIpejhy \
+  --username <e-mail do projeto> --query 'UserAttributes[?Name==`sub`].Value' --output text
+
+# 3. ligar ao Daniel do seed (na EC2, pelo Session Manager)
+sudo docker exec -i readrace-db-1 psql -U readrace -d readrace -c \
+  "UPDATE usuario SET cognito_sub = '<sub>' WHERE id = '00000000-0000-0000-0000-000000000001';"
+```
+
+Nunca ligar contas por e-mail: os e-mails do seed (`@readrace.com`) são de um domínio real
+de terceiros.
 
 ## Orçamento
 

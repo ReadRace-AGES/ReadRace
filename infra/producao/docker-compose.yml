@@ -33,6 +33,12 @@ services:
       DB_PASSWORD: ${DB_PASSWORD:?subir.sh não exportou DB_PASSWORD}
       GOOGLE_BOOKS_API_KEY: ${GOOGLE_BOOKS_API_KEY:?subir.sh não exportou GOOGLE_BOOKS_API_KEY}
       SERVER_PORT: 8080
+      # Autenticação desligada até o app com as telas de login ser lançado (épico #131).
+      # Valores do Cognito são públicos: identificam o user pool, não dão acesso a nada.
+      READRACE_AUTH_ENABLED: "${READRACE_AUTH_ENABLED:-false}"
+      READRACE_COGNITO_REGION: us-east-2
+      READRACE_COGNITO_USER_POOL_ID: us-east-2_MEVIpejhy
+      READRACE_COGNITO_CLIENT_ID: 5f06kagodbku0mvveakmsim8qu
     depends_on:
       db:
         condition: service_healthy
