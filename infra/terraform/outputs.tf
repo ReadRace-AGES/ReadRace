@@ -1,3 +1,8 @@
+output "repositorio_imagem" {
+  description = "Endereço do ECR para docker push/pull da API."
+  value       = aws_ecr_repository.api.repository_url
+}
+
 output "ip_publico" {
   description = "Elastic IP da API."
   value       = aws_eip.api.public_ip
