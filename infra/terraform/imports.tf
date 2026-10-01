@@ -27,3 +27,8 @@ import {
   to = aws_cognito_user_pool_domain.principal
   id = "us-east-2mevipejhy"
 }
+
+import {
+  to = aws_cognito_managed_login_branding.app
+  id = "us-east-2_MEVIpejhy,73d54128-03ce-45e5-b0d8-d4da7193a6d4"
+}

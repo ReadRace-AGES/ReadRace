@@ -107,11 +107,11 @@ resource "aws_cognito_user_pool_client" "app" {
   ]
   supported_identity_providers = ["COGNITO"]
 
-  # O escopo aws.cognito.signin.user.admin autoriza o GetUser que a API faz no primeiro
-  # acesso. O fluxo OAuth (Google, etapa 2) só traz o escopo se ele estiver liberado aqui.
+  # O app pede openid, email e profile na página de login. O backend usa o /oauth2/userInfo,
+  # que exige openid. aws.cognito.signin.user.admin fica para chamadas diretas à API do Cognito.
   allowed_oauth_flows_user_pool_client = true
   allowed_oauth_flows                  = ["code"]
-  allowed_oauth_scopes                 = ["email", "openid", "aws.cognito.signin.user.admin"]
+  allowed_oauth_scopes                 = ["email", "openid", "profile", "aws.cognito.signin.user.admin"]
   callback_urls                        = ["readrace://auth"]
   logout_urls                          = ["readrace://logout"]
 
@@ -149,4 +149,12 @@ output "cognito_user_pool_id" {
 output "cognito_client_id" {
   description = "Vai em READRACE_COGNITO_CLIENT_ID e em EXPO_PUBLIC_COGNITO_CLIENT_ID."
   value       = aws_cognito_user_pool_client.app.id
+}
+
+# Estilo da página de login (managed login versão 2), criado pelo console junto com o pool e
+# importado. Usa o visual padrão da AWS; a página abre em português com lang=pt-BR.
+resource "aws_cognito_managed_login_branding" "app" {
+  user_pool_id                = aws_cognito_user_pool.principal.id
+  client_id                   = aws_cognito_user_pool_client.app.id
+  use_cognito_provided_values = true
 }

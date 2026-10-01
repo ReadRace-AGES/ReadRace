@@ -66,10 +66,14 @@ valida o token (épico #131).
 ### Ligar a autenticação na API
 
 A API recebe a configuração pelo `infra/producao/docker-compose.yml`
-(`READRACE_COGNITO_*`, valores públicos). A autenticação fica **desligada**
-(`READRACE_AUTH_ENABLED` com padrão `false`) até o app com as telas de login ser lançado.
-Para ligar, trocar o padrão para `true` no compose, num PR, e fazer o deploy: desligada,
-a API atende todo mundo como o usuário do seed.
+(`COGNITO_ISSUER_URI`, `COGNITO_CLIENT_ID`, `COGNITO_DOMAIN`, valores públicos). O login
+fica **desligado** (`AUTH_MODO` com padrão `seed`) até o app com login ser lançado. Para
+ligar, trocar o padrão para `cognito` no compose, num PR, e fazer o deploy: em `seed`, a
+API atende todo mundo como o usuário do seed.
+
+O app entra pela página de login do Cognito (domínio `us-east-2mevipejhy`), que já traz
+cadastro, código de confirmação e "esqueci a senha". O Google entra como botão nessa página
+quando for configurado como provedor.
 
 ### Conta de demonstração
 

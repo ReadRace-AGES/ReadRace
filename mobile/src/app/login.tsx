@@ -33,6 +33,7 @@ export default function LoginScreen() {
       // Sem forçar provedor: a página do Cognito mostra e-mail e senha, cadastro, código de
       // confirmação e "esqueci a senha". O Google entra como botão nessa mesma página quando
       // for configurado como provedor no Cognito.
+      extraParams: { lang: 'pt-BR' },
     },
     discovery
   );
