@@ -6,11 +6,12 @@ import java.util.stream.Collectors;
 import com.readrace.api.model.Livro;
 
 /** Um livro como a aba Meus Livros o exibe: só o que cabe numa capa com título e autor. */
-public record LivroBibliotecaResponse(UUID livroId, String titulo, String autor, String capaUrl) {
+public record LivroBibliotecaResponse(
+        UUID livroId, String titulo, String autor, String capaUrl, String genero) {
 
-    public static LivroBibliotecaResponse de(Livro livro) {
+    public static LivroBibliotecaResponse de(Livro livro, String genero) {
         return new LivroBibliotecaResponse(
-                livro.getId(), livro.getTitulo(), autorDe(livro), livro.getCapaUrl());
+                livro.getId(), livro.getTitulo(), autorDe(livro), livro.getCapaUrl(), genero);
     }
 
     /** Mesma regra da busca (#72): autores na ordem do vínculo, separados por vírgula. */

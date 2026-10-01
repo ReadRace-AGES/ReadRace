@@ -89,16 +89,18 @@ public class RegistrarProgressoService {
         int xpGanho = xpPaginas + xpConclusao;
         int percentual = Math.round((pagina * 100f) / livro.getTotalPaginas());
 
-        desafioService.avancarDesafios(usuarioAtualId.valor(), livro, paginasNovas, concluiuAgora);
-
+        // Desafio e conquista também pagam XP no mesmo usuário: o nível de antes é guardado aqui e
+        // os campos de nível só são calculados depois de todas as recompensas.
         int nivelAnterior = usuario.getNivel();
-        usuario.somarXp(xpGanho);
+        desafioService.avancarDesafios(usuarioAtualId.valor(), livro, pagina, paginasNovas);
+
+        usuario.receberXp(xpGanho);
+        // Depois da soma de XP, para a avaliação já enxergar o XP e o nível atualizados.
+        conquistaService.avaliar(usuarioAtualId.valor());
+
         boolean subiuDeNivel = usuario.getNivel() != nivelAnterior;
         int xpNoNivel = CurvaDeNivel.xpNoNivel(usuario.getXpTotal(), usuario.getNivel());
         int xpDoNivel = CurvaDeNivel.xpDoNivel(usuario.getNivel());
-
-        // Depois da soma de XP, para a avaliação já enxergar o XP e o nível atualizados.
-        conquistaService.avaliar(usuarioAtualId.valor());
 
         return new ProgressoLeituraResponse(
                 item.getPaginaAtual(),

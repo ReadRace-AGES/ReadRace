@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { useLocalSearchParams, useRouter, type Href } from 'expo-router';
+import { useLocalSearchParams, useRouter } from 'expo-router';
 import {
   ActivityIndicator,
   KeyboardAvoidingView,
@@ -19,9 +19,11 @@ import { BookCover } from '@/components/BookCover';
 import { Card } from '@/components/Card';
 import { EmptyState } from '@/components/EmptyState';
 import { BookIcon } from '@/components/icons/BookIcon';
+import { RematchIcon } from '@/components/icons/RematchIcon';
 import { PrimaryButton } from '@/components/PrimaryButton';
 import { SearchInput } from '@/components/SearchInput';
 import { Slider } from '@/components/Slider';
+import type { LivroBiblioteca } from '@/features/biblioteca/api';
 import {
   colors,
   radius,
@@ -32,15 +34,14 @@ import {
 } from '@/theme';
 
 import type { Oponente } from './api';
-import type { LivroBiblioteca } from '@/features/biblioteca/api';
-import { CrossedSwordsIcon, PencilIcon } from './DesafiarAmigoIcons';
+import { CloseIcon, CrossedSwordsIcon, PencilIcon } from './DesafiarAmigoIcons';
 import { useCriarDesafio, useOponentes } from './useDesafiarAmigo';
 
 const META_INICIAL = 150;
 const META_MINIMA = 10;
 const META_MAXIMA = 500;
 const PRAZO_INICIAL = 7;
-const PRAZO_MAXIMO = 2_147_483_647;
+const PRAZO_MAXIMO = 365;
 
 type TipoMeta = 'paginas' | 'livro';
 
@@ -51,6 +52,17 @@ function prazoValido(valor: string) {
   return Number.isSafeInteger(numero) && numero > 0 && numero <= PRAZO_MAXIMO
     ? numero
     : null;
+}
+
+function livroDoParametro(valor: string | undefined) {
+  if (!valor) return null;
+
+  try {
+    const livro: LivroBiblioteca = JSON.parse(valor);
+    return livro.livroId && livro.titulo ? livro : null;
+  } catch {
+    return null;
+  }
 }
 
 function metaValida(valor: number) {
@@ -148,8 +160,8 @@ function CartaoTipoMeta({
 
 export function DesafiarAmigoScreen() {
   const router = useRouter();
-  const { livroSelecionado: livroSelecionadoParam } = useLocalSearchParams<{
-    livroSelecionado?: string | string[];
+  const { livroSelecionado: livroParametro } = useLocalSearchParams<{
+    livroSelecionado?: string;
   }>();
   const insets = useSafeAreaInsets();
   const [termo, setTermo] = useState('');
@@ -159,24 +171,9 @@ export function DesafiarAmigoScreen() {
   const [prazoDias, setPrazoDias] = useState(PRAZO_INICIAL);
   const [prazoDigitado, setPrazoDigitado] = useState(String(PRAZO_INICIAL));
   const [editandoPrazo, setEditandoPrazo] = useState(false);
-  const [livroSelecionado, setLivroSelecionado] =
-    useState<LivroBiblioteca | null>(null);
+  const [mexendoNaMeta, setMexendoNaMeta] = useState(false);
   const { estado: estadoOponentes, recarregar } = useOponentes(termo);
   const { estado: estadoEnvio, enviar, limparErro } = useCriarDesafio();
-
-  useEffect(() => {
-    const valor = Array.isArray(livroSelecionadoParam)
-      ? livroSelecionadoParam[0]
-      : livroSelecionadoParam;
-    if (!valor) return;
-
-    try {
-      const livro = JSON.parse(valor) as LivroBiblioteca;
-      if (livro.livroId && livro.titulo) setLivroSelecionado(livro);
-    } catch {
-      setLivroSelecionado(null);
-    }
-  }, [livroSelecionadoParam]);
 
   const oponenteSelecionado =
     oponenteId !== null &&
@@ -193,13 +190,12 @@ export function DesafiarAmigoScreen() {
     }
   }, [estadoOponentes, oponenteId, oponenteSelecionado]);
 
+  const livroSelecionado = livroDoParametro(livroParametro);
   const prazoAtual = prazoValido(prazoDigitado);
   const unidadePrazo = prazoDias === 1 ? 'dia corrido' : 'dias corridos';
   const podeEnviar =
     oponenteSelecionado &&
-    (tipoMeta === 'paginas'
-      ? metaValida(meta)
-      : livroSelecionado !== null) &&
+    (tipoMeta === 'paginas' ? metaValida(meta) : livroSelecionado !== null) &&
     prazoAtual !== null &&
     estadoEnvio.situacao !== 'enviando';
 
@@ -208,11 +204,16 @@ export function DesafiarAmigoScreen() {
     router.dismissTo('/desafios');
   }
 
-  function trocarLivro() {
+  function escolherLivro() {
     router.push({
       pathname: '/escolher-livro',
-      params: { livroId: livroSelecionado?.livroId ?? '' },
-    } as unknown as Href);
+      params: livroSelecionado ? { livroId: livroSelecionado.livroId } : {},
+    });
+  }
+
+  function removerLivro() {
+    router.setParams({ livroSelecionado: undefined });
+    limparErro();
   }
 
   function alterarTermo(valor: string) {
@@ -276,12 +277,60 @@ export function DesafiarAmigoScreen() {
     if (sucesso) voltarParaDesafios();
   }
 
+  const controlePrazo = editandoPrazo ? (
+    <View style={styles.prazoEditavel}>
+      <Text style={styles.textoPrazo}>Em</Text>
+      <TextInput
+        autoFocus
+        accessibilityLabel="Prazo em dias corridos"
+        keyboardType="number-pad"
+        inputMode="numeric"
+        maxLength={String(PRAZO_MAXIMO).length}
+        value={prazoDigitado}
+        onChangeText={alterarPrazo}
+        onBlur={terminarEdicaoDoPrazo}
+        onSubmitEditing={terminarEdicaoDoPrazo}
+        selectTextOnFocus
+        style={styles.campoPrazo}
+      />
+      <Text style={styles.textoPrazo}>
+        {prazoAtual === 1 ? 'dia corrido' : 'dias corridos'}
+      </Text>
+    </View>
+  ) : (
+    <Pressable
+      accessibilityRole="button"
+      accessibilityLabel={`Editar prazo. Em ${prazoDias} ${unidadePrazo}`}
+      onPress={() => setEditandoPrazo(true)}
+      hitSlop={spacing[2]}
+      style={styles.prazo}
+    >
+      <Text style={styles.textoPrazo}>
+        Em {prazoDias} {unidadePrazo}
+      </Text>
+      <PencilIcon size={sizes.iconSmall} color={colors.textSecondary} />
+    </Pressable>
+  );
+
   return (
     <KeyboardAvoidingView
       style={styles.tela}
       behavior={Platform.OS === 'ios' ? 'padding' : undefined}
     >
+      <View style={styles.cabecalho}>
+        <AppHeader
+          compact
+          title="Desafiar"
+          subtitle="Escolha um oponente e defina a meta"
+          variant="primary"
+          titleAlign="center"
+          showBack
+          onBackPress={voltarParaDesafios}
+        />
+      </View>
+
       <ScrollView
+        scrollEnabled={!mexendoNaMeta}
         keyboardDismissMode="on-drag"
         keyboardShouldPersistTaps="handled"
         contentContainerStyle={[
@@ -289,18 +338,6 @@ export function DesafiarAmigoScreen() {
           { paddingBottom: insets.bottom + spacing[8] },
         ]}
       >
-        <View style={styles.cabecalho}>
-          <AppHeader
-            compact
-            title="Desafiar"
-            subtitle="Escolha um oponente e defina a meta"
-            variant="primary"
-            titleAlign="center"
-            showBack
-            onBackPress={voltarParaDesafios}
-          />
-        </View>
-
         <View style={styles.conteudo}>
           <View style={styles.secao}>
             <Text style={styles.tituloSecao}>Oponente</Text>
@@ -386,49 +423,13 @@ export function DesafiarAmigoScreen() {
 
           {tipoMeta === 'paginas' && (
             <Card
-              style={styles.cartaoVolume}
+              style={styles.cartaoMeta}
               surfaceStyle={styles.superficieVolume}
             >
               <View style={styles.cabecalhoVolume}>
                 <View style={styles.textosVolume}>
                   <Text style={styles.tituloVolume}>Volume de Leitura</Text>
-                  {editandoPrazo ? (
-                    <View style={styles.prazoEditavel}>
-                      <Text style={styles.textoPrazo}>Em</Text>
-                      <TextInput
-                        autoFocus
-                        accessibilityLabel="Prazo em dias corridos"
-                        keyboardType="number-pad"
-                        inputMode="numeric"
-                        maxLength={String(PRAZO_MAXIMO).length}
-                        value={prazoDigitado}
-                        onChangeText={alterarPrazo}
-                        onBlur={terminarEdicaoDoPrazo}
-                        onSubmitEditing={terminarEdicaoDoPrazo}
-                        selectTextOnFocus
-                        style={styles.campoPrazo}
-                      />
-                      <Text style={styles.textoPrazo}>
-                        {prazoAtual === 1 ? 'dia corrido' : 'dias corridos'}
-                      </Text>
-                    </View>
-                  ) : (
-                    <Pressable
-                      accessibilityRole="button"
-                      accessibilityLabel={`Editar prazo. Em ${prazoDias} ${unidadePrazo}`}
-                      onPress={() => setEditandoPrazo(true)}
-                      hitSlop={spacing[2]}
-                      style={styles.prazo}
-                    >
-                      <Text style={styles.textoPrazo}>
-                        Em {prazoDias} {unidadePrazo}
-                      </Text>
-                      <PencilIcon
-                        size={sizes.iconSmall}
-                        color={colors.textSecondary}
-                      />
-                    </Pressable>
-                  )}
+                  {controlePrazo}
                 </View>
 
                 <View style={styles.valorMeta} accessibilityLiveRegion="polite">
@@ -447,45 +448,73 @@ export function DesafiarAmigoScreen() {
                 maximumLabel="500+"
                 accessibilityLabel="Meta de páginas"
                 onValueChange={alterarMeta}
+                onSlidingStart={() => setMexendoNaMeta(true)}
+                onSlidingComplete={() => setMexendoNaMeta(false)}
               />
             </Card>
           )}
 
-            {tipoMeta === 'livro' && (
-              <View style={styles.secao}>
-                <Text style={styles.tituloSecao}>Livro do desafio</Text>
-                <Card surfaceStyle={styles.superficieLivro}>
-                  <View style={styles.linhaLivro}>
-                    {livroSelecionado ? (
-                      <BookCover
-                        size="thumbnail"
-                        source={livroSelecionado.capaUrl}
-                        accessibilityLabel={`Capa de ${livroSelecionado.titulo}`}
-                      />
-                    ) : (
-                      <View style={styles.capaVazia}>
-                        <BookIcon size={sizes.icon} color={colors.textMuted} />
-                      </View>
-                    )}
-                    <View style={styles.detalhesLivro}>
-                      <Text numberOfLines={2} style={styles.tituloLivro}>
-                        {livroSelecionado?.titulo ?? 'Nenhum livro escolhido'}
-                      </Text>
-                      {!!livroSelecionado?.autor && (
-                        <Text numberOfLines={2} style={styles.autorLivro}>
-                          {livroSelecionado.autor}
-                        </Text>
-                      )}
-                    </View>
-                  </View>
-                  <PrimaryButton
-                    label={livroSelecionado ? 'Trocar Livro' : 'Escolher Livro'}
-                    onPress={trocarLivro}
-                    variant="outline"
+          {tipoMeta === 'livro' && (
+            <Card
+              style={styles.cartaoMeta}
+              surfaceStyle={styles.superficieLivro}
+            >
+              {livroSelecionado ? (
+                <View style={styles.linhaLivro}>
+                  <BookCover
+                    source={livroSelecionado.capaUrl}
+                    accessibilityLabel={`Capa de ${livroSelecionado.titulo}`}
                   />
-                </Card>
-              </View>
-            )}
+                  <View style={styles.detalhesLivro}>
+                    <Text numberOfLines={2} style={styles.tituloLivro}>
+                      {livroSelecionado.titulo}
+                    </Text>
+                    {!!livroSelecionado.autor && (
+                      <Text numberOfLines={1} style={styles.autorLivro}>
+                        {livroSelecionado.autor}
+                      </Text>
+                    )}
+                    <Pressable
+                      accessibilityRole="button"
+                      accessibilityLabel="Trocar Livro"
+                      onPress={escolherLivro}
+                      hitSlop={spacing[2]}
+                      style={styles.trocarLivro}
+                    >
+                      <RematchIcon
+                        size={sizes.iconSmall}
+                        color={colors.primary}
+                      />
+                      <Text style={styles.textoTrocarLivro}>Trocar Livro</Text>
+                    </Pressable>
+                  </View>
+                  <Pressable
+                    accessibilityRole="button"
+                    accessibilityLabel={`Remover ${livroSelecionado.titulo}`}
+                    onPress={removerLivro}
+                    hitSlop={spacing[2]}
+                  >
+                    <CloseIcon size={sizes.icon} color={colors.textSecondary} />
+                  </Pressable>
+                </View>
+              ) : (
+                <EmptyState
+                  icon={BookIcon}
+                  message="Nenhum livro escolhido"
+                  action={
+                    <PrimaryButton
+                      label="Escolher Livro"
+                      variant="outline"
+                      onPress={escolherLivro}
+                    />
+                  }
+                />
+              )}
+
+              <View style={styles.divisor} />
+              {controlePrazo}
+            </Card>
+          )}
 
           {estadoEnvio.situacao === 'erro' && (
             <Text accessibilityRole="alert" style={styles.erroEnvio}>
@@ -581,7 +610,7 @@ const styles = StyleSheet.create({
     backgroundColor: colors.surface,
     borderColor: colors.borderStrong,
   },
-  cartaoVolume: {
+  cartaoMeta: {
     shadowOpacity: spacing[0],
     elevation: spacing[0],
     backgroundColor: colors.surface,
@@ -593,23 +622,18 @@ const styles = StyleSheet.create({
     borderWidth: sizes.borderWidth,
     borderColor: colors.surfacePinkStrong,
   },
-  linhaLivro: {
+  linhaLivro: { flexDirection: 'row', alignItems: 'center', gap: spacing[4] },
+  detalhesLivro: { flex: 1, minWidth: 0 },
+  tituloLivro: { ...textStyles.h2, color: colors.text },
+  autorLivro: { ...textStyles.bodySmall, color: colors.textSecondary },
+  trocarLivro: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: spacing[3],
-    minHeight: sizes.avatarLarge,
+    alignSelf: 'flex-start',
+    gap: spacing[1],
+    marginTop: spacing[3],
   },
-  capaVazia: {
-    width: sizes.avatarLarge,
-    height: sizes.avatarLarge,
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderRadius: radius.sm,
-    backgroundColor: colors.surfaceMuted,
-  },
-  detalhesLivro: { flex: 1, minWidth: 0, gap: spacing[1] },
-  tituloLivro: { ...textStyles.bodyStrong, color: colors.text },
-  autorLivro: { ...textStyles.bodySmall, color: colors.textSecondary },
+  textoTrocarLivro: { ...textStyles.bodySmallStrong, color: colors.primary },
   superficieVolume: {
     padding: spacing[6],
     gap: spacing[4],

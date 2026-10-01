@@ -80,7 +80,22 @@ class ConquistaAutomaticaIT {
         marcarComoLendo(A_HORA_DA_ESTRELA_ID, O_PEQUENO_PRINCIPE_ID);
         int xpAntes = xp(DANIEL_ID);
 
-        registrar(LIVRO_1984_ID, 211);
+        // A resposta já conta as recompensas: 2450 + 1 + 350 = 2801 passa dos 2762 que fecham o
+        // nível 7, então o nível sobe e o XP dentro do nível 8 é o que sobrou.
+        assertThat(
+                        mvc.post()
+                                .uri("/api/livros/{livroId}/progresso", LIVRO_1984_ID)
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content("{\"pagina\":211}"))
+                .hasStatusOk()
+                .bodyJson()
+                .extractingPath("$")
+                .asMap()
+                .containsEntry("xpDoUsuario", 2801)
+                .containsEntry("nivel", 8)
+                .containsEntry("subiuDeNivel", true)
+                .containsEntry("xpNoNivel", 39)
+                .containsEntry("xpDoNivel", 1018);
 
         assertThat(conquistas(DANIEL_ID))
                 .containsExactlyInAnyOrder(PRIMEIROS_PASSOS, MIL_PAGINAS, COMPETIDOR);
