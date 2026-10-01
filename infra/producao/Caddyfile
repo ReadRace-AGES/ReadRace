@@ -1,0 +1,5 @@
+# O Caddy emite e renova sozinho o certificado HTTPS do host abaixo e redireciona
+# HTTP para HTTPS. HOST_API vem do docker-compose.yml.
+{$HOST_API} {
+	reverse_proxy api:8080
+}

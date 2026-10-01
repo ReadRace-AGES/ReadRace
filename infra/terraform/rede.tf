@@ -5,11 +5,21 @@ resource "aws_security_group" "api" {
   description = "launch-wizard-1 created 2026-10-01T01:39:36.299Z"
   vpc_id      = "vpc-0c1e127530bd8ff31"
 
-  # Só HTTPS entra. Sem porta 22: o acesso à máquina é pelo SSM Session Manager.
+  # Sem porta 22: o acesso à máquina é pelo SSM Session Manager.
   ingress {
     description = ""
     from_port   = 443
     to_port     = 443
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  # A 80 só serve ao Caddy: responder o desafio do Let's Encrypt ao emitir e renovar
+  # o certificado, e redirecionar qualquer outra requisição para HTTPS.
+  ingress {
+    description = "HTTP para desafio ACME e redirecionamento para HTTPS"
+    from_port   = 80
+    to_port     = 80
     protocol    = "tcp"
     cidr_blocks = ["0.0.0.0/0"]
   }
