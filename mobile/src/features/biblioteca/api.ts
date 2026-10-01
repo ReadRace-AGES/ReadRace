@@ -5,6 +5,7 @@ export type LivroBiblioteca = {
   titulo: string;
   autor: string | null;
   capaUrl: string | null;
+  genero: string | null;
 };
 
 /** As quatro listas da aba Meus Livros, no nome que a API usa no path. */

@@ -19,7 +19,7 @@ public enum CodigoErro {
     META_INVALIDA(HttpStatus.BAD_REQUEST, "A meta de páginas deve estar entre 10 e 500."),
     LIVRO_OBRIGATORIO(
             HttpStatus.BAD_REQUEST, "O livro é obrigatório para desafios com meta por livro."),
-    PRAZO_INVALIDO(HttpStatus.BAD_REQUEST, "O prazo deve ser maior que zero."),
+    PRAZO_INVALIDO(HttpStatus.BAD_REQUEST, "O prazo deve ser de 1 a 365 dias."),
     METHOD_NOT_ALLOWED(HttpStatus.METHOD_NOT_ALLOWED, "Método não permitido para esta rota."),
     UNSUPPORTED_MEDIA_TYPE(HttpStatus.UNSUPPORTED_MEDIA_TYPE, "Formato de conteúdo não suportado."),
     EXTERNAL_SERVICE_UNAVAILABLE(

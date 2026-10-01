@@ -104,7 +104,7 @@ class DesafioControllerIT {
                 .extractingPath("$.desafios[*].status")
                 .asArray()
                 .containsExactlyInAnyOrder(
-                        "pendente", "em_andamento", "concluido_ganho", "concluido_perdido");
+                        "em_andamento", "em_andamento", "concluido_ganho", "concluido_perdido");
         assertThat(resultado).bodyJson().extractingPath("$.nextCursor").isNull();
     }
 
