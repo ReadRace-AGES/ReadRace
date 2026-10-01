@@ -30,8 +30,9 @@ export default function LoginScreen() {
       redirectUri,
       scopes: ['openid', 'email', 'profile'],
       usePKCE: true,
-      // Pula a tela do Cognito e vai direto para o Google.
-      extraParams: { identity_provider: 'Google' },
+      // Sem forçar provedor: a página do Cognito mostra e-mail e senha, cadastro, código de
+      // confirmação e "esqueci a senha". O Google entra como botão nessa mesma página quando
+      // for configurado como provedor no Cognito.
     },
     discovery
   );
@@ -74,7 +75,7 @@ export default function LoginScreen() {
       <ReadRaceLogo />
       <View className="w-full gap-3">
         <PrimaryButton
-          label="Entrar com Google"
+          label="Entrar"
           onPress={() => {
             setErro(null);
             promptAsync();

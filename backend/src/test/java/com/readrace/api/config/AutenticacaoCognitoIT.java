@@ -77,13 +77,28 @@ class AutenticacaoCognitoIT {
         given(userInfoClient.buscar("token-daniel"))
                 .willReturn(
                         new CognitoUserInfo(
-                                "sub-daniel", "daniel@readrace.com", "true", "Daniel", null));
+                                "sub-daniel", "daniel@example.com", "true", "Daniel", null));
 
         assertThat(mvc.get().uri("/api/me").with(token("sub-daniel", "token-daniel")))
                 .hasStatusOk()
                 .bodyJson()
                 .extractingPath("$.id")
                 .isEqualTo(ID_DANIEL);
+    }
+
+    @Test
+    void nao_deve_vincular_pelo_email_antigo_do_seed() {
+        // @readrace.com é domínio real de terceiros: o dono não pode assumir o perfil do seed.
+        given(userInfoClient.buscar("token-dominio-real"))
+                .willReturn(
+                        new CognitoUserInfo(
+                                "sub-dominio-real", "daniel@readrace.com", "true", "Daniel", null));
+
+        assertThat(mvc.get().uri("/api/me").with(token("sub-dominio-real", "token-dominio-real")))
+                .hasStatusOk()
+                .bodyJson()
+                .extractingPath("$.id")
+                .isNotEqualTo(ID_DANIEL);
     }
 
     private static RequestPostProcessor token(String sub, String valorDoToken) {
