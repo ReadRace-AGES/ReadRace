@@ -38,12 +38,16 @@ class RegistrarProgressoConcorrenciaIT {
     @Autowired private JdbcTemplate jdbc;
 
     private int placarAntes;
+    private int xpUsuarioAntes;
+    private int nivelUsuarioAntes;
     private int sequenciaAntes;
     private LocalDate ultimaLeituraAntes;
 
     @BeforeEach
     void guardar_estado_do_usuario() {
         placarAntes = placarDoDesafioAtivo();
+        xpUsuarioAntes = xpDoUsuario();
+        nivelUsuarioAntes = nivelDoUsuario();
         sequenciaAntes = sequencia();
         ultimaLeituraAntes = ultimaLeitura();
 
@@ -56,8 +60,8 @@ class RegistrarProgressoConcorrenciaIT {
 
     @AfterEach
     void limpar_registros_confirmados() {
-        // Os registros também avançam o desafio ativo e a sequência do usuário e, aqui, são
-        // confirmados de verdade.
+        // Os registros também avançam o desafio ativo, o XP e a sequência do usuário e, aqui, são
+        // confirmados de verdade — sem isso, os testes seguintes herdariam o estado sujo.
         jdbc.update(
                 "UPDATE progresso_desafio SET valor_atual = ?"
                         + " WHERE desafio_id = ? AND usuario_id = ?",
@@ -65,7 +69,10 @@ class RegistrarProgressoConcorrenciaIT {
                 DESAFIO_ATIVO,
                 USUARIO);
         jdbc.update(
-                "UPDATE usuario SET dias_consecutivos = ?, ultima_leitura_em = ? WHERE id = ?",
+                "UPDATE usuario SET xp_total = ?, nivel = ?, dias_consecutivos = ?,"
+                        + " ultima_leitura_em = ? WHERE id = ?",
+                xpUsuarioAntes,
+                nivelUsuarioAntes,
                 sequenciaAntes,
                 ultimaLeituraAntes,
                 USUARIO);
@@ -119,6 +126,9 @@ class RegistrarProgressoConcorrenciaIT {
                                 LIVRO))
                 .isEqualTo(24);
         assertThat(placarDoDesafioAtivo()).isEqualTo(placarAntes + 20);
+        // As 24 chamadas somam exatamente os mesmos 20 de XP que o item e o desafio pagaram —
+        // se o lock pessimista do Usuario não estivesse lá, esse valor viria menor que 20.
+        assertThat(xpDoUsuario()).isEqualTo(xpUsuarioAntes + 20);
         // Vinte e quatro registros no mesmo dia contam um dia só.
         assertThat(sequencia()).isEqualTo(13);
         assertThat(ultimaLeitura()).isEqualTo(SequenciaDeLeitura.hoje());
@@ -141,6 +151,16 @@ class RegistrarProgressoConcorrenciaIT {
                 Integer.class,
                 DESAFIO_ATIVO,
                 USUARIO);
+    }
+
+    private int xpDoUsuario() {
+        return jdbc.queryForObject(
+                "SELECT xp_total FROM usuario WHERE id = ?", Integer.class, USUARIO);
+    }
+
+    private int nivelDoUsuario() {
+        return jdbc.queryForObject(
+                "SELECT nivel FROM usuario WHERE id = ?", Integer.class, USUARIO);
     }
 
     private void verificarChamadasConcorrentes(int pagina, int xpEsperado) throws Exception {

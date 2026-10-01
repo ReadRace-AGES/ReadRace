@@ -10,6 +10,7 @@ import com.readrace.api.dto.response.ProgressoLeituraResponse;
 import com.readrace.api.exception.LivroNaoEncontradoException;
 import com.readrace.api.exception.PaginaInvalidaException;
 import com.readrace.api.exception.UsuarioNaoEncontradoException;
+import com.readrace.api.model.CurvaDeNivel;
 import com.readrace.api.model.ItemBiblioteca;
 import com.readrace.api.model.Livro;
 import com.readrace.api.model.RegistroLeitura;
@@ -76,6 +77,7 @@ public class RegistrarProgressoService {
         item.registrarProgresso(pagina);
         registroLeituraRepository.save(new RegistroLeitura(item, pagina));
 
+        // Um único lock pessimista no usuário cobre a sequência de leitura e a soma de XP.
         Usuario usuario =
                 usuarioRepository
                         .buscarAtivoComLock(usuarioAtualId.valor())
@@ -84,10 +86,21 @@ public class RegistrarProgressoService {
 
         boolean concluiuAgora = !concluidoAntes && item.estaConcluido();
         int xpConclusao = concluiuAgora ? XP_CONCLUSAO : 0;
+        int xpGanho = xpPaginas + xpConclusao;
         int percentual = Math.round((pagina * 100f) / livro.getTotalPaginas());
 
+        // Desafio e conquista também pagam XP no mesmo usuário: o nível de antes é guardado aqui e
+        // os campos de nível só são calculados depois de todas as recompensas.
+        int nivelAnterior = usuario.getNivel();
         desafioService.avancarDesafios(usuarioAtualId.valor(), livro, pagina, paginasNovas);
+
+        usuario.receberXp(xpGanho);
+        // Depois da soma de XP, para a avaliação já enxergar o XP e o nível atualizados.
         conquistaService.avaliar(usuarioAtualId.valor());
+
+        boolean subiuDeNivel = usuario.getNivel() != nivelAnterior;
+        int xpNoNivel = CurvaDeNivel.xpNoNivel(usuario.getXpTotal(), usuario.getNivel());
+        int xpDoNivel = CurvaDeNivel.xpDoNivel(usuario.getNivel());
 
         return new ProgressoLeituraResponse(
                 item.getPaginaAtual(),
@@ -96,9 +109,14 @@ public class RegistrarProgressoService {
                 percentual,
                 xpPaginas,
                 xpConclusao,
-                xpPaginas + xpConclusao,
+                xpGanho,
                 item.estaConcluido(),
-                usuario.getDiasConsecutivos());
+                usuario.getDiasConsecutivos(),
+                usuario.getNivel(),
+                usuario.getXpTotal(),
+                xpNoNivel,
+                xpDoNivel,
+                subiuDeNivel);
     }
 
     private int lerPagina(RegistrarProgressoRequest request) {
