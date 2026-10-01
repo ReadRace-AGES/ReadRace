@@ -1,0 +1,7 @@
+# Copie para backend.hcl (ignorado pelo git) e preencha.
+# O bucket é criado uma única vez, à mão, antes do primeiro terraform init.
+bucket       = "readrace-terraform-state-<sufixo>"
+key          = "readrace/terraform.tfstate"
+region       = "<regiao>"
+encrypt      = true
+use_lockfile = true

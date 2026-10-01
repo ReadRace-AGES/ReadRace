@@ -17,6 +17,7 @@ import com.readrace.api.model.CursorBiblioteca;
 import com.readrace.api.model.ItemBiblioteca;
 import com.readrace.api.model.ListaBiblioteca;
 import com.readrace.api.repository.ItemBibliotecaRepository;
+import com.readrace.api.repository.ItemBibliotecaRepository.GeneroDoLivro;
 import com.readrace.api.repository.ItemBibliotecaRepository.ItemPaginado;
 
 @Service
@@ -109,12 +110,24 @@ public class BibliotecaService {
                         .stream()
                         .collect(Collectors.toMap(ItemBiblioteca::getId, Function.identity()));
 
+        Map<UUID, String> generoPorLivro =
+                itemBibliotecaRepository
+                        .buscarPrimeiroGeneroDosLivros(
+                                porId.values().stream()
+                                        .map(item -> item.getLivro().getId())
+                                        .toList())
+                        .stream()
+                        .collect(
+                                Collectors.toMap(
+                                        GeneroDoLivro::getLivroId, GeneroDoLivro::getNome));
+
         List<LivroBibliotecaResponse> livros =
                 visiveis.stream()
+                        .map(item -> porId.get(item.getItemId()).getLivro())
                         .map(
-                                item ->
+                                livro ->
                                         LivroBibliotecaResponse.de(
-                                                porId.get(item.getItemId()).getLivro()))
+                                                livro, generoPorLivro.get(livro.getId())))
                         .toList();
 
         ItemPaginado ultimo = visiveis.getLast();

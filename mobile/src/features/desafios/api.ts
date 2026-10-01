@@ -69,11 +69,27 @@ export type DesafiosResponse = {
   nextCursor: string | null;
 };
 
-export function listarDesafios(signal?: AbortSignal) {
-  return apiRequest<DesafiosResponse>('/api/desafios', {
+export function listarDesafios(signal?: AbortSignal, cursor?: string) {
+  const query = cursor ? `?cursor=${encodeURIComponent(cursor)}` : '';
+
+  return apiRequest<DesafiosResponse>(`/api/desafios${query}`, {
     method: 'GET',
     signal,
   });
+}
+
+export async function listarTodosOsDesafios(signal?: AbortSignal) {
+  const primeira = await listarDesafios(signal);
+  const desafios = [...primeira.desafios];
+  let cursor = primeira.nextCursor;
+
+  while (cursor) {
+    const pagina = await listarDesafios(signal, cursor);
+    desafios.push(...pagina.desafios);
+    cursor = pagina.nextCursor;
+  }
+
+  return desafios;
 }
 
 export type DesafioResponse = DesafioBase &

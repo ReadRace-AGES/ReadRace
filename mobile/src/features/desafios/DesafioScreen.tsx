@@ -16,7 +16,7 @@ import { PrimaryButton } from '@/components/PrimaryButton';
 import { useToastContext } from '@/components/toast-provider';
 import { colors, sizes, spacing, textStyles } from '@/theme';
 
-import { listarDesafios, type Desafio } from './api';
+import { listarTodosOsDesafios, type Desafio } from './api';
 
 type Estado =
   | { situacao: 'carregando' }
@@ -56,7 +56,7 @@ function DesafioCard({ desafio, onRevanche }: DesafioCardProps) {
     if (!finalizado) {
       return (
         <Text style={[textStyles.micro, { color: colors.text }]}>
-          {desafio.diasRestantes} dias
+          {desafio.diasRestantes} {desafio.diasRestantes === 1 ? 'dia' : 'dias'}
         </Text>
       );
     }
@@ -222,13 +222,13 @@ export function DesafiosScreen() {
     );
 
     try {
-      const resposta = await listarDesafios(controller.signal);
+      const desafios = await listarTodosOsDesafios(controller.signal);
 
       if (controller.signal.aborted) return;
 
       setEstado({
         situacao: 'sucesso',
-        desafios: resposta.desafios,
+        desafios,
       });
     } catch (erro: unknown) {
       if (controller.signal.aborted) return;
@@ -239,9 +239,7 @@ export function DesafiosScreen() {
         mensagem:
           erro instanceof ApiError
             ? erro.message
-            : erro instanceof Error
-              ? erro.message
-              : '',
+            : 'Não foi possível carregar os desafios.',
       }));
     } finally {
       if (requisicao.current === controller) {
@@ -336,11 +334,13 @@ export function DesafiosScreen() {
           />
         ))}
 
-        <PrimaryButton
-          label="Desafiar Amigo"
-          icon={UsersIcon}
-          onPress={desafiarAmigo}
-        />
+        <View style={{ paddingHorizontal: spacing[4] }}>
+          <PrimaryButton
+            label="Desafiar Amigo"
+            icon={UsersIcon}
+            onPress={desafiarAmigo}
+          />
+        </View>
       </ScrollView>
     </View>
   );

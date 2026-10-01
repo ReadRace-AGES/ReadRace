@@ -1,0 +1,103 @@
+name: Deploy
+
+# Sobe a API para produção a cada push na main (fim de sprint) ou sob demanda,
+# sempre a partir da main: a role na AWS só aceita execuções vindas dela.
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+# Um deploy por vez; um novo push espera o anterior terminar em vez de cancelá-lo
+# no meio da troca de containers.
+concurrency:
+  group: deploy-producao
+  cancel-in-progress: false
+
+permissions:
+  id-token: write # pedir o token OIDC que a AWS troca por credencial temporária
+  contents: read
+
+env:
+  AWS_REGION: us-east-2
+  REPOSITORIO_ECR: readrace-api
+  INSTANCIA: i-0a27ef464e5619692
+  URL_SAUDE: https://3-19-247-112.sslip.io/actuator/health
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Credenciais temporárias da AWS (OIDC)
+        uses: aws-actions/configure-aws-credentials@v6
+        with:
+          role-to-assume: ${{ vars.AWS_DEPLOY_ROLE_ARN }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Login no ECR
+        id: ecr
+        uses: aws-actions/amazon-ecr-login@v2
+
+      - name: Define a tag da imagem
+        id: tag
+        run: echo "valor=${GITHUB_SHA::12}" >> "$GITHUB_OUTPUT"
+
+      # As tags do ECR são imutáveis: rodar de novo o deploy do mesmo commit
+      # reaproveita a imagem em vez de falhar ao tentar enviá-la outra vez.
+      - name: Verifica se a imagem já existe
+        id: existe
+        run: |
+          if aws ecr describe-images --repository-name "$REPOSITORIO_ECR" \
+               --image-ids imageTag="${{ steps.tag.outputs.valor }}" >/dev/null 2>&1; then
+            echo "sim=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "sim=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - uses: docker/setup-buildx-action@v4
+        if: steps.existe.outputs.sim == 'false'
+
+      - name: Build e envio da imagem
+        if: steps.existe.outputs.sim == 'false'
+        uses: docker/build-push-action@v7
+        with:
+          context: backend
+          platforms: linux/amd64
+          push: true
+          provenance: false
+          tags: ${{ steps.ecr.outputs.registry }}/${{ env.REPOSITORIO_ECR }}:${{ steps.tag.outputs.valor }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Atualiza a EC2
+        run: |
+          ID=$(aws ssm send-command \
+            --instance-ids "$INSTANCIA" \
+            --document-name readrace-deploy \
+            --parameters "Commit=$GITHUB_SHA" \
+            --comment "deploy ${GITHUB_SHA::12}" \
+            --query Command.CommandId --output text)
+          echo "Comando SSM: $ID"
+          # O wait desiste depois de ~100 s; o deploy pode levar mais, então tenta de novo.
+          for _ in 1 2 3 4 5; do
+            aws ssm wait command-executed --command-id "$ID" --instance-id "$INSTANCIA" && break || true
+          done
+          aws ssm get-command-invocation --command-id "$ID" --instance-id "$INSTANCIA" \
+            --query '[Status, StandardOutputContent, StandardErrorContent]' --output text
+          STATUS=$(aws ssm get-command-invocation --command-id "$ID" --instance-id "$INSTANCIA" \
+            --query Status --output text)
+          test "$STATUS" = "Success"
+
+      - name: Confere a saúde da API
+        run: |
+          for _ in $(seq 1 24); do
+            if curl -fsS "$URL_SAUDE" | grep -q '"status":"UP"'; then
+              echo "API no ar."
+              exit 0
+            fi
+            sleep 5
+          done
+          echo "A API não respondeu UP em 2 minutos."
+          exit 1

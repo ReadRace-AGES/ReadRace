@@ -1,5 +1,12 @@
+import { Stack } from 'expo-router';
+
 import { DesafiarAmigoScreen } from '@/features/desafios/DesafiarAmigoScreen';
 
 export default function DesafiarAmigoRoute() {
-  return <DesafiarAmigoScreen />;
+  return (
+    <>
+      <Stack.Screen options={{ gestureEnabled: false }} />
+      <DesafiarAmigoScreen />
+    </>
+  );
 }

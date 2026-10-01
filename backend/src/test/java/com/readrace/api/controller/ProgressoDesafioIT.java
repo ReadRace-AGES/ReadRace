@@ -161,6 +161,7 @@ class ProgressoDesafioIT {
 
     @Test
     void nao_deve_avancar_desafio_pendente() {
+        alterarDesafio("status = 'pendente'", DESAFIO_PENDENTE_ID);
         int placarAntes = placar(DESAFIO_PENDENTE_ID, DANIEL_ID);
 
         registrar(DOM_CASMURRO_ID, 200);

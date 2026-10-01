@@ -86,7 +86,7 @@ public class RegistrarProgressoService {
         int xpConclusao = concluiuAgora ? XP_CONCLUSAO : 0;
         int percentual = Math.round((pagina * 100f) / livro.getTotalPaginas());
 
-        desafioService.avancarDesafios(usuarioAtualId.valor(), livro, paginasNovas, concluiuAgora);
+        desafioService.avancarDesafios(usuarioAtualId.valor(), livro, pagina, paginasNovas);
         conquistaService.avaliar(usuarioAtualId.valor());
 
         return new ProgressoLeituraResponse(

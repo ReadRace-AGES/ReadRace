@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { Text, View, type GestureResponderEvent } from 'react-native';
 
-import { sizes } from '@/theme';
+import { sizes, spacing } from '@/theme';
 
 import { clampSliderValue, sliderValueAtPosition } from './sliderValues';
 
@@ -13,6 +13,8 @@ export type SliderProps = {
   maximumLabel: string;
   accessibilityLabel: string;
   onValueChange: (value: number) => void;
+  onSlidingStart?: () => void;
+  onSlidingComplete?: () => void;
 };
 
 /** Controle de inteiros. O valor selecionado e sua unidade pertencem à tela. */
@@ -24,9 +26,13 @@ export function Slider({
   maximumLabel,
   accessibilityLabel,
   onValueChange,
+  onSlidingStart,
+  onSlidingComplete,
 }: SliderProps) {
   const [width, setWidth] = useState(0);
   const origin = useRef(0);
+  const inicioDoToque = useRef(0);
+  const arrastando = useRef(false);
   const lastNotified = useRef<number | null>(null);
 
   if (
@@ -63,6 +69,12 @@ export function Slider({
   function updateFromTouch(event: GestureResponderEvent) {
     if (travel <= 0) return;
 
+    if (
+      Math.abs(event.nativeEvent.pageX - inicioDoToque.current) > spacing[1]
+    ) {
+      arrastando.current = true;
+    }
+
     notify(
       sliderValueAtPosition(
         event.nativeEvent.pageX - origin.current - thumbSize / 2,
@@ -95,18 +107,30 @@ export function Slider({
           );
         }}
         className="h-button-height justify-center"
+        hitSlop={{ top: spacing[3], bottom: spacing[3] }}
         onLayout={({ nativeEvent }) => setWidth(nativeEvent.layout.width)}
         onStartShouldSetResponder={() => travel > 0}
         onMoveShouldSetResponder={() => travel > 0}
         onResponderGrant={(event) => {
           origin.current =
             event.nativeEvent.pageX - event.nativeEvent.locationX;
+          inicioDoToque.current = event.nativeEvent.pageX;
+          arrastando.current = false;
           lastNotified.current = null;
+          onSlidingStart?.();
           updateFromTouch(event);
         }}
         onResponderMove={updateFromTouch}
-        onResponderRelease={updateFromTouch}
-        onResponderTerminationRequest={() => true}
+        onResponderRelease={(event) => {
+          updateFromTouch(event);
+          arrastando.current = false;
+          onSlidingComplete?.();
+        }}
+        onResponderTerminate={() => {
+          arrastando.current = false;
+          onSlidingComplete?.();
+        }}
+        onResponderTerminationRequest={() => !arrastando.current}
       >
         <View pointerEvents="none" style={{ marginHorizontal: thumbSize / 2 }}>
           <View className="h-progress-track-height overflow-hidden rounded-pill bg-progress-track">
