@@ -31,7 +31,7 @@ test('slider cede a rolagem e mantém toque, arraste, limites e acessibilidade',
   const values = load('sliderValues.ts');
   const { Slider } = load('Slider.tsx', {
     'react-native': { Text: 'Text', View: 'View' },
-    '@/theme': { sizes: { icon: 24 } },
+    '@/theme': { sizes: { icon: 24 }, spacing: { 1: 4, 3: 12 } },
     './sliderValues': values,
   });
   let tree;

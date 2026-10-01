@@ -172,7 +172,7 @@ test('aba navega, recarrega ao foco e ignora respostas antigas', async () => {
   assert.equal(requests[0].options.method, 'GET');
   assert.equal(tree.root.findAllByType('ActivityIndicator').length, 1);
 
-  await receive(0, [], 'proxima-pagina');
+  await receive(0, []);
 
   assert.equal(tree.root.findAllByType('EmptyState').length, 1);
   assert.equal(requests.length, 1);
@@ -188,7 +188,7 @@ test('aba navega, recarrega ao foco e ignora respostas antigas', async () => {
 
   assert.equal(requests.length, 2);
 
-  await receive(1, [desafio('novo')], 'proxima-pagina');
+  await receive(1, [desafio('novo')]);
 
   assert.equal(tree.root.findAllByType('Card').length, 1);
   assert.match(JSON.stringify(tree.toJSON()), /150 páginas/);
@@ -264,11 +264,7 @@ test('aba navega, recarrega ao foco e ignora respostas antigas', async () => {
   assert.equal(tree.root.findAllByType('ActivityIndicator').length, 0);
   assert.equal(tree.root.findAllByType('Card').length, 1);
 
-  await receive(
-    7,
-    [desafio('recuperado'), desafio('criado')],
-    'proxima-pagina'
-  );
+  await receive(7, [desafio('recuperado'), desafio('criado')]);
 
   assert.equal(tree.root.findAllByType('Card').length, 2);
   assert.equal(requests.length, 8);

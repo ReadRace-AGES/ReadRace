@@ -82,10 +82,12 @@ test('busca reconcilia seleção e bloqueia envio durante loading e erro', async
     '@/components/Card': { Card: 'Card' },
     '@/components/EmptyState': { EmptyState: 'EmptyState' },
     '@/components/icons/BookIcon': { BookIcon: 'BookIcon' },
+    '@/components/icons/RematchIcon': { RematchIcon: 'RematchIcon' },
     '@/components/PrimaryButton': { PrimaryButton: 'PrimaryButton' },
     '@/components/SearchInput': { SearchInput: 'SearchInput' },
     '@/components/Slider': { Slider: 'Slider' },
     './DesafiarAmigoIcons': {
+      CloseIcon: 'CloseIcon',
       CrossedSwordsIcon: 'CrossedSwordsIcon',
       PencilIcon: 'PencilIcon',
     },
