@@ -1,9 +1,13 @@
 # Instância criada pelo console e importada. Os valores de ami, subnet, IP privado,
-# key pair e disco reproduzem o que existe: mudar qualquer um deles faz o Terraform
-# destruir e recriar a máquina, junto com o Postgres que roda nela.
+# key pair e criptografia do disco reproduzem o que existe: mudar qualquer um deles faz
+# o Terraform destruir e recriar a máquina, junto com o Postgres que roda nela.
+# Tipo da instância e tamanho do disco mudam sem recriar.
 resource "aws_instance" "api" {
-  ami                         = "ami-0d3d85815a9746bc5"
-  instance_type               = "t3.medium"
+  ami = "ami-0d3d85815a9746bc5"
+  # t3.small (2 GB) cabe no teto de US$ 28,27/mês; a t3.medium sob demanda sozinha passa dele.
+  # Medido: a API sobrevive a carga com 512 MB e é morta com 384 MB. Trocar o tipo para e
+  # religa a instância (sem recriar), e o IP público muda enquanto não houver Elastic IP.
+  instance_type               = "t3.small"
   availability_zone           = "us-east-2a"
   subnet_id                   = "subnet-0c2e3ab760be82509"
   private_ip                  = "172.31.6.27"
@@ -24,7 +28,7 @@ resource "aws_instance" "api" {
   # Volume criado sem criptografia. Ligar agora exige um volume novo; fica como limitação conhecida.
   root_block_device {
     volume_type = "gp3"
-    volume_size = 8
+    volume_size = 20 # disco só cresce: a AWS não permite reduzir um volume EBS
     encrypted   = false
   }
 
