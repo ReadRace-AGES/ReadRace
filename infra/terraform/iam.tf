@@ -1,6 +1,5 @@
 # Role assumida pela própria EC2. O SSM dá acesso ao terminal da máquina pelo Session
-# Manager sem porta 22 aberta. Escrita no bucket de backup e envio de logs entram
-# aqui conforme esses recursos forem criados.
+# Manager sem porta 22 aberta. O acesso ao bucket de backup fica em backup.tf.
 data "aws_iam_policy_document" "ec2_assume" {
   statement {
     actions = ["sts:AssumeRole"]

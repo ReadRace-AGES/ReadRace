@@ -24,6 +24,19 @@ export GOOGLE_BOOKS_API_KEY="$(parametro /readrace/prod/google-books/api-key)"
 aws ecr get-login-password --region "$REGIAO" | docker login --username AWS --password-stdin "$REGISTRO" >/dev/null
 
 cd "$(dirname "$0")"
+
+# Cópia do banco antes de trocar a imagem: migration do Flyway não tem volta, e essa
+# cópia é o ponto de restauração. Se falhar, o deploy para aqui. Na primeira subida
+# ainda não há banco para copiar.
+if [ -n "$(docker ps -q --filter label=com.docker.compose.project=readrace --filter label=com.docker.compose.service=db)" ]; then
+  ./backup-banco.sh antes-do-deploy
+fi
+
+# Backup diário. Reinstalar a cada deploy mantém a máquina igual ao que está no git.
+install -m 644 readrace-backup.service readrace-backup.timer /etc/systemd/system/
+systemctl daemon-reload
+systemctl enable --now readrace-backup.timer
+
 docker compose pull --quiet
 docker compose up -d --remove-orphans
 docker image prune -f >/dev/null

@@ -1,0 +1,12 @@
+# Instalado e ligado pelo subir.sh. Próxima execução: systemctl list-timers readrace-backup
+[Unit]
+Description=Backup diário do Postgres do ReadRace
+
+[Timer]
+# 06:00 UTC = 03:00 em Brasília, horário de menor uso.
+OnCalendar=*-*-* 06:00:00 UTC
+# Se a máquina estiver desligada no horário, roda assim que ela voltar.
+Persistent=true
+
+[Install]
+WantedBy=timers.target
