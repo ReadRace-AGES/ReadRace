@@ -18,7 +18,10 @@ HOST="${IP//./-}.sslip.io"
 
 # Pelo Caddy, com o certificado de verdade, mas sem sair da máquina (--resolve):
 # testa o mesmo caminho que o app usa.
-if curl -fsS -m 10 --resolve "$HOST:443:127.0.0.1" "https://$HOST/actuator/health" | grep -q '"status":"UP"'; then
+# Resposta numa variável em vez de "curl | grep -q": com pipefail, o grep que sai cedo
+# pode matar o curl com SIGPIPE e a API seria dada como fora do ar sem estar.
+RESPOSTA=$(curl -fsS -m 10 --resolve "$HOST:443:127.0.0.1" "https://$HOST/actuator/health")
+if [[ "$RESPOSTA" == *'"status":"UP"'* ]]; then
   API=1
 else
   API=0
