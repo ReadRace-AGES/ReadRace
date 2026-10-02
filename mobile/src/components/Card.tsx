@@ -1,4 +1,10 @@
-import { Children, Fragment, isValidElement, type ReactNode } from 'react';
+import {
+  Children,
+  Fragment,
+  isValidElement,
+  useState,
+  type ReactNode,
+} from 'react';
 import {
   Pressable,
   StyleSheet,
@@ -45,6 +51,9 @@ export function Card({
   surfaceStyle,
   testID,
 }: CardProps) {
+  // Estilo-função no Pressable é descartado pelo NativeWind no nativo.
+  const [pressionado, setPressionado] = useState(false);
+
   if (!temConteudo(children)) return null;
 
   // A sombra fica fora do recorte para não ser cortada pelo overflow no iOS.
@@ -56,11 +65,9 @@ export function Card({
           accessibilityLabel={accessibilityLabel}
           accessibilityState={accessibilityState}
           onPress={onPress}
-          style={({ pressed }) => [
-            styles.surface,
-            surfaceStyle,
-            pressed && styles.pressed,
-          ]}
+          onPressIn={() => setPressionado(true)}
+          onPressOut={() => setPressionado(false)}
+          style={[styles.surface, surfaceStyle, pressionado && styles.pressed]}
         >
           {children}
         </Pressable>
