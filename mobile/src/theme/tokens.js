@@ -33,12 +33,15 @@ const colors = {
   navInactive: '#C1848F',
 
   progressTrack: '#D9D9D9',
-  rankGoldStart: '#EBE28D',
-  rankGoldEnd: '#B7B57D',
-  rankSilverStart: '#B3A9A9',
-  rankSilverEnd: '#8A8787',
-  rankBronzeStart: '#794E17',
-  rankBronzeEnd: '#B07322',
+  // Escurecidos a partir do `menu - clube do livro` 3-6: o ouro do frame (#EBE28D -> #B7B57D)
+  // dava 1.2:1 sobre o card. Mantem os tres metais; cada gradiente fecha acima de 4.5:1 sobre
+  // `surfaceMuted` e `surfaceAlt`, e nenhuma parada fica abaixo de 3:1.
+  rankGoldStart: '#B08A0C',
+  rankGoldEnd: '#7A6008',
+  rankSilverStart: '#7A7575',
+  rankSilverEnd: '#504C4C',
+  rankBronzeStart: '#A3621C',
+  rankBronzeEnd: '#6E4513',
 };
 
 const typography = {

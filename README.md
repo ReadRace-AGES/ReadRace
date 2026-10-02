@@ -329,7 +329,7 @@ abaixo saiu de um deles.
 | `textInverse` | `#FEFEFE` | titulo e subtitulo do cabecalho, 3-7 e 3-8 |
 | `navInactive*` | `#D98B9A` → `#AE7E86` | gradiente do icone inativo em `navbar` 34-322 |
 | `progressTrack` | `#D9D9D9` | trilha da barra em `desafios` 3-8 |
-| `rankGold/Silver/Bronze*` | ver `tokens.js` | 1o/2o/3o lugar em `menu - clube do livro` 3-6 |
+| `rankGold/Silver/Bronze*` | ver `tokens.js` | 1o/2o/3o lugar em `menu - clube do livro` 3-6, escurecidos para contraste (o ouro do frame dava 1.2:1) |
 
 ### Tipografia
 
