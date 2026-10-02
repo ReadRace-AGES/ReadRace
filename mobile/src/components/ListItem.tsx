@@ -44,6 +44,7 @@ export function ListItem(props: ListItemProps) {
         ? props.genre
         : undefined;
   const label = [title, subtitle, metadata].filter(Boolean).join(', ');
+  const action = props.variant === 'community' ? props.action : undefined;
   const content = (
     <>
       <View
@@ -117,9 +118,13 @@ export function ListItem(props: ListItemProps) {
             accessibilityState={selectable ? { checked: selected } : undefined}
             accessibilityLabel={label}
             onPress={onPress}
-            style={({ pressed }) => [styles.main, pressed && styles.pressed]}
+            style={styles.pressable}
           >
-            {content}
+            {({ pressed }) => (
+              <View style={[styles.main, pressed && styles.pressed]}>
+                {content}
+              </View>
+            )}
           </Pressable>
         ) : (
           <View
@@ -131,14 +136,18 @@ export function ListItem(props: ListItemProps) {
             {content}
           </View>
         )}
-        {props.variant === 'community' && props.action && (
+        {action && (
           <Pressable
             accessibilityRole="button"
-            accessibilityLabel={`${props.action.label}: ${title}`}
-            onPress={props.action.onPress}
-            style={({ pressed }) => [styles.action, pressed && styles.pressed]}
+            accessibilityLabel={`${action.label}: ${title}`}
+            onPress={action.onPress}
+            style={styles.actionPressable}
           >
-            <Text style={styles.actionLabel}>{props.action.label}</Text>
+            {({ pressed }) => (
+              <View style={[styles.action, pressed && styles.pressed]}>
+                <Text style={styles.actionLabel}>{action.label}</Text>
+              </View>
+            )}
           </Pressable>
         )}
       </View>
@@ -150,6 +159,8 @@ const styles = StyleSheet.create({
   surface: { padding: spacing[0] },
   selected: { backgroundColor: colors.surfacePink },
   row: { flexDirection: 'row', alignItems: 'center' },
+  // Estilo-função no Pressable é descartado pelo NativeWind no nativo.
+  pressable: { flex: 1, minWidth: 0 },
   main: {
     flex: 1,
     minWidth: 0,
@@ -186,9 +197,8 @@ const styles = StyleSheet.create({
     borderColor: colors.primary,
   },
   check: { ...textStyles.bodySmallStrong, color: colors.textInverse },
+  actionPressable: { flexShrink: 0, maxWidth: '40%' },
   action: {
-    flexShrink: 0,
-    maxWidth: '40%',
     minHeight: sizes.buttonHeight,
     justifyContent: 'center',
     paddingHorizontal: spacing[3],

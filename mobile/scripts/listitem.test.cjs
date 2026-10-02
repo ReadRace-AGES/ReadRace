@@ -15,7 +15,13 @@ const dependencies = {
   'react-native': {
     View: 'View',
     Text: 'Text',
-    Pressable: 'Pressable',
+    // Como o Pressable real, aceita children como função do estado.
+    Pressable: ({ children, ...props }) =>
+      React.createElement(
+        'Pressable',
+        props,
+        typeof children === 'function' ? children({ pressed: false }) : children
+      ),
     StyleSheet: { create: (styles) => styles },
   },
   'react-native-svg': {
