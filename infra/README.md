@@ -19,15 +19,15 @@ Endereço da API: `https://3-19-247-112.sslip.io` (sem domínio comprado; o
 | Caminho | Conteúdo |
 |---|---|
 | `infra/terraform/` | Tudo da AWS que é gerenciado por código |
-| `infra/producao/` | `docker-compose.yml`, `Caddyfile` e `subir.sh` que rodam na EC2 |
+| `infra/producao/` | `docker-compose.yml`, `Caddyfile`, `subir.sh` e o backup do banco, que rodam na EC2 |
 | `.github/workflows/deploy.yml` | Deploy automático a cada push na `main` |
 
 ## O que existe na AWS
 
 Gerenciado pelo Terraform: EC2 (importada do console), security group (80 e 443;
 sem 22), Elastic IP, role e instance profile da EC2, ECR `readrace-api`, provedor
-OIDC do GitHub, role `readrace-deploy-github`, documento SSM `readrace-deploy` e o
-Cognito (user pool, app client e domínio, importados do console).
+OIDC do GitHub, role `readrace-deploy-github`, documento SSM `readrace-deploy`, bucket de backup
+`readrace-backup-<conta>` e o Cognito (user pool, app client e domínio, importados do console).
 
 Fora do Terraform, de propósito:
 
@@ -161,6 +161,44 @@ Maven ("Function not implemented"). Compilar na arquitetura nativa e só a image
 final em amd64 resolve: `FROM --platform=$BUILDPLATFORM eclipse-temurin:21-jdk AS build`
 no `backend/Dockerfile`. No GitHub Actions o problema não existe.
 
+## Backup do banco
+
+`pg_dump` do Postgres para o bucket `readrace-backup-<conta>`, em dois momentos:
+
+| Prefixo | Quando |
+|---|---|
+| `diario/` | Todo dia às 06:00 UTC (03:00 em Brasília), pelo timer do systemd |
+| `antes-do-deploy/` | No `subir.sh`, antes de trocar a imagem. Se falhar, o deploy não acontece |
+
+Os arquivos expiram sozinhos depois de **30 dias**. A EC2 grava e lê no bucket, mas não
+apaga. O `subir.sh` instala o timer a cada deploy.
+
+```bash
+systemctl list-timers readrace-backup      # próxima execução
+journalctl -u readrace-backup              # resultado das últimas
+sudo /opt/readrace/backup-banco.sh manual  # backup na hora
+```
+
+### Restaurar
+
+Na EC2, pelo Session Manager. Primeiro num banco à parte, para conferir:
+
+```bash
+BUCKET=readrace-backup-$(aws sts get-caller-identity --region us-east-2 --query Account --output text)
+aws s3 ls s3://$BUCKET/ --recursive --region us-east-2 | sort | tail   # escolher o arquivo
+aws s3 cp s3://$BUCKET/<chave> /var/tmp/restaurar.dump --region us-east-2
+
+DB=$(sudo docker ps -q --filter label=com.docker.compose.service=db)
+sudo docker exec $DB createdb -U readrace readrace_restaurado
+sudo docker exec -i $DB pg_restore -U readrace -d readrace_restaurado --no-owner < /var/tmp/restaurar.dump
+sudo docker exec $DB psql -U readrace -d readrace_restaurado -c "SELECT count(*) FROM usuario;"
+```
+
+Para substituir o banco de produção, parar a API antes
+(`sudo docker stop readrace-api-1`), restaurar com `pg_restore --clean --if-exists`
+em `readrace` e subir de novo com o `subir.sh` da tag que estava no ar. No fim,
+apagar `/var/tmp/restaurar.dump` e o banco `readrace_restaurado` (`dropdb`).
+
 ## Operação
 
 Acesso à máquina: **EC2 → instância ReadRace → Conectar → Session Manager**. Não
@@ -182,4 +220,5 @@ exige as variáveis de segredo e se recusa a ler o arquivo sem elas.
 - Sem login: qualquer pessoa usa a API como o usuário do seed (V4) até o Cognito
   entrar. O Swagger está público.
 - O nome sslip.io depende de um serviço de terceiros.
-- Sem backup do banco, logs no CloudWatch nem alarmes ainda.
+- Sem logs no CloudWatch nem alarmes ainda: uma falha do backup diário só aparece
+  no `journalctl`.
