@@ -31,7 +31,7 @@ public class RegistrarProgressoService {
     private final ItemBibliotecaRepository itemBibliotecaRepository;
     private final RegistroLeituraRepository registroLeituraRepository;
     private final UsuarioRepository usuarioRepository;
-    private final UsuarioAtualDeSeed usuarioAtual;
+    private final UsuarioAtual usuarioAtual;
     private final DesafioService desafioService;
     private final ConquistaService conquistaService;
 
@@ -40,7 +40,7 @@ public class RegistrarProgressoService {
             ItemBibliotecaRepository itemBibliotecaRepository,
             RegistroLeituraRepository registroLeituraRepository,
             UsuarioRepository usuarioRepository,
-            UsuarioAtualDeSeed usuarioAtual,
+            UsuarioAtual usuarioAtual,
             DesafioService desafioService,
             ConquistaService conquistaService) {
         this.livroRepository = livroRepository;

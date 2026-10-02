@@ -31,14 +31,14 @@ public class ForumClubeService {
     private final PostRepository postRepository;
     private final CurtidaRepository curtidaRepository;
     private final UsuarioRepository usuarioRepository;
-    private final UsuarioAtualDeSeed usuarioAtual;
+    private final UsuarioAtual usuarioAtual;
 
     public ForumClubeService(
             ClubeDoLivroRepository clubeRepository,
             PostRepository postRepository,
             CurtidaRepository curtidaRepository,
             UsuarioRepository usuarioRepository,
-            UsuarioAtualDeSeed usuarioAtual) {
+            UsuarioAtual usuarioAtual) {
         this.clubeRepository = clubeRepository;
         this.postRepository = postRepository;
         this.curtidaRepository = curtidaRepository;

@@ -2,6 +2,7 @@ import { Stack } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import { useEffect } from 'react';
 
+import { AuthProvider, useAuth } from '@/auth/AuthProvider';
 import { ToastProvider } from '@/components/toast-provider';
 import { colors, useAppFonts } from '@/theme';
 
@@ -10,28 +11,53 @@ import '../../global.css';
 SplashScreen.preventAutoHideAsync();
 
 export default function RootLayout() {
+  return (
+    <AuthProvider>
+      <ToastProvider>
+        <RootStack />
+      </ToastProvider>
+    </AuthProvider>
+  );
+}
+
+function RootStack() {
   const [fontsLoaded, fontError] = useAppFonts();
+  const { status } = useAuth();
+  const pronto = (fontsLoaded || !!fontError) && status !== 'carregando';
 
   useEffect(() => {
-    if (fontsLoaded || fontError) {
+    if (pronto) {
       SplashScreen.hideAsync();
     }
-  }, [fontsLoaded, fontError]);
+  }, [pronto]);
 
-  if (!fontsLoaded && !fontError) {
+  if (!pronto) {
     return null;
   }
 
+  const logado = status === 'logado';
+
   return (
-    <ToastProvider>
-      <Stack
-        screenOptions={{
-          headerShown: false,
-          contentStyle: { backgroundColor: colors.surface },
-        }}
-      >
+    <Stack
+      screenOptions={{
+        headerShown: false,
+        contentStyle: { backgroundColor: colors.surface },
+      }}
+    >
+      {/* Primeiro da lista: sem sessão, é a primeira tela disponível e vira o destino padrão. */}
+      <Stack.Protected guard={!logado}>
+        <Stack.Screen name="login" />
+      </Stack.Protected>
+
+      <Stack.Protected guard={logado}>
+        <Stack.Screen name="index" />
         <Stack.Screen name="(tabs)" />
-      </Stack>
-    </ToastProvider>
+        <Stack.Screen name="desafiar-amigo" />
+        <Stack.Screen name="escolher-livro" />
+      </Stack.Protected>
+
+      {/* Destino do redirect do OAuth: acessível com ou sem sessão. */}
+      <Stack.Screen name="auth" />
+    </Stack>
   );
 }

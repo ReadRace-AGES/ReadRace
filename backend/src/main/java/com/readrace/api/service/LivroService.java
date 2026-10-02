@@ -36,7 +36,7 @@ public class LivroService {
     private final PostRepository postRepository;
     private final UsuarioRepository usuarioRepository;
     private final CurtidaRepository curtidaRepository;
-    private final UsuarioAtualDeSeed usuarioAtual;
+    private final UsuarioAtual usuarioAtual;
 
     public LivroService(
             LivroRepository livroRepository,
@@ -45,7 +45,7 @@ public class LivroService {
             PostRepository postRepository,
             UsuarioRepository usuarioRepository,
             CurtidaRepository curtidaRepository,
-            UsuarioAtualDeSeed usuarioAtual) {
+            UsuarioAtual usuarioAtual) {
 
         this.livroRepository = livroRepository;
         this.generoRepository = generoRepository;

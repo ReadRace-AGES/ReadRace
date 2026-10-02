@@ -33,6 +33,13 @@ services:
       DB_PASSWORD: ${DB_PASSWORD:?subir.sh não exportou DB_PASSWORD}
       GOOGLE_BOOKS_API_KEY: ${GOOGLE_BOOKS_API_KEY:?subir.sh não exportou GOOGLE_BOOKS_API_KEY}
       SERVER_PORT: 8080
+      # Autenticação desligada até o app com as telas de login ser lançado (épico #131).
+      # Valores do Cognito são públicos: identificam o user pool, não dão acesso a nada.
+      # seed = sem login (todo request é o usuário do seed); cognito = exige token.
+      AUTH_MODO: "${AUTH_MODO:-seed}"
+      COGNITO_ISSUER_URI: https://cognito-idp.us-east-2.amazonaws.com/us-east-2_MEVIpejhy
+      COGNITO_CLIENT_ID: 5f06kagodbku0mvveakmsim8qu
+      COGNITO_DOMAIN: https://us-east-2mevipejhy.auth.us-east-2.amazoncognito.com
     depends_on:
       db:
         condition: service_healthy

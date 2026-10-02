@@ -15,12 +15,12 @@ public class CurtidaService {
 
     private final CurtidaRepository curtidaRepository;
     private final PostRepository postRepository;
-    private final UsuarioAtualDeSeed usuarioAtual;
+    private final UsuarioAtual usuarioAtual;
 
     public CurtidaService(
             CurtidaRepository curtidaRepository,
             PostRepository postRepository,
-            UsuarioAtualDeSeed usuarioAtual) {
+            UsuarioAtual usuarioAtual) {
         this.curtidaRepository = curtidaRepository;
         this.postRepository = postRepository;
         this.usuarioAtual = usuarioAtual;

@@ -61,7 +61,7 @@ public class DesafioService {
     private final SeguirRepository seguirRepository;
     private final UsuarioRepository usuarioRepository;
     private final LivroRepository livroRepository;
-    private final UsuarioAtualDeSeed usuarioAtual;
+    private final UsuarioAtual usuarioAtual;
     private final ConquistaService conquistaService;
 
     public DesafioService(
@@ -70,7 +70,7 @@ public class DesafioService {
             SeguirRepository seguirRepository,
             UsuarioRepository usuarioRepository,
             LivroRepository livroRepository,
-            UsuarioAtualDeSeed usuarioAtual,
+            UsuarioAtual usuarioAtual,
             ConquistaService conquistaService) {
         this.desafioRepository = desafioRepository;
         this.progressoRepository = progressoRepository;

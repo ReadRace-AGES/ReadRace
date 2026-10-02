@@ -17,10 +17,10 @@ import com.readrace.api.repository.UsuarioRepository;
 public class PerfilService {
     private final UsuarioRepository usuarios;
     private final PerfilRepository perfis;
-    private final UsuarioAtualDeSeed usuarioAtual;
+    private final UsuarioAtual usuarioAtual;
 
     public PerfilService(
-            UsuarioRepository usuarios, PerfilRepository perfis, UsuarioAtualDeSeed usuarioAtual) {
+            UsuarioRepository usuarios, PerfilRepository perfis, UsuarioAtual usuarioAtual) {
         this.usuarios = usuarios;
         this.perfis = perfis;
         this.usuarioAtual = usuarioAtual;

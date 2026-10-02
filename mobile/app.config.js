@@ -7,7 +7,7 @@ module.exports = {
     version: '1.0.0',
     orientation: 'portrait',
     icon: './assets/images/icon.png',
-    scheme: 'mobile',
+    scheme: 'readrace',
     userInterfaceStyle: 'automatic',
     ios: {
       icon: './assets/expo.icon',
@@ -27,6 +27,7 @@ module.exports = {
     },
     plugins: [
       'expo-router',
+      'expo-secure-store',
       [
         'expo-splash-screen',
         {

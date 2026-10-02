@@ -1,5 +1,5 @@
 import { useFocusEffect, useRouter, type Href } from 'expo-router';
-import { Fragment, useCallback, useRef } from 'react';
+import { Fragment, useCallback, useRef, type ReactNode } from 'react';
 import {
   ActivityIndicator,
   Pressable,
@@ -230,7 +230,13 @@ export function PerfilConteudo({
   );
 }
 
-export function PerfilScreen({ usuarioId }: { usuarioId?: string }) {
+export function PerfilScreen({
+  usuarioId,
+  rodape,
+}: {
+  usuarioId?: string;
+  rodape?: ReactNode;
+}) {
   const { estado, recarregar, atualizar } = usePerfil(usuarioId);
   const router = useRouter();
   const { showToast } = useToastContext();
@@ -299,6 +305,7 @@ export function PerfilScreen({ usuarioId }: { usuarioId?: string }) {
           }
         />
       )}
+      {rodape}
     </ScrollView>
   );
 }

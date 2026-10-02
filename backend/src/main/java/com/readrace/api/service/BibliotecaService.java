@@ -28,10 +28,10 @@ public class BibliotecaService {
     static final int LIMITE_MAXIMO = 50;
 
     private final ItemBibliotecaRepository itemBibliotecaRepository;
-    private final UsuarioAtualDeSeed usuarioAtual;
+    private final UsuarioAtual usuarioAtual;
 
     public BibliotecaService(
-            ItemBibliotecaRepository itemBibliotecaRepository, UsuarioAtualDeSeed usuarioAtual) {
+            ItemBibliotecaRepository itemBibliotecaRepository, UsuarioAtual usuarioAtual) {
         this.itemBibliotecaRepository = itemBibliotecaRepository;
         this.usuarioAtual = usuarioAtual;
     }

@@ -45,6 +45,12 @@ public class Usuario {
     @Column(name = "ultima_leitura_em")
     private LocalDate ultimaLeituraEm;
 
+    @Column(nullable = false, length = 255)
+    private String email;
+
+    @Column(name = "cognito_sub", length = 255)
+    private String cognitoSub;
+
     public void receberXp(int xp) {
         xpTotal += xp;
         nivel = CurvaDeNivel.nivelDoXp(xpTotal);
@@ -57,6 +63,28 @@ public class Usuario {
 
     public int sequenciaExibida(LocalDate hoje) {
         return SequenciaDeLeitura.exibida(diasConsecutivos, ultimaLeituraEm, hoje);
+    }
+
+    /** Cria o usuário no primeiro login pelo Cognito. */
+    public static Usuario novoDoCognito(
+            String cognitoSub, String nome, String nomeUsuario, String email, String avatarUrl) {
+        Usuario u = new Usuario();
+        u.id = UUID.randomUUID();
+        u.cognitoSub = cognitoSub;
+        u.nome = nome;
+        u.nomeUsuario = nomeUsuario;
+        u.email = email;
+        u.avatarUrl = avatarUrl;
+        // Os defaults do banco não valem: o Hibernate envia estes campos explicitamente.
+        u.nivel = 1;
+        u.xpTotal = 0;
+        u.diasConsecutivos = 0;
+        return u;
+    }
+
+    /** Liga um usuário já existente (ex.: seed) à identidade do Cognito. */
+    public void vincularCognito(String cognitoSub) {
+        this.cognitoSub = cognitoSub;
     }
 
     @Override
