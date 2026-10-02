@@ -13,6 +13,7 @@ export type FeedCarga =
 export type FeedComunidadesState = {
   feed: FeedCarga;
   recarregar: () => void;
+  atualizar: () => void;
 };
 
 function mensagemDe(erro: unknown) {
@@ -23,24 +24,42 @@ function mensagemDe(erro: unknown) {
 
 export function useFeedComunidades(): FeedComunidadesState {
   const [feed, setFeed] = useState<FeedCarga>({ situacao: 'carregando' });
-  const [versao, setVersao] = useState(0);
+  // Silenciosa é a busca de fundo ao voltar para a aba: quem já está vendo o feed não perde o
+  // conteúdo para o carregando, nem para um erro passageiro.
+  const [tentativa, setTentativa] = useState({ numero: 0, silenciosa: false });
 
   useEffect(() => {
     const controller = new AbortController();
-    setFeed({ situacao: 'carregando' });
+    let ativo = true;
+    const aplicar = (estado: FeedCarga, preservaConteudo: boolean) => {
+      if (!ativo) return;
+      setFeed((atual) =>
+        preservaConteudo && atual.situacao === 'sucesso' ? atual : estado
+      );
+    };
+    aplicar({ situacao: 'carregando' }, tentativa.silenciosa);
     buscarFeedComunidades(controller.signal)
-      .then((dados) => {
-        if (controller.signal.aborted) return;
-        setFeed({ situacao: 'sucesso', dados });
-      })
-      .catch((erro: unknown) => {
-        if (controller.signal.aborted) return;
-        setFeed({ situacao: 'erro', mensagem: mensagemDe(erro) });
-      });
-    return () => controller.abort();
-  }, [versao]);
+      .then((dados) => aplicar({ situacao: 'sucesso', dados }, false))
+      .catch((erro: unknown) =>
+        aplicar(
+          { situacao: 'erro', mensagem: mensagemDe(erro) },
+          tentativa.silenciosa
+        )
+      );
+    return () => {
+      ativo = false;
+      controller.abort();
+    };
+  }, [tentativa]);
 
-  const recarregar = useCallback(() => setVersao((v) => v + 1), []);
+  const recarregar = useCallback(
+    () => setTentativa(({ numero }) => ({ numero: numero + 1, silenciosa: false })),
+    []
+  );
+  const atualizar = useCallback(
+    () => setTentativa(({ numero }) => ({ numero: numero + 1, silenciosa: true })),
+    []
+  );
 
-  return { feed, recarregar };
+  return { feed, recarregar, atualizar };
 }
