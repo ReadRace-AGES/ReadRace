@@ -317,17 +317,15 @@ export function DesafiarAmigoScreen() {
       style={styles.tela}
       behavior={Platform.OS === 'ios' ? 'padding' : undefined}
     >
-      <View style={styles.cabecalho}>
-        <AppHeader
-          compact
-          title="Desafiar"
-          subtitle="Escolha um oponente e defina a meta"
-          variant="primary"
-          titleAlign="center"
-          showBack
-          onBackPress={voltarParaDesafios}
-        />
-      </View>
+      <AppHeader
+        compact
+        title="Desafiar"
+        subtitle="Escolha um oponente e defina a meta"
+        variant="primary"
+        titleAlign="center"
+        showBack
+        onBackPress={voltarParaDesafios}
+      />
 
       <ScrollView
         scrollEnabled={!mexendoNaMeta}
@@ -538,12 +536,6 @@ export function DesafiarAmigoScreen() {
 const styles = StyleSheet.create({
   tela: { flex: 1, backgroundColor: colors.surfaceMuted },
   rolagem: { flexGrow: 1 },
-  cabecalho: {
-    overflow: 'hidden',
-    backgroundColor: colors.primary,
-    borderBottomLeftRadius: radius.xl,
-    borderBottomRightRadius: radius.xl,
-  },
   conteudo: {
     paddingHorizontal: spacing[6],
     paddingTop: spacing[6],

@@ -264,6 +264,7 @@ export function PerfilScreen({
         />
       ) : (
         <AppHeader
+          compact
           title="Perfil"
           showBack
           onBackPress={() =>
