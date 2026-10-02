@@ -101,8 +101,12 @@ test('ação e linha são controles irmãos com callbacks independentes', () => 
       })
     );
   });
-  const [row, action] = tree.root.findAllByType('Pressable');
-  assert.equal(row.parent, action.parent);
+  // O mock adiciona um nó host dentro de cada Pressable. A relação de
+  // irmãos deve ser verificada nos componentes, como montados pelo ListItem.
+  const controls = tree.root.findAllByType(dependencies['react-native'].Pressable);
+  assert.equal(controls.length, 2);
+  const [row, action] = controls;
+  assert.ok(row.parent === action.parent, 'linha e ação devem ter o mesmo pai');
   act(() => action.props.onPress());
   assert.equal(actions, 1);
   assert.equal(rows, 0);
