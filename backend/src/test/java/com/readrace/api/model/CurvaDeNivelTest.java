@@ -24,7 +24,10 @@ class CurvaDeNivelTest {
     }
 
     @ParameterizedTest(name = "{0} de XP é nível {1}")
-    @CsvSource({"0, 1", "44, 1", "45, 2", "171, 2", "172, 3", "2761, 7", "2762, 8", "2800, 8"})
+    @CsvSource({
+        "0, 1", "44, 1", "45, 2", "171, 2", "172, 3",
+        "2450, 7", "2505, 7", "2761, 7", "2762, 8", "2800, 8"
+    })
     void derivaONivelDoXpTotal(int xpTotal, int nivel) {
         assertThat(CurvaDeNivel.nivelDoXp(xpTotal)).isEqualTo(nivel);
     }

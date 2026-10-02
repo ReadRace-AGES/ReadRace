@@ -9,4 +9,9 @@ public record ProgressoLeituraResponse(
         Integer xpConclusao,
         Integer xpTotal,
         Boolean concluido,
-        Integer sequenciaDias) {}
+        Integer sequenciaDias,
+        Integer nivel,
+        Integer xpDoUsuario,
+        Integer xpNoNivel,
+        Integer xpDoNivel,
+        Boolean subiuDeNivel) {}

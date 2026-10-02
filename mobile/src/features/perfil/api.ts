@@ -7,8 +7,9 @@ export type Perfil = {
   avatar: string | null;
   titulo: string;
   nivel: number;
-  /** XP total persistido. O schema não define XP necessário por nível. */
   xpAtual: number;
+  xpNoNivel: number;
+  xpDoNivel: number;
   seguidores: number;
   seguindo: number;
   estatisticas: {
