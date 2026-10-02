@@ -120,18 +120,16 @@ export function MinhasConquistasScreen() {
     estado.situacao === 'sucesso' ? separarConquistas(estado.dados) : null;
   return (
     <ScrollView style={styles.screen} contentContainerStyle={styles.scroll}>
-      <View style={styles.header}>
-        <AppHeader
-          compact
-          titleAlign="center"
-          title="Minhas Conquistas"
-          subtitle="Visualize seu progresso e medalhas"
-          showBack
-          onBackPress={() =>
-            router.canGoBack() ? router.back() : router.replace('/perfil')
-          }
-        />
-      </View>
+      <AppHeader
+        compact
+        titleAlign="center"
+        title="Minhas Conquistas"
+        subtitle="Visualize seu progresso e medalhas"
+        showBack
+        onBackPress={() =>
+          router.canGoBack() ? router.back() : router.replace('/perfil')
+        }
+      />
       {estado.situacao === 'carregando' && (
         <ActivityIndicator
           style={styles.content}
@@ -170,11 +168,6 @@ export function MinhasConquistasScreen() {
 const styles = StyleSheet.create({
   screen: { flex: 1, backgroundColor: colors.surface },
   scroll: { flexGrow: 1, paddingBottom: sizes.navHeight + spacing[6] },
-  header: {
-    borderBottomLeftRadius: radius.xl,
-    borderBottomRightRadius: radius.xl,
-    overflow: 'hidden',
-  },
   content: {
     paddingTop: spacing[6],
     paddingHorizontal: spacing[5],

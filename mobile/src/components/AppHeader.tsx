@@ -81,12 +81,11 @@ export function AppHeader({
   const temBadge = streakDays !== undefined;
   const larguraLateral = Math.max(larguraEsquerda, larguraDireita);
   const emSuperficie = variant === 'surface';
-  // O cabeçalho claro não tem faixa para arredondar: ele é o próprio fundo da tela.
+  // O cabeçalho claro não tem faixa para arredondar: ele é o próprio fundo da tela. A faixa
+  // vinho é sempre arredondada; `compact` só abre mão da altura mínima das telas raiz.
   const classesFundo = emSuperficie
     ? 'bg-surface px-6 pb-4'
-    : compact
-      ? 'bg-primary px-6 pb-4'
-      : 'rounded-b-xl bg-primary px-6 pb-6';
+    : 'rounded-b-xl bg-primary px-6 pb-6';
   const corDoTexto = emSuperficie ? colors.text : colors.textInverse;
   const classesCorDoTexto = emSuperficie ? 'text-text' : 'text-text-inverse';
   const classesTitulo = `${classesCorDoTexto} ${centralizado ? 'text-center' : ''}`;
