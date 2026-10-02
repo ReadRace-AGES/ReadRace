@@ -147,8 +147,12 @@ function CartaoTipoMeta({
     >
       <BookIcon size={sizes.icon} color={cor} />
       <Text
+        numberOfLines={1}
+        adjustsFontSizeToFit
+        minimumFontScale={0.8}
         style={[
           selecionado ? textStyles.bodyStrong : textStyles.body,
+          styles.textoTipo,
           { color: cor },
         ]}
       >
@@ -587,12 +591,16 @@ const styles = StyleSheet.create({
     elevation: spacing[0],
   },
   superficieTipo: {
+    // Preenche a altura da linha para os dois cartões ficarem iguais.
+    flexGrow: 1,
     minHeight: sizes.buttonHeight * 2,
+    paddingHorizontal: spacing[2],
     alignItems: 'center',
     justifyContent: 'center',
     gap: spacing[2],
     borderWidth: sizes.borderWidth,
   },
+  textoTipo: { alignSelf: 'stretch', textAlign: 'center' },
   superficieTipoSelecionada: {
     backgroundColor: colors.surfacePink,
     borderColor: colors.primary,
