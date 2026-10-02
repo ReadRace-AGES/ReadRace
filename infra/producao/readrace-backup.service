@@ -1,0 +1,10 @@
+# Instalado em /etc/systemd/system pelo subir.sh. Disparado pelo readrace-backup.timer.
+# Resultado: journalctl -u readrace-backup
+[Unit]
+Description=Backup do Postgres do ReadRace para o S3
+Requires=docker.service
+After=docker.service
+
+[Service]
+Type=oneshot
+ExecStart=/opt/readrace/backup-banco.sh diario

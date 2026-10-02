@@ -1,0 +1,168 @@
+// Todo valor aqui foi medido nos frames do designer (node-id < 2011).
+// Os 12 frames com node-id >= 2011 foram feitos as pressas e NAO servem de fonte.
+// A tabela token -> valor -> frame de origem esta no README da raiz.
+const colors = {
+  primary: '#732634',
+  primarySoft: '#823E4A',
+  accent: '#C9425B',
+
+  surface: '#FEFEFE',
+  surfaceMuted: '#F5F5F5',
+  surfaceAlt: '#E4E4E4',
+  surfacePink: '#F6E2E2',
+  surfacePinkStrong: '#EFC7CF',
+  surfaceDisabled: '#EDEDED',
+  overlay: 'rgba(0, 0, 0, 0.65)',
+  chipOnPrimary: 'rgba(255, 255, 255, 0.11)',
+
+  border: '#EEEEEE',
+  borderStrong: '#D1D1D6',
+  inputBorder: '#CBD5E1',
+
+  text: '#1E1E1E',
+  textSecondary: '#888888',
+  textMuted: '#A3A3A3',
+  textInverse: '#FEFEFE',
+
+  // Cores de estado dos desafios
+  success: '#4CAF50',
+  danger: '#E53935',
+
+  navInactiveStart: '#D98B9A',
+  navInactiveEnd: '#AE7E86',
+  navInactive: '#C1848F',
+
+  progressTrack: '#D9D9D9',
+  // Escurecidos a partir do `menu - clube do livro` 3-6: o ouro do frame (#EBE28D -> #B7B57D)
+  // dava 1.2:1 sobre o card. Mantem os tres metais; cada gradiente fecha acima de 4.5:1 sobre
+  // `surfaceMuted` e `surfaceAlt`, e nenhuma parada fica abaixo de 3:1.
+  rankGoldStart: '#B08A0C',
+  rankGoldEnd: '#7A6008',
+  rankSilverStart: '#7A7575',
+  rankSilverEnd: '#504C4C',
+  rankBronzeStart: '#A3621C',
+  rankBronzeEnd: '#6E4513',
+};
+
+const typography = {
+  fontFamily: {
+    regular: 'Inter_400Regular',
+    semibold: 'Inter_600SemiBold',
+    bold: 'Inter_700Bold',
+    extrabold: 'Inter_800ExtraBold',
+  },
+  fontSize: {
+    display: 32,
+    h1: 24,
+    h2: 20,
+    h3: 18,
+    body: 16,
+    bodySmall: 14,
+    caption: 12,
+    micro: 10,
+  },
+  lineHeight: {
+    // `heading` e o titulo dentro do cabecalho vermelho: 21.395px em fonte de 24px
+    // (`menu - comunidades` 3-7 e `desafios` 3-8, ambos com caixa de texto de 22px).
+    heading: 0.9,
+    tight: 1.25,
+    normal: 1.5,
+  },
+  // O Figma aplica -0.011em em todo texto: -0.176px@16, -0.154px@14, -0.132px@12
+  // (`card` 403-404). Sem isso cada linha do app sai mais larga que o design.
+  letterSpacingRatio: -0.011,
+};
+
+const spacing = {
+  0: 0,
+  1: 4,
+  2: 8,
+  3: 12,
+  4: 16,
+  5: 20,
+  6: 24,
+  8: 32,
+  10: 40,
+};
+
+const radius = {
+  xs: 4,
+  sm: 8,
+  md: 12,
+  lg: 16,
+  xl: 32,
+  pill: 9999,
+};
+
+const shadows = {
+  button: {
+    shadowColor: '#000000',
+    shadowOpacity: 0.25,
+    shadowRadius: 4,
+    shadowOffset: { width: 0, height: 2 },
+    elevation: 3,
+  },
+  floating: {
+    shadowColor: '#000000',
+    shadowOpacity: 0.08,
+    shadowRadius: 8,
+    shadowOffset: { width: 0, height: 2 },
+    elevation: 6,
+  },
+  input: {
+    shadowColor: '#000000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.05,
+    shadowRadius: 2,
+    elevation: 2,
+  },
+};
+
+const sizes = {
+  buttonHeight: 40,
+  inputHeight: 40,
+  searchInputHeight: 48,
+  navHeight: 76,
+  navIcon: 28,
+  navIndicatorWidth: 24,
+  navIndicatorHeight: 3,
+  headerHeight: 192,
+  progressTrackHeight: 8,
+  chipHeight: 23,
+  icon: 24,
+  iconSmall: 16,
+  // Dois tamanhos distintos, nao um so: 39-42px no post, no card de desafio e na
+  // linha do ranking; 50px no item de lista de comunidade (`menu - comunidades` 3-7).
+  avatar: 40,
+  avatarLarge: 50,
+  borderWidth: 1,
+};
+
+// Pares de parada dos gradientes do design, na ordem que o LinearGradient espera.
+const gradients = {
+  navInactive: [colors.navInactiveStart, colors.navInactiveEnd],
+  rankGold: [colors.rankGoldStart, colors.rankGoldEnd],
+  rankSilver: [colors.rankSilverStart, colors.rankSilverEnd],
+  rankBronze: [colors.rankBronzeStart, colors.rankBronzeEnd],
+};
+
+// BookCover: composicao da escala existente, sem novas medidas extraidas do
+// Figma. Centralizado para o tema ajustar as tres variantes em conjunto.
+const bookCover = {
+  detail: { width: spacing[10] * 2, height: spacing[10] * 3 },
+  grid: { width: spacing[10] * 2, height: sizes.avatarLarge * 2 },
+  featured: { width: spacing[10] * 3, height: sizes.avatarLarge * 3 },
+  thumbnail: { width: spacing[10], height: sizes.avatarLarge },
+  borderRadius: radius.md,
+};
+
+module.exports = {
+  colors,
+  typography,
+  spacing,
+  radius,
+  shadows,
+  sizes,
+  gradients,
+  bookCover,
+};

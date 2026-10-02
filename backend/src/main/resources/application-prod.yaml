@@ -1,0 +1,21 @@
+# =============================================================
+# Profile: prod
+#
+# Usa a Google Books API real (GoogleBooksAdapter).
+# Requer GOOGLE_BOOKS_API_KEY configurada.
+# Limite: 1000 requests/dia no tier gratuito.
+# =============================================================
+
+google:
+  books:
+    api-key: ${GOOGLE_BOOKS_API_KEY}
+
+# Em produção, desativar logs verbosos do Hibernate
+logging:
+  level:
+    org.hibernate.SQL: warn
+    org.hibernate.orm.jdbc.bind: warn
+
+# O modo de login (readrace.auth.modo) vem de AUTH_MODO, com padrão seed (application.yaml).
+# Fica em seed em produção até o app com login ser lançado: com cognito, o app atual, que não
+# manda token, para de funcionar. Ligar = AUTH_MODO=cognito no compose de produção.

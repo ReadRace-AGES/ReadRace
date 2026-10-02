@@ -9,3 +9,28 @@
 # Ambiente
 .env
 *.local
+
+# Docker
+docker-compose.override.yml
+**/workspace.xml
+
+# Instruções de IA
+# Padrão sem barra casa em qualquer nível: pega CLAUDE.md da raiz,
+# backend/CLAUDE.md, mobile/CLAUDE.md e assim por diante.
+CLAUDE.md
+AGENTS.md
+GEMINI.md
+.claude/
+
+# Terraform
+# O state guarda valores sensíveis em texto puro e vive no S3, nunca no git.
+# tfvars e backend.hcl têm valores reais da conta; só os .example são versionados.
+**/.terraform/
+*.tfstate
+*.tfstate.*
+*.tfvars
+*.tfvars.json
+!*.tfvars.example
+infra/terraform/backend.hcl
+crash.log
+crash.*.log
