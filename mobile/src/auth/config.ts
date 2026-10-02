@@ -18,6 +18,12 @@ export const discovery = {
   revocationEndpoint: `${DOMAIN}/oauth2/revoke`,
 };
 
+/** Mesma troca de código, mas a página do Cognito abre direto no cadastro. */
+export const discoveryCadastro = {
+  ...discovery,
+  authorizationEndpoint: `${DOMAIN}/signup`,
+};
+
 /** Precisam bater com o `scheme` do app.config.js e com as callback URLs do app client. */
 export const SCHEME = 'readrace';
 export const REDIRECT_PATH = 'auth';

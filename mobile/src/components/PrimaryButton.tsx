@@ -8,7 +8,8 @@ export type PrimaryButtonIconProps = { size: number; color: string };
 export type PrimaryButtonProps = {
   label: string;
   onPress: () => void;
-  variant?: 'filled' | 'outline';
+  /** `inverse` e `outlineInverse` são para fundo escuro (tela de entrada). */
+  variant?: 'filled' | 'outline' | 'inverse' | 'outlineInverse';
   icon?: ComponentType<PrimaryButtonIconProps>;
   disabled?: boolean;
   loading?: boolean;
@@ -25,29 +26,37 @@ export function PrimaryButton({
   const [pressed, setPressed] = useState(false);
   const inactive = disabled || loading;
   const filled = variant === 'filled';
+  const inverse = variant === 'inverse';
+  const outlineInverse = variant === 'outlineInverse';
   const hasIcon = Boolean(Icon);
 
-  const backgroundStyle = filled
+  const backgroundStyle = filled || inverse
     ? inactive
       ? styles.filledInactive
-      : styles.filledActive
+      : inverse
+        ? styles.inverseActive
+        : styles.filledActive
     : inactive
       ? styles.outlineInactive
-      : [styles.outlineBase, hasIcon ? styles.outlineIcon : styles.outlineNoIcon];
+      : outlineInverse
+        ? styles.outlineInverse
+        : [styles.outlineBase, hasIcon ? styles.outlineIcon : styles.outlineNoIcon];
+  const contentColor = inactive
+    ? colors.textMuted
+    : filled || outlineInverse
+      ? colors.textInverse
+      : inverse || hasIcon
+        ? colors.primary
+        : colors.text;
   const textColorStyle = inactive
     ? styles.textInactive
     : filled
       ? styles.textFilledActive
-      : hasIcon
-        ? styles.textOutlineIcon
-        : styles.textOutlineNoIcon;
-  const contentColor = inactive
-    ? colors.textMuted
-    : filled
-      ? colors.textInverse
-      : hasIcon
-        ? colors.primary
-        : colors.text;
+      : inverse || outlineInverse
+        ? { color: contentColor }
+        : hasIcon
+          ? styles.textOutlineIcon
+          : styles.textOutlineNoIcon;
 
   function handlePress() {
     if (inactive) return;
@@ -100,6 +109,12 @@ const styles = StyleSheet.create({
   },
   filledActive: { backgroundColor: colors.primary, ...shadows.button },
   filledInactive: { backgroundColor: colors.surfaceDisabled },
+  inverseActive: { backgroundColor: colors.surface },
+  outlineInverse: {
+    backgroundColor: 'transparent',
+    borderWidth: 2,
+    borderColor: colors.textInverse,
+  },
   outlineBase: { backgroundColor: colors.surface, borderWidth: sizes.borderWidth },
   outlineIcon: { borderColor: colors.primary },
   outlineNoIcon: { borderColor: colors.borderStrong },
