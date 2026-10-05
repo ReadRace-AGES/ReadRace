@@ -50,7 +50,7 @@
     "ios": "expo start --ios",
     "web": "expo start --web",
     "lint": "expo lint",
-    "test": "node scripts/livro-detalhe.test.cjs && node scripts/progresso-fluxo.test.cjs && node scripts/curtida-fluxo.test.cjs && npm run test:listitem && npm run test:perfil && node scripts/desafiar-amigo.test.cjs && node scripts/desafio-integracao.test.cjs && node scripts/slider-responder.test.cjs && npm run test:slider",
+    "test": "node scripts/livro-detalhe.test.cjs && node scripts/progresso-fluxo.test.cjs && node scripts/curtida-fluxo.test.cjs && npm run test:listitem && npm run test:perfil && node scripts/desafiar-amigo.test.cjs && node scripts/desafio-integracao.test.cjs && node scripts/slider-responder.test.cjs && node scripts/adicionar-livro-api.test.cjs && node scripts/adicionar-livro-fluxo.test.cjs && npm run test:slider",
     "test:perfil": "node scripts/perfil.test.cjs",
     "test:listitem": "node scripts/listitem.test.cjs"
   },

@@ -113,6 +113,39 @@ public interface ItemBibliotecaRepository extends JpaRepository<ItemBiblioteca, 
             @Param("usuarioId") UUID usuarioId,
             @Param("livroId") UUID livroId);
 
+    // "Lido"/"Desejos" trocam o status, criando o item se ainda não existir (#155). Favorito não é
+    // tocado: EXCLUDED não o inclui, então um item existente mantém o que já tinha.
+    @Modifying
+    @Query(
+            value =
+                    """
+            INSERT INTO item_biblioteca (id, usuario_id, livro_id, status_leitura)
+            VALUES (:id, :usuarioId, :livroId, CAST(:status AS status_leitura))
+            ON CONFLICT (usuario_id, livro_id) DO UPDATE SET status_leitura = EXCLUDED.status_leitura
+            """,
+            nativeQuery = true)
+    void definirStatus(
+            @Param("id") UUID id,
+            @Param("usuarioId") UUID usuarioId,
+            @Param("livroId") UUID livroId,
+            @Param("status") String status);
+
+    // "Favoritos" (#155): item novo entra como desejo e favorito; item existente só ganha a flag,
+    // sem mudar status nem página.
+    @Modifying
+    @Query(
+            value =
+                    """
+            INSERT INTO item_biblioteca (id, usuario_id, livro_id, status_leitura, favorito)
+            VALUES (:id, :usuarioId, :livroId, 'desejo', true)
+            ON CONFLICT (usuario_id, livro_id) DO UPDATE SET favorito = true
+            """,
+            nativeQuery = true)
+    void marcarFavorito(
+            @Param("id") UUID id,
+            @Param("usuarioId") UUID usuarioId,
+            @Param("livroId") UUID livroId);
+
     // Consulta sem lock para o endpoint de detalhe, que usa transação somente leitura.
     Optional<ItemBiblioteca> findByUsuarioIdAndLivroId(UUID usuarioId, UUID livroId);
 
