@@ -72,6 +72,7 @@ public class ConquistaService {
             case LIVROS_LIDOS -> conquistaRepository.contarLivrosLidos(usuarioId);
             case PAGINAS_LIDAS -> conquistaRepository.somarPaginasLidas(usuarioId);
             case DESAFIOS -> conquistaRepository.contarDesafiosFinalizados(usuarioId);
+            case CLUBES -> conquistaRepository.contarClubes(usuarioId);
         };
     }
 }

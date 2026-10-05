@@ -80,7 +80,7 @@ class ConquistaAutomaticaIT {
         marcarComoLendo(A_HORA_DA_ESTRELA_ID, O_PEQUENO_PRINCIPE_ID);
         int xpAntes = xp(DANIEL_ID);
 
-        // A resposta já conta as recompensas: 2450 + 1 + 350 = 2801 passa dos 2762 que fecham o
+        // A resposta já conta as recompensas: 2450 + 1 + 425 = 2876 passa dos 2762 que fecham o
         // nível 7, então o nível sobe e o XP dentro do nível 8 é o que sobrou.
         assertThat(
                         mvc.post()
@@ -91,16 +91,17 @@ class ConquistaAutomaticaIT {
                 .bodyJson()
                 .extractingPath("$")
                 .asMap()
-                .containsEntry("xpDoUsuario", 2801)
+                .containsEntry("xpDoUsuario", 2876)
                 .containsEntry("nivel", 8)
                 .containsEntry("subiuDeNivel", true)
-                .containsEntry("xpNoNivel", 39)
+                .containsEntry("xpNoNivel", 114)
                 .containsEntry("xpDoNivel", 1018);
 
         assertThat(conquistas(DANIEL_ID))
-                .containsExactlyInAnyOrder(PRIMEIROS_PASSOS, MIL_PAGINAS, COMPETIDOR);
-        // 1 de XP da página nova (210 -> 211) mais as recompensas das 3 conquistas.
-        assertThat(xp(DANIEL_ID)).isEqualTo(xpAntes + 1 + 50 + 200 + 100);
+                .containsExactlyInAnyOrder(
+                        PRIMEIROS_PASSOS, MIL_PAGINAS, COMPETIDOR, EM_BOA_COMPANHIA);
+        // 1 de XP da página nova (210 -> 211) mais as recompensas das 4 conquistas.
+        assertThat(xp(DANIEL_ID)).isEqualTo(xpAntes + 1 + 50 + 200 + 100 + 75);
         assertThat(nivel(DANIEL_ID)).isEqualTo(8);
         assertThat(
                         mvc.get()
@@ -109,7 +110,7 @@ class ConquistaAutomaticaIT {
                 .hasStatusOk()
                 .bodyJson()
                 .extractingPath("$.estatisticas.conquistas")
-                .isEqualTo(3);
+                .isEqualTo(4);
     }
 
     @Test
@@ -195,12 +196,12 @@ class ConquistaAutomaticaIT {
     }
 
     @Test
-    void nao_deve_avaliar_o_criterio_de_clubes() {
+    void deve_avaliar_o_criterio_de_clubes() {
         apagarConquista(DANIEL_ID, EM_BOA_COMPANHIA);
 
         registrar(DOM_CASMURRO_ID, 150);
 
-        assertThat(conquistas(DANIEL_ID)).doesNotContain(EM_BOA_COMPANHIA);
+        assertThat(conquistas(DANIEL_ID)).contains(EM_BOA_COMPANHIA);
     }
 
     private void registrar(UUID livroId, int pagina) {

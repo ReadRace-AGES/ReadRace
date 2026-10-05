@@ -6,6 +6,8 @@ import java.util.UUID;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
@@ -21,7 +23,9 @@ import lombok.NoArgsConstructor;
 @Table(name = "clube_do_livro")
 public class ClubeDoLivro {
 
-    @Id private UUID id;
+    @Id
+    @GeneratedValue(strategy = GenerationType.UUID)
+    private UUID id;
 
     @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "livro_id", nullable = false)
@@ -30,11 +34,21 @@ public class ClubeDoLivro {
     @Column(nullable = false, length = 120)
     private String nome;
 
+    @Column(columnDefinition = "text")
+    private String descricao;
+
     @Column(name = "capa_url", columnDefinition = "text")
     private String capaUrl;
 
     @Column(name = "excluido_em")
     private OffsetDateTime excluidoEm;
+
+    public ClubeDoLivro(String nome, String descricao, Livro livro) {
+        this.nome = nome;
+        this.descricao = descricao;
+        this.livro = livro;
+        this.capaUrl = livro.getCapaUrl();
+    }
 
     @Override
     public boolean equals(Object obj) {
