@@ -13,9 +13,12 @@ import java.util.UUID;
  *
  * <p>A moeda do ranking é {@code Pontos} ({@code membro_clube.pontos}), do clube. Nenhum campo de
  * {@code XP} entra nesta resposta (produto §5).
+ *
+ * <p>{@code meuCargo} é {@code "administrador"} ou {@code "membro"} quando o usuário atual
+ * participa do clube, e {@code null} quando não participa (#160).
  */
 public record ClubeResponse(
-        UUID id, String nome, LivroAtual livroAtual, List<LinhaRanking> ranking) {
+        UUID id, String nome, LivroAtual livroAtual, List<LinhaRanking> ranking, String meuCargo) {
 
     /** {@code id} vem porque "Registrar leitura" precisa saber sobre qual livro o modal abre. */
     public record LivroAtual(UUID id, String titulo, String autor) {}
