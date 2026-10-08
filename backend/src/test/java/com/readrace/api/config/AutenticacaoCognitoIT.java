@@ -14,8 +14,10 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.context.annotation.Import;
 import org.springframework.http.HttpStatus;
+import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.security.oauth2.jwt.JwtDecoder;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
+import org.springframework.test.context.transaction.AfterTransaction;
 import org.springframework.test.web.servlet.assertj.MockMvcTester;
 import org.springframework.test.web.servlet.request.RequestPostProcessor;
 import org.springframework.transaction.annotation.Transactional;
@@ -45,6 +47,19 @@ class AutenticacaoCognitoIT {
     @MockitoBean private JwtDecoder jwtDecoder;
 
     @MockitoBean private CognitoUserInfoClient userInfoClient;
+
+    @Autowired private JdbcTemplate jdbc;
+
+    /**
+     * O primeiro acesso grava em transação própria (REQUIRES_NEW), que o rollback do teste não
+     * desfaz. Depois do rollback, apaga os perfis criados aqui e desliga o Daniel do seed, para não
+     * vazar estado para outros testes.
+     */
+    @AfterTransaction
+    void limparPrimeirosAcessos() {
+        jdbc.update("DELETE FROM usuario WHERE cognito_sub IN ('sub-novo', 'sub-dominio-real')");
+        jdbc.update("UPDATE usuario SET cognito_sub = NULL WHERE cognito_sub = 'sub-daniel'");
+    }
 
     @Test
     void deve_recusar_request_sem_token() {

@@ -6,6 +6,7 @@ import java.util.concurrent.ThreadLocalRandom;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.readrace.api.adapter.cognito.CognitoUserInfo;
@@ -28,7 +29,13 @@ public class ProvisionamentoUsuario {
         this.userInfoClient = userInfoClient;
     }
 
-    @Transactional
+    /**
+     * Transação própria, de escrita: o primeiro acesso costuma chegar por uma rota de leitura, cujo
+     * service roda em @Transactional(readOnly = true). Participando dela, o INSERT nunca chegava ao
+     * banco e a rota respondia "Usuário não encontrado" (#156). Com REQUIRES_NEW o perfil é gravado
+     * antes de voltar, e a corrida tratada em UsuarioAtualDoToken lê o perfil já gravado.
+     */
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
     public Usuario provisionar(Jwt jwt) {
         CognitoUserInfo info = userInfoClient.buscar(jwt.getTokenValue());
 
