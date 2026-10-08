@@ -21,6 +21,13 @@ resource "aws_sns_topic_subscription" "alertas_email" {
   endpoint  = var.email_alertas
 }
 
+resource "aws_sns_topic_subscription" "alertas_email_extras" {
+  for_each  = toset(var.emails_alertas_extras)
+  topic_arn = aws_sns_topic.alertas.arn
+  protocol  = "email"
+  endpoint  = each.value
+}
+
 # Dois períodos seguidos sem resposta (10 minutos): um deploy, que derruba a API por
 # menos de um minuto, não chega a disparar.
 resource "aws_cloudwatch_metric_alarm" "api_fora_do_ar" {
