@@ -1,8 +1,8 @@
-import * as AuthSession from 'expo-auth-session';
-
 import { configurarAutenticacao } from '@/api/client';
 
-import { authHabilitada, COGNITO_CLIENT_ID, discovery } from './config';
+import { renovarSessao, revogarSessao } from './cognitoApi';
+import type { SessaoCognito } from './cognitoProtocolo';
+import { authHabilitada } from './config';
 import {
   apagarTokens,
   carregarTokens,
@@ -38,15 +38,8 @@ export async function restaurarSessao(): Promise<boolean> {
   return atual !== null;
 }
 
-export async function salvarRespostaDeToken(
-  resposta: AuthSession.TokenResponse
-): Promise<void> {
-  atual = {
-    accessToken: resposta.accessToken,
-    // O Cognito não devolve um refresh token novo ao renovar: mantém o anterior.
-    refreshToken: resposta.refreshToken ?? atual?.refreshToken ?? null,
-    expiresAt: (resposta.issuedAt + (resposta.expiresIn ?? 3600)) * 1000,
-  };
+export async function salvarSessao(sessao: SessaoCognito): Promise<void> {
+  atual = sessao;
   await salvarTokens(atual);
   avisar();
 }
@@ -70,12 +63,9 @@ export function renovar(): Promise<string | null> {
       if (!atual?.refreshToken) {
         throw new Error('Sessão sem refresh token.');
       }
-      const resposta = await AuthSession.refreshAsync(
-        { clientId: COGNITO_CLIENT_ID, refreshToken: atual.refreshToken },
-        discovery
-      );
-      await salvarRespostaDeToken(resposta);
-      return resposta.accessToken;
+      const sessao = await renovarSessao(atual.refreshToken);
+      await salvarSessao(sessao);
+      return sessao.accessToken;
     } catch {
       await encerrarSessaoLocal();
       return null;
@@ -96,10 +86,7 @@ export async function encerrarSessaoLocal(): Promise<void> {
 export async function sair(): Promise<void> {
   const refreshToken = atual?.refreshToken;
   if (refreshToken) {
-    AuthSession.revokeAsync(
-      { token: refreshToken, clientId: COGNITO_CLIENT_ID },
-      discovery
-    ).catch(() => {});
+    revogarSessao(refreshToken).catch(() => {});
   }
   await encerrarSessaoLocal();
 }
