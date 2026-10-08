@@ -1,8 +1,6 @@
 import { StatusBar } from 'expo-status-bar';
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import {
-  KeyboardAvoidingView,
-  Platform,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -20,6 +18,7 @@ import { GoogleIcon } from '@/components/icons/GoogleIcon';
 import { PrimaryButton } from '@/components/PrimaryButton';
 import { ReadRaceLogo } from '@/components/readracelogo';
 import { useToastContext } from '@/components/toast-provider';
+import { useAlturaTeclado } from '@/components/useAlturaTeclado';
 import { colors, spacing, textStyles } from '@/theme';
 
 /** Login com e-mail e senha (frame `cadastro` do Figma, que apesar do nome é o login). */
@@ -32,6 +31,16 @@ export default function EntrarScreen() {
   const [senha, setSenha] = useState('');
   const [entrando, setEntrando] = useState(false);
   const [erro, setErro] = useState<string | null>(null);
+
+  const alturaTeclado = useAlturaTeclado();
+  const rolagem = useRef<ScrollView>(null);
+
+  // Com o teclado aberto, rola até o fim para o campo e o ENTRAR ficarem acima dele.
+  useEffect(() => {
+    if (alturaTeclado > 0) {
+      rolagem.current?.scrollToEnd({ animated: true });
+    }
+  }, [alturaTeclado]);
 
   const podeEntrar = email.trim() !== '' && senha !== '' && !entrando;
 
@@ -51,13 +60,15 @@ export default function EntrarScreen() {
   }
 
   return (
-    <KeyboardAvoidingView
-      style={styles.tela}
-      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-    >
+    <View style={styles.tela}>
       <StatusBar style="light" />
       <ScrollView
-        contentContainerStyle={{ flexGrow: 1, paddingTop: insets.top }}
+        ref={rolagem}
+        contentContainerStyle={{
+          flexGrow: 1,
+          paddingTop: insets.top,
+          paddingBottom: alturaTeclado,
+        }}
         keyboardShouldPersistTaps="handled"
       >
         <View className="items-center gap-3 py-8">
@@ -140,7 +151,7 @@ export default function EntrarScreen() {
           </View>
         </View>
       </ScrollView>
-    </KeyboardAvoidingView>
+    </View>
   );
 }
 
