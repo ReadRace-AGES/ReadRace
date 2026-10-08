@@ -18,7 +18,7 @@ import com.readrace.api.exception.ClubeInvalidoException;
 import com.readrace.api.exception.LivroNaoEncontradoException;
 import com.readrace.api.exception.RecursoNaoEncontradoException;
 import com.readrace.api.exception.UsuarioNaoEncontradoException;
-import com.readrace.api.model.CargoClube;
+import com.readrace.api.model.Cargo;
 import com.readrace.api.model.ClubeDoLivro;
 import com.readrace.api.model.Livro;
 import com.readrace.api.model.MembroClube;
@@ -93,8 +93,8 @@ public class ClubeService {
                                                 clube,
                                                 id,
                                                 id.equals(criadorId)
-                                                        ? CargoClube.ADMINISTRADOR
-                                                        : CargoClube.MEMBRO))
+                                                        ? Cargo.ADMINISTRADOR
+                                                        : Cargo.MEMBRO))
                         .toList());
 
         // avaliar faz flush antes das medições, incluindo os vínculos desta transação.

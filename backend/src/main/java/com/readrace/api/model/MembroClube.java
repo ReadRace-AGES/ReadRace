@@ -45,10 +45,9 @@ public class MembroClube {
     @Enumerated(EnumType.STRING)
     @JdbcTypeCode(SqlTypes.NAMED_ENUM)
     @Column(name = "cargo_clube", nullable = false, columnDefinition = "cargo")
-    
-    private CargoClube cargoClube;
+    private Cargo cargoClube;
 
-    public MembroClube(ClubeDoLivro clube, UUID usuarioId, CargoClube cargoClube) {
+    public MembroClube(ClubeDoLivro clube, UUID usuarioId, Cargo cargoClube) {
         this.clube = clube;
         this.usuarioId = usuarioId;
         this.cargoClube = cargoClube;
