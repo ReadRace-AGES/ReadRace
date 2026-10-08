@@ -47,6 +47,7 @@ function RootStack() {
       {/* Primeiro da lista: sem sessão, é a primeira tela disponível e vira o destino padrão. */}
       <Stack.Protected guard={!logado}>
         <Stack.Screen name="login" />
+        <Stack.Screen name="entrar" />
       </Stack.Protected>
 
       <Stack.Protected guard={logado}>
