@@ -26,11 +26,15 @@ public class ClubeService {
 
     private final ClubeDoLivroRepository clubeRepository;
     private final MembroClubeRepository membroClubeRepository;
+    private final UsuarioAtual usuarioAtual;
 
     public ClubeService(
-            ClubeDoLivroRepository clubeRepository, MembroClubeRepository membroClubeRepository) {
+            ClubeDoLivroRepository clubeRepository,
+            MembroClubeRepository membroClubeRepository,
+            UsuarioAtual usuarioAtual) {
         this.clubeRepository = clubeRepository;
         this.membroClubeRepository = membroClubeRepository;
+        this.usuarioAtual = usuarioAtual;
     }
 
     /**
@@ -51,7 +55,20 @@ public class ClubeService {
                         clubeId, PageRequest.of(0, TAMANHO_DO_RANKING));
 
         return new ClubeResponse(
-                clube.getId(), clube.getNome(), livroAtual(clube.getLivro()), ranking(linhas));
+                clube.getId(),
+                clube.getNome(),
+                livroAtual(clube.getLivro()),
+                ranking(linhas),
+                meuCargo(clubeId));
+    }
+
+    private String meuCargo(UUID clubeId) {
+        UUID usuarioId = usuarioAtual.idDoUsuarioAtual().valor();
+
+        return membroClubeRepository
+                .findByClube_IdAndUsuarioId(clubeId, usuarioId)
+                .map(membro -> membro.getCargoClube().getValor())
+                .orElse(null);
     }
 
     private static ClubeResponse.LivroAtual livroAtual(Livro livro) {

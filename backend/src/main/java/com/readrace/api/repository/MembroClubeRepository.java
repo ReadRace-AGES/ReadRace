@@ -1,6 +1,7 @@
 package com.readrace.api.repository;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 import org.springframework.data.domain.Pageable;
@@ -12,6 +13,8 @@ import com.readrace.api.model.ClubeDoLivro;
 import com.readrace.api.model.MembroClube;
 
 public interface MembroClubeRepository extends JpaRepository<MembroClube, UUID> {
+
+    Optional<MembroClube> findByClube_IdAndUsuarioId(UUID clubeId, UUID usuarioId);
 
     @Query(
             "select mc.clube from MembroClube mc"
