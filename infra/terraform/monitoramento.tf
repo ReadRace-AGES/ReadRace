@@ -70,20 +70,27 @@ resource "aws_cloudwatch_metric_alarm" "backup_atrasado" {
   ok_actions          = [aws_sns_topic.alertas.arn]
 }
 
-# Métrica que a AWS mede de graça: falha no hardware que hospeda a máquina ou no
-# sistema operacional dela.
+# Falha no hardware da AWS que hospeda a máquina (métrica gratuita). Além de avisar, manda
+# a AWS recuperar a instância: ela volta em outro servidor físico com o mesmo IP, disco e
+# configuração. Em 6 out 2026 o servidor falhou, a recuperação automática padrão da AWS não
+# aconteceu e a API ficou 44 horas fora até alguém parar e ligar a máquina à mão.
+# A ação "recover" só é aceita com StatusCheckFailed_System; falha dentro do sistema
+# operacional derruba a API e cai no alarme api_fora_do_ar.
 resource "aws_cloudwatch_metric_alarm" "ec2_com_defeito" {
   alarm_name          = "readrace-ec2-com-defeito"
-  alarm_description   = "A EC2 falhou na verificação de status da AWS (hardware ou sistema operacional)."
+  alarm_description   = "Falha no hardware da AWS que hospeda a EC2. A AWS tenta recuperar a instância em outro servidor; se a API não voltar, parar e ligar a instância."
   namespace           = "AWS/EC2"
-  metric_name         = "StatusCheckFailed"
+  metric_name         = "StatusCheckFailed_System"
   dimensions          = { InstanceId = aws_instance.api.id }
   statistic           = "Maximum"
   period              = 60
-  evaluation_periods  = 3
+  evaluation_periods  = 2
   comparison_operator = "GreaterThanOrEqualToThreshold"
   threshold           = 1
   treat_missing_data  = "notBreaching"
-  alarm_actions       = [aws_sns_topic.alertas.arn]
-  ok_actions          = [aws_sns_topic.alertas.arn]
+  alarm_actions = [
+    "arn:aws:automate:${var.regiao}:ec2:recover",
+    aws_sns_topic.alertas.arn,
+  ]
+  ok_actions = [aws_sns_topic.alertas.arn]
 }
