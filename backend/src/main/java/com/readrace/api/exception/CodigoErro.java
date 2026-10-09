@@ -14,6 +14,12 @@ public enum CodigoErro {
     OPONENTE_NAO_ENCONTRADO(HttpStatus.NOT_FOUND, "Oponente não encontrado."),
     LIVRO_NAO_ENCONTRADO(HttpStatus.NOT_FOUND, "Livro não encontrado."),
     POST_NAO_ENCONTRADO(HttpStatus.NOT_FOUND, "Post não encontrado."),
+
+    // Chat do clube - Task #151
+    CLUBE_NAO_ENCONTRADO(HttpStatus.NOT_FOUND, "Clube não encontrado."),
+    MENSAGEM_INVALIDA(HttpStatus.BAD_REQUEST, "Mensagem inválida."),
+    SO_MEMBRO_NO_CHAT(HttpStatus.FORBIDDEN, "Só membros do clube participam do chat."),
+
     OPONENTE_NAO_E_AMIGO(
             HttpStatus.BAD_REQUEST, "O oponente informado não é amigo do usuário atual."),
     META_INVALIDA(HttpStatus.BAD_REQUEST, "A meta de páginas deve estar entre 10 e 500."),
@@ -21,14 +27,14 @@ public enum CodigoErro {
             HttpStatus.BAD_REQUEST, "O livro é obrigatório para desafios com meta por livro."),
     PRAZO_INVALIDO(HttpStatus.BAD_REQUEST, "O prazo deve ser de 1 a 365 dias."),
     METHOD_NOT_ALLOWED(HttpStatus.METHOD_NOT_ALLOWED, "Método não permitido para esta rota."),
-    UNSUPPORTED_MEDIA_TYPE(HttpStatus.UNSUPPORTED_MEDIA_TYPE, "Formato de conteúdo não suportado."),
+    UNSUPPORTED_MEDIA_TYPE(
+            HttpStatus.UNSUPPORTED_MEDIA_TYPE, "Formato de conteúdo não suportado."),
     EXTERNAL_SERVICE_UNAVAILABLE(
             HttpStatus.SERVICE_UNAVAILABLE,
             "Serviço externo indisponível no momento. Tente novamente mais tarde."),
     INTERNAL_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, "Erro interno. Tente novamente.");
 
     private final HttpStatus status;
-
     private final String mensagemPadrao;
 
     CodigoErro(HttpStatus status, String mensagemPadrao) {
@@ -50,7 +56,8 @@ public enum CodigoErro {
             case METHOD_NOT_ALLOWED -> METHOD_NOT_ALLOWED;
             case UNSUPPORTED_MEDIA_TYPE -> UNSUPPORTED_MEDIA_TYPE;
             case BAD_REQUEST -> MALFORMED_REQUEST;
-            case BAD_GATEWAY, SERVICE_UNAVAILABLE, GATEWAY_TIMEOUT -> EXTERNAL_SERVICE_UNAVAILABLE;
+            case BAD_GATEWAY, SERVICE_UNAVAILABLE, GATEWAY_TIMEOUT ->
+                    EXTERNAL_SERVICE_UNAVAILABLE;
             default -> INTERNAL_ERROR;
         };
     }
