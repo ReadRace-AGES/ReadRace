@@ -164,14 +164,29 @@ function CartaoTipoMeta({
 
 export function DesafiarAmigoScreen() {
   const router = useRouter();
-  const { livroSelecionado: livroParametro } = useLocalSearchParams<{
+  const {
+    livroSelecionado: livroParametro,
+    oponenteId: oponenteParametro,
+    tipoMeta: tipoMetaParametro,
+    meta: metaParametro,
+  } = useLocalSearchParams<{
     livroSelecionado?: string;
+    oponenteId?: string;
+    tipoMeta?: TipoMeta;
+    meta?: string;
   }>();
   const insets = useSafeAreaInsets();
   const [termo, setTermo] = useState('');
-  const [oponenteId, setOponenteId] = useState<string | null>(null);
-  const [tipoMeta, setTipoMeta] = useState<TipoMeta>('paginas');
-  const [meta, setMeta] = useState(META_INICIAL);
+  const [oponenteId, setOponenteId] = useState<string | null>(
+    oponenteParametro ?? null
+  );
+  const [tipoMeta, setTipoMeta] = useState<TipoMeta>(
+    tipoMetaParametro === 'livro' ? 'livro' : 'paginas'
+  );
+  const [meta, setMeta] = useState(() => {
+    const valor = Number(metaParametro);
+    return metaParametro && metaValida(valor) ? valor : META_INICIAL;
+  });
   const [prazoDias, setPrazoDias] = useState(PRAZO_INICIAL);
   const [prazoDigitado, setPrazoDigitado] = useState(String(PRAZO_INICIAL));
   const [editandoPrazo, setEditandoPrazo] = useState(false);
