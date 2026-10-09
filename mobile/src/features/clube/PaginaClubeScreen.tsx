@@ -23,16 +23,19 @@ const COPY = {
   registrarLeitura: 'Registrar leitura',
   acessarQuiz: 'Acessar Quiz',
   forum: 'Fórum de leitura',
+  chat: 'Chat do clube',
   tentarDeNovo: 'Tentar de novo',
   voltar: 'Voltar',
   erroAoAbrirRegistro:
     'Não foi possível abrir o registro de leitura. Tente novamente.',
 } as const;
 
-// O Fórum é a #36 e ainda não tem rota; o `as Href` é o mesmo recurso que a #34 usou para
-// apontar para esta tela antes de ela existir.
 function rotaDoForum(clubeId: string): Href {
   return `/clube/${clubeId}/forum` as Href;
+}
+
+function rotaDoChat(clubeId: string): Href {
+  return `/clube/${clubeId}/chat` as Href;
 }
 
 function IconePlus({ size, color }: PrimaryButtonIconProps) {
@@ -84,20 +87,36 @@ function IconeLista({ size, color }: PrimaryButtonIconProps) {
   );
 }
 
+function IconeChat({ size, color }: PrimaryButtonIconProps) {
+  return (
+    <Svg width={size} height={size} viewBox="0 0 24 24" fill="none">
+      <Path
+        d="M21 12a8 8 0 0 1-8 8H6l-4 2 1.5-5A9 9 0 1 1 21 12Z"
+        stroke={color}
+        strokeWidth={2}
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </Svg>
+  );
+}
+
 export function PaginaClubeScreen({ clubeId }: { clubeId: string }) {
   const router = useRouter();
   const { showToast } = useToastContext();
   const { clube, recarregar } = useClube(clubeId);
+
   const [livroDoModal, setLivroDoModal] = useState<LivroDetalhe | null>(null);
   const [abrindoModal, setAbrindoModal] = useState(false);
   const [erroDoModal, setErroDoModal] = useState<string | null>(null);
+
   const buscaDoLivro = useRef<AbortController | null>(null);
 
   const fecharModal = useCallback(() => {
     buscaDoLivro.current?.abort();
     setLivroDoModal(null);
   }, []);
-  // Sair da tela fecha o modal e cancela uma busca em voo, para ele não subir depois.
+
   useFocusEffect(useCallback(() => () => fecharModal(), [fecharModal]));
 
   const dados = clube.situacao === 'sucesso' ? clube.dados : null;
@@ -107,25 +126,28 @@ export function PaginaClubeScreen({ clubeId }: { clubeId: string }) {
       router.back();
       return;
     }
+
     router.replace('/feed');
   }
 
-  /**
-   * O contrato da #35 devolve só o id do livro atual, e o modal da #33 precisa de total de
-   * páginas e progresso: o detalhe do livro (#31) entra aqui, sob demanda.
-   */
   async function abrirRegistroDeLeitura() {
     if (!dados || abrindoModal) return;
+
     setAbrindoModal(true);
     setErroDoModal(null);
+
     const controller = new AbortController();
     buscaDoLivro.current = controller;
+
     try {
       const detalhe = await buscarDetalhe(
         dados.livroAtual.id,
         controller.signal
       );
-      if (!controller.signal.aborted) setLivroDoModal(detalhe);
+
+      if (!controller.signal.aborted) {
+        setLivroDoModal(detalhe);
+      }
     } catch (erro: unknown) {
       if (!controller.signal.aborted) {
         setErroDoModal(
@@ -137,7 +159,6 @@ export function PaginaClubeScreen({ clubeId }: { clubeId: string }) {
     }
   }
 
-  // Título do livro em negrito seguido do autor em regular, como a definição travada pede.
   const subtitulo = dados ? (
     <>
       <Text style={styles.tituloDoLivro}>{dados.livroAtual.titulo}</Text>
@@ -158,6 +179,7 @@ export function PaginaClubeScreen({ clubeId }: { clubeId: string }) {
                 onPress={recarregar}
                 variant="outline"
               />
+
               <PrimaryButton
                 label={COPY.voltar}
                 onPress={voltar}
@@ -193,17 +215,26 @@ export function PaginaClubeScreen({ clubeId }: { clubeId: string }) {
               loading={abrindoModal}
               onPress={abrirRegistroDeLeitura}
             />
+
             <PrimaryButton
               label={COPY.acessarQuiz}
               icon={IconeCheck}
               disabled={!dados}
               onPress={showToast}
             />
+
             <PrimaryButton
               label={COPY.forum}
               icon={IconeLista}
               disabled={!dados}
               onPress={() => router.push(rotaDoForum(clubeId))}
+            />
+
+            <PrimaryButton
+              label={COPY.chat}
+              icon={IconeChat}
+              disabled={!dados}
+              onPress={() => router.push(rotaDoChat(clubeId))}
             />
           </View>
 
@@ -239,12 +270,34 @@ export function PaginaClubeScreen({ clubeId }: { clubeId: string }) {
 }
 
 const styles = StyleSheet.create({
-  tela: { flex: 1, backgroundColor: colors.surface },
-  tituloDoLivro: { fontFamily: typography.fontFamily.bold },
-  rolagem: { flexGrow: 1, paddingBottom: spacing[10] },
-  conteudo: { padding: spacing[6], gap: spacing[4] },
-  acoes: { gap: spacing[4] },
-  acoesDoErro: { alignSelf: 'stretch', gap: spacing[2] },
+  tela: {
+    flex: 1,
+    backgroundColor: colors.surface,
+  },
+
+  tituloDoLivro: {
+    fontFamily: typography.fontFamily.bold,
+  },
+
+  rolagem: {
+    flexGrow: 1,
+    paddingBottom: spacing[10],
+  },
+
+  conteudo: {
+    padding: spacing[6],
+    gap: spacing[4],
+  },
+
+  acoes: {
+    gap: spacing[4],
+  },
+
+  acoesDoErro: {
+    alignSelf: 'stretch',
+    gap: spacing[2],
+  },
+
   erroDoModal: {
     ...textStyles.bodySmall,
     color: colors.accent,
