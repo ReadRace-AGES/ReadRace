@@ -101,3 +101,53 @@ resource "aws_cloudwatch_metric_alarm" "ec2_com_defeito" {
   ]
   ok_actions = [aws_sns_topic.alertas.arn]
 }
+
+# Logs dos containers. O Docker de cada serviço envia a saída do container direto para o
+# grupo dele (driver awslogs no infra/producao/docker-compose.yml), sem agente na máquina.
+# Antes os logs só existiam no disco da EC2: com a falha de hardware de 6 out, teriam se
+# perdido junto. Os grupos precisam existir antes do deploy: o Docker não sobe um container
+# cujo grupo de logs não existe.
+locals {
+  servicos_com_log = toset(["api", "caddy", "db"])
+}
+
+resource "aws_cloudwatch_log_group" "servicos" {
+  for_each = local.servicos_com_log
+  name     = "/readrace/prod/${each.key}"
+  # Sem retenção o CloudWatch guarda para sempre e o custo só cresce. 14 dias cobrem uma
+  # sprint para investigar um problema.
+  retention_in_days = 14
+}
+
+# Conta as linhas ERROR do log da API. O formato é o padrão do Spring Boot
+# ("<data> ERROR <pid> --- ..."): o padrão olha só o segundo campo, então linhas de stack
+# trace e mensagens que citam "ERROR" no texto não contam.
+resource "aws_cloudwatch_log_metric_filter" "erros_api" {
+  name           = "readrace-erros-api"
+  log_group_name = aws_cloudwatch_log_group.servicos["api"].name
+  pattern        = "[data, nivel = \"ERROR\", ...]"
+
+  metric_transformation {
+    name          = "ErrosApi"
+    namespace     = local.namespace_metricas
+    value         = "1"
+    default_value = "0"
+  }
+}
+
+# Um erro isolado (ex.: um 500 de uma chamada malformada) não manda e-mail; uma sequência,
+# sim. Mais de 5 em 5 minutos indica algo quebrado para todo mundo.
+resource "aws_cloudwatch_metric_alarm" "erros_api" {
+  alarm_name          = "readrace-erros-na-api"
+  alarm_description   = "Mais de 5 linhas ERROR no log da API em 5 minutos. Ver o grupo /readrace/prod/api no CloudWatch Logs."
+  namespace           = local.namespace_metricas
+  metric_name         = aws_cloudwatch_log_metric_filter.erros_api.metric_transformation[0].name
+  statistic           = "Sum"
+  period              = 300
+  evaluation_periods  = 1
+  comparison_operator = "GreaterThanThreshold"
+  threshold           = 5
+  treat_missing_data  = "notBreaching" # máquina parada já dispara o alarme da API
+  alarm_actions       = [aws_sns_topic.alertas.arn]
+  ok_actions          = [aws_sns_topic.alertas.arn]
+}

@@ -210,7 +210,8 @@ Alarmes do CloudWatch (`infra/terraform/monitoramento.tf`) mandam e-mail pelo t�
 | `readrace-api-fora-do-ar` | `/actuator/health` sem `UP` por 10 minutos, ou a EC2 parou de enviar métricas |
 | `readrace-disco-cheio` | Disco acima de 80% |
 | `readrace-backup-atrasado` | Mais de 26 horas sem backup concluído |
-| `readrace-ec2-com-defeito` | A EC2 falha na verificação de status da AWS |
+| `readrace-ec2-com-defeito` | A EC2 falha na verificação de status da AWS; a AWS também tenta recuperar a instância |
+| `readrace-erros-na-api` | Mais de 5 linhas `ERROR` no log da API em 5 minutos |
 
 Os três primeiros usam métricas do namespace `ReadRace`, enviadas pelo `saude.sh` a cada
 5 minutos (timer `readrace-saude`, instalado pelo `subir.sh`). O e-mail que recebe os
@@ -221,6 +222,26 @@ e-mail, a AWS manda um link de confirmação; sem clicar nele, nenhum alerta che
 systemctl list-timers readrace-saude   # próxima medida
 journalctl -u readrace-saude -n 5      # últimas medidas (api=1 disco=12% backup=3h)
 ```
+
+### Logs
+
+Cada container manda a saída para um grupo do CloudWatch Logs, guardado por 14 dias:
+`/readrace/prod/api`, `/readrace/prod/caddy` e `/readrace/prod/db`. Quem envia é o próprio
+Docker (driver `awslogs` no `infra/producao/docker-compose.yml`), sem agente na máquina.
+Para ler: **CloudWatch → Logs → Log groups**, ou **Logs Insights** para buscar, por exemplo:
+
+```
+fields @timestamp, @message
+| filter @message like /ERROR/
+| sort @timestamp desc
+| limit 50
+```
+
+O `docker logs` na máquina continua funcionando, com uma cópia local.
+
+**Ordem ao ligar pela primeira vez:** `terraform apply` antes do deploy. O Docker não sobe
+um container cujo grupo de logs não existe, então um deploy com o compose novo antes do
+apply deixa a API fora do ar.
 
 ## Operação
 
