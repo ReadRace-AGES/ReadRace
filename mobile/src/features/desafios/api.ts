@@ -7,7 +7,14 @@ export type DesafioStatus =
   | 'concluido_perdido'
   | 'concluido_empate';
 
-export type Desafio = {
+export type LivroDesafio = {
+  id: string;
+  titulo: string;
+  autor: string | null;
+  capaUrl: string | null;
+};
+
+type DesafioBase = {
   id: string;
   status: DesafioStatus;
   descricao: string;
@@ -22,6 +29,12 @@ export type Desafio = {
     oponente: number;
   };
 };
+
+export type Desafio = DesafioBase &
+  (
+    | { tipoMeta: 'paginas'; meta: number; livro: null }
+    | { tipoMeta: 'livro'; meta?: never; livro: LivroDesafio }
+  );
 
 export type Oponente = {
   id: string;
@@ -43,26 +56,6 @@ export type CriarDesafioRequest = CriarDesafioBaseRequest &
     | { tipoMeta: 'paginas'; meta: number; livroId?: never }
     | { tipoMeta: 'livro'; livroId: string; meta?: never }
   );
-
-export type LivroDesafio = {
-  id: string;
-  titulo: string;
-  autor: string | null;
-  capaUrl: string | null;
-};
-
-type DesafioBase = {
-  id: string;
-  oponente: Oponente;
-  descricao: string;
-  prazoDias: number;
-  diasRestantes: number;
-  status: DesafioStatus;
-  progresso: {
-    voce: number;
-    oponente: number;
-  };
-};
 
 export type DesafiosResponse = {
   desafios: Desafio[];
