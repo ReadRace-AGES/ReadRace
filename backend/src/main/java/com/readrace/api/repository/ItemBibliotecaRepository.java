@@ -114,8 +114,10 @@ public interface ItemBibliotecaRepository extends JpaRepository<ItemBiblioteca, 
             @Param("livroId") UUID livroId);
 
     // "Lido"/"Desejos" trocam o status, criando o item se ainda não existir (#155). Favorito não é
-    // tocado: EXCLUDED não o inclui, então um item existente mantém o que já tinha.
-    @Modifying
+    // tocado: EXCLUDED não o inclui, então um item existente mantém o que já tinha. O upsert é
+    // nativo e o Hibernate não o enxerga: sem clearAutomatically, o findBy seguinte devolveria o
+    // item antigo, em cache na mesma transação, em vez do que o banco acabou de gravar.
+    @Modifying(flushAutomatically = true, clearAutomatically = true)
     @Query(
             value =
                     """
@@ -131,8 +133,8 @@ public interface ItemBibliotecaRepository extends JpaRepository<ItemBiblioteca, 
             @Param("status") String status);
 
     // "Favoritos" (#155): item novo entra como desejo e favorito; item existente só ganha a flag,
-    // sem mudar status nem página.
-    @Modifying
+    // sem mudar status nem página. Mesmo motivo do cache de definirStatus.
+    @Modifying(flushAutomatically = true, clearAutomatically = true)
     @Query(
             value =
                     """

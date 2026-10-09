@@ -248,7 +248,8 @@ class BibliotecaControllerIT {
 
     @Test
     void deve_recusar_o_verbo_errado_no_formato_padrao_de_erro() {
-        assertThat(mvc.post().uri("/api/biblioteca"))
+        // POST passou a existir na #155; DELETE continua sem rota nesse caminho.
+        assertThat(mvc.delete().uri("/api/biblioteca"))
                 .hasStatus(HttpStatus.METHOD_NOT_ALLOWED)
                 .bodyJson()
                 .extractingPath("$.code")
