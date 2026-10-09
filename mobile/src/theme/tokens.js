@@ -30,6 +30,14 @@ const colors = {
   success: '#4CAF50',
   danger: '#E53935',
 
+  // Estados de resposta do quiz (#162), medidos em `quiz - resposta certa` 67-190 e
+  // `quiz - resposta errada` 312-614: borda/ícone da alternativa, fundo do painel e texto do painel.
+  quizCorreto: '#127415',
+  quizCorretoFundo: '#ACE8AE',
+  quizErrado: '#A13549',
+  quizErradoFundo: '#E42548',
+  quizErradoTexto: '#402227',
+
   navInactiveStart: '#D98B9A',
   navInactiveEnd: '#AE7E86',
   navInactive: '#C1848F',

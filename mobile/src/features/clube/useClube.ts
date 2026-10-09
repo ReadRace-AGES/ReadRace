@@ -23,8 +23,8 @@ function mensagemDe(erro: unknown) {
 /**
  * Cabeçalho e ranking chegam na mesma resposta, então a tela nunca mostra meia página.
  *
- * Recarregar depois de registrar leitura é o comportamento pedido pela #35: o ranking volta
- * igual porque nenhuma ação desta sprint cria `Pontos`.
+ * Recarregar depois de registrar leitura é o comportamento pedido pela #35. Voltar do quiz
+ * (#162) também recarrega: cada acerto soma `Pontos` e muda o ranking.
  */
 export function useClube(clubeId: string): ClubeState {
   const [clube, setClube] = useState<ClubeCarga>({ situacao: 'carregando' });
