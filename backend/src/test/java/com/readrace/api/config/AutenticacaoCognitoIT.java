@@ -15,12 +15,14 @@ import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.context.annotation.Import;
 import org.springframework.http.HttpStatus;
 import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.security.oauth2.jwt.BadJwtException;
 import org.springframework.security.oauth2.jwt.JwtDecoder;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.context.transaction.AfterTransaction;
 import org.springframework.test.web.servlet.assertj.MockMvcTester;
 import org.springframework.test.web.servlet.request.RequestPostProcessor;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.server.ResponseStatusException;
 
 import com.readrace.api.TestcontainersConfiguration;
 import com.readrace.api.adapter.cognito.CognitoUserInfo;
@@ -63,7 +65,43 @@ class AutenticacaoCognitoIT {
 
     @Test
     void deve_recusar_request_sem_token() {
-        assertThat(mvc.get().uri("/api/me")).hasStatus(HttpStatus.UNAUTHORIZED);
+        var resposta = mvc.get().uri("/api/me").exchange();
+
+        assertThat(resposta).headers().containsHeader("WWW-Authenticate");
+        assertThat(resposta)
+                .hasStatus(HttpStatus.UNAUTHORIZED)
+                .bodyJson()
+                .extractingPath("$.code")
+                .isEqualTo("UNAUTHORIZED");
+    }
+
+    // O 401 do Spring Security, antes do controller, segue o mesmo envelope de erro da API.
+    @Test
+    void deve_recusar_token_invalido_no_envelope_de_erro() {
+        given(jwtDecoder.decode("token-ruim"))
+                .willThrow(new BadJwtException("assinatura inválida"));
+
+        assertThat(mvc.get().uri("/api/me").header("Authorization", "Bearer token-ruim"))
+                .hasStatus(HttpStatus.UNAUTHORIZED)
+                .bodyJson()
+                .extractingPath("$.code")
+                .isEqualTo("UNAUTHORIZED");
+    }
+
+    // O 401 do primeiro acesso (Cognito recusou o token no GetUser) passa pelo
+    // GlobalExceptionHandler, que precisa do código próprio em vez de INTERNAL_ERROR.
+    @Test
+    void deve_responder_401_no_envelope_quando_o_cognito_recusa_no_primeiro_acesso() {
+        given(userInfoClient.buscar("token-recusado"))
+                .willThrow(
+                        new ResponseStatusException(
+                                HttpStatus.UNAUTHORIZED, "Sessão inválida. Entre de novo."));
+
+        assertThat(mvc.get().uri("/api/me").with(token("sub-novo", "token-recusado")))
+                .hasStatus(HttpStatus.UNAUTHORIZED)
+                .bodyJson()
+                .extractingPath("$.code")
+                .isEqualTo("UNAUTHORIZED");
     }
 
     @Test
