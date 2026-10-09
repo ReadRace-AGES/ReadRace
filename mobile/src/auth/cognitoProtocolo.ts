@@ -118,6 +118,17 @@ export function traduzirErroLogin(
   }
 }
 
+/**
+ * Só sai da conta quem o Cognito recusou. Sem rede ou com limite de chamadas o refresh token
+ * continua válido: a sessão fica e a renovação é tentada de novo na próxima chamada.
+ */
+export function renovacaoEncerraSessao(erro: unknown): boolean {
+  if (!(erro instanceof ErroLogin)) {
+    return true;
+  }
+  return erro.tipo !== 'falha' && erro.tipo !== 'muitasTentativas';
+}
+
 export async function chamarCognito(
   fetchImpl: typeof fetch,
   endpoint: string,

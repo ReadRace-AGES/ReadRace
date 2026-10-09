@@ -7,6 +7,7 @@ import {
   ErroLogin,
   MENSAGENS_ERRO_LOGIN,
   regiaoDoDominio,
+  renovacaoEncerraSessao,
   requisicaoLogin,
   requisicaoRenovacao,
   requisicaoRevogacao,
@@ -175,4 +176,17 @@ test('sessaoDaResposta recusa desafio', () => {
     () => sessaoDaResposta({ ChallengeName: 'NEW_PASSWORD_REQUIRED', Session: 's' }, null, 0),
     (erro) => erro instanceof ErroLogin && erro.tipo === 'falha'
   );
+});
+
+test('renovacaoEncerraSessao encerra quando o Cognito recusa o refresh token', () => {
+  assert.equal(renovacaoEncerraSessao(new ErroLogin('credenciais')), true);
+});
+
+test('renovacaoEncerraSessao mantém a sessão sem rede ou com limite de chamadas', () => {
+  assert.equal(renovacaoEncerraSessao(new ErroLogin('falha')), false);
+  assert.equal(renovacaoEncerraSessao(new ErroLogin('muitasTentativas')), false);
+});
+
+test('renovacaoEncerraSessao encerra com erro que não veio do Cognito', () => {
+  assert.equal(renovacaoEncerraSessao(new Error('Sessão sem refresh token.')), true);
 });

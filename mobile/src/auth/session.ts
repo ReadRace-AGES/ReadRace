@@ -1,7 +1,7 @@
 import { configurarAutenticacao } from '@/api/client';
 
 import { renovarSessao, revogarSessao } from './cognitoApi';
-import type { SessaoCognito } from './cognitoProtocolo';
+import { renovacaoEncerraSessao, type SessaoCognito } from './cognitoProtocolo';
 import { authHabilitada } from './config';
 import {
   apagarTokens,
@@ -55,7 +55,10 @@ export async function obterAccessToken(): Promise<string | null> {
   return renovar();
 }
 
-/** Força a renovação (ex.: a API respondeu 401). Sem refresh token válido, encerra a sessão. */
+/**
+ * Força a renovação (ex.: a API respondeu 401). Sem refresh token válido, encerra a sessão; sem
+ * rede, mantém a sessão e repassa o erro para quem chamou a API.
+ */
 export function renovar(): Promise<string | null> {
   // Requests simultâneos compartilham a mesma renovação.
   renovando ??= (async () => {
@@ -66,7 +69,10 @@ export function renovar(): Promise<string | null> {
       const sessao = await renovarSessao(atual.refreshToken);
       await salvarSessao(sessao);
       return sessao.accessToken;
-    } catch {
+    } catch (e) {
+      if (!renovacaoEncerraSessao(e)) {
+        throw e;
+      }
       await encerrarSessaoLocal();
       return null;
     } finally {
