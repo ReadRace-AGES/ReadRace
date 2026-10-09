@@ -27,7 +27,8 @@ Endereço da API: `https://3-19-247-112.sslip.io` (sem domínio comprado; o
 Gerenciado pelo Terraform: EC2 (importada do console), security group (80 e 443;
 sem 22), Elastic IP, role e instance profile da EC2, ECR `readrace-api`, provedor
 OIDC do GitHub, role `readrace-deploy-github`, documento SSM `readrace-deploy`, bucket de backup
-`readrace-backup-<conta>` e o Cognito (user pool, app client e domínio, importados do console).
+`readrace-backup-<conta>`, alarmes do CloudWatch com o tópico SNS `readrace-alertas` e o
+Cognito (user pool, app client e domínio, importados do console).
 
 Fora do Terraform, de propósito:
 
@@ -199,6 +200,49 @@ Para substituir o banco de produção, parar a API antes
 em `readrace` e subir de novo com o `subir.sh` da tag que estava no ar. No fim,
 apagar `/var/tmp/restaurar.dump` e o banco `readrace_restaurado` (`dropdb`).
 
+## Monitoramento
+
+Alarmes do CloudWatch (`infra/terraform/monitoramento.tf`) mandam e-mail pelo tópico SNS
+`readrace-alertas` quando disparam e quando voltam ao normal:
+
+| Alarme | Dispara quando |
+|---|---|
+| `readrace-api-fora-do-ar` | `/actuator/health` sem `UP` por 10 minutos, ou a EC2 parou de enviar métricas |
+| `readrace-disco-cheio` | Disco acima de 80% |
+| `readrace-backup-atrasado` | Mais de 26 horas sem backup concluído |
+| `readrace-ec2-com-defeito` | A EC2 falha na verificação de status da AWS; a AWS também tenta recuperar a instância |
+| `readrace-erros-na-api` | Mais de 5 linhas `ERROR` no log da API em 5 minutos |
+
+Os três primeiros usam métricas do namespace `ReadRace`, enviadas pelo `saude.sh` a cada
+5 minutos (timer `readrace-saude`, instalado pelo `subir.sh`). O e-mail que recebe os
+alarmes fica na variável `email_alertas`, no `terraform.tfvars`, fora do git. Ao trocar o
+e-mail, a AWS manda um link de confirmação; sem clicar nele, nenhum alerta chega.
+
+```bash
+systemctl list-timers readrace-saude   # próxima medida
+journalctl -u readrace-saude -n 5      # últimas medidas (api=1 disco=12% backup=3h)
+```
+
+### Logs
+
+Cada container manda a saída para um grupo do CloudWatch Logs, guardado por 14 dias:
+`/readrace/prod/api`, `/readrace/prod/caddy` e `/readrace/prod/db`. Quem envia é o próprio
+Docker (driver `awslogs` no `infra/producao/docker-compose.yml`), sem agente na máquina.
+Para ler: **CloudWatch → Logs → Log groups**, ou **Logs Insights** para buscar, por exemplo:
+
+```
+fields @timestamp, @message
+| filter @message like /ERROR/
+| sort @timestamp desc
+| limit 50
+```
+
+O `docker logs` na máquina continua funcionando, com uma cópia local.
+
+**Ordem ao ligar pela primeira vez:** `terraform apply` antes do deploy. O Docker não sobe
+um container cujo grupo de logs não existe, então um deploy com o compose novo antes do
+apply deixa a API fora do ar.
+
 ## Operação
 
 Acesso à máquina: **EC2 → instância ReadRace → Conectar → Session Manager**. Não
@@ -220,5 +264,4 @@ exige as variáveis de segredo e se recusa a ler o arquivo sem elas.
 - Sem login: qualquer pessoa usa a API como o usuário do seed (V4) até o Cognito
   entrar. O Swagger está público.
 - O nome sslip.io depende de um serviço de terceiros.
-- Sem logs no CloudWatch nem alarmes ainda: uma falha do backup diário só aparece
-  no `journalctl`.
+- Logs da API só existem dentro da EC2 (`docker logs`); ainda não vão para o CloudWatch.
