@@ -29,6 +29,8 @@ class ClubeControllerIT {
     private static final String DOM_CASMURRO = "30000000-0000-0000-0000-000000000001";
     private static final String USUARIO_1 = "00000000-0000-0000-0000-000000000001";
     private static final String USUARIO_2 = "00000000-0000-0000-0000-000000000002";
+    private static final String CLUBE_3 = "50000000-0000-0000-0000-000000000003";
+    private static final String CLUBE_4 = "50000000-0000-0000-0000-000000000004";
     private static final String URL = "/api/clubes/" + CLUBE;
 
     @Autowired private MockMvcTester mvc;
@@ -120,6 +122,37 @@ class ClubeControllerIT {
     @DisplayName("o ranking é em Pontos: nenhum campo de XP entra na resposta")
     void nao_deve_expor_xp() {
         assertThat(corpo(URL)).doesNotContainIgnoringCase("xp");
+    }
+
+    @Test
+    @DisplayName("meuCargo: administrador quando o usuário atual lidera o clube")
+    void deve_devolver_administrador_quando_o_usuario_atual_e_lider_do_clube() {
+        assertThat(mvc.get().uri(URL))
+                .hasStatusOk()
+                .bodyJson()
+                .extractingPath("$.meuCargo")
+                .isEqualTo("administrador");
+    }
+
+    @Test
+    @DisplayName(
+            "meuCargo: membro quando o usuário atual é membro comum (V13 colocou-o no clube 3)")
+    void deve_devolver_membro_quando_o_usuario_atual_e_membro_comum() {
+        assertThat(mvc.get().uri("/api/clubes/{id}", CLUBE_3))
+                .hasStatusOk()
+                .bodyJson()
+                .extractingPath("$.meuCargo")
+                .isEqualTo("membro");
+    }
+
+    @Test
+    @DisplayName("meuCargo: null quando o usuário atual não participa do clube")
+    void deve_devolver_null_quando_o_usuario_atual_nao_participa_do_clube() {
+        assertThat(mvc.get().uri("/api/clubes/{id}", CLUBE_4))
+                .hasStatusOk()
+                .bodyJson()
+                .extractingPath("$.meuCargo")
+                .isNull();
     }
 
     @Test

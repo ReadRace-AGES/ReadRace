@@ -5,6 +5,8 @@ const colors = {
   primary: '#732634',
   primarySoft: '#823E4A',
   accent: '#C9425B',
+  // Creme do mascote e do "Read Race" no logo (readracelogo.tsx); subtítulo da tela de entrada.
+  logoCream: '#FDCA7E',
 
   surface: '#FEFEFE',
   surfaceMuted: '#F5F5F5',
