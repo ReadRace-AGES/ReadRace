@@ -11,6 +11,8 @@ import static org.springframework.test.web.client.response.MockRestResponseCreat
 
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -101,6 +103,46 @@ class CognitoUserInfoClientTest {
                 .isInstanceOfSatisfying(
                         ResponseStatusException.class,
                         e -> assertThat(e.getStatusCode()).isEqualTo(HttpStatus.UNAUTHORIZED));
+    }
+
+    // Limite de chamadas do Cognito é passageiro e não diz nada sobre o token. Um 401 aqui faria o
+    // app renovar, bater no mesmo limite, receber outro 401 e apagar uma sessão válida.
+    @ParameterizedTest
+    @ValueSource(strings = {"TooManyRequestsException", "LimitExceededException"})
+    void limite_de_chamadas_do_cognito_vira_503(String tipo) {
+        CognitoUserInfoClient client = clienteRespondendo(HttpStatus.BAD_REQUEST, tipo);
+
+        assertThatThrownBy(() -> client.buscar("token-valido"))
+                .isInstanceOfSatisfying(
+                        ResponseStatusException.class,
+                        e ->
+                                assertThat(e.getStatusCode())
+                                        .isEqualTo(HttpStatus.SERVICE_UNAVAILABLE));
+    }
+
+    // Outro 4xx (ex.: parâmetro inválido) é defeito da nossa chamada, não do token da pessoa.
+    @Test
+    void outro_erro_4xx_do_cognito_vira_500() {
+        CognitoUserInfoClient client =
+                clienteRespondendo(HttpStatus.BAD_REQUEST, "InvalidParameterException");
+
+        assertThatThrownBy(() -> client.buscar("token-valido"))
+                .isInstanceOfSatisfying(
+                        ResponseStatusException.class,
+                        e ->
+                                assertThat(e.getStatusCode())
+                                        .isEqualTo(HttpStatus.INTERNAL_SERVER_ERROR));
+    }
+
+    private static CognitoUserInfoClient clienteRespondendo(HttpStatus status, String tipo) {
+        RestClient.Builder builder = RestClient.builder();
+        MockRestServiceServer cognito = MockRestServiceServer.bindTo(builder).build();
+        cognito.expect(requestTo(API))
+                .andRespond(
+                        withStatus(status)
+                                .contentType(AMZ_JSON)
+                                .body("{\"__type\":\"" + tipo + "\",\"message\":\"x\"}"));
+        return new CognitoUserInfoClient(builder, ISSUER);
     }
 
     @Test

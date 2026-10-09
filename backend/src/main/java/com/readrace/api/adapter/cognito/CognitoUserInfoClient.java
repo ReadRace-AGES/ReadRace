@@ -46,10 +46,13 @@ public class CognitoUserInfoClient {
     }
 
     /**
-     * Token recusado pelo Cognito (4xx) vira 401: sessão antiga da página do Cognito, sem o escopo
-     * aws.cognito.signin.user.admin, ou token revogado. Com 401 o app renova, perde a sessão e leva
-     * a pessoa para a entrada; um 500 a deixava presa em erro. Falha do próprio Cognito (5xx) segue
-     * como erro do servidor.
+     * Só o token recusado vira 401: sessão antiga da página do Cognito, sem o escopo
+     * aws.cognito.signin.user.admin, token revogado ou conta apagada. Com 401 o app renova, perde a
+     * sessão e leva a pessoa para a entrada; um 500 a deixava presa em erro.
+     *
+     * <p>O Cognito responde 4xx também para o limite de chamadas. Esse vira 503: como 401, o app
+     * renovaria, bateria no mesmo limite e apagaria uma sessão válida. Outro 4xx é defeito da nossa
+     * chamada e vira 500. Falha do próprio Cognito (5xx) segue como erro do servidor.
      */
     public CognitoUserInfo buscar(String accessToken) {
         try {
@@ -63,9 +66,34 @@ public class CognitoUserInfoClient {
                             .retrieve()
                             .body(String.class);
             return lerResposta(resposta);
-        } catch (HttpClientErrorException recusado) {
-            throw new ResponseStatusException(
-                    HttpStatus.UNAUTHORIZED, "Sessão inválida. Entre de novo.", recusado);
+        } catch (HttpClientErrorException erro) {
+            throw traduzirErro(erro);
+        }
+    }
+
+    private static ResponseStatusException traduzirErro(HttpClientErrorException erro) {
+        return switch (tipoDoErro(erro.getResponseBodyAsString())) {
+            case "NotAuthorizedException", "UserNotFoundException" ->
+                    new ResponseStatusException(
+                            HttpStatus.UNAUTHORIZED, "Sessão inválida. Entre de novo.", erro);
+            case "TooManyRequestsException", "LimitExceededException" ->
+                    new ResponseStatusException(
+                            HttpStatus.SERVICE_UNAVAILABLE,
+                            "Serviço de login ocupado. Tente de novo em instantes.",
+                            erro);
+            default ->
+                    new ResponseStatusException(
+                            HttpStatus.INTERNAL_SERVER_ERROR, "Falha ao consultar o login.", erro);
+        };
+    }
+
+    /** O Cognito manda o tipo em "__type", às vezes com prefixo ("...#NotAuthorizedException"). */
+    static String tipoDoErro(String corpo) {
+        try {
+            String tipo = JSON.readTree(corpo).path("__type").asString("");
+            return tipo.substring(tipo.lastIndexOf('#') + 1);
+        } catch (RuntimeException corpoNaoJson) {
+            return "";
         }
     }
 
