@@ -1,3 +1,4 @@
+import { useRouter } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { useEffect, useRef, useState } from 'react';
 import {
@@ -9,10 +10,12 @@ import {
   View,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import Svg, { Path } from 'react-native-svg';
 
 import { abrirPaginaCognito, entrarComSenha } from '@/auth/cognitoApi';
 import { ErroLogin, MENSAGENS_ERRO_LOGIN } from '@/auth/cognitoProtocolo';
 import { salvarSessao } from '@/auth/session';
+import { VOLTAR_PATH } from '@/components/AppHeader';
 import { CampoTexto } from '@/components/CampoTexto';
 import { GoogleIcon } from '@/components/icons/GoogleIcon';
 import { PrimaryButton } from '@/components/PrimaryButton';
@@ -23,6 +26,7 @@ import { colors, spacing, textStyles } from '@/theme';
 
 /** Login com e-mail e senha (frame `cadastro` do Figma, que apesar do nome é o login). */
 export default function EntrarScreen() {
+  const router = useRouter();
   const insets = useSafeAreaInsets();
   const { width } = useWindowDimensions();
   const { showToast } = useToastContext();
@@ -31,6 +35,9 @@ export default function EntrarScreen() {
   const [senha, setSenha] = useState('');
   const [entrando, setEntrando] = useState(false);
   const [erro, setErro] = useState<string | null>(null);
+  // O estado `entrando` só muda no próximo render: dois toques rápidos passariam os dois. A ref
+  // muda na hora.
+  const enviando = useRef(false);
 
   const alturaTeclado = useAlturaTeclado();
   const rolagem = useRef<ScrollView>(null);
@@ -45,7 +52,8 @@ export default function EntrarScreen() {
   const podeEntrar = email.trim() !== '' && senha !== '' && !entrando;
 
   async function entrar() {
-    if (!podeEntrar) return;
+    if (!podeEntrar || enviando.current) return;
+    enviando.current = true;
     setErro(null);
     setEntrando(true);
     try {
@@ -55,7 +63,21 @@ export default function EntrarScreen() {
       setErro(e instanceof ErroLogin ? e.message : MENSAGENS_ERRO_LOGIN.falha);
       setSenha('');
     } finally {
+      enviando.current = false;
       setEntrando(false);
+    }
+  }
+
+  // O router enfileira a navegação: dois toques na seta voltariam duas telas e esvaziariam a pilha.
+  const saindo = useRef(false);
+
+  function voltar() {
+    if (saindo.current) return;
+    saindo.current = true;
+    if (router.canGoBack()) {
+      router.back();
+    } else {
+      router.replace('/login');
     }
   }
 
@@ -72,6 +94,24 @@ export default function EntrarScreen() {
         keyboardShouldPersistTaps="handled"
       >
         <View className="items-center gap-3 py-8">
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel="Voltar"
+            onPress={voltar}
+            disabled={entrando}
+            hitSlop={12}
+            style={styles.voltar}
+          >
+            <Svg width={9} height={15} viewBox="0 0 9 15" fill="none">
+              <Path
+                d={VOLTAR_PATH}
+                stroke={colors.textInverse}
+                strokeWidth={2.01667}
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
+            </Svg>
+          </Pressable>
           <ReadRaceLogo size={Math.min(width * 0.36, 150)} />
           <Text style={textStyles.bodySmallStrong} className="text-logo-cream">
             Uma leitura imersiva
@@ -166,4 +206,5 @@ const styles = StyleSheet.create({
     paddingTop: spacing[8],
   },
   link: { color: colors.text, textDecorationLine: 'underline' },
+  voltar: { position: 'absolute', top: spacing[4], left: spacing[6] },
 });
