@@ -29,6 +29,12 @@ const colors = {
   // Cores de estado dos desafios
   success: '#4CAF50',
   danger: '#E53935',
+  // Chama acesa do badge de sequência: a leitura de hoje já foi registrada. Mesmo tom de
+  // `danger`, separado porque aqui o vermelho é conquista, não erro.
+  streakFire: '#E53935',
+  // Degradê da chama acesa, de cima (ponta, mais clara) para baixo (base, mais escura).
+  streakFireTip: '#FF6F61',
+  streakFireBase: '#B3122E',
 
   // Estados de resposta do quiz (#162), medidos em `quiz - resposta certa` 67-190 e
   // `quiz - resposta errada` 312-614: borda/ícone da alternativa, fundo do painel e texto do painel.
