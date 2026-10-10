@@ -34,6 +34,14 @@ public class LivroAutor {
     @Column(nullable = false)
     private Short ordem;
 
+    /** Vínculo criado junto com um {@link Livro} novo, a partir do catálogo externo (#155). */
+    public LivroAutor(Livro livro, Autor autor, short ordem) {
+        this.id = new LivroAutorId(livro.getId(), autor.getId());
+        this.livro = livro;
+        this.autor = autor;
+        this.ordem = ordem;
+    }
+
     @Override
     public boolean equals(Object obj) {
         if (this == obj) {

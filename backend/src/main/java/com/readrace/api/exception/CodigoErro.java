@@ -14,6 +14,10 @@ public enum CodigoErro {
     OPONENTE_NAO_ENCONTRADO(HttpStatus.NOT_FOUND, "Oponente não encontrado."),
     LIVRO_NAO_ENCONTRADO(HttpStatus.NOT_FOUND, "Livro não encontrado."),
     POST_NAO_ENCONTRADO(HttpStatus.NOT_FOUND, "Post não encontrado."),
+    LISTA_INVALIDA(HttpStatus.BAD_REQUEST, "Lista inválida. Use lido, desejo ou favorito."),
+    LIVRO_SEM_ISBN_OU_PAGINAS(
+            HttpStatus.UNPROCESSABLE_ENTITY,
+            "O livro não tem ISBN ou número de páginas suficiente para entrar na biblioteca."),
     OPONENTE_NAO_E_AMIGO(
             HttpStatus.BAD_REQUEST, "O oponente informado não é amigo do usuário atual."),
     META_INVALIDA(HttpStatus.BAD_REQUEST, "A meta de páginas deve estar entre 10 e 500."),
