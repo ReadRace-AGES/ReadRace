@@ -4,8 +4,6 @@ import java.util.UUID;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
-import jakarta.persistence.EnumType;
-import jakarta.persistence.Enumerated;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
@@ -19,33 +17,30 @@ import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
+/**
+ * {@code correta} nunca sai da API antes da resposta: quem decide se o membro acertou é o backend.
+ */
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @Entity
-@Table(name = "membro_clube")
-public class MembroClube {
+@Table(name = "alternativa_quiz")
+public class AlternativaQuiz {
 
     @Id private UUID id;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "clube_id", nullable = false)
-    private ClubeDoLivro clube;
+    @JoinColumn(name = "pergunta_id", nullable = false)
+    private PerguntaQuiz pergunta;
 
-    @Column(name = "usuario_id", nullable = false)
-    private UUID usuarioId;
+    @JdbcTypeCode(SqlTypes.CHAR)
+    @Column(nullable = false, length = 1)
+    private String letra;
 
-    /** `Pontos` do membro dentro deste clube — a moeda do ranking (#35). Nunca XP. */
+    @Column(nullable = false, columnDefinition = "text")
+    private String texto;
+
     @Column(nullable = false)
-    private Integer pontos;
-
-    @Enumerated(EnumType.STRING)
-    @JdbcTypeCode(SqlTypes.NAMED_ENUM)
-    @Column(name = "cargo_clube", nullable = false, columnDefinition = "cargo")
-    private Cargo cargoClube;
-
-    public void somarPontos(int pontosGanhos) {
-        pontos += pontosGanhos;
-    }
+    private Boolean correta;
 
     @Override
     public boolean equals(Object obj) {
@@ -53,7 +48,7 @@ public class MembroClube {
             return true;
         }
 
-        if (!(obj instanceof MembroClube outro)) {
+        if (!(obj instanceof AlternativaQuiz outro)) {
             return false;
         }
 
