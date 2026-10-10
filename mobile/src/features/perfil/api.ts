@@ -1,4 +1,4 @@
-import { apiGet } from '@/api/client';
+import { apiGet, apiRequest } from '@/api/client';
 
 export type Perfil = {
   id: string;
@@ -43,4 +43,16 @@ export function buscarPerfil(
       ? '/api/me/perfil'
       : `/api/usuarios/${encodeURIComponent(usuarioId)}/perfil`;
   return apiGet<Perfil>(caminho, { signal });
+}
+
+export type AtualizacaoPerfil = {
+  nome?: string;
+  username?: string;
+};
+
+export function atualizarPerfil(dados: AtualizacaoPerfil) {
+  return apiRequest<Perfil>('/api/me/perfil', {
+    method: 'PATCH',
+    body: JSON.stringify(dados),
+  });
 }

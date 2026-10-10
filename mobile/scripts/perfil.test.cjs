@@ -253,9 +253,9 @@ test('próprio perfil mostra anel, Mascotes, engrenagem e slot de favorito', () 
     adicionar.props.onPress();
     tree.root.findByType('PerfilTopo').props.onConfiguracoes();
   });
-  assert.equal(avisos, 5);
+  assert.equal(avisos, 4);
   act(() => capa.props.onPress());
-  assert.deepEqual(rotas, ['/perfil-livro/livro']);
+  assert.deepEqual(rotas, ['/configuracoes', '/perfil-livro/livro']);
   dados = { ...dados, livrosFavoritos: [] };
   act(() => tree.update(React.createElement(PerfilScreen)));
   assert.match(JSON.stringify(tree.toJSON()), /Livros favoritos/);
