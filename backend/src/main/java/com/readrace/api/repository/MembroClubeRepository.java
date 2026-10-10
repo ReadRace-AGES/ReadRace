@@ -4,8 +4,11 @@ import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
+import jakarta.persistence.LockModeType;
+
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Lock;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
@@ -15,6 +18,19 @@ import com.readrace.api.model.MembroClube;
 public interface MembroClubeRepository extends JpaRepository<MembroClube, UUID> {
 
     Optional<MembroClube> findByClube_IdAndUsuarioId(UUID clubeId, UUID usuarioId);
+
+    // Responder o quiz soma pontos nesta linha. O lock serializa respostas simultâneas do mesmo
+    // membro, para a checagem de "já respondida" e a soma de pontos não correrem em paralelo.
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
+    @Query(
+            """
+            SELECT membro
+            FROM MembroClube membro
+            WHERE membro.clube.id = :clubeId
+              AND membro.usuarioId = :usuarioId
+            """)
+    Optional<MembroClube> buscarComLock(
+            @Param("clubeId") UUID clubeId, @Param("usuarioId") UUID usuarioId);
 
     @Query(
             "select mc.clube from MembroClube mc"
