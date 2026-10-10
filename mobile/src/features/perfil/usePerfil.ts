@@ -7,7 +7,7 @@ export type EstadoPerfil =
   | { situacao: 'erro'; mensagem: string }
   | { situacao: 'sucesso'; dados: Perfil };
 
-export function usePerfil(usuarioId?: string) {
+export function usePerfil(usuarioId?: string, habilitado = true) {
   const [resultado, setResultado] = useState<{
     id: string | undefined;
     estado: EstadoPerfil;
@@ -16,6 +16,11 @@ export function usePerfil(usuarioId?: string) {
   // conteúdo para o carregando, nem para um erro passageiro.
   const [tentativa, setTentativa] = useState({ numero: 0, silenciosa: false });
   useEffect(() => {
+    if (!habilitado) {
+      setResultado({ id: usuarioId, estado: { situacao: 'carregando' } });
+      return;
+    }
+
     const controller = new AbortController();
     let ativo = true;
     const timeout = setTimeout(() => controller.abort(), 15000);
@@ -50,7 +55,7 @@ export function usePerfil(usuarioId?: string) {
       clearTimeout(timeout);
       controller.abort();
     };
-  }, [usuarioId, tentativa]);
+  }, [usuarioId, tentativa, habilitado]);
   const estado: EstadoPerfil =
     resultado.id === usuarioId ? resultado.estado : { situacao: 'carregando' };
   const recarregar = useCallback(

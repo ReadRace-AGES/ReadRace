@@ -7,6 +7,8 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
 import jakarta.persistence.FetchType;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
@@ -25,7 +27,9 @@ import lombok.NoArgsConstructor;
 @Table(name = "membro_clube")
 public class MembroClube {
 
-    @Id private UUID id;
+    @Id
+    @GeneratedValue(strategy = GenerationType.UUID)
+    private UUID id;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "clube_id", nullable = false)
@@ -42,6 +46,13 @@ public class MembroClube {
     @JdbcTypeCode(SqlTypes.NAMED_ENUM)
     @Column(name = "cargo_clube", nullable = false, columnDefinition = "cargo")
     private Cargo cargoClube;
+
+    public MembroClube(ClubeDoLivro clube, UUID usuarioId, Cargo cargoClube) {
+        this.clube = clube;
+        this.usuarioId = usuarioId;
+        this.cargoClube = cargoClube;
+        this.pontos = 0;
+    }
 
     public void somarPontos(int pontosGanhos) {
         pontos += pontosGanhos;
