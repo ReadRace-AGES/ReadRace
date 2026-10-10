@@ -1,3 +1,4 @@
+
 package com.readrace.api.service;
 
 import java.util.List;
@@ -10,9 +11,13 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.readrace.api.dto.response.ClubeResponse;
+import com.readrace.api.exception.NaoEMembroException;
 import com.readrace.api.exception.RecursoNaoEncontradoException;
+import com.readrace.api.exception.UnicoLiderException;
+import com.readrace.api.model.Cargo;
 import com.readrace.api.model.ClubeDoLivro;
 import com.readrace.api.model.Livro;
+import com.readrace.api.model.MembroClube;
 import com.readrace.api.repository.ClubeDoLivroRepository;
 import com.readrace.api.repository.LinhaRankingClube;
 import com.readrace.api.repository.MembroClubeRepository;
@@ -21,7 +26,6 @@ import com.readrace.api.repository.MembroClubeRepository;
 @Transactional(readOnly = true)
 public class ClubeService {
 
-    /** A Página do clube mostra 7 posições; o ranking completo está fora da sprint (#35). */
     static final int TAMANHO_DO_RANKING = 7;
 
     private final ClubeDoLivroRepository clubeRepository;
@@ -37,18 +41,13 @@ public class ClubeService {
         this.usuarioAtual = usuarioAtual;
     }
 
-    /**
-     * Cabeçalho e ranking de um clube do livro.
-     *
-     * <p>Um id que não é de clube — inclusive um id que só existe em {@code comunidade} — não é
-     * encontrado aqui e responde 404, como qualquer id inexistente.
-     */
     public ClubeResponse buscar(UUID clubeId) {
         ClubeDoLivro clube =
                 clubeRepository
                         .findByIdAndExcluidoEmIsNull(clubeId)
                         .orElseThrow(
-                                () -> new RecursoNaoEncontradoException("Clube não encontrado."));
+                                () -> new RecursoNaoEncontradoException(
+                                        "Clube não encontrado."));
 
         List<LinhaRankingClube> linhas =
                 membroClubeRepository.rankingDoClube(
@@ -71,6 +70,35 @@ public class ClubeService {
                 .orElse(null);
     }
 
+    // Task #152 - Sair de um clube do livro
+
+    @Transactional
+    public void sairDoClube(UUID clubeId) {
+
+        UUID usuarioId = usuarioAtual.idDoUsuarioAtual().valor();
+
+        MembroClube membro =
+                membroClubeRepository
+                        .findByClube_IdAndUsuarioId(clubeId, usuarioId)
+                        .orElseThrow(NaoEMembroException::new);
+
+        if (membro.getCargoClube() == Cargo.ADMINISTRADOR) {
+
+            long totalMembros =
+                    membroClubeRepository.countByClube_Id(clubeId);
+
+            long totalAdministradores =
+                    membroClubeRepository.countByClube_IdAndCargoClube(
+                            clubeId, Cargo.ADMINISTRADOR);
+
+            if (totalAdministradores == 1 && totalMembros > 1) {
+                throw new UnicoLiderException();
+            }
+        }
+
+        membroClubeRepository.delete(membro);
+    }
+
     private static ClubeResponse.LivroAtual livroAtual(Livro livro) {
         String autor =
                 livro.getLivroAutores().stream()
@@ -78,24 +106,29 @@ public class ClubeService {
                         .collect(Collectors.joining(", "));
 
         return new ClubeResponse.LivroAtual(
-                livro.getId(), livro.getTitulo(), autor.isEmpty() ? null : autor);
+                livro.getId(),
+                livro.getTitulo(),
+                autor.isEmpty() ? null : autor);
     }
 
-    /**
-     * A consulta já entrega ordenado; aqui só entra a numeração de 1 a {@value
-     * #TAMANHO_DO_RANKING}.
-     */
-    private static List<ClubeResponse.LinhaRanking> ranking(List<LinhaRankingClube> linhas) {
+    private static List<ClubeResponse.LinhaRanking> ranking(
+            List<LinhaRankingClube> linhas) {
+
         return IntStream.range(0, linhas.size())
                 .mapToObj(indice -> paraLinha(indice + 1, linhas.get(indice)))
                 .toList();
     }
 
-    private static ClubeResponse.LinhaRanking paraLinha(int posicao, LinhaRankingClube linha) {
+    private static ClubeResponse.LinhaRanking paraLinha(
+            int posicao,
+            LinhaRankingClube linha) {
+
         return new ClubeResponse.LinhaRanking(
                 posicao,
                 new ClubeResponse.Usuario(
-                        linha.getUsuarioId(), linha.getNome(), linha.getAvatarUrl()),
+                        linha.getUsuarioId(),
+                        linha.getNome(),
+                        linha.getAvatarUrl()),
                 linha.getPontos());
     }
 }

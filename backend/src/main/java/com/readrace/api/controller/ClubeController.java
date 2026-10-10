@@ -1,7 +1,10 @@
+
 package com.readrace.api.controller;
 
 import java.util.UUID;
 
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -23,7 +26,9 @@ public class ClubeController {
     private final ClubeService clubeService;
     private final ForumClubeService forumClubeService;
 
-    public ClubeController(ClubeService clubeService, ForumClubeService forumClubeService) {
+    public ClubeController(
+            ClubeService clubeService,
+            ForumClubeService forumClubeService) {
         this.clubeService = clubeService;
         this.forumClubeService = forumClubeService;
     }
@@ -46,5 +51,16 @@ public class ClubeController {
                             + " não entram.")
     public ForumClubeResponse buscarPosts(@PathVariable UUID clubeId) {
         return forumClubeService.buscar(clubeId);
+    }
+
+    // Task #152 - Sair de um clube do livro
+    @DeleteMapping("/{clubeId}/membros/eu")
+    @Operation(
+            summary = "Sair de um clube do livro",
+            description =
+                    "Remove o usuário autenticado do clube, respeitando a regra do único líder.")
+    public ResponseEntity<Void> sairDoClube(@PathVariable UUID clubeId) {
+        clubeService.sairDoClube(clubeId);
+        return ResponseEntity.noContent().build();
     }
 }

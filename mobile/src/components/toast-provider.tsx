@@ -5,6 +5,7 @@ import {
   useContext,
   useEffect,
   useMemo,
+  useRef,
   type ReactNode,
 } from 'react';
 
@@ -12,8 +13,8 @@ import { Toast, useToast } from './toast';
 
 type ToastContextValue = {
   showToast: () => void;
-  /** Mensagem específica de erro (ex.: falha ao curtir) — não confundir com {@link showToast}. */
   showErrorToast: (message: string) => void;
+  showToastAfterNavigation: (message: string) => void;
 };
 
 const ToastContext = createContext<ToastContextValue | null>(null);
@@ -26,21 +27,46 @@ export function ToastProvider({ children }: ToastProviderProps) {
   const { visible, message, show, hide } = useToast();
   const pathname = usePathname();
 
-  useEffect(() => {
-    hide();
-  }, [pathname, hide]);
+  const previousPathname = useRef(pathname);
+  const pendingToast = useRef<string | null>(null);
 
-  // Sem parâmetros de propósito: várias telas passam `showToast` direto para `onPress`, e um
-  // evento de toque não pode virar mensagem do toast.
+  useEffect(() => {
+    if (previousPathname.current === pathname) {
+      return;
+    }
+
+    previousPathname.current = pathname;
+
+    const pendingMessage = pendingToast.current;
+    pendingToast.current = null;
+
+    if (pendingMessage !== null) {
+      show(pendingMessage);
+    } else {
+      hide();
+    }
+  }, [pathname, show, hide]);
+
+  // Mantém a assinatura sem parâmetros usada pelas outras telas.
   const showToast = useCallback(() => show(), [show]);
+
   const showErrorToast = useCallback(
     (mensagem: string) => show(mensagem),
     [show]
   );
 
+  // Exibe a mensagem quando a próxima mudança de rota acontecer.
+  const showToastAfterNavigation = useCallback((mensagem: string) => {
+    pendingToast.current = mensagem;
+  }, []);
+
   const value = useMemo<ToastContextValue>(
-    () => ({ showToast, showErrorToast }),
-    [showToast, showErrorToast]
+    () => ({
+      showToast,
+      showErrorToast,
+      showToastAfterNavigation,
+    }),
+    [showToast, showErrorToast, showToastAfterNavigation]
   );
 
   return (
@@ -53,11 +79,13 @@ export function ToastProvider({ children }: ToastProviderProps) {
 
 export function useToastContext(): ToastContextValue {
   const context = useContext(ToastContext);
+
   if (!context) {
     throw new Error(
       'useToastContext precisa ser usado dentro de um ToastProvider'
     );
   }
+
   return context;
 }
 
