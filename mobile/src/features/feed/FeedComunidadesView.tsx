@@ -33,6 +33,13 @@ const COPY = {
   semComunidades: 'Você ainda não participa de nenhuma comunidade.',
 } as const;
 
+// A sequência aguenta até 7 dias sem leitura: enquanto a de hoje não é registrada, o badge
+// mostra quanto falta para perdê-la.
+function avisoSequencia(diasAtePerder: number | null | undefined) {
+  if (diasAtePerder == null) return undefined;
+  return `Perde em ${diasAtePerder} ${diasAtePerder === 1 ? 'dia' : 'dias'}`;
+}
+
 function IconePlus({ size, color }: PrimaryButtonIconProps) {
   return (
     <Svg width={size} height={size} viewBox="0 0 24 24" fill="none">
@@ -105,7 +112,8 @@ export function FeedComunidadesView({
         title={usuario ? `Olá, ${usuario.nome}!` : 'Olá!'}
         subtitle={COPY.subtitulo}
         streakDays={usuario?.sequenciaDias}
-        streakActive={(usuario?.sequenciaDias ?? 0) > 0}
+        streakActive={usuario?.leuHoje}
+        streakHint={avisoSequencia(usuario?.diasAtePerder)}
       />
 
       <View className="px-6 pb-2 pt-6">

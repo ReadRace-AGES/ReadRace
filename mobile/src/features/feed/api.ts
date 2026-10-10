@@ -16,7 +16,14 @@ export type ComunidadeFeed = {
 };
 
 export type FeedComunidades = {
-  usuario: { nome: string; sequenciaDias: number };
+  usuario: {
+    nome: string;
+    sequenciaDias: number;
+    /** Já existe registro de leitura hoje: a chama do cabeçalho acende. */
+    leuHoje: boolean;
+    /** Dias até a sequência acabar sem leitura (7 = leu ontem, 1 = acaba amanhã). */
+    diasAtePerder: number | null;
+  };
   clubes: ClubeFeed[];
   comunidades: ComunidadeFeed[];
 };

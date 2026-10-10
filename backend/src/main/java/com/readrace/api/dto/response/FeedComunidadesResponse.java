@@ -11,7 +11,9 @@ import java.util.UUID;
 public record FeedComunidadesResponse(
         Usuario usuario, List<Clube> clubes, List<Comunidade> comunidades) {
 
-    public record Usuario(String nome, Integer sequenciaDias) {}
+    // `leuHoje` e `diasAtePerder` saem da última leitura do usuário (`SequenciaDeLeitura`).
+    public record Usuario(
+            String nome, Integer sequenciaDias, boolean leuHoje, Integer diasAtePerder) {}
 
     public record Clube(
             UUID id, String nome, String capaUrl, LivroAtual livroAtual, long totalMembros) {}

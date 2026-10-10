@@ -40,6 +40,26 @@ class SequenciaDeLeituraTest {
         assertThat(SequenciaDeLeitura.exibida(0, null, HOJE)).isZero();
     }
 
+    @ParameterizedTest(name = "último registro há {0} dias: leu hoje = {1}")
+    @CsvSource({"0, true", "1, false", "7, false", "8, false"})
+    void deve_saber_se_a_leitura_de_hoje_ja_foi_registrada(int diasSemLer, boolean esperado) {
+        assertThat(SequenciaDeLeitura.leuHoje(HOJE.minusDays(diasSemLer), HOJE))
+                .isEqualTo(esperado);
+    }
+
+    @ParameterizedTest(name = "último registro há {0} dias: faltam {1}")
+    @CsvSource({"0, ", "1, 7", "4, 4", "7, 1", "8, ", "30, "})
+    void deve_contar_os_dias_que_faltam_para_perder_a_sequencia(int diasSemLer, Integer esperado) {
+        assertThat(SequenciaDeLeitura.diasAtePerder(HOJE.minusDays(diasSemLer), HOJE))
+                .isEqualTo(esperado);
+    }
+
+    @Test
+    void nao_deve_acender_nem_avisar_para_quem_nunca_leu() {
+        assertThat(SequenciaDeLeitura.leuHoje(null, HOJE)).isFalse();
+        assertThat(SequenciaDeLeitura.diasAtePerder(null, HOJE)).isNull();
+    }
+
     @Test
     void deve_tratar_data_no_futuro_como_hoje() {
         LocalDate futuro = HOJE.plusDays(3);

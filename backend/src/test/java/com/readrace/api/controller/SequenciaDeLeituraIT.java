@@ -164,6 +164,39 @@ class SequenciaDeLeituraIT {
     }
 
     @Test
+    void deve_acender_a_chama_do_feed_depois_de_registrar_a_leitura_de_hoje() {
+        definirSequencia(1, hoje.minusDays(1));
+
+        assertThat(mvc.get().uri("/api/feed/comunidades"))
+                .hasStatusOk()
+                .bodyJson()
+                .extractingPath("$.usuario.leuHoje")
+                .isEqualTo(false);
+
+        registrar(DOM_CASMURRO_ID, 200);
+
+        assertThat(mvc.get().uri("/api/feed/comunidades"))
+                .hasStatusOk()
+                .bodyJson()
+                .satisfies(
+                        json -> {
+                            assertThat(json).extractingPath("$.usuario.leuHoje").isEqualTo(true);
+                            assertThat(json).extractingPath("$.usuario.diasAtePerder").isNull();
+                        });
+    }
+
+    @Test
+    void deve_avisar_no_feed_que_a_sequencia_acaba_amanha_com_sete_dias_sem_registro() {
+        definirSequencia(1, hoje.minusDays(7));
+
+        assertThat(mvc.get().uri("/api/feed/comunidades"))
+                .hasStatusOk()
+                .bodyJson()
+                .extractingPath("$.usuario.diasAtePerder")
+                .isEqualTo(1);
+    }
+
+    @Test
     void nao_deve_tocar_na_sequencia_quando_a_pagina_e_invalida() {
         definirSequencia(12, hoje.minusDays(1));
 

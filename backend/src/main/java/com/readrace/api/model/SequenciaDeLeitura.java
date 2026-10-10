@@ -42,6 +42,27 @@ public final class SequenciaDeLeitura {
         return sequencia;
     }
 
+    // A chama do app acende quando a leitura de hoje já foi registrada.
+    public static boolean leuHoje(LocalDate ultimaLeitura, LocalDate hoje) {
+        return ultimaLeitura != null && diasDesde(ultimaLeitura, hoje) == 0;
+    }
+
+    // Quantos dias faltam para a sequência acabar sem leitura: 7 se leu ontem, 1 se acaba amanhã.
+    // Nulo quando não há o que avisar: nunca leu, já leu hoje ou a sequência já acabou.
+    public static Integer diasAtePerder(LocalDate ultimaLeitura, LocalDate hoje) {
+        if (ultimaLeitura == null) {
+            return null;
+        }
+
+        long dias = diasDesde(ultimaLeitura, hoje);
+
+        if (dias == 0 || dias >= DIAS_PARA_PERDER) {
+            return null;
+        }
+
+        return (int) (DIAS_PARA_PERDER - dias);
+    }
+
     // A sequência nunca conta o futuro: uma data depois de hoje vale como hoje.
     private static long diasDesde(LocalDate ultimaLeitura, LocalDate hoje) {
         return Math.max(0, ChronoUnit.DAYS.between(ultimaLeitura, hoje));

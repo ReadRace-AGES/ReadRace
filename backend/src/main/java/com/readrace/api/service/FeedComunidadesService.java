@@ -1,5 +1,6 @@
 package com.readrace.api.service;
 
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -66,9 +67,15 @@ public class FeedComunidadesService {
                         .map(comunidade -> paraComunidade(comunidade, membrosPorComunidade))
                         .toList();
 
+        LocalDate hoje = SequenciaDeLeitura.hoje();
+        LocalDate ultimaLeitura = usuario.getUltimaLeituraEm();
+
         return new FeedComunidadesResponse(
                 new FeedComunidadesResponse.Usuario(
-                        usuario.getNome(), usuario.sequenciaExibida(SequenciaDeLeitura.hoje())),
+                        usuario.getNome(),
+                        usuario.sequenciaExibida(hoje),
+                        SequenciaDeLeitura.leuHoje(ultimaLeitura, hoje),
+                        SequenciaDeLeitura.diasAtePerder(ultimaLeitura, hoje)),
                 clubes,
                 comunidades);
     }
