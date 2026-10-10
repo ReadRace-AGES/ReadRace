@@ -21,6 +21,10 @@ public enum CodigoErro {
             HttpStatus.BAD_REQUEST, "O livro é obrigatório para desafios com meta por livro."),
     PRAZO_INVALIDO(HttpStatus.BAD_REQUEST, "O prazo deve ser de 1 a 365 dias."),
     UNAUTHORIZED(HttpStatus.UNAUTHORIZED, "Sessão inválida ou expirada. Entre de novo."),
+    QUIZ_NAO_ENCONTRADO(HttpStatus.NOT_FOUND, "Este clube ainda não tem quiz."),
+    SO_MEMBRO_RESPONDE(HttpStatus.FORBIDDEN, "Só membros do clube participam do quiz."),
+    PERGUNTA_JA_RESPONDIDA(HttpStatus.CONFLICT, "Você já respondeu esta pergunta."),
+    ALTERNATIVA_INVALIDA(HttpStatus.BAD_REQUEST, "A alternativa não pertence a esta pergunta."),
     METHOD_NOT_ALLOWED(HttpStatus.METHOD_NOT_ALLOWED, "Método não permitido para esta rota."),
     UNSUPPORTED_MEDIA_TYPE(HttpStatus.UNSUPPORTED_MEDIA_TYPE, "Formato de conteúdo não suportado."),
     EXTERNAL_SERVICE_UNAVAILABLE(
