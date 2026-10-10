@@ -43,6 +43,10 @@ public class MembroClube {
     @Column(name = "cargo_clube", nullable = false, columnDefinition = "cargo")
     private Cargo cargoClube;
 
+    public void somarPontos(int pontosGanhos) {
+        pontos += pontosGanhos;
+    }
+
     @Override
     public boolean equals(Object obj) {
         if (this == obj) {

@@ -2,15 +2,23 @@ package com.readrace.api.controller;
 
 import java.util.UUID;
 
+import jakarta.validation.Valid;
+
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.readrace.api.dto.request.ResponderPerguntaRequest;
 import com.readrace.api.dto.response.ClubeResponse;
 import com.readrace.api.dto.response.ForumClubeResponse;
+import com.readrace.api.dto.response.QuizResponse;
+import com.readrace.api.dto.response.RespostaQuizResponse;
 import com.readrace.api.service.ClubeService;
 import com.readrace.api.service.ForumClubeService;
+import com.readrace.api.service.QuizService;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -22,10 +30,15 @@ public class ClubeController {
 
     private final ClubeService clubeService;
     private final ForumClubeService forumClubeService;
+    private final QuizService quizService;
 
-    public ClubeController(ClubeService clubeService, ForumClubeService forumClubeService) {
+    public ClubeController(
+            ClubeService clubeService,
+            ForumClubeService forumClubeService,
+            QuizService quizService) {
         this.clubeService = clubeService;
         this.forumClubeService = forumClubeService;
+        this.quizService = quizService;
     }
 
     @GetMapping("/{clubeId}")
@@ -46,5 +59,29 @@ public class ClubeController {
                             + " não entram.")
     public ForumClubeResponse buscarPosts(@PathVariable UUID clubeId) {
         return forumClubeService.buscar(clubeId);
+    }
+
+    @GetMapping("/{clubeId}/quiz")
+    @Operation(
+            summary = "Quiz ativo do clube e a próxima pergunta que o membro não respondeu",
+            description =
+                    "As alternativas não dizem qual é a correta. proximaPergunta é null quando o"
+                            + " membro já respondeu todas. 404 sem quiz ativo; 403 para quem não"
+                            + " é membro e para o administrador.")
+    public QuizResponse buscarQuiz(@PathVariable UUID clubeId) {
+        return quizService.buscar(clubeId);
+    }
+
+    @PostMapping("/{clubeId}/quiz/perguntas/{perguntaId}/resposta")
+    @Operation(
+            summary = "Responde uma pergunta do quiz: +50 Pontos no clube por acerto",
+            description =
+                    "Cada pergunta é respondida uma vez (409 na segunda). Responder a última"
+                            + " conclui o quiz e paga a recompensa de XP uma única vez.")
+    public RespostaQuizResponse responderPergunta(
+            @PathVariable UUID clubeId,
+            @PathVariable UUID perguntaId,
+            @Valid @RequestBody ResponderPerguntaRequest request) {
+        return quizService.responder(clubeId, perguntaId, request);
     }
 }

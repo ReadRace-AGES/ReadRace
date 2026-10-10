@@ -1,0 +1,9 @@
+# Instalado em /etc/systemd/system pelo subir.sh. Disparado pelo readrace-saude.timer.
+# Resultado: journalctl -u readrace-saude
+[Unit]
+Description=Envia a saúde da produção do ReadRace ao CloudWatch
+After=docker.service
+
+[Service]
+Type=oneshot
+ExecStart=/opt/readrace/saude.sh

@@ -24,6 +24,11 @@ public enum CodigoErro {
     LIVRO_OBRIGATORIO(
             HttpStatus.BAD_REQUEST, "O livro é obrigatório para desafios com meta por livro."),
     PRAZO_INVALIDO(HttpStatus.BAD_REQUEST, "O prazo deve ser de 1 a 365 dias."),
+    UNAUTHORIZED(HttpStatus.UNAUTHORIZED, "Sessão inválida ou expirada. Entre de novo."),
+    QUIZ_NAO_ENCONTRADO(HttpStatus.NOT_FOUND, "Este clube ainda não tem quiz."),
+    SO_MEMBRO_RESPONDE(HttpStatus.FORBIDDEN, "Só membros do clube participam do quiz."),
+    PERGUNTA_JA_RESPONDIDA(HttpStatus.CONFLICT, "Você já respondeu esta pergunta."),
+    ALTERNATIVA_INVALIDA(HttpStatus.BAD_REQUEST, "A alternativa não pertence a esta pergunta."),
     METHOD_NOT_ALLOWED(HttpStatus.METHOD_NOT_ALLOWED, "Método não permitido para esta rota."),
     UNSUPPORTED_MEDIA_TYPE(HttpStatus.UNSUPPORTED_MEDIA_TYPE, "Formato de conteúdo não suportado."),
     EXTERNAL_SERVICE_UNAVAILABLE(
@@ -51,6 +56,7 @@ public enum CodigoErro {
     public static CodigoErro paraStatus(HttpStatus status) {
         return switch (status) {
             case NOT_FOUND -> ROUTE_NOT_FOUND;
+            case UNAUTHORIZED -> UNAUTHORIZED;
             case METHOD_NOT_ALLOWED -> METHOD_NOT_ALLOWED;
             case UNSUPPORTED_MEDIA_TYPE -> UNSUPPORTED_MEDIA_TYPE;
             case BAD_REQUEST -> MALFORMED_REQUEST;
