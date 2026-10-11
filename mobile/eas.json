@@ -1,0 +1,40 @@
+{
+  "cli": {
+    "version": ">= 5.0.0",
+    "appVersionSource": "local"
+  },
+  "build": {
+    "development": {
+      "developmentClient": true,
+      "distribution": "internal",
+      "android": {
+        "buildType": "apk"
+      }
+    },
+    "preview": {
+      "distribution": "internal",
+      "android": {
+        "buildType": "apk"
+      },
+      "env": {
+        "EXPO_PUBLIC_API_URL": "https://api.readrace.app",
+        "EXPO_PUBLIC_COGNITO_DOMAIN": "",
+        "EXPO_PUBLIC_COGNITO_CLIENT_ID": ""
+      }
+    },
+    "production": {
+      "distribution": "internal",
+      "android": {
+        "buildType": "apk"
+      },
+      "env": {
+        "EXPO_PUBLIC_API_URL": "https://api.readrace.app",
+        "EXPO_PUBLIC_COGNITO_DOMAIN": "",
+        "EXPO_PUBLIC_COGNITO_CLIENT_ID": ""
+      }
+    }
+  },
+  "submit": {
+    "production": {}
+  }
+}

@@ -2,19 +2,22 @@ const { colors } = require('./src/theme/tokens');
 
 module.exports = {
   expo: {
-    name: 'mobile',
-    slug: 'mobile',
-    version: '1.0.0',
+    name: 'ReadRace',
+    slug: 'readrace',
+    version: '0.1.0',
     orientation: 'portrait',
     icon: './assets/images/icon.png',
     scheme: 'readrace',
     userInterfaceStyle: 'automatic',
-    ios: {
-      icon: './assets/expo.icon',
-    },
     android: {
+      package: 'com.readrace.app',
+      versionCode: 1,
       adaptiveIcon: {
-        backgroundColor: colors.primary,
+        // TEMPORÁRIO (#159): o foreground é o ícone inteiro do Figma (arte + fundo embutido)
+        // e o background é a cor sólida desse fundo (#A1312F, não o #732634 da marca). Solução
+        // rápida sem recorte. O ideal é exportar o foreground isolado (transparente) do Figma e
+        // usar backgroundColor = colors.primary. O monochromeImage ainda é o antigo.
+        backgroundColor: '#A1312F',
         foregroundImage: './assets/images/android-icon-foreground.png',
         backgroundImage: './assets/images/android-icon-background.png',
         monochromeImage: './assets/images/android-icon-monochrome.png',

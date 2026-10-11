@@ -4,6 +4,20 @@ Aplicativo mobile de incentivo ao hábito de leitura por meio de gamificação c
 
 ---
 
+## Instalar no Android
+
+> Apenas Android. iOS está fora do escopo do projeto.
+
+1. Baixe o APK mais recente na página de releases: **[Releases do ReadRace](https://github.com/ReadRace-AGES/ReadRace/releases)** <!-- substituir pelo link fixo da release publicada, ex.: .../releases/tag/v0.1.0 -->
+2. No celular, abra o arquivo `.apk` baixado. Se o Android pedir, autorize a instalação de apps de fontes desconhecidas para o navegador/gerenciador de arquivos usado.
+3. Abra o app **ReadRace** e entre com uma conta.
+
+A versão instalável fala com a **API de produção** e exige login. Você pode entrar criando uma conta nova (começa vazia) ou, para avaliação, usar a **conta de demonstração**, que mostra os dados do usuário de exemplo (nível, Meus Livros, clubes e desafios).
+
+> As credenciais da conta de demonstração não ficam neste README público — solicite ao gestor do projeto ou a quem for apresentar.
+
+---
+
 ## Stack
 
 | Camada | Tecnologia | Versão |
@@ -139,7 +153,6 @@ npm start
 Opcoes apos o start:
 - Pressione `s` para mudar para **Expo Go** (recomendado se aparecer erro de versao no celular)
 - Pressione `a` para abrir no emulador Android
-- Pressione `i` para abrir no simulador iOS (macOS)
 - Pressione `w` para abrir no navegador (web)
 - Escaneie o QR code com o app **Expo Go** no celular (mesmo WiFi)
 
@@ -151,7 +164,6 @@ Opcoes apos o start:
 |--------|---------|-----------|
 | start | `npm start` | Inicia o Expo DevTools |
 | android | `npm run android` | Abre direto no emulador Android |
-| ios | `npm run ios` | Abre direto no simulador iOS |
 | web | `npm run web` | Abre no navegador |
 | lint | `npm run lint` | Roda o linter do Expo |
 
