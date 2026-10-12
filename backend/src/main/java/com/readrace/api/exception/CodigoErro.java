@@ -22,6 +22,8 @@ public enum CodigoErro {
     LIVRO_OBRIGATORIO(
             HttpStatus.BAD_REQUEST, "O livro é obrigatório para desafios com meta por livro."),
     PRAZO_INVALIDO(HttpStatus.BAD_REQUEST, "O prazo deve ser de 1 a 365 dias."),
+    PERFIL_INVALIDO(HttpStatus.BAD_REQUEST, "Dados do perfil inválidos."),
+    USERNAME_EM_USO(HttpStatus.CONFLICT, "Esse nome de usuário já está em uso."),
     UNAUTHORIZED(HttpStatus.UNAUTHORIZED, "Sessão inválida ou expirada. Entre de novo."),
     QUIZ_NAO_ENCONTRADO(HttpStatus.NOT_FOUND, "Este clube ainda não tem quiz."),
     SO_MEMBRO_RESPONDE(HttpStatus.FORBIDDEN, "Só membros do clube participam do quiz."),
