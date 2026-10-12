@@ -116,6 +116,24 @@ class PerfilControllerIT {
         assertThat(perfil.xpDoNivel()).isEqualTo(833);
     }
 
+    @Test
+    void emailSoApareceNoPerfilDoProprioUsuario() {
+        String email =
+                jdbc.queryForObject("SELECT email FROM usuario WHERE id = ?", String.class, FIXO);
+        var outro = UUID.fromString("00000000-0000-0000-0000-000000000002");
+
+        assertThat(mvc.get().uri("/api/me/perfil"))
+                .hasStatusOk()
+                .bodyJson()
+                .extractingPath("$.email")
+                .isEqualTo(email);
+        assertThat(mvc.get().uri("/api/usuarios/" + outro + "/perfil"))
+                .hasStatusOk()
+                .bodyJson()
+                .extractingPath("$.email")
+                .isNull();
+    }
+
     private MvcTestResult patchPerfil(String json) {
         return mvc.patch()
                 .uri("/api/me/perfil")

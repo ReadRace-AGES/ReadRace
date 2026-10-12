@@ -85,6 +85,7 @@ public class PerfilService {
                 usuario.getId(),
                 usuario.getNome(),
                 usuario.getNomeUsuario(),
+                id.equals(usuarioAtual.idDoUsuarioAtual().valor()) ? usuario.getEmail() : null,
                 usuario.getAvatarUrl(),
                 usuario.getTitulo(),
                 nivel,

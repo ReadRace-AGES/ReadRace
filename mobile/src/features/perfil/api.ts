@@ -4,6 +4,7 @@ export type Perfil = {
   id: string;
   nome: string;
   username: string;
+  email: string | null;
   avatar: string | null;
   titulo: string;
   nivel: number;

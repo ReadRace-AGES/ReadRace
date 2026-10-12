@@ -138,8 +138,7 @@ function Formulario({
         erro={erroUsername}
         autoCapitalize="none"
       />
-      {/* TODO: e-mail depende da decisão do time (a API ainda não devolve). */}
-      <Campo label="E-mail" value="" editable={false} />
+      <Campo label="E-mail" value={perfil.email ?? ''} editable={false} />
       <Opcao label="Avatar" onPress={showToast} />
       <Opcao label="Plano de fundo" onPress={showToast} />
       <Opcao
@@ -214,12 +213,16 @@ const styles = StyleSheet.create({
   label: { ...textStyles.bodySmallStrong, color: colors.text },
   input: {
     ...textStyles.body,
+    lineHeight: undefined,
     color: colors.text,
     height: sizes.inputHeight,
     borderWidth: sizes.borderWidth,
     borderColor: colors.inputBorder,
     borderRadius: radius.md,
     paddingHorizontal: spacing[3],
+    paddingVertical: 0,
+    textAlignVertical: 'center',
+    includeFontPadding: false,
   },
   inputDesabilitado: {
     backgroundColor: colors.surfaceDisabled,
