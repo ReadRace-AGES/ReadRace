@@ -16,6 +16,8 @@ public enum CodigoErro {
     POST_NAO_ENCONTRADO(HttpStatus.NOT_FOUND, "Post não encontrado."),
     OPONENTE_NAO_E_AMIGO(
             HttpStatus.BAD_REQUEST, "O oponente informado não é amigo do usuário atual."),
+    CLUBE_INVALIDO(
+            HttpStatus.BAD_REQUEST, "O nome do clube é obrigatório e deve ter até 120 caracteres."),
     META_INVALIDA(HttpStatus.BAD_REQUEST, "A meta de páginas deve estar entre 10 e 500."),
     LIVRO_OBRIGATORIO(
             HttpStatus.BAD_REQUEST, "O livro é obrigatório para desafios com meta por livro."),
