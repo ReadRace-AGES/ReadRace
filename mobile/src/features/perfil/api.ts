@@ -1,4 +1,4 @@
-import { apiGet } from '@/api/client';
+import { apiGet, apiRequest } from '@/api/client';
 
 export type Perfil = {
   id: string;
@@ -12,6 +12,8 @@ export type Perfil = {
   xpDoNivel: number;
   seguidores: number;
   seguindo: number;
+  sigo: boolean;
+  meSegue: boolean;
   estatisticas: {
     livrosLidos: number;
     paginasLidas: number;
@@ -33,6 +35,23 @@ export type Perfil = {
     capa: string | null;
   }[];
 };
+
+export type RelacaoSeguir = Pick<Perfil, 'seguidores' | 'sigo' | 'meSegue'>;
+
+export function buscarUsuarioAtual(signal: AbortSignal) {
+  return apiGet<{ id: string }>('/api/me', { signal });
+}
+
+export function alterarSeguir(
+  usuarioId: string,
+  seguir: boolean,
+  signal: AbortSignal
+) {
+  return apiRequest<RelacaoSeguir>(
+    `/api/usuarios/${encodeURIComponent(usuarioId)}/seguidores/eu`,
+    { method: seguir ? 'POST' : 'DELETE', signal }
+  );
+}
 
 export function buscarPerfil(
   usuarioId: string | undefined,
