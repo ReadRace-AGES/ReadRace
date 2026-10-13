@@ -36,6 +36,7 @@ test('busca reconcilia seleção e bloqueia envio durante loading e erro', async
   const posts = [];
   const routes = [];
   let anterior = '/desafios';
+  let focar;
   const api = {
     normalizarTermoOponente,
     buscarOponentes: (termo, signal) =>
@@ -53,6 +54,9 @@ test('busca reconcilia seleção e bloqueia envio durante loading e erro', async
   });
   const dependencies = {
     'expo-router': {
+      useFocusEffect: (callback) => {
+        focar = callback;
+      },
       useLocalSearchParams: () => ({}),
       useRouter: () => ({
         canGoBack: () => anterior !== null,
@@ -209,6 +213,21 @@ test('busca reconcilia seleção e bloqueia envio durante loading e erro', async
   assert.equal(posts[1].prazoDias, 1);
   assert.equal(posts[0].oponenteId, outro.id);
   assert.deepEqual(routes, ['/desafios', '/desafios', '/desafios']);
+  act(() => focar());
+  const anteriores = requests.length;
+  act(() => focar());
+  await waitForSearch();
+  assert.equal(
+    requests.length,
+    anteriores + 1,
+    'voltar para a tela recarrega amigos'
+  );
+  await receive(anteriores, []);
+  assert.equal(
+    button().props.disabled,
+    true,
+    'ex-amigo deixa de ser selecionável'
+  );
   act(() => tree.unmount());
 });
 

@@ -1,5 +1,5 @@
-import { useEffect, useState } from 'react';
-import { useLocalSearchParams, useRouter } from 'expo-router';
+import { useCallback, useEffect, useRef, useState } from 'react';
+import { useFocusEffect, useLocalSearchParams, useRouter } from 'expo-router';
 import {
   ActivityIndicator,
   KeyboardAvoidingView,
@@ -178,6 +178,16 @@ export function DesafiarAmigoScreen() {
   const [mexendoNaMeta, setMexendoNaMeta] = useState(false);
   const { estado: estadoOponentes, recarregar } = useOponentes(termo);
   const { estado: estadoEnvio, enviar, limparErro } = useCriarDesafio();
+  const primeiroFoco = useRef(true);
+  useFocusEffect(
+    useCallback(() => {
+      if (primeiroFoco.current) {
+        primeiroFoco.current = false;
+        return;
+      }
+      recarregar();
+    }, [recarregar])
+  );
 
   const oponenteSelecionado =
     oponenteId !== null &&
