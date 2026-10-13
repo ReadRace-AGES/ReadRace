@@ -1,0 +1,12 @@
+# Instalado e ligado pelo subir.sh.
+[Unit]
+Description=Saúde da produção do ReadRace a cada 5 minutos
+
+[Timer]
+# Alinhado ao relógio (:00, :05, ...) para cair uma medida por período de 5 minutos
+# do alarme. Sem isso, um período sem medida conta como API fora do ar.
+OnCalendar=*:0/5
+AccuracySec=1s
+
+[Install]
+WantedBy=timers.target

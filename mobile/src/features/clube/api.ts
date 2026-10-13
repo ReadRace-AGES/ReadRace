@@ -9,6 +9,8 @@ export type Clube = {
   nome: string;
   livroAtual: { id: string; titulo: string; autor: string | null };
   ranking: LinhaRanking[];
+  /** Cargo do usuário atual neste clube; `null` quando ele não participa (#160). */
+  meuCargo: 'administrador' | 'membro' | null;
 };
 
 export type LinhaRanking = {

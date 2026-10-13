@@ -32,10 +32,12 @@ if [ -n "$(docker ps -q --filter label=com.docker.compose.project=readrace --fil
   ./backup-banco.sh antes-do-deploy
 fi
 
-# Backup diário. Reinstalar a cada deploy mantém a máquina igual ao que está no git.
-install -m 644 readrace-backup.service readrace-backup.timer /etc/systemd/system/
+# Backup diário e saúde para o CloudWatch. Reinstalar a cada deploy mantém a máquina
+# igual ao que está no git.
+install -m 644 readrace-backup.service readrace-backup.timer \
+  readrace-saude.service readrace-saude.timer /etc/systemd/system/
 systemctl daemon-reload
-systemctl enable --now readrace-backup.timer
+systemctl enable --now readrace-backup.timer readrace-saude.timer
 
 docker compose pull --quiet
 docker compose up -d --remove-orphans

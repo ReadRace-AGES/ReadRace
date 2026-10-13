@@ -3,8 +3,8 @@ package com.readrace.api.adapter.cognito;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 /**
- * Resposta do endpoint /oauth2/userInfo do Cognito. email_verified vem como boolean ou string
- * dependendo do provedor, por isso Object.
+ * Perfil da pessoa no Cognito, lido pelo GetUser. email_verified é guardado como Object porque
+ * provedores diferentes o mandam como boolean ou string.
  */
 public record CognitoUserInfo(
         String sub,

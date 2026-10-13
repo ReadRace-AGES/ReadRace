@@ -4,6 +4,7 @@ export type Perfil = {
   id: string;
   nome: string;
   username: string;
+  email: string | null;
   avatar: string | null;
   titulo: string;
   nivel: number;
@@ -62,4 +63,16 @@ export function buscarPerfil(
       ? '/api/me/perfil'
       : `/api/usuarios/${encodeURIComponent(usuarioId)}/perfil`;
   return apiGet<Perfil>(caminho, { signal });
+}
+
+export type AtualizacaoPerfil = {
+  nome?: string;
+  username?: string;
+};
+
+export function atualizarPerfil(dados: AtualizacaoPerfil) {
+  return apiRequest<Perfil>('/api/me/perfil', {
+    method: 'PATCH',
+    body: JSON.stringify(dados),
+  });
 }

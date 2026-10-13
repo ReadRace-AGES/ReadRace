@@ -285,7 +285,7 @@ export function PerfilScreen({
         <PerfilTopo
           nome={dados?.nome}
           avatar={dados?.avatar}
-          onConfiguracoes={showToast}
+          onConfiguracoes={() => router.push('/configuracoes')}
         />
       ) : (
         <AppHeader

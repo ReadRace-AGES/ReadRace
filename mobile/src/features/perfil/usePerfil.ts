@@ -12,7 +12,7 @@ export type EstadoPerfil =
   | { situacao: 'erro'; mensagem: string }
   | { situacao: 'sucesso'; dados: Perfil; proprio: boolean };
 
-export function usePerfil(usuarioId?: string) {
+export function usePerfil(usuarioId?: string, habilitado = true) {
   const versao = useRef(0);
   const mutacao = useRef<AbortController | null>(null);
   const [alterandoId, setAlterandoId] = useState<string>();
@@ -23,7 +23,7 @@ export function usePerfil(usuarioId?: string) {
       mutacao.current?.abort();
       mutacao.current = null;
     };
-  }, [usuarioId]);
+  }, [usuarioId, habilitado]);
   const [resultado, setResultado] = useState<{
     id: string | undefined;
     estado: EstadoPerfil;
@@ -32,6 +32,11 @@ export function usePerfil(usuarioId?: string) {
   // conteúdo para o carregando, nem para um erro passageiro.
   const [tentativa, setTentativa] = useState({ numero: 0, silenciosa: false });
   useEffect(() => {
+    if (!habilitado) {
+      setResultado({ id: usuarioId, estado: { situacao: 'carregando' } });
+      return;
+    }
+
     // O foco pode ter agendado a recarga no mesmo ciclo em que o leitor tocou no botão.
     if (mutacao.current) return;
     const controller = new AbortController();
@@ -83,9 +88,11 @@ export function usePerfil(usuarioId?: string) {
       clearTimeout(timeout);
       controller.abort();
     };
-  }, [usuarioId, tentativa]);
+  }, [usuarioId, tentativa, habilitado]);
   const estado: EstadoPerfil =
-    resultado.id === usuarioId ? resultado.estado : { situacao: 'carregando' };
+    habilitado && resultado.id === usuarioId
+      ? resultado.estado
+      : { situacao: 'carregando' };
   const recarregar = useCallback(() => {
     if (!mutacao.current)
       setTentativa(({ numero }) => ({ numero: numero + 1, silenciosa: false }));
@@ -96,6 +103,7 @@ export function usePerfil(usuarioId?: string) {
   }, []);
   const alternarSeguir = async () => {
     if (
+      !habilitado ||
       mutacao.current ||
       estado.situacao !== 'sucesso' ||
       estado.proprio ||

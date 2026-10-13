@@ -1,4 +1,4 @@
-import { useCallback, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useFocusEffect, useRouter, type Href } from 'expo-router';
 import Svg, { Path, Rect } from 'react-native-svg';
@@ -13,6 +13,8 @@ import {
 } from '@/components/PrimaryButton';
 import { useToastContext } from '@/components/toast-provider';
 import { buscarDetalhe, type LivroDetalhe } from '@/features/livro/api';
+import { buscarQuiz, ERRO_QUIZ } from '@/features/quiz/api';
+import { consumirRetorno, textoDoResumo } from '@/features/quiz/retornoDoQuiz';
 import { RegistrarProgressoSheet } from '@/features/progresso/RegistrarProgressoSheet';
 import { colors, spacing, textStyles, typography } from '@/theme';
 
@@ -27,12 +29,20 @@ const COPY = {
   voltar: 'Voltar',
   erroAoAbrirRegistro:
     'Não foi possível abrir o registro de leitura. Tente novamente.',
+  quizJaRespondido: 'Você já respondeu o quiz deste clube.',
+  quizInexistente: 'Este clube ainda não tem quiz.',
+  quizSoMembros: 'Só membros do clube participam do quiz.',
+  erroAoAbrirQuiz: 'Não foi possível abrir o quiz. Tente novamente.',
 } as const;
 
 // O Fórum é a #36 e ainda não tem rota; o `as Href` é o mesmo recurso que a #34 usou para
 // apontar para esta tela antes de ela existir.
 function rotaDoForum(clubeId: string): Href {
   return `/clube/${clubeId}/forum` as Href;
+}
+
+function rotaDoQuiz(clubeId: string): Href {
+  return `/clube/${clubeId}/quiz` as Href;
 }
 
 function IconePlus({ size, color }: PrimaryButtonIconProps) {
@@ -86,12 +96,14 @@ function IconeLista({ size, color }: PrimaryButtonIconProps) {
 
 export function PaginaClubeScreen({ clubeId }: { clubeId: string }) {
   const router = useRouter();
-  const { showToast } = useToastContext();
+  const { showToast, showErrorToast } = useToastContext();
   const { clube, recarregar } = useClube(clubeId);
   const [livroDoModal, setLivroDoModal] = useState<LivroDetalhe | null>(null);
   const [abrindoModal, setAbrindoModal] = useState(false);
   const [erroDoModal, setErroDoModal] = useState<string | null>(null);
   const buscaDoLivro = useRef<AbortController | null>(null);
+  const [abrindoQuiz, setAbrindoQuiz] = useState(false);
+  const [resumoDoQuiz, setResumoDoQuiz] = useState<string | null>(null);
 
   const fecharModal = useCallback(() => {
     buscaDoLivro.current?.abort();
@@ -101,6 +113,34 @@ export function PaginaClubeScreen({ clubeId }: { clubeId: string }) {
   useFocusEffect(useCallback(() => () => fecharModal(), [fecharModal]));
 
   const dados = clube.situacao === 'sucesso' ? clube.dados : null;
+
+  // Voltando do quiz: responder mexeu nos Pontos, então o ranking recarrega. O resumo de quem
+  // concluiu só aparece depois do ranking novo, e não ao ganhar foco: o toast é escondido na troca
+  // de rota.
+  useFocusEffect(
+    useCallback(() => {
+      const retorno = consumirRetorno(clubeId);
+      if (!retorno) return;
+      if (retorno.resumo) setResumoDoQuiz(textoDoResumo(retorno.resumo));
+      recarregar();
+    }, [clubeId, recarregar])
+  );
+
+  // No render em que o resumo chega, `clube` ainda é o sucesso antigo: mostrar ali faria o toast
+  // subir antes da troca de rota e ser escondido por ela. Só mostra depois que a recarga passou
+  // por `carregando` e voltou.
+  const recargaDoQuizComecou = useRef(false);
+  useEffect(() => {
+    if (!resumoDoQuiz) return;
+    if (clube.situacao === 'carregando') {
+      recargaDoQuizComecou.current = true;
+      return;
+    }
+    if (!recargaDoQuizComecou.current) return;
+    recargaDoQuizComecou.current = false;
+    if (clube.situacao === 'sucesso') showErrorToast(resumoDoQuiz);
+    setResumoDoQuiz(null);
+  }, [clube.situacao, resumoDoQuiz, showErrorToast]);
 
   function voltar() {
     if (router.canGoBack()) {
@@ -134,6 +174,42 @@ export function PaginaClubeScreen({ clubeId }: { clubeId: string }) {
       }
     } finally {
       setAbrindoModal(false);
+    }
+  }
+
+  /** O que o "Acessar Quiz" faz depende de `meuCargo` e, para o membro, do estado do quiz. */
+  async function acessarQuiz() {
+    if (!dados || abrindoQuiz) return;
+    if (dados.meuCargo === 'administrador') {
+      // A configuração do quiz é a #161 (`/clube/{clubeId}/quiz/configurar`), que ainda não
+      // entrou: até lá o líder vê o aviso de funcionalidade em desenvolvimento.
+      showToast();
+      return;
+    }
+    if (dados.meuCargo === null) {
+      showErrorToast(COPY.quizSoMembros);
+      return;
+    }
+    setAbrindoQuiz(true);
+    try {
+      const quiz = await buscarQuiz(clubeId);
+      if (quiz.proximaPergunta === null) {
+        showErrorToast(COPY.quizJaRespondido);
+        return;
+      }
+      router.push(rotaDoQuiz(clubeId));
+    } catch (erro: unknown) {
+      if (erro instanceof ApiError && erro.code === ERRO_QUIZ.semQuiz) {
+        showErrorToast(COPY.quizInexistente);
+      } else if (erro instanceof ApiError && erro.code === ERRO_QUIZ.soMembro) {
+        showErrorToast(COPY.quizSoMembros);
+      } else {
+        showErrorToast(
+          erro instanceof ApiError ? erro.message : COPY.erroAoAbrirQuiz
+        );
+      }
+    } finally {
+      setAbrindoQuiz(false);
     }
   }
 
@@ -197,7 +273,8 @@ export function PaginaClubeScreen({ clubeId }: { clubeId: string }) {
               label={COPY.acessarQuiz}
               icon={IconeCheck}
               disabled={!dados}
-              onPress={showToast}
+              loading={abrindoQuiz}
+              onPress={acessarQuiz}
             />
             <PrimaryButton
               label={COPY.forum}

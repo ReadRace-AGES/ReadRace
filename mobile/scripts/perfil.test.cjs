@@ -255,9 +255,9 @@ test('próprio perfil mostra anel, Mascotes, engrenagem e slot de favorito', () 
     adicionar.props.onPress();
     tree.root.findByType('PerfilTopo').props.onConfiguracoes();
   });
-  assert.equal(avisos, 5);
+  assert.equal(avisos, 4);
   act(() => capa.props.onPress());
-  assert.deepEqual(rotas, ['/perfil-livro/livro']);
+  assert.deepEqual(rotas, ['/configuracoes', '/perfil-livro/livro']);
   dados = { ...dados, livrosFavoritos: [] };
   act(() => tree.update(React.createElement(PerfilScreen)));
   assert.match(JSON.stringify(tree.toJSON()), /Livros favoritos/);
@@ -471,6 +471,47 @@ function carregarHookSeguir() {
   });
   return { ...hook, leituras, alteracoes };
 }
+
+test('desabilitar o perfil cancela seguir e bloqueia chamadas até reabilitar', async () => {
+  const { usePerfil, leituras, alteracoes } = carregarHookSeguir();
+  let atual, tree, envio;
+  function Probe({ habilitado }) {
+    atual = usePerfil('1', habilitado);
+    return null;
+  }
+  await act(async () => {
+    tree = create(React.createElement(Probe, { habilitado: false }));
+  });
+  assert.equal(leituras.length, 0);
+  await act(async () => atual.alternarSeguir());
+  assert.equal(alteracoes.length, 0);
+  await act(async () =>
+    tree.update(React.createElement(Probe, { habilitado: true }))
+  );
+  await act(async () => leituras[0].resolve(perfil));
+  act(() => {
+    envio = atual.alternarSeguir();
+  });
+  await act(async () =>
+    tree.update(React.createElement(Probe, { habilitado: false }))
+  );
+  assert.equal(alteracoes[0].signal.aborted, true);
+  assert.equal(atual.estado.situacao, 'carregando');
+  await act(async () => {
+    alteracoes[0].resolve({ seguidores: 5, sigo: true, meSegue: false });
+    await envio;
+    await atual.alternarSeguir();
+  });
+  assert.equal(alteracoes.length, 1);
+  assert.equal(atual.estado.situacao, 'carregando');
+  await act(async () =>
+    tree.update(React.createElement(Probe, { habilitado: true }))
+  );
+  await act(async () => leituras[1].resolve(perfil));
+  assert.equal(atual.estado.situacao, 'sucesso');
+  assert.equal(atual.alterandoSeguir, false);
+  act(() => tree.unmount());
+});
 
 test('falha ao seguir restaura o perfil e permite nova tentativa, mesmo com foco no mesmo ciclo', async () => {
   const { usePerfil, leituras, alteracoes } = carregarHookSeguir();
