@@ -21,7 +21,8 @@ import lombok.NoArgsConstructor;
 @Table(name = "pergunta_quiz")
 public class PerguntaQuiz {
 
-    @Id private UUID id;
+    @Id
+    private UUID id;
 
     @Column(name = "quiz_id", nullable = false)
     private UUID quizId;
@@ -36,6 +37,13 @@ public class PerguntaQuiz {
     @OneToMany(mappedBy = "pergunta")
     @OrderBy("letra")
     private List<AlternativaQuiz> alternativas = new ArrayList<>();
+
+    public PerguntaQuiz(UUID quizId, String enunciado, int ordem) {
+        this.id = UUID.randomUUID();
+        this.quizId = quizId;
+        this.enunciado = enunciado;
+        this.ordem = (short) ordem;
+    }
 
     @Override
     public boolean equals(Object obj) {

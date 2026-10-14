@@ -21,7 +21,8 @@ import lombok.NoArgsConstructor;
 @Table(name = "quiz")
 public class Quiz {
 
-    @Id private UUID id;
+    @Id
+    private UUID id;
 
     @Column(name = "clube_id", nullable = false)
     private UUID clubeId;
@@ -30,15 +31,33 @@ public class Quiz {
     @JoinColumn(name = "livro_id", nullable = false)
     private Livro livro;
 
+    @Column(name = "criado_por", nullable = false)
+    private UUID criadoPor;
+
     @Column(nullable = false, length = 150)
     private String titulo;
 
-    /** {@code XP} pago uma única vez a quem conclui o quiz. Nunca vira {@code Pontos}. */
+    /** XP pago uma única vez a quem conclui o quiz. Nunca vira Pontos. */
     @Column(name = "recompensa_xp", nullable = false)
     private Integer recompensaXp;
 
     @Column(nullable = false)
     private Boolean ativo;
+
+    public Quiz(
+            UUID clubeId,
+            Livro livro,
+            UUID criadoPor,
+            String titulo,
+            Integer recompensaXp) {
+        this.id = UUID.randomUUID();
+        this.clubeId = clubeId;
+        this.livro = livro;
+        this.criadoPor = criadoPor;
+        this.titulo = titulo;
+        this.recompensaXp = recompensaXp;
+        this.ativo = true;
+    }
 
     @Override
     public boolean equals(Object obj) {

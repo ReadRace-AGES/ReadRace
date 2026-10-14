@@ -25,10 +25,16 @@ public enum CodigoErro {
     PERFIL_INVALIDO(HttpStatus.BAD_REQUEST, "Dados do perfil inválidos."),
     USERNAME_EM_USO(HttpStatus.CONFLICT, "Esse nome de usuário já está em uso."),
     UNAUTHORIZED(HttpStatus.UNAUTHORIZED, "Sessão inválida ou expirada. Entre de novo."),
+
+    // Erros relacionados à publicação e participação no quiz do clube.
+    CLUBE_NAO_ENCONTRADO(HttpStatus.NOT_FOUND, "Clube não encontrado."),
+    SO_LIDER_CRIA_QUIZ(HttpStatus.FORBIDDEN, "Somente o líder do clube pode publicar um quiz."),
+    QUIZ_INVALIDO(HttpStatus.BAD_REQUEST, "Os dados do quiz são inválidos."),
     QUIZ_NAO_ENCONTRADO(HttpStatus.NOT_FOUND, "Este clube ainda não tem quiz."),
     SO_MEMBRO_RESPONDE(HttpStatus.FORBIDDEN, "Só membros do clube participam do quiz."),
     PERGUNTA_JA_RESPONDIDA(HttpStatus.CONFLICT, "Você já respondeu esta pergunta."),
     ALTERNATIVA_INVALIDA(HttpStatus.BAD_REQUEST, "A alternativa não pertence a esta pergunta."),
+
     METHOD_NOT_ALLOWED(HttpStatus.METHOD_NOT_ALLOWED, "Método não permitido para esta rota."),
     UNSUPPORTED_MEDIA_TYPE(HttpStatus.UNSUPPORTED_MEDIA_TYPE, "Formato de conteúdo não suportado."),
     EXTERNAL_SERVICE_UNAVAILABLE(
@@ -37,7 +43,6 @@ public enum CodigoErro {
     INTERNAL_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, "Erro interno. Tente novamente.");
 
     private final HttpStatus status;
-
     private final String mensagemPadrao;
 
     CodigoErro(HttpStatus status, String mensagemPadrao) {
@@ -60,7 +65,8 @@ public enum CodigoErro {
             case METHOD_NOT_ALLOWED -> METHOD_NOT_ALLOWED;
             case UNSUPPORTED_MEDIA_TYPE -> UNSUPPORTED_MEDIA_TYPE;
             case BAD_REQUEST -> MALFORMED_REQUEST;
-            case BAD_GATEWAY, SERVICE_UNAVAILABLE, GATEWAY_TIMEOUT -> EXTERNAL_SERVICE_UNAVAILABLE;
+            case BAD_GATEWAY, SERVICE_UNAVAILABLE, GATEWAY_TIMEOUT ->
+                    EXTERNAL_SERVICE_UNAVAILABLE;
             default -> INTERNAL_ERROR;
         };
     }
