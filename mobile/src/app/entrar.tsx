@@ -1,7 +1,8 @@
-import { useRouter } from 'expo-router';
+import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useRef, useState } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
+import { guardarCadastro } from '@/auth/cadastroPendente';
 import { abrirPaginaCognito, entrarComSenha } from '@/auth/cognitoApi';
 import { ErroLogin, MENSAGENS_ERRO_LOGIN } from '@/auth/cognitoProtocolo';
 import { salvarSessao } from '@/auth/session';
@@ -18,6 +19,8 @@ export default function EntrarScreen() {
   const router = useRouter();
   const voltar = useVoltar('/login');
   const { showToast } = useToastContext();
+  // Vindo do passo 2 quando o login automático falhou depois de confirmar (sem dado sensível).
+  const { confirmada } = useLocalSearchParams<{ confirmada?: string }>();
 
   const [email, setEmail] = useState('');
   const [senha, setSenha] = useState('');
@@ -38,6 +41,13 @@ export default function EntrarScreen() {
       // Ao salvar, o AuthProvider percebe a sessão e o _layout leva às abas.
       await salvarSessao(await entrarComSenha(email, senha));
     } catch (e) {
+      // Conta criada e nunca confirmada: leva ao código, sem reenviar (o código vale 24 h e a cota
+      // de e-mails é do pool inteiro). O passo 2 tem o "Reenviar código".
+      if (e instanceof ErroLogin && e.tipo === 'naoConfirmado') {
+        guardarCadastro(email, senha, null);
+        router.push('/confirmar-email');
+        return;
+      }
       setErro(e instanceof ErroLogin ? e.message : MENSAGENS_ERRO_LOGIN.falha);
       setSenha('');
     } finally {
@@ -48,6 +58,11 @@ export default function EntrarScreen() {
 
   return (
     <TelaDeAcesso onVoltar={voltar} voltarDesabilitado={entrando}>
+      {confirmada === '1' && (
+        <Text style={textStyles.bodySmall} className="mb-6 text-center text-text">
+          Conta confirmada. Entre com seu e-mail e senha.
+        </Text>
+      )}
       <View className="gap-6">
         <CampoTexto
           rotulo="Email"
