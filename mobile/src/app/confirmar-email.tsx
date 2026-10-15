@@ -41,6 +41,7 @@ export default function ConfirmarEmailScreen() {
   const [erroCodigo, setErroCodigo] = useState<string | null>(null);
   const [erroGeral, setErroGeral] = useState<string | null>(null);
   const [aviso, setAviso] = useState<string | null>(null);
+  const [reenviandoAgora, setReenviandoAgora] = useState(false);
   const [agora, setAgora] = useState(() => Date.now());
   const enviando = useRef(false);
   const reenviando = useRef(false);
@@ -60,10 +61,12 @@ export default function ConfirmarEmailScreen() {
   }
   const { email, senha } = pendente;
 
-  const podeConfirmar = codigo !== '' && !confirmando;
+  // Confirmar com um reenvio em voo gastaria o e-mail à toa: um espera o outro.
+  const podeConfirmar = codigo !== '' && !confirmando && !reenviandoAgora;
+  const reenvioBloqueado = espera > 0 || confirmando || reenviandoAgora;
 
   async function confirmar() {
-    if (!podeConfirmar || enviando.current) return;
+    if (!podeConfirmar || enviando.current || reenviando.current) return;
     enviando.current = true;
     setErroCodigo(null);
     setErroGeral(null);
@@ -97,8 +100,9 @@ export default function ConfirmarEmailScreen() {
   }
 
   async function reenviar() {
-    if (espera > 0 || reenviando.current) return;
+    if (reenvioBloqueado || reenviando.current || enviando.current) return;
     reenviando.current = true;
+    setReenviandoAgora(true);
     setErroGeral(null);
     setAviso(null);
     try {
@@ -114,6 +118,7 @@ export default function ConfirmarEmailScreen() {
       setErroGeral(MENSAGENS_ERRO_CADASTRO[tipo]);
     } finally {
       reenviando.current = false;
+      setReenviandoAgora(false);
     }
   }
 
@@ -147,21 +152,28 @@ export default function ConfirmarEmailScreen() {
 
       <Pressable
         accessibilityRole="button"
-        accessibilityState={{ disabled: espera > 0 }}
+        accessibilityState={{
+          disabled: reenvioBloqueado,
+          busy: reenviandoAgora,
+        }}
         onPress={reenviar}
-        disabled={espera > 0 || confirmando}
+        disabled={reenvioBloqueado}
         className="mt-4 self-center"
       >
         <Text
           style={[
             textStyles.bodySmall,
             {
-              color: espera > 0 ? colors.textMuted : colors.text,
+              color: reenvioBloqueado ? colors.textMuted : colors.text,
               textDecorationLine: 'underline',
             },
           ]}
         >
-          {espera > 0 ? `Reenviar em ${espera} s` : 'Reenviar código'}
+          {reenviandoAgora
+            ? 'Reenviando...'
+            : espera > 0
+              ? `Reenviar em ${espera} s`
+              : 'Reenviar código'}
         </Text>
       </Pressable>
 

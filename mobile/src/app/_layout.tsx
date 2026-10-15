@@ -49,7 +49,8 @@ function RootStack() {
         <Stack.Screen name="login" />
         <Stack.Screen name="entrar" />
         <Stack.Screen name="criar-conta" />
-        <Stack.Screen name="confirmar-email" />
+        {/* Uma cópia só: o router enfileira a navegação e dois toques rápidos empilhariam duas. */}
+        <Stack.Screen name="confirmar-email" dangerouslySingular />
       </Stack.Protected>
 
       <Stack.Protected guard={logado}>
