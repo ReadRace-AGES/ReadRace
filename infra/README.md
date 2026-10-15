@@ -72,9 +72,9 @@ fica **desligado** (`AUTH_MODO` com padrão `seed`) até o app com login ser lan
 ligar, trocar o padrão para `cognito` no compose, num PR, e fazer o deploy: em `seed`, a
 API atende todo mundo como o usuário do seed.
 
-O app faz o login na própria tela, com e-mail e senha, falando direto com a API do Cognito
-(#156). A página do Cognito (domínio `us-east-2mevipejhy`) continua sendo usada para criar
-conta, até o cadastro no app (#157), e para recuperar a senha. O login com Google é a #158.
+O app faz o login (#156) e o cadastro com o código de confirmação (#157) nas próprias telas,
+falando direto com a API do Cognito. A página do Cognito (domínio `us-east-2mevipejhy`) continua
+sendo usada só para recuperar a senha. O login com Google é a #158.
 
 Ao ligar, quem estiver com o app sem as variáveis do Cognito no `mobile/.env` para de
 funcionar: o app não manda token e a API responde 401 em tudo. Combinar a data com o time,
