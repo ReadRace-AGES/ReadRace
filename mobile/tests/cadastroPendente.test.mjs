@@ -47,3 +47,14 @@ test('segundosParaReenviar conta 60 s a partir do envio', () => {
   assert.equal(segundosParaReenviar(10_000, 70_000), 0);
   assert.equal(segundosParaReenviar(10_000, 999_999), 0);
 });
+
+// O login de conta não confirmada guarda sem envio (null). Se for o cadastro que acabou de mandar
+// o código, a espera de 60 s continua: senão o "Reenviar" libera na hora e gasta a cota.
+test('guardarCadastro sem envio preserva a espera do mesmo cadastro', () => {
+  guardarCadastro('maria@exemplo.com', 'Senha#123', 10_000);
+  guardarCadastro(' Maria@Exemplo.com', 'Senha#123', null);
+  assert.equal(cadastroPendente()?.ultimoEnvio, 10_000);
+  guardarCadastro('outra@exemplo.com', 'Senha#123', null);
+  assert.equal(cadastroPendente()?.ultimoEnvio, null);
+  limparCadastro();
+});

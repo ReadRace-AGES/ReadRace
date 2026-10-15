@@ -20,7 +20,13 @@ export function guardarCadastro(
   senha: string,
   ultimoEnvio: number | null
 ): void {
-  pendente = { email: email.trim(), senha, ultimoEnvio };
+  // Sem envio novo e mesmo cadastro (ex.: login logo depois de criar a conta): a espera do
+  // "Reenviar código" continua valendo.
+  const envio =
+    ultimoEnvio === null && ehOMesmoCadastro(email, senha)
+      ? (pendente?.ultimoEnvio ?? null)
+      : ultimoEnvio;
+  pendente = { email: email.trim(), senha, ultimoEnvio: envio };
 }
 
 export function cadastroPendente(): CadastroPendente | null {
