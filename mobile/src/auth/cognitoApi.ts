@@ -2,6 +2,10 @@ import * as WebBrowser from 'expo-web-browser';
 
 import {
   chamarCognito,
+  erroDeCadastro,
+  requisicaoCadastro,
+  requisicaoConfirmacao,
+  requisicaoReenvio,
   requisicaoLogin,
   requisicaoRenovacao,
   requisicaoRevogacao,
@@ -35,6 +39,34 @@ export async function revogarSessao(refreshToken: string): Promise<void> {
     fetch,
     ENDPOINT_COGNITO,
     requisicaoRevogacao(COGNITO_CLIENT_ID, refreshToken)
+  );
+}
+
+/** Lança ErroCadastro com a mensagem pronta para a tela. O Cognito manda o código por e-mail. */
+export async function criarConta(nome: string, email: string, senha: string): Promise<void> {
+  await chamarCognito(
+    fetch,
+    ENDPOINT_COGNITO,
+    requisicaoCadastro(COGNITO_CLIENT_ID, nome, email, senha),
+    erroDeCadastro('cadastro')
+  );
+}
+
+export async function confirmarConta(email: string, codigo: string): Promise<void> {
+  await chamarCognito(
+    fetch,
+    ENDPOINT_COGNITO,
+    requisicaoConfirmacao(COGNITO_CLIENT_ID, email, codigo),
+    erroDeCadastro('confirmacao')
+  );
+}
+
+export async function reenviarCodigo(email: string): Promise<void> {
+  await chamarCognito(
+    fetch,
+    ENDPOINT_COGNITO,
+    requisicaoReenvio(COGNITO_CLIENT_ID, email),
+    erroDeCadastro('reenvio')
   );
 }
 
