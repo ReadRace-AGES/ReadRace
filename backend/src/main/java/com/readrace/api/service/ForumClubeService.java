@@ -12,7 +12,10 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.readrace.api.dto.response.ForumClubeResponse;
+import com.readrace.api.exception.ClubeNaoEncontradoException;
 import com.readrace.api.exception.RecursoNaoEncontradoException;
+import com.readrace.api.exception.SoMembroPostaException;
+import com.readrace.api.model.Cargo;
 import com.readrace.api.model.ClubeDoLivro;
 import com.readrace.api.model.Livro;
 import com.readrace.api.model.Post;
@@ -20,6 +23,7 @@ import com.readrace.api.model.SequenciaDeLeitura;
 import com.readrace.api.model.Usuario;
 import com.readrace.api.repository.ClubeDoLivroRepository;
 import com.readrace.api.repository.CurtidaRepository;
+import com.readrace.api.repository.MembroClubeRepository;
 import com.readrace.api.repository.PostRepository;
 import com.readrace.api.repository.UsuarioRepository;
 
@@ -32,18 +36,21 @@ public class ForumClubeService {
     private final CurtidaRepository curtidaRepository;
     private final UsuarioRepository usuarioRepository;
     private final UsuarioAtual usuarioAtual;
+    private final MembroClubeRepository membroClubeRepository;
 
     public ForumClubeService(
             ClubeDoLivroRepository clubeRepository,
             PostRepository postRepository,
             CurtidaRepository curtidaRepository,
             UsuarioRepository usuarioRepository,
-            UsuarioAtual usuarioAtual) {
+            UsuarioAtual usuarioAtual,
+            MembroClubeRepository membroClubeRepository) {
         this.clubeRepository = clubeRepository;
         this.postRepository = postRepository;
         this.curtidaRepository = curtidaRepository;
         this.usuarioRepository = usuarioRepository;
         this.usuarioAtual = usuarioAtual;
+        this.membroClubeRepository = membroClubeRepository;
     }
 
     /** Leitura pura: nada é criado, alterado ou apagado, e nenhuma curtida é gerada. */
@@ -54,7 +61,34 @@ public class ForumClubeService {
                         .orElseThrow(
                                 () -> new RecursoNaoEncontradoException("Clube não encontrado."));
 
-        return new ForumClubeResponse(cabecalho(clube), posts(clubeId));
+        UUID usuarioId = usuarioAtual.idDoUsuarioAtual().valor();
+        return new ForumClubeResponse(
+                cabecalho(clube), posts(clubeId, usuarioId), podeEscrever(clubeId, usuarioId));
+    }
+
+    @Transactional(readOnly = false)
+    public ForumClubeResponse.Post publicar(UUID clubeId, String texto) {
+        clubeRepository
+                .findByIdAndExcluidoEmIsNull(clubeId)
+                .orElseThrow(ClubeNaoEncontradoException::new);
+        UUID autorId = usuarioAtual.idDoUsuarioAtual().valor();
+        if (!podeEscrever(clubeId, autorId)) {
+            throw new SoMembroPostaException();
+        }
+
+        Post post = postRepository.save(Post.criarRaizDeClube(autorId, clubeId, texto));
+        Usuario autor = usuarioRepository.findById(autorId).orElse(null);
+        return paraPost(post, autor, 0L, false, SequenciaDeLeitura.hoje());
+    }
+
+    private boolean podeEscrever(UUID clubeId, UUID usuarioId) {
+        return membroClubeRepository
+                .findByClube_IdAndUsuarioId(clubeId, usuarioId)
+                .map(
+                        membro ->
+                                membro.getCargoClube() == Cargo.MEMBRO
+                                        || membro.getCargoClube() == Cargo.ADMINISTRADOR)
+                .orElse(false);
     }
 
     private static ForumClubeResponse.Clube cabecalho(ClubeDoLivro clube) {
@@ -71,7 +105,7 @@ public class ForumClubeService {
                         livro.getTitulo(), autor.isEmpty() ? null : autor, livro.getCapaUrl()));
     }
 
-    private List<ForumClubeResponse.Post> posts(UUID clubeId) {
+    private List<ForumClubeResponse.Post> posts(UUID clubeId, UUID usuarioId) {
         List<Post> posts =
                 postRepository
                         .findByClubeIdAndPostPaiIdIsNullAndExcluidoEmIsNullOrderByCriadoEmDesc(
@@ -95,24 +129,24 @@ public class ForumClubeService {
                                         CurtidaRepository.ContagemPorPost::getPostId,
                                         CurtidaRepository.ContagemPorPost::getTotal));
 
-        UUID usuarioId = usuarioAtual.idDoUsuarioAtual().valor();
         Set<UUID> curtidosPorMim =
                 Set.copyOf(curtidaRepository.postsCurtidosPorUsuario(usuarioId, postIds));
         LocalDate hoje = SequenciaDeLeitura.hoje();
 
         return posts.stream()
-                .map(post -> paraPost(post, autores, curtidas, curtidosPorMim, hoje))
+                .map(
+                        post ->
+                                paraPost(
+                                        post,
+                                        autores.get(post.getAutorId()),
+                                        curtidas.getOrDefault(post.getId(), 0L),
+                                        curtidosPorMim.contains(post.getId()),
+                                        hoje))
                 .toList();
     }
 
     private static ForumClubeResponse.Post paraPost(
-            Post post,
-            Map<UUID, Usuario> autores,
-            Map<UUID, Long> curtidas,
-            Set<UUID> curtidosPorMim,
-            LocalDate hoje) {
-        Usuario autor = autores.get(post.getAutorId());
-
+            Post post, Usuario autor, long totalCurtidas, boolean curtidoPorMim, LocalDate hoje) {
         return new ForumClubeResponse.Post(
                 post.getId(),
                 new ForumClubeResponse.Autor(
@@ -122,7 +156,7 @@ public class ForumClubeService {
                         autor == null ? null : autor.sequenciaExibida(hoje)),
                 post.getCriadoEm(),
                 post.getConteudo(),
-                curtidas.getOrDefault(post.getId(), 0L),
-                curtidosPorMim.contains(post.getId()));
+                totalCurtidas,
+                curtidoPorMim);
     }
 }

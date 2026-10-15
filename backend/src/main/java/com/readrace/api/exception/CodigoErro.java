@@ -14,6 +14,10 @@ public enum CodigoErro {
     OPONENTE_NAO_ENCONTRADO(HttpStatus.NOT_FOUND, "Oponente não encontrado."),
     LIVRO_NAO_ENCONTRADO(HttpStatus.NOT_FOUND, "Livro não encontrado."),
     POST_NAO_ENCONTRADO(HttpStatus.NOT_FOUND, "Post não encontrado."),
+    POST_INVALIDO(
+            HttpStatus.BAD_REQUEST, "O post deve conter texto e ter no máximo 2.000 caracteres."),
+    SO_MEMBRO_POSTA(HttpStatus.FORBIDDEN, "Somente membros do clube podem publicar no fórum."),
+    CLUBE_NAO_ENCONTRADO(HttpStatus.NOT_FOUND, "Clube não encontrado."),
     OPONENTE_NAO_E_AMIGO(
             HttpStatus.BAD_REQUEST, "O oponente informado não é amigo do usuário atual."),
     CLUBE_INVALIDO(
