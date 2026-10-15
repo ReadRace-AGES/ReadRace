@@ -71,9 +71,9 @@ export async function reenviarCodigo(email: string): Promise<void> {
 }
 
 /**
- * Criar conta e recuperar senha continuam na página do Cognito (#157 traz o cadastro para o app).
- * Navegador simples, sem esperar código: depois a pessoa entra pela tela do app.
+ * Recuperar senha continua na página do Cognito. Navegador simples, sem esperar código: depois a
+ * pessoa entra pela tela do app.
  */
-export async function abrirPaginaCognito(pagina: 'signup' | 'forgotPassword'): Promise<void> {
+export async function abrirPaginaCognito(pagina: 'forgotPassword'): Promise<void> {
   await WebBrowser.openBrowserAsync(urlPaginaCognito(COGNITO_DOMAIN, COGNITO_CLIENT_ID, pagina));
 }

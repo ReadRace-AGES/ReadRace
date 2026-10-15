@@ -1,3 +1,4 @@
+import { useRouter } from 'expo-router';
 import { useRef, useState } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
@@ -14,6 +15,7 @@ import { colors, textStyles } from '@/theme';
 
 /** Login com e-mail e senha (frame `cadastro` do Figma, que apesar do nome é o login). */
 export default function EntrarScreen() {
+  const router = useRouter();
   const voltar = useVoltar('/login');
   const { showToast } = useToastContext();
 
@@ -110,7 +112,7 @@ export default function EntrarScreen() {
         <Text style={textStyles.bodySmall} className="text-text">
           Não tem conta?
         </Text>
-        <Pressable accessibilityRole="link" onPress={() => abrirPaginaCognito('signup')}>
+        <Pressable accessibilityRole="link" onPress={() => router.push('/criar-conta')}>
           <Text style={textStyles.bodySmallStrong} className="text-primary">
             Criar uma
           </Text>

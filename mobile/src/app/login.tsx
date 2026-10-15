@@ -3,14 +3,13 @@ import { StatusBar } from 'expo-status-bar';
 import { Text, useWindowDimensions, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import { abrirPaginaCognito } from '@/auth/cognitoApi';
 import { PrimaryButton } from '@/components/PrimaryButton';
 import { ReadRaceLogo } from '@/components/readracelogo';
 import { textStyles } from '@/theme';
 
 /**
- * Tela de entrada (frame `login` do Figma): ENTRAR leva ao login do app; CRIAR CONTA abre a página
- * de cadastro do Cognito até a #157 trazer o cadastro para o app.
+ * Tela de entrada (frame `login` do Figma): ENTRAR leva ao login do app; CRIAR CONTA, ao cadastro
+ * do app.
  */
 export default function LoginScreen() {
   const { width } = useWindowDimensions();
@@ -42,7 +41,7 @@ export default function LoginScreen() {
           <PrimaryButton
             label="CRIAR CONTA"
             variant="outlineInverse"
-            onPress={() => abrirPaginaCognito('signup')}
+            onPress={() => router.push('/criar-conta')}
           />
         </View>
       </View>

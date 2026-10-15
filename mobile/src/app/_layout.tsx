@@ -48,6 +48,8 @@ function RootStack() {
       <Stack.Protected guard={!logado}>
         <Stack.Screen name="login" />
         <Stack.Screen name="entrar" />
+        <Stack.Screen name="criar-conta" />
+        <Stack.Screen name="confirmar-email" />
       </Stack.Protected>
 
       <Stack.Protected guard={logado}>
