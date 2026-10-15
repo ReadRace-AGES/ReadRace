@@ -6,12 +6,20 @@
 
 export const ESPERA_REENVIO_MS = 60_000;
 
-export type CadastroPendente = { email: string; senha: string; ultimoEnvio: number | null };
+export type CadastroPendente = {
+  email: string;
+  senha: string;
+  ultimoEnvio: number | null;
+};
 
 let pendente: CadastroPendente | null = null;
 
 /** `ultimoEnvio` é null quando nenhum código foi enviado agora (ex.: veio do login). */
-export function guardarCadastro(email: string, senha: string, ultimoEnvio: number | null): void {
+export function guardarCadastro(
+  email: string,
+  senha: string,
+  ultimoEnvio: number | null
+): void {
   pendente = { email: email.trim(), senha, ultimoEnvio };
 }
 
@@ -39,9 +47,15 @@ export function ehOMesmoCadastro(email: string, senha: string): boolean {
 }
 
 /** Quantos segundos faltam para liberar o "Reenviar código". 0 = liberado. */
-export function segundosParaReenviar(ultimoEnvio: number | null, agora: number): number {
+export function segundosParaReenviar(
+  ultimoEnvio: number | null,
+  agora: number
+): number {
   if (ultimoEnvio === null) {
     return 0;
   }
-  return Math.max(0, Math.ceil((ultimoEnvio + ESPERA_REENVIO_MS - agora) / 1000));
+  return Math.max(
+    0,
+    Math.ceil((ultimoEnvio + ESPERA_REENVIO_MS - agora) / 1000)
+  );
 }
