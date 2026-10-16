@@ -40,6 +40,18 @@ public class Post {
 
     protected Post() {}
 
+    /** Cria um post raiz de clube, sem vínculo com livro ou comunidade. */
+    public static Post criarRaizDeClube(UUID autorId, UUID clubeId, String texto) {
+        String conteudo = ValidadorTextoPost.validar(texto);
+        Post post = new Post();
+        post.id = UUID.randomUUID();
+        post.autorId = autorId;
+        post.clubeId = clubeId;
+        post.conteudo = conteudo;
+        post.criadoEm = OffsetDateTime.now();
+        return post;
+    }
+
     public UUID getId() {
         return id;
     }
