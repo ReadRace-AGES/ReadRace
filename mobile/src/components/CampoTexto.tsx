@@ -71,10 +71,10 @@ const styles = StyleSheet.create({
     backgroundColor: colors.surface,
     color: colors.text,
   },
-  comErro: { borderColor: colors.accent },
+  comErro: { borderColor: colors.danger },
   bloqueado: { opacity: 0.6 },
-  textoAjuda: { color: colors.textMuted },
-  textoErro: { color: colors.accent },
+  textoAjuda: { color: colors.textSecondary },
+  textoErro: { color: colors.danger },
 });
 
 export default CampoTexto;

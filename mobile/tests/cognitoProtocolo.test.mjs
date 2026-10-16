@@ -280,13 +280,43 @@ test('traduzirErroCadastro cobre os casos da issue', () => {
   assert.equal(traduzirErroCadastro('InvalidPasswordException', 'cadastro'), 'senhaFraca');
   assert.equal(traduzirErroCadastro('CodeMismatchException', 'confirmacao'), 'codigoIncorreto');
   assert.equal(traduzirErroCadastro('ExpiredCodeException', 'confirmacao'), 'codigoExpirado');
-  assert.equal(traduzirErroCadastro('NotAuthorizedException', 'confirmacao'), 'jaConfirmada');
+  assert.equal(
+    traduzirErroCadastro(
+      'NotAuthorizedException',
+      'confirmacao',
+      'User cannot be confirmed. Current status is CONFIRMED'
+    ),
+    'jaConfirmada'
+  );
   assert.equal(traduzirErroCadastro('NotAuthorizedException', 'cadastro'), 'falha');
   assert.equal(
     traduzirErroCadastro('com.amazonaws#UsernameExistsException', 'cadastro'),
     'emailJaExiste'
   );
   assert.equal(traduzirErroCadastro(undefined, 'cadastro'), 'falha');
+});
+
+test('traduzirErroCadastro só trata como já confirmada quando o Cognito diz isso', () => {
+  assert.equal(
+    traduzirErroCadastro('NotAuthorizedException', 'confirmacao', 'User is disabled.'),
+    'falha'
+  );
+  assert.equal(traduzirErroCadastro('NotAuthorizedException', 'confirmacao'), 'falha');
+  assert.equal(
+    traduzirErroCadastro('InvalidParameterException', 'reenvio', 'User is already confirmed.'),
+    'jaConfirmada'
+  );
+  assert.equal(
+    traduzirErroCadastro('InvalidParameterException', 'reenvio', 'Username should be an email.'),
+    'falha'
+  );
+});
+
+test('traduzirErroCadastro trata código errado vezes demais como tentativas demais', () => {
+  assert.equal(
+    traduzirErroCadastro('TooManyFailedAttemptsException', 'confirmacao'),
+    'muitasTentativas'
+  );
 });
 
 test('ErroCadastro carrega a mensagem da issue', () => {

@@ -102,7 +102,7 @@ export default function EntrarScreen() {
       </Pressable>
 
       {erro && (
-        <Text style={textStyles.bodySmall} className="mt-4 text-center text-accent">
+        <Text style={textStyles.bodySmall} className="mt-4 text-center text-danger">
           {erro}
         </Text>
       )}

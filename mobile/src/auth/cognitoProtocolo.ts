@@ -185,9 +185,13 @@ export class ErroCadastro extends Error {
  */
 export function traduzirErroCadastro(
   tipoAws: string | undefined,
-  acao: AcaoCadastro
+  acao: AcaoCadastro,
+  mensagem?: string
 ): TipoErroCadastro {
   const tipo = (tipoAws ?? '').split('#').pop();
+  // O mesmo tipo do Cognito cobre outros motivos (ex.: conta desativada): só a mensagem distingue
+  // a conta já confirmada.
+  const jaConfirmada = /already confirmed|status is CONFIRMED/i.test(mensagem ?? '');
   switch (tipo) {
     case 'UsernameExistsException':
       return acao === 'cadastro' ? 'emailJaExiste' : 'falha';
@@ -197,12 +201,16 @@ export function traduzirErroCadastro(
       return 'codigoIncorreto';
     case 'ExpiredCodeException':
       return 'codigoExpirado';
+    case 'TooManyFailedAttemptsException':
+      return 'muitasTentativas';
     case 'LimitExceededException':
     case 'CodeDeliveryFailureException':
     case 'TooManyRequestsException':
       return acao === 'confirmacao' ? 'muitasTentativas' : 'limiteEmails';
     case 'NotAuthorizedException':
-      return acao === 'confirmacao' ? 'jaConfirmada' : 'falha';
+      return acao === 'confirmacao' && jaConfirmada ? 'jaConfirmada' : 'falha';
+    case 'InvalidParameterException':
+      return acao === 'reenvio' && jaConfirmada ? 'jaConfirmada' : 'falha';
     default:
       return 'falha';
   }
@@ -265,7 +273,7 @@ const erroDeLogin: ErroDaResposta = (tipoAws, mensagem) =>
   new ErroLogin(traduzirErroLogin(tipoAws, mensagem));
 
 export function erroDeCadastro(acao: AcaoCadastro): ErroDaResposta {
-  return (tipoAws) => new ErroCadastro(traduzirErroCadastro(tipoAws, acao));
+  return (tipoAws, mensagem) => new ErroCadastro(traduzirErroCadastro(tipoAws, acao, mensagem));
 }
 
 export async function chamarCognito(

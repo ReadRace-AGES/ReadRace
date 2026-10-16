@@ -18,6 +18,9 @@ import { PrimaryButton } from '@/components/PrimaryButton';
 import { TelaDeAcesso } from '@/components/TelaDeAcesso';
 import { textStyles } from '@/theme';
 
+const AVISO_CONTA_JA_CRIADA =
+  'A conta deste e-mail já foi criada. Para mudar nome ou senha, use outro e-mail.';
+
 /** Passo 1 do cadastro (frame `criar conta` do Figma). Sem seta: o Figma não desenha. */
 export default function CriarContaScreen() {
   const router = useRouter();
@@ -31,15 +34,25 @@ export default function CriarContaScreen() {
   const [erroGeral, setErroGeral] = useState<string | null>(null);
   // Mesmo motivo do login: o estado só muda no próximo render, a ref muda na hora.
   const enviando = useRef(false);
+  const nomeCriado = useRef<string | null>(null);
+
+  // Voltou do passo 2 pela seta: a conta deste e-mail já existe no Cognito, que não deixa trocar
+  // nome nem senha de conta sem confirmar. Os dois ficam travados até a pessoa trocar o e-mail.
+  const contaJaCriada = ehOMesmoCadastro(email, senha);
+  const nomeNoCampo =
+    contaJaCriada && nomeCriado.current !== null ? nomeCriado.current : nome;
 
   const regraVermelha = (senha !== '' && !senhaValida(senha)) || senhaRecusada;
   const podeCriar =
-    nomeValido(nome) && emailValido(email) && senhaValida(senha) && !criando;
+    nomeValido(nomeNoCampo) &&
+    emailValido(email) &&
+    senhaValida(senha) &&
+    !criando;
 
   async function criar() {
     if (!podeCriar || enviando.current) return;
-    // Voltou do passo 2 pela seta: a conta já existe no Cognito, um novo SignUp diria "já existe".
-    if (ehOMesmoCadastro(email, senha)) {
+    // Um novo SignUp diria "já existe" para a própria conta: volta direto ao passo 2.
+    if (contaJaCriada) {
       router.push('/confirmar-email');
       return;
     }
@@ -51,12 +64,15 @@ export default function CriarContaScreen() {
     try {
       await criarConta(nome, email, senha);
       guardarCadastro(email, senha, Date.now());
+      nomeCriado.current = nome;
       router.push('/confirmar-email');
     } catch (e) {
       const tipo = e instanceof ErroCadastro ? e.tipo : 'falha';
       if (tipo === 'emailJaExiste') {
         setErroEmail(MENSAGENS_ERRO_CADASTRO.emailJaExiste);
       } else if (tipo === 'senhaFraca') {
+        // O erro é na senha: só ela se perde, como pede a issue.
+        setSenha('');
         setSenhaRecusada(true);
       } else {
         setErroGeral(MENSAGENS_ERRO_CADASTRO[tipo]);
@@ -77,9 +93,9 @@ export default function CriarContaScreen() {
         <CampoTexto
           rotulo="Nome"
           placeholder="Nome"
-          value={nome}
+          value={nomeNoCampo}
           onChangeText={setNome}
-          editable={!criando}
+          editable={!criando && !contaJaCriada}
           maxLength={TAMANHO_MAX_NOME}
           autoCapitalize="words"
           autoComplete="name"
@@ -96,6 +112,7 @@ export default function CriarContaScreen() {
           }}
           editable={!criando}
           erro={erroEmail}
+          ajuda={contaJaCriada ? AVISO_CONTA_JA_CRIADA : undefined}
           keyboardType="email-address"
           autoCapitalize="none"
           autoCorrect={false}
@@ -111,7 +128,7 @@ export default function CriarContaScreen() {
             setSenha(texto);
             setSenhaRecusada(false);
           }}
-          editable={!criando}
+          editable={!criando && !contaJaCriada}
           ajuda={REGRA_SENHA}
           erro={regraVermelha ? REGRA_SENHA : null}
           secureTextEntry

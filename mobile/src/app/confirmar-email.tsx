@@ -88,6 +88,10 @@ export default function ConfirmarEmailScreen() {
         return;
       }
     }
+    await entrarNaContaConfirmada();
+  }
+
+  async function entrarNaContaConfirmada() {
     // Conta confirmada: o cadastro pendente não serve mais, com ou sem login.
     limparCadastro();
     try {
@@ -115,15 +119,23 @@ export default function ConfirmarEmailScreen() {
       setAviso('Código reenviado.');
     } catch (e) {
       const tipo = e instanceof ErroCadastro ? e.tipo : 'falha';
+      if (tipo === 'jaConfirmada') {
+        // Confirmada por fora (ex.: pela página do Cognito): não há código a reenviar, segue para o
+        // app. O reenvio continua marcado até o login terminar, para o CONFIRMAR não correr junto.
+        await entrarNaContaConfirmada();
+        return;
+      }
       setErroGeral(MENSAGENS_ERRO_CADASTRO[tipo]);
-    } finally {
-      reenviando.current = false;
-      setReenviandoAgora(false);
     }
+    reenviando.current = false;
+    setReenviandoAgora(false);
   }
 
   return (
-    <TelaDeAcesso onVoltar={voltar} voltarDesabilitado={confirmando}>
+    <TelaDeAcesso
+      onVoltar={voltar}
+      voltarDesabilitado={confirmando || reenviandoAgora}
+    >
       <Text style={textStyles.h3} className="mb-2 text-text">
         Confirme seu e-mail
       </Text>
@@ -188,7 +200,7 @@ export default function ConfirmarEmailScreen() {
       {erroGeral && (
         <Text
           style={textStyles.bodySmall}
-          className="mt-4 text-center text-accent"
+          className="mt-4 text-center text-danger"
         >
           {erroGeral}
         </Text>
