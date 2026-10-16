@@ -1,5 +1,8 @@
 package com.readrace.api.model;
 
+import java.time.OffsetDateTime;
+import java.util.UUID;
+
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
@@ -8,15 +11,11 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 
-import java.time.OffsetDateTime;
-import java.util.UUID;
-
 @Entity
 @Table(name = "mensagem_clube")
 public class MensagemClube {
 
-    @Id
-    private UUID id;
+    @Id private UUID id;
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "clube_id", nullable = false)
@@ -32,15 +31,10 @@ public class MensagemClube {
     @Column(name = "enviada_em", nullable = false)
     private OffsetDateTime enviadaEm;
 
-    protected MensagemClube() {
-    }
+    protected MensagemClube() {}
 
     public MensagemClube(
-            UUID id,
-            ClubeDoLivro clube,
-            Usuario autor,
-            String texto,
-            OffsetDateTime enviadaEm) {
+            UUID id, ClubeDoLivro clube, Usuario autor, String texto, OffsetDateTime enviadaEm) {
         this.id = id;
         this.clube = clube;
         this.autor = autor;

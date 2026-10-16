@@ -61,22 +61,17 @@ public class MensagemClubeService {
             mensagens =
                     new ArrayList<>(
                             mensagemRepository.findByClube_IdOrderByEnviadaEmDesc(
-                                    clube.getId(),
-                                    PageRequest.of(0, LIMITE_MENSAGENS)));
+                                    clube.getId(), PageRequest.of(0, LIMITE_MENSAGENS)));
 
             Collections.reverse(mensagens);
         } else {
             mensagens =
-                    mensagemRepository
-                            .findByClube_IdAndEnviadaEmGreaterThanOrderByEnviadaEmAsc(
-                                    clube.getId(),
-                                    depois);
+                    mensagemRepository.findByClube_IdAndEnviadaEmGreaterThanOrderByEnviadaEmAsc(
+                            clube.getId(), depois);
         }
 
         List<MensagemClubeResponse> respostas =
-                mensagens.stream()
-                        .map(mensagem -> paraResponse(mensagem, usuarioId))
-                        .toList();
+                mensagens.stream().map(mensagem -> paraResponse(mensagem, usuarioId)).toList();
 
         return new MensagensClubeResponse(respostas);
     }
@@ -90,17 +85,11 @@ public class MensagemClubeService {
         validarMensagem(request);
 
         Usuario autor =
-                usuarioRepository
-                        .findById(usuarioId)
-                        .orElseThrow(SoMembroNoChatException::new);
+                usuarioRepository.findById(usuarioId).orElseThrow(SoMembroNoChatException::new);
 
         MensagemClube mensagem =
                 new MensagemClube(
-                        UUID.randomUUID(),
-                        clube,
-                        autor,
-                        request.texto(),
-                        OffsetDateTime.now());
+                        UUID.randomUUID(), clube, autor, request.texto(), OffsetDateTime.now());
 
         MensagemClube salva = mensagemRepository.save(mensagem);
 
@@ -114,9 +103,7 @@ public class MensagemClubeService {
     }
 
     private void verificarMembro(UUID clubeId, UUID usuarioId) {
-        if (membroClubeRepository
-                .findByClube_IdAndUsuarioId(clubeId, usuarioId)
-                .isEmpty()) {
+        if (membroClubeRepository.findByClube_IdAndUsuarioId(clubeId, usuarioId).isEmpty()) {
             throw new SoMembroNoChatException();
         }
     }
@@ -130,9 +117,7 @@ public class MensagemClubeService {
         }
     }
 
-    private MensagemClubeResponse paraResponse(
-            MensagemClube mensagem,
-            UUID usuarioId) {
+    private MensagemClubeResponse paraResponse(MensagemClube mensagem, UUID usuarioId) {
 
         Usuario autor = mensagem.getAutor();
 
@@ -142,8 +127,6 @@ public class MensagemClubeService {
                 mensagem.getEnviadaEm(),
                 autor.getId().equals(usuarioId),
                 new MensagemClubeResponse.Autor(
-                        autor.getId(),
-                        autor.getNome(),
-                        autor.getAvatarUrl()));
+                        autor.getId(), autor.getNome(), autor.getAvatarUrl()));
     }
 }

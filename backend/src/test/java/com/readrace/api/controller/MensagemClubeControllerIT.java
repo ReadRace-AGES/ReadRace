@@ -27,23 +27,17 @@ import com.readrace.api.TestcontainersConfiguration;
 @DisplayName("Chat do clube - /api/clubes/{clubeId}/mensagens")
 class MensagemClubeControllerIT {
 
-    private static final String CLUBE =
-            "50000000-0000-0000-0000-000000000003";
+    private static final String CLUBE = "50000000-0000-0000-0000-000000000003";
 
-    private static final String CLUBE_NAO_MEMBRO =
-            "50000000-0000-0000-0000-000000000004";
+    private static final String CLUBE_NAO_MEMBRO = "50000000-0000-0000-0000-000000000004";
 
-    private static final String USUARIO_ATUAL =
-            "00000000-0000-0000-0000-000000000001";
+    private static final String USUARIO_ATUAL = "00000000-0000-0000-0000-000000000001";
 
-    private static final String URL =
-            "/api/clubes/" + CLUBE + "/mensagens";
+    private static final String URL = "/api/clubes/" + CLUBE + "/mensagens";
 
-    @Autowired
-    private MockMvcTester mvc;
+    @Autowired private MockMvcTester mvc;
 
-    @Autowired
-    private JdbcTemplate jdbc;
+    @Autowired private JdbcTemplate jdbc;
 
     @Test
     void deve_listar_mensagens_do_clube() {
@@ -56,8 +50,7 @@ class MensagemClubeControllerIT {
 
     @Test
     void deve_listar_mensagens_da_mais_antiga_para_a_mais_nova() {
-        List<String> datas =
-                JsonPath.read(corpo(URL), "$.mensagens[*].enviadaEm");
+        List<String> datas = JsonPath.read(corpo(URL), "$.mensagens[*].enviadaEm");
 
         assertThat(datas).isSorted();
     }
@@ -87,10 +80,7 @@ class MensagemClubeControllerIT {
 
     @Test
     void deve_buscar_apenas_mensagens_posteriores_ao_depois() {
-        String ultimaData =
-                JsonPath.read(
-                        corpo(URL),
-                        "$.mensagens[1].enviadaEm");
+        String ultimaData = JsonPath.read(corpo(URL), "$.mensagens[1].enviadaEm");
 
         assertThat(
                         mvc.get()
@@ -112,7 +102,8 @@ class MensagemClubeControllerIT {
                         mvc.post()
                                 .uri(URL)
                                 .contentType(MediaType.APPLICATION_JSON)
-                                .content("""
+                                .content(
+                                        """
                                         {
                                           "texto": "Mensagem criada pelo teste de integração"
                                         }
@@ -146,7 +137,8 @@ class MensagemClubeControllerIT {
                         mvc.post()
                                 .uri(URL)
                                 .contentType(MediaType.APPLICATION_JSON)
-                                .content("""
+                                .content(
+                                        """
                                         {
                                           "texto": "Minha mensagem"
                                         }
@@ -163,7 +155,8 @@ class MensagemClubeControllerIT {
                         mvc.post()
                                 .uri(URL)
                                 .contentType(MediaType.APPLICATION_JSON)
-                                .content("""
+                                .content(
+                                        """
                                         {
                                           "texto": "   "
                                         }
@@ -178,17 +171,15 @@ class MensagemClubeControllerIT {
     void deve_rejeitar_mensagem_com_mais_de_mil_caracteres() {
         String texto = "a".repeat(1001);
 
-        String json = """
+        String json =
+                """
                 {
                   "texto": "%s"
                 }
-                """.formatted(texto);
+                """
+                        .formatted(texto);
 
-        assertThat(
-                        mvc.post()
-                                .uri(URL)
-                                .contentType(MediaType.APPLICATION_JSON)
-                                .content(json))
+        assertThat(mvc.post().uri(URL).contentType(MediaType.APPLICATION_JSON).content(json))
                 .hasStatus(HttpStatus.BAD_REQUEST)
                 .bodyJson()
                 .extractingPath("$.code")
@@ -197,11 +188,7 @@ class MensagemClubeControllerIT {
 
     @Test
     void deve_impedir_nao_membro_de_ler_chat() {
-        assertThat(
-                        mvc.get()
-                                .uri(
-                                        "/api/clubes/{clubeId}/mensagens",
-                                        CLUBE_NAO_MEMBRO))
+        assertThat(mvc.get().uri("/api/clubes/{clubeId}/mensagens", CLUBE_NAO_MEMBRO))
                 .hasStatus(HttpStatus.FORBIDDEN)
                 .bodyJson()
                 .extractingPath("$.code")
@@ -212,11 +199,10 @@ class MensagemClubeControllerIT {
     void deve_impedir_nao_membro_de_enviar_mensagem() {
         assertThat(
                         mvc.post()
-                                .uri(
-                                        "/api/clubes/{clubeId}/mensagens",
-                                        CLUBE_NAO_MEMBRO)
+                                .uri("/api/clubes/{clubeId}/mensagens", CLUBE_NAO_MEMBRO)
                                 .contentType(MediaType.APPLICATION_JSON)
-                                .content("""
+                                .content(
+                                        """
                                         {
                                           "texto": "Não deveria enviar"
                                         }
@@ -229,11 +215,7 @@ class MensagemClubeControllerIT {
 
     @Test
     void deve_devolver_404_quando_clube_nao_existir() {
-        assertThat(
-                        mvc.get()
-                                .uri(
-                                        "/api/clubes/{clubeId}/mensagens",
-                                        UUID.randomUUID()))
+        assertThat(mvc.get().uri("/api/clubes/{clubeId}/mensagens", UUID.randomUUID()))
                 .hasStatus(HttpStatus.NOT_FOUND)
                 .bodyJson()
                 .extractingPath("$.code")
@@ -269,11 +251,7 @@ class MensagemClubeControllerIT {
 
     private String corpo(String url) {
         try {
-            return mvc.get()
-                    .uri(url)
-                    .exchange()
-                    .getResponse()
-                    .getContentAsString();
+            return mvc.get().uri(url).exchange().getResponse().getContentAsString();
         } catch (java.io.UnsupportedEncodingException e) {
             throw new IllegalStateException(e);
         }

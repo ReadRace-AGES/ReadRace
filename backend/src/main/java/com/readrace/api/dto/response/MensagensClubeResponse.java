@@ -2,7 +2,4 @@ package com.readrace.api.dto.response;
 
 import java.util.List;
 
-public record MensagensClubeResponse(
-        List<MensagemClubeResponse> mensagens
-) {
-}
+public record MensagensClubeResponse(List<MensagemClubeResponse> mensagens) {}

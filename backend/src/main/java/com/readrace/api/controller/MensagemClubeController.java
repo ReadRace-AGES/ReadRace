@@ -35,8 +35,7 @@ public class MensagemClubeController {
     @GetMapping
     @Operation(summary = "Lista as mensagens do chat do clube")
     public MensagensClubeResponse buscar(
-            @PathVariable UUID clubeId,
-            @RequestParam(required = false) OffsetDateTime depois) {
+            @PathVariable UUID clubeId, @RequestParam(required = false) OffsetDateTime depois) {
 
         return mensagemClubeService.buscar(clubeId, depois);
     }
@@ -45,8 +44,7 @@ public class MensagemClubeController {
     @ResponseStatus(HttpStatus.CREATED)
     @Operation(summary = "Envia uma mensagem para o chat do clube")
     public MensagemClubeResponse enviar(
-            @PathVariable UUID clubeId,
-            @RequestBody MensagemClubeRequest request) {
+            @PathVariable UUID clubeId, @RequestBody MensagemClubeRequest request) {
 
         return mensagemClubeService.enviar(clubeId, request);
     }
