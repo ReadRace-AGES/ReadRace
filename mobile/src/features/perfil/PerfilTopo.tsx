@@ -3,21 +3,23 @@ import { Pressable, StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Avatar } from '@/components/avatar';
 import { GearIcon } from '@/components/icons/GearIcon';
+import { arteDoMascote, PROPORCAO_ARTE } from '@/features/mascotes/imagens';
 import { colors, radius, sizes, spacing } from '@/theme';
 
-const capivara = require('../../../assets/images/perfil-capivara.png');
 const cenario = require('../../../assets/images/perfil-cenario.png');
 
 const PROPORCAO_CENARIO = 786 / 722;
-const PROPORCAO_CAPIVARA = 334 / 222;
 
 export function PerfilTopo({
   nome,
   avatar,
+  mascote,
   onConfiguracoes,
 }: {
   nome?: string;
   avatar?: string | null;
+  /** Chave da arte do mascote escolhido; sem ela, o perfil ainda não carregou. */
+  mascote?: string;
   onConfiguracoes: () => void;
 }) {
   const insets = useSafeAreaInsets();
@@ -40,12 +42,15 @@ export function PerfilTopo({
           </View>
         </View>
       )}
-      <Image
-        source={capivara}
-        style={styles.capivara}
-        contentFit="contain"
-        accessible={false}
-      />
+      {mascote !== undefined && (
+        <Image
+          source={arteDoMascote(mascote)}
+          style={styles.mascote}
+          contentFit="contain"
+          contentPosition="bottom"
+          accessible={false}
+        />
+      )}
       <Pressable
         accessibilityRole="button"
         accessibilityLabel="Configurações"
@@ -73,12 +78,12 @@ const styles = StyleSheet.create({
     borderRadius: radius.pill,
     backgroundColor: colors.surface,
   },
-  capivara: {
+  mascote: {
     position: 'absolute',
     right: '4%',
     bottom: 0,
     width: '32%',
-    aspectRatio: PROPORCAO_CAPIVARA,
+    aspectRatio: PROPORCAO_ARTE,
   },
   engrenagem: {
     position: 'absolute',
