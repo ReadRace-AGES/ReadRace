@@ -217,6 +217,7 @@ test('useForumClube.alternarCurtida: otimista e reverte em falha, propagando o e
     '@/features/posts/api': postsApi,
     './api': {
       buscarForumDoClube: async () => ({
+        podeEscrever: true,
         clube: {
           id: 'c1',
           nome: 'Clube',
