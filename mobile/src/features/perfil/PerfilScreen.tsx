@@ -32,12 +32,14 @@ export function PerfilConteudo({
   onVerMaisConquistas = onPlaceholder,
   proprio = false,
   onAbrirLivro,
+  onMascotes = onPlaceholder,
 }: {
   perfil: Perfil;
   onPlaceholder: () => void;
   onVerMaisConquistas?: () => void;
   proprio?: boolean;
   onAbrirLivro?: (livroId: string) => void;
+  onMascotes?: () => void;
 }) {
   const stats = perfil.estatisticas;
   const mostrarFavoritos = proprio || perfil.livrosFavoritos.length > 0;
@@ -112,7 +114,7 @@ export function PerfilConteudo({
         <PrimaryButton
           label="Mascotes"
           icon={PawIcon}
-          onPress={onPlaceholder}
+          onPress={onMascotes}
         />
       )}
       <Text accessibilityRole="header" style={styles.heading}>
@@ -260,6 +262,7 @@ export function PerfilScreen({
         <PerfilTopo
           nome={dados?.nome}
           avatar={dados?.avatar}
+          mascote={dados?.mascote?.imagem}
           onConfiguracoes={() => router.push('/configuracoes')}
         />
       ) : (
@@ -295,6 +298,9 @@ export function PerfilScreen({
           onPlaceholder={showToast}
           onVerMaisConquistas={
             proprio ? () => router.push('/conquistas' as Href) : undefined
+          }
+          onMascotes={
+            proprio ? () => router.push('/mascotes' as Href) : undefined
           }
           onAbrirLivro={
             proprio
