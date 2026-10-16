@@ -41,12 +41,27 @@ melhoria de design para uma próxima iteração.
 - [ ] Garantir que o fluxo de **Authorization Code** está habilitado para o app client.
 
 ### 2. Preencher as variáveis do build
-No `mobile/eas.json` (perfil `production`) ou via **EAS Secrets**, definir os valores reais:
-- [ ] `EXPO_PUBLIC_API_URL` → URL da API de produção.
+Para o release final (login ligado), definir as variáveis do Cognito no perfil `production`:
+- [ ] `EXPO_PUBLIC_API_URL` → URL da API de produção (já configurada).
 - [ ] `EXPO_PUBLIC_COGNITO_DOMAIN` → domínio do Cognito.
 - [ ] `EXPO_PUBLIC_COGNITO_CLIENT_ID` → Client ID do app client.
-> Como são valores de ambiente de produção, o ideal é usar `eas secret:create` em vez de commitar
-> no `eas.json`.
+
+> **Atenção ao schema do `eas.json`:** ele **não aceita `env` vazio nem variável com string vazia**
+> (`""`). Por isso os perfis de teste (`preview-local`, `preview`) **omitem** as variáveis do
+> Cognito — a ausência já significa "login desligado" (modo seed) no app. Só adicione as chaves
+> `EXPO_PUBLIC_COGNITO_*` quando for preenchê-las com valores reais.
+>
+> Como são valores de produção, o ideal é usar **EAS Secrets** (`eas secret:create`) em vez de
+> commitar no `eas.json`.
+
+### Perfis de build disponíveis (`eas.json`)
+| Perfil | API | Login | Uso |
+|---|---|---|---|
+| `preview-local` | `http://192.168.0.104:8080` (PC do dev) | desligado | testar com backend local (dev) |
+| `preview` | `https://3-19-247-112.sslip.io` (produção) | desligado | testar instalação contra produção |
+| `production` | produção | a ligar (Cognito) | release final |
+
+Comando: `eas build -p android --profile <perfil>`. O IP do `preview-local` muda se a rede Wi-Fi mudar.
 
 ### 3. Gerar o APK (EAS Build)
 Não há projeto EAS ainda — o primeiro build cria o projeto e grava o `projectId` no `app.config.js`.

@@ -11,15 +11,22 @@
         "buildType": "apk"
       }
     },
+    "preview-local": {
+      "distribution": "internal",
+      "android": {
+        "buildType": "apk"
+      },
+      "env": {
+        "EXPO_PUBLIC_API_URL": "http://192.168.0.104:8080"
+      }
+    },
     "preview": {
       "distribution": "internal",
       "android": {
         "buildType": "apk"
       },
       "env": {
-        "EXPO_PUBLIC_API_URL": "https://api.readrace.app",
-        "EXPO_PUBLIC_COGNITO_DOMAIN": "",
-        "EXPO_PUBLIC_COGNITO_CLIENT_ID": ""
+        "EXPO_PUBLIC_API_URL": "https://3-19-247-112.sslip.io"
       }
     },
     "production": {
@@ -28,9 +35,7 @@
         "buildType": "apk"
       },
       "env": {
-        "EXPO_PUBLIC_API_URL": "https://api.readrace.app",
-        "EXPO_PUBLIC_COGNITO_DOMAIN": "",
-        "EXPO_PUBLIC_COGNITO_CLIENT_ID": ""
+        "EXPO_PUBLIC_API_URL": "https://3-19-247-112.sslip.io"
       }
     }
   },
