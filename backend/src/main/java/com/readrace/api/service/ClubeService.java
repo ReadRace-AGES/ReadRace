@@ -88,11 +88,7 @@ public class ClubeService {
         }
 
         ClubeDoLivro clube =
-                clubeRepository.save(
-                        new ClubeDoLivro(
-                                request.nome(),
-                                request.descricao(),
-                                livro));
+                clubeRepository.save(new ClubeDoLivro(request.nome(), request.descricao(), livro));
 
         membroClubeRepository.saveAll(
                 participantes.stream()
@@ -117,13 +113,11 @@ public class ClubeService {
                 clubeRepository
                         .findByIdAndExcluidoEmIsNull(clubeId)
                         .orElseThrow(
-                                () -> new RecursoNaoEncontradoException(
-                                        "Clube não encontrado."));
+                                () -> new RecursoNaoEncontradoException("Clube não encontrado."));
 
         List<LinhaRankingClube> linhas =
                 membroClubeRepository.rankingDoClube(
-                        clubeId,
-                        PageRequest.of(0, TAMANHO_DO_RANKING));
+                        clubeId, PageRequest.of(0, TAMANHO_DO_RANKING));
 
         return new ClubeResponse(
                 clube.getId(),
@@ -155,13 +149,11 @@ public class ClubeService {
 
         if (membro.getCargoClube() == Cargo.ADMINISTRADOR) {
 
-            long totalMembros =
-                    membroClubeRepository.countByClube_Id(clubeId);
+            long totalMembros = membroClubeRepository.countByClube_Id(clubeId);
 
             long totalAdministradores =
                     membroClubeRepository.countByClube_IdAndCargoClube(
-                            clubeId,
-                            Cargo.ADMINISTRADOR);
+                            clubeId, Cargo.ADMINISTRADOR);
 
             if (totalAdministradores == 1 && totalMembros > 1) {
                 throw new UnicoLiderException();
@@ -178,29 +170,22 @@ public class ClubeService {
                         .collect(Collectors.joining(", "));
 
         return new ClubeResponse.LivroAtual(
-                livro.getId(),
-                livro.getTitulo(),
-                autor.isEmpty() ? null : autor);
+                livro.getId(), livro.getTitulo(), autor.isEmpty() ? null : autor);
     }
 
-    private static List<ClubeResponse.LinhaRanking> ranking(
-            List<LinhaRankingClube> linhas) {
+    private static List<ClubeResponse.LinhaRanking> ranking(List<LinhaRankingClube> linhas) {
 
         return IntStream.range(0, linhas.size())
                 .mapToObj(indice -> paraLinha(indice + 1, linhas.get(indice)))
                 .toList();
     }
 
-    private static ClubeResponse.LinhaRanking paraLinha(
-            int posicao,
-            LinhaRankingClube linha) {
+    private static ClubeResponse.LinhaRanking paraLinha(int posicao, LinhaRankingClube linha) {
 
         return new ClubeResponse.LinhaRanking(
                 posicao,
                 new ClubeResponse.Usuario(
-                        linha.getUsuarioId(),
-                        linha.getNome(),
-                        linha.getAvatarUrl()),
+                        linha.getUsuarioId(), linha.getNome(), linha.getAvatarUrl()),
                 linha.getPontos());
     }
 }

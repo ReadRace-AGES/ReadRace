@@ -1,4 +1,3 @@
-
 package com.readrace.api.repository;
 
 import java.util.List;
@@ -19,9 +18,7 @@ import com.readrace.api.model.MembroClube;
 
 public interface MembroClubeRepository extends JpaRepository<MembroClube, UUID> {
 
-    Optional<MembroClube> findByClube_IdAndUsuarioId(
-            UUID clubeId,
-            UUID usuarioId);
+    Optional<MembroClube> findByClube_IdAndUsuarioId(UUID clubeId, UUID usuarioId);
 
     // Responder o quiz soma pontos nesta linha. O lock serializa respostas simultâneas do mesmo
     // membro, para a checagem de "já respondida" e a soma de pontos não correrem em paralelo.
@@ -65,8 +62,8 @@ public interface MembroClubeRepository extends JpaRepository<MembroClube, UUID> 
     List<ContagemMembros> contarMembrosPorClube();
 
     /**
-     * Ranking de um clube, do maior para o menor número de Pontos.
-     * A Página do clube mostra até 7 posições.
+     * Ranking de um clube, do maior para o menor número de Pontos. A Página do clube mostra até 7
+     * posições.
      */
     @Query(
             "select u.id as usuarioId, u.nome as nome, u.avatarUrl as avatarUrl,"
@@ -75,21 +72,13 @@ public interface MembroClubeRepository extends JpaRepository<MembroClube, UUID> 
                     + " where mc.clube.id = :clubeId"
                     + " and u.id = mc.usuarioId and u.excluidoEm is null"
                     + " order by mc.pontos desc, u.nome asc")
-    List<LinhaRankingClube> rankingDoClube(
-            @Param("clubeId") UUID clubeId,
-            Pageable limite);
+    List<LinhaRankingClube> rankingDoClube(@Param("clubeId") UUID clubeId, Pageable limite);
 
     // Task #152 - Sair de um clube do livro
 
-    /**
-     * Conta todos os membros de um clube.
-     */
+    /** Conta todos os membros de um clube. */
     long countByClube_Id(UUID clubeId);
 
-    /**
-     * Conta os membros de um clube que possuem determinado cargo.
-     */
-    long countByClube_IdAndCargoClube(
-            UUID clubeId,
-            Cargo cargoClube);
+    /** Conta os membros de um clube que possuem determinado cargo. */
+    long countByClube_IdAndCargoClube(UUID clubeId, Cargo cargoClube);
 }

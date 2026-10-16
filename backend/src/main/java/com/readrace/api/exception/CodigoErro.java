@@ -1,97 +1,70 @@
-
 package com.readrace.api.exception;
 
 import org.springframework.http.HttpStatus;
 
 public enum CodigoErro {
+    USUARIO_NAO_ENCONTRADO(HttpStatus.NOT_FOUND, "Usuário não encontrado."),
 
-    USUARIO_NAO_ENCONTRADO(
-            HttpStatus.NOT_FOUND, "Usuário não encontrado."),
+    RESOURCE_NOT_FOUND(HttpStatus.NOT_FOUND, "Recurso não encontrado."),
 
-    RESOURCE_NOT_FOUND(
-            HttpStatus.NOT_FOUND, "Recurso não encontrado."),
+    ROUTE_NOT_FOUND(HttpStatus.NOT_FOUND, "Rota não encontrada."),
 
-    ROUTE_NOT_FOUND(
-            HttpStatus.NOT_FOUND, "Rota não encontrada."),
+    VALIDATION_ERROR(HttpStatus.BAD_REQUEST, "Dados inválidos."),
 
-    VALIDATION_ERROR(
-            HttpStatus.BAD_REQUEST, "Dados inválidos."),
+    MALFORMED_REQUEST(HttpStatus.BAD_REQUEST, "Requisição malformada."),
 
-    MALFORMED_REQUEST(
-            HttpStatus.BAD_REQUEST, "Requisição malformada."),
+    PARAMETRO_INVALIDO(HttpStatus.BAD_REQUEST, "Parâmetro de busca inválido."),
 
-    PARAMETRO_INVALIDO(
-            HttpStatus.BAD_REQUEST, "Parâmetro de busca inválido."),
+    PAGINA_INVALIDA(HttpStatus.UNPROCESSABLE_ENTITY, "Página inválida."),
 
-    PAGINA_INVALIDA(
-            HttpStatus.UNPROCESSABLE_ENTITY, "Página inválida."),
+    DESAFIO_NAO_ENCONTRADO(HttpStatus.NOT_FOUND, "Desafio não encontrado."),
 
-    DESAFIO_NAO_ENCONTRADO(
-            HttpStatus.NOT_FOUND, "Desafio não encontrado."),
+    OPONENTE_NAO_ENCONTRADO(HttpStatus.NOT_FOUND, "Oponente não encontrado."),
 
-    OPONENTE_NAO_ENCONTRADO(
-            HttpStatus.NOT_FOUND, "Oponente não encontrado."),
+    LIVRO_NAO_ENCONTRADO(HttpStatus.NOT_FOUND, "Livro não encontrado."),
 
-    LIVRO_NAO_ENCONTRADO(
-            HttpStatus.NOT_FOUND, "Livro não encontrado."),
+    POST_NAO_ENCONTRADO(HttpStatus.NOT_FOUND, "Post não encontrado."),
 
-    POST_NAO_ENCONTRADO(
-            HttpStatus.NOT_FOUND, "Post não encontrado."),
-
-    CLUBE_INVALIDO(
-            HttpStatus.BAD_REQUEST, "Dados do clube inválidos."),
+    CLUBE_INVALIDO(HttpStatus.BAD_REQUEST, "Dados do clube inválidos."),
 
     // Task #152 - Sair de um clube do livro
-    NAO_E_MEMBRO(
-            HttpStatus.NOT_FOUND, "Você não é membro deste clube."),
+    NAO_E_MEMBRO(HttpStatus.NOT_FOUND, "Você não é membro deste clube."),
 
-    UNICO_LIDER(
-            HttpStatus.CONFLICT, "Você é o único líder deste clube e não pode sair."),
+    UNICO_LIDER(HttpStatus.CONFLICT, "Você é o único líder deste clube e não pode sair."),
 
     OPONENTE_NAO_E_AMIGO(
             HttpStatus.BAD_REQUEST, "O oponente informado não é amigo do usuário atual."),
 
-    META_INVALIDA(
-            HttpStatus.BAD_REQUEST, "A meta de páginas deve estar entre 10 e 500."),
+    META_INVALIDA(HttpStatus.BAD_REQUEST, "A meta de páginas deve estar entre 10 e 500."),
 
     LIVRO_OBRIGATORIO(
             HttpStatus.BAD_REQUEST, "O livro é obrigatório para desafios com meta por livro."),
 
-    PRAZO_INVALIDO(
-            HttpStatus.BAD_REQUEST, "O prazo deve ser de 1 a 365 dias."),
+    PRAZO_INVALIDO(HttpStatus.BAD_REQUEST, "O prazo deve ser de 1 a 365 dias."),
 
-    PERFIL_INVALIDO(
-            HttpStatus.BAD_REQUEST, "Dados do perfil inválidos."),
+    PERFIL_INVALIDO(HttpStatus.BAD_REQUEST, "Dados do perfil inválidos."),
 
-    USERNAME_EM_USO(
-            HttpStatus.CONFLICT, "Esse nome de usuário já está em uso."),
+    USERNAME_EM_USO(HttpStatus.CONFLICT, "Esse nome de usuário já está em uso."),
 
-    UNAUTHORIZED(
-            HttpStatus.UNAUTHORIZED, "Sessão inválida ou expirada. Entre de novo."),
+    UNAUTHORIZED(HttpStatus.UNAUTHORIZED, "Sessão inválida ou expirada. Entre de novo."),
 
-    QUIZ_NAO_ENCONTRADO(
-            HttpStatus.NOT_FOUND, "Este clube ainda não tem quiz."),
+    QUIZ_NAO_ENCONTRADO(HttpStatus.NOT_FOUND, "Este clube ainda não tem quiz."),
 
-    SO_MEMBRO_RESPONDE(
-            HttpStatus.FORBIDDEN, "Só membros do clube participam do quiz."),
+    SO_MEMBRO_RESPONDE(HttpStatus.FORBIDDEN, "Só membros do clube participam do quiz."),
 
-    PERGUNTA_JA_RESPONDIDA(
-            HttpStatus.CONFLICT, "Você já respondeu esta pergunta."),
+    PERGUNTA_JA_RESPONDIDA(HttpStatus.CONFLICT, "Você já respondeu esta pergunta."),
 
-    ALTERNATIVA_INVALIDA(
-            HttpStatus.BAD_REQUEST, "A alternativa não pertence a esta pergunta."),
+    ALTERNATIVA_INVALIDA(HttpStatus.BAD_REQUEST, "A alternativa não pertence a esta pergunta."),
 
-    METHOD_NOT_ALLOWED(
-            HttpStatus.METHOD_NOT_ALLOWED, "Método não permitido para esta rota."),
+    METHOD_NOT_ALLOWED(HttpStatus.METHOD_NOT_ALLOWED, "Método não permitido para esta rota."),
 
-    UNSUPPORTED_MEDIA_TYPE(
-            HttpStatus.UNSUPPORTED_MEDIA_TYPE, "Formato de conteúdo não suportado."),
+    UNSUPPORTED_MEDIA_TYPE(HttpStatus.UNSUPPORTED_MEDIA_TYPE, "Formato de conteúdo não suportado."),
 
     EXTERNAL_SERVICE_UNAVAILABLE(
-            HttpStatus.SERVICE_UNAVAILABLE, "Serviço externo indisponível no momento. Tente novamente mais tarde."),
+            HttpStatus.SERVICE_UNAVAILABLE,
+            "Serviço externo indisponível no momento. Tente novamente mais tarde."),
 
-    INTERNAL_ERROR(
-            HttpStatus.INTERNAL_SERVER_ERROR, "Erro interno. Tente novamente.");
+    INTERNAL_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, "Erro interno. Tente novamente.");
 
     private final HttpStatus status;
     private final String mensagemPadrao;
