@@ -154,5 +154,5 @@ const styles = StyleSheet.create({
     textAlignVertical: 'top',
   },
   counter: { ...textStyles.bodySmall, color: colors.textSecondary },
-  error: { ...textStyles.bodySmall, color: colors.accent },
+  error: { ...textStyles.bodySmall, color: colors.danger },
 });
