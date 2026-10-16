@@ -26,6 +26,9 @@ public class Post {
     @Column(name = "clube_id")
     private UUID clubeId;
 
+    @Column(name = "comunidade_id")
+    private UUID comunidadeId;
+
     @Column(name = "post_pai_id")
     private UUID postPaiId;
 
@@ -54,6 +57,10 @@ public class Post {
 
     public UUID getClubeId() {
         return clubeId;
+    }
+
+    public UUID getComunidadeId() {
+        return comunidadeId;
     }
 
     public UUID getPostPaiId() {
