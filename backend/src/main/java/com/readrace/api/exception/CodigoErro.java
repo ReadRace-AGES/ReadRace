@@ -17,7 +17,12 @@ public enum CodigoErro {
     POST_INVALIDO(
             HttpStatus.BAD_REQUEST, "O post deve conter texto e ter no máximo 2.000 caracteres."),
     SO_MEMBRO_POSTA(HttpStatus.FORBIDDEN, "Somente membros do clube podem publicar no fórum."),
+
+    // Chat do clube - Task #151
     CLUBE_NAO_ENCONTRADO(HttpStatus.NOT_FOUND, "Clube não encontrado."),
+    MENSAGEM_INVALIDA(HttpStatus.BAD_REQUEST, "Mensagem inválida."),
+    SO_MEMBRO_NO_CHAT(HttpStatus.FORBIDDEN, "Só membros do clube participam do chat."),
+
     OPONENTE_NAO_E_AMIGO(
             HttpStatus.BAD_REQUEST, "O oponente informado não é amigo do usuário atual."),
     CLUBE_INVALIDO(
@@ -41,7 +46,6 @@ public enum CodigoErro {
     INTERNAL_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, "Erro interno. Tente novamente.");
 
     private final HttpStatus status;
-
     private final String mensagemPadrao;
 
     CodigoErro(HttpStatus status, String mensagemPadrao) {
