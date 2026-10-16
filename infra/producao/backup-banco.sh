@@ -27,4 +27,8 @@ trap 'rm -f "$ARQUIVO"' EXIT
 docker exec "$DB" pg_dump -U readrace -d readrace -Fc > "$ARQUIVO"
 
 aws s3 cp "$ARQUIVO" "s3://$BUCKET/$CHAVE" --region "$REGIAO" --only-show-errors
+
+# O saude.sh lê a data deste arquivo e o alarme avisa se passar de 26 horas.
+mkdir -p /var/lib/readrace
+touch /var/lib/readrace/ultimo-backup
 echo "Backup enviado: s3://$BUCKET/$CHAVE ($(du -h "$ARQUIVO" | cut -f1))"

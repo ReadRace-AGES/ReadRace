@@ -24,27 +24,59 @@ function mensagemDe(erro: unknown) {
 }
 
 export function useBusca(termo: string, tipo: TipoBusca): BuscaState {
-  const [busca, setBusca] = useState<Busca>({ situacao: 'inicial' });
   const [versao, setVersao] = useState(0);
   const termoLimpo = termo.trim();
+  const [resultado, setResultado] = useState<{
+    termo: string;
+    tipo: TipoBusca;
+    versao: number;
+    busca: Busca;
+  }>({ termo: termoLimpo, tipo, versao, busca: { situacao: 'inicial' } });
+  const busca: Busca = !termoLimpo
+    ? { situacao: 'inicial' }
+    : resultado.termo === termoLimpo &&
+        resultado.tipo === tipo &&
+        resultado.versao === versao
+      ? resultado.busca
+      : { situacao: 'carregando' };
 
   useEffect(() => {
     if (!termoLimpo) {
-      setBusca({ situacao: 'inicial' });
+      setResultado({
+        termo: termoLimpo,
+        tipo,
+        versao,
+        busca: { situacao: 'inicial' },
+      });
       return;
     }
 
-    setBusca({ situacao: 'carregando' });
+    setResultado({
+      termo: termoLimpo,
+      tipo,
+      versao,
+      busca: { situacao: 'carregando' },
+    });
     const controller = new AbortController();
     const timer = setTimeout(() => {
       buscar(termoLimpo, tipo, controller.signal)
         .then((dados) => {
           if (controller.signal.aborted) return;
-          setBusca({ situacao: 'sucesso', dados });
+          setResultado({
+            termo: termoLimpo,
+            tipo,
+            versao,
+            busca: { situacao: 'sucesso', dados },
+          });
         })
         .catch((erro: unknown) => {
           if (controller.signal.aborted) return;
-          setBusca({ situacao: 'erro', mensagem: mensagemDe(erro) });
+          setResultado({
+            termo: termoLimpo,
+            tipo,
+            versao,
+            busca: { situacao: 'erro', mensagem: mensagemDe(erro) },
+          });
         });
     }, ATRASO_DIGITACAO_MS);
 

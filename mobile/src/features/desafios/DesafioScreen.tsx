@@ -13,7 +13,6 @@ import { SadFaceIcon } from '@/components/icons/SadFaceIcon';
 import { TrophyIcon } from '@/components/icons/TrophyIcon';
 import { UsersIcon } from '@/components/icons/UsersIcon';
 import { PrimaryButton } from '@/components/PrimaryButton';
-import { useToastContext } from '@/components/toast-provider';
 import { colors, sizes, spacing, textStyles } from '@/theme';
 
 import { listarTodosOsDesafios, type Desafio } from './api';
@@ -25,7 +24,7 @@ type Estado =
 
 type DesafioCardProps = {
   desafio: Desafio;
-  onRevanche: () => void;
+  onRevanche: (desafio: Desafio) => void;
 };
 
 function desafioFinalizado(desafio: Desafio) {
@@ -192,7 +191,7 @@ function DesafioCard({ desafio, onRevanche }: DesafioCardProps) {
             label="Revanche"
             variant="outline"
             icon={RematchIcon}
-            onPress={onRevanche}
+            onPress={() => onRevanche(desafio)}
           />
         )}
       </View>
@@ -201,7 +200,6 @@ function DesafioCard({ desafio, onRevanche }: DesafioCardProps) {
 }
 
 export function DesafiosScreen() {
-  const { showToast } = useToastContext();
   const router = useRouter();
   const requisicao = useRef<AbortController | null>(null);
 
@@ -259,8 +257,29 @@ export function DesafiosScreen() {
     }, [carregarDesafios])
   );
 
-  function desafiarAmigo() {
-    router.push('/desafiar-amigo');
+  function desafiarAmigo(desafio?: Desafio) {
+    if (!desafio) {
+      router.push('/desafiar-amigo');
+      return;
+    }
+
+    const parametros = {
+      oponenteId: desafio.oponente.id,
+      tipoMeta: desafio.tipoMeta,
+      ...(desafio.tipoMeta === 'paginas'
+        ? { meta: String(desafio.meta) }
+        : {
+            livroSelecionado: JSON.stringify({
+              livroId: desafio.livro.id,
+              titulo: desafio.livro.titulo,
+              autor: desafio.livro.autor,
+              capaUrl: desafio.livro.capaUrl,
+              genero: null,
+            }),
+          }),
+    };
+
+    router.push({ pathname: '/desafiar-amigo', params: parametros });
   }
 
   const desafios =
@@ -330,7 +349,7 @@ export function DesafiosScreen() {
           <DesafioCard
             key={desafio.id}
             desafio={desafio}
-            onRevanche={showToast}
+            onRevanche={desafiarAmigo}
           />
         ))}
 

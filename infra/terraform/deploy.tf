@@ -117,10 +117,10 @@ resource "aws_ssm_document" "deploy" {
             - COMMIT="{{ Commit }}"
             - mkdir -p /opt/readrace && cd /opt/readrace
             - BASE="https://raw.githubusercontent.com/${local.repositorio_github}/$COMMIT/infra/producao"
-            - ARQUIVOS="docker-compose.yml Caddyfile subir.sh backup-banco.sh readrace-backup.service readrace-backup.timer"
+            - ARQUIVOS="docker-compose.yml Caddyfile subir.sh backup-banco.sh readrace-backup.service readrace-backup.timer saude.sh readrace-saude.service readrace-saude.timer"
             - for f in $ARQUIVOS; do curl -fsSL "$BASE/$f" -o "$f.novo"; done
             - for f in $ARQUIVOS; do mv "$f.novo" "$f"; done
-            - chmod 755 subir.sh backup-banco.sh
+            - chmod 755 subir.sh backup-banco.sh saude.sh
             - ./subir.sh "$${COMMIT:0:12}"
   DOC
 }

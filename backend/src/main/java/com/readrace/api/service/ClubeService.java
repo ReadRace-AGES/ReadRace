@@ -1,7 +1,8 @@
-
 package com.readrace.api.service;
 
 import java.util.List;
+import java.util.Set;
+import java.util.TreeSet;
 import java.util.UUID;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
@@ -10,17 +11,24 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.readrace.api.dto.request.CriarClubeRequest;
+import com.readrace.api.dto.response.ClubeCriadoResponse;
 import com.readrace.api.dto.response.ClubeResponse;
+import com.readrace.api.exception.ClubeInvalidoException;
+import com.readrace.api.exception.LivroNaoEncontradoException;
 import com.readrace.api.exception.NaoEMembroException;
 import com.readrace.api.exception.RecursoNaoEncontradoException;
 import com.readrace.api.exception.UnicoLiderException;
+import com.readrace.api.exception.UsuarioNaoEncontradoException;
 import com.readrace.api.model.Cargo;
 import com.readrace.api.model.ClubeDoLivro;
 import com.readrace.api.model.Livro;
 import com.readrace.api.model.MembroClube;
 import com.readrace.api.repository.ClubeDoLivroRepository;
 import com.readrace.api.repository.LinhaRankingClube;
+import com.readrace.api.repository.LivroRepository;
 import com.readrace.api.repository.MembroClubeRepository;
+import com.readrace.api.repository.UsuarioRepository;
 
 @Service
 @Transactional(readOnly = true)
@@ -32,13 +40,76 @@ public class ClubeService {
     private final MembroClubeRepository membroClubeRepository;
     private final UsuarioAtual usuarioAtual;
 
+    private final LivroRepository livroRepository;
+    private final UsuarioRepository usuarioRepository;
+    private final ConquistaService conquistaService;
+
     public ClubeService(
             ClubeDoLivroRepository clubeRepository,
             MembroClubeRepository membroClubeRepository,
-            UsuarioAtual usuarioAtual) {
+            LivroRepository livroRepository,
+            UsuarioRepository usuarioRepository,
+            UsuarioAtual usuarioAtual,
+            ConquistaService conquistaService) {
         this.clubeRepository = clubeRepository;
         this.membroClubeRepository = membroClubeRepository;
+        this.livroRepository = livroRepository;
+        this.usuarioRepository = usuarioRepository;
         this.usuarioAtual = usuarioAtual;
+        this.conquistaService = conquistaService;
+    }
+
+    @Transactional
+    public ClubeCriadoResponse criar(CriarClubeRequest request) {
+        if (request.nome() == null || request.nome().isBlank() || request.nome().length() > 120) {
+            throw new ClubeInvalidoException();
+        }
+
+        Livro livro =
+                livroRepository
+                        .findById(request.livroId())
+                        .orElseThrow(LivroNaoEncontradoException::new);
+
+        UUID criadorId = usuarioAtual.idDoUsuarioAtual().valor();
+
+        Set<UUID> participantes = new TreeSet<>();
+        participantes.add(criadorId);
+
+        if (request.membros() != null) {
+            participantes.addAll(request.membros());
+        }
+
+        // Mesma ordem de locks das conquistas. Adquirir antes dos INSERTs evita promover
+        // locks de FK de vários participantes em ordens diferentes entre requisições.
+        for (UUID participante : participantes) {
+            usuarioRepository
+                    .buscarAtivoComLock(participante)
+                    .orElseThrow(UsuarioNaoEncontradoException::new);
+        }
+
+        ClubeDoLivro clube =
+                clubeRepository.save(
+                        new ClubeDoLivro(
+                                request.nome(),
+                                request.descricao(),
+                                livro));
+
+        membroClubeRepository.saveAll(
+                participantes.stream()
+                        .map(
+                                id ->
+                                        new MembroClube(
+                                                clube,
+                                                id,
+                                                id.equals(criadorId)
+                                                        ? Cargo.ADMINISTRADOR
+                                                        : Cargo.MEMBRO))
+                        .toList());
+
+        // avaliar faz flush antes das medições, incluindo os vínculos desta transação.
+        participantes.forEach(conquistaService::avaliar);
+
+        return ClubeCriadoResponse.de(clube);
     }
 
     public ClubeResponse buscar(UUID clubeId) {
@@ -51,7 +122,8 @@ public class ClubeService {
 
         List<LinhaRankingClube> linhas =
                 membroClubeRepository.rankingDoClube(
-                        clubeId, PageRequest.of(0, TAMANHO_DO_RANKING));
+                        clubeId,
+                        PageRequest.of(0, TAMANHO_DO_RANKING));
 
         return new ClubeResponse(
                 clube.getId(),
@@ -74,7 +146,6 @@ public class ClubeService {
 
     @Transactional
     public void sairDoClube(UUID clubeId) {
-
         UUID usuarioId = usuarioAtual.idDoUsuarioAtual().valor();
 
         MembroClube membro =
@@ -89,7 +160,8 @@ public class ClubeService {
 
             long totalAdministradores =
                     membroClubeRepository.countByClube_IdAndCargoClube(
-                            clubeId, Cargo.ADMINISTRADOR);
+                            clubeId,
+                            Cargo.ADMINISTRADOR);
 
             if (totalAdministradores == 1 && totalMembros > 1) {
                 throw new UnicoLiderException();
