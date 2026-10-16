@@ -7,6 +7,8 @@ import { ApiError } from '@/api/client';
 import { AppHeader } from '@/components/AppHeader';
 import { Card } from '@/components/Card';
 import { PrimaryButton } from '@/components/PrimaryButton';
+import { useToastContext } from '@/components/toast-provider';
+import { buscarQuiz } from '@/features/quiz/api';
 import { colors, radius, sizes, spacing, textStyles } from '@/theme';
 
 import { publicarQuiz, type PerguntaNova } from './api';
@@ -76,12 +78,23 @@ export function AdicionarPerguntasScreen({
   recompensaXp,
 }: AdicionarPerguntasScreenProps) {
   const router = useRouter();
+  const { showErrorToast } = useToastContext();
   const [perguntas, setPerguntas] = useState<PerguntaNova[]>([]);
   const [formulario, setFormulario] =
     useState<FormularioPergunta>(FORMULARIO_VAZIO);
   const [publicando, setPublicando] = useState(false);
-  const [erro, setErro] = useState<string | null>(null);
+  const [clubeTemQuiz, setClubeTemQuiz] = useState(false);
   const [publicado, setPublicado] = useState(false);
+
+  // O aviso de substituição só faz sentido se já existe um quiz ativo. 404 (sem quiz) ou
+  // qualquer falha aqui só deixam o aviso de fora; não impedem de montar o quiz.
+  useEffect(() => {
+    const cancelar = new AbortController();
+    buscarQuiz(clubeId, cancelar.signal)
+      .then(() => setClubeTemQuiz(true))
+      .catch(() => {});
+    return () => cancelar.abort();
+  }, [clubeId]);
 
   // Some sozinho depois de confirmar — sem exigir mais um toque do líder.
   useEffect(() => {
@@ -132,12 +145,11 @@ export function AdicionarPerguntasScreen({
   async function finalizarQuiz() {
     if (perguntas.length === 0 || publicando) return;
     setPublicando(true);
-    setErro(null);
     try {
       await publicarQuiz(clubeId, { titulo, recompensaXp, perguntas });
       setPublicado(true);
     } catch (erroCapturado: unknown) {
-      setErro(
+      showErrorToast(
         erroCapturado instanceof ApiError
           ? erroCapturado.message
           : COPY.erroGenerico
@@ -252,13 +264,9 @@ export function AdicionarPerguntasScreen({
           />
         </Card>
 
-        {erro && (
-          <Text accessibilityRole="alert" style={styles.erro}>
-            {erro}
-          </Text>
+        {clubeTemQuiz && (
+          <Text style={styles.avisoSubstituicao}>{COPY.avisoSubstituicao}</Text>
         )}
-
-        <Text style={styles.avisoSubstituicao}>{COPY.avisoSubstituicao}</Text>
 
         <PrimaryButton
           label={COPY.finalizar}
@@ -331,7 +339,6 @@ const styles = StyleSheet.create({
     borderColor: colors.primary,
     backgroundColor: colors.primary,
   },
-  erro: { ...textStyles.bodySmall, color: colors.accent, textAlign: 'center' },
   avisoSubstituicao: {
     ...textStyles.caption,
     color: colors.textSecondary,

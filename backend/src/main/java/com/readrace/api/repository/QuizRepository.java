@@ -12,18 +12,14 @@ import com.readrace.api.model.Quiz;
 
 public interface QuizRepository extends JpaRepository<Quiz, UUID> {
 
-    /** Busca o quiz ativo do clube. */
+    /** No máximo um, garantido por {@code uq_quiz_clube_ativo}. */
     Optional<Quiz> findByClubeIdAndAtivoTrue(UUID clubeId);
 
     /**
-     * Desativa o quiz ativo anterior sem apagá-lo nem remover seu histórico.
+     * Executa na hora, antes do INSERT do quiz novo. Um {@code UPDATE} por entidade só sairia no
+     * flush, depois do INSERT, e {@code uq_quiz_clube_ativo} recusaria dois ativos juntos.
      */
     @Modifying(flushAutomatically = true)
-    @Query("""
-            UPDATE Quiz quiz
-            SET quiz.ativo = false
-            WHERE quiz.clubeId = :clubeId
-              AND quiz.ativo = true
-            """)
+    @Query("UPDATE Quiz quiz SET quiz.ativo = false WHERE quiz.clubeId = :clubeId AND quiz.ativo = true")
     int desativarAtivoDoClube(@Param("clubeId") UUID clubeId);
 }

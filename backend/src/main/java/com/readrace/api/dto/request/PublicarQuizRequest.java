@@ -2,6 +2,11 @@ package com.readrace.api.dto.request;
 
 import java.util.List;
 
+/**
+ * Sem Bean Validation de propósito: toda falha do corpo responde {@code QUIZ_INVALIDO}, o código do
+ * contrato, e não o {@code VALIDATION_ERROR} genérico. A validação fica em {@code
+ * PublicarQuizService}.
+ */
 public record PublicarQuizRequest(
         String titulo, Integer recompensaXp, List<PerguntaRequest> perguntas) {
 

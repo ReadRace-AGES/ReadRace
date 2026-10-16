@@ -21,8 +21,7 @@ import lombok.NoArgsConstructor;
 @Table(name = "pergunta_quiz")
 public class PerguntaQuiz {
 
-    @Id
-    private UUID id;
+    @Id private UUID id;
 
     @Column(name = "quiz_id", nullable = false)
     private UUID quizId;

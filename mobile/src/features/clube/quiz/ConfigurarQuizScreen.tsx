@@ -181,6 +181,7 @@ export function ConfigurarQuizScreen({ clubeId }: ConfigurarQuizScreenProps) {
             maximumValue={RECOMPENSA_MAXIMA}
             value={recompensaXp}
             minimumLabel="10 XP"
+            middleLabel="250 XP"
             maximumLabel="500 XP"
             accessibilityLabel={COPY.recompensa}
             onValueChange={setRecompensaXp}
