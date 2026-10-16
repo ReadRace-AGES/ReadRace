@@ -159,10 +159,7 @@ class PublicarQuizControllerIT {
         MvcTestResult resposta = publicar(clubeId, corpo("Quiz", 100, PERGUNTA_VALIDA));
 
         assertThat(resposta).hasStatus(HttpStatus.FORBIDDEN);
-        assertThat(resposta)
-                .bodyJson()
-                .extractingPath("$.code")
-                .isEqualTo("SO_LIDER_CRIA_QUIZ");
+        assertThat(resposta).bodyJson().extractingPath("$.code").isEqualTo("SO_LIDER_CRIA_QUIZ");
         // Nada é gravado e o quiz ativo do clube 3 continua o mesmo.
         assertThat(totalDeQuizzes(clubeId)).isEqualTo(quizzesAntes);
     }
@@ -170,14 +167,10 @@ class PublicarQuizControllerIT {
     @Test
     @DisplayName("clube inexistente responde 404 CLUBE_NAO_ENCONTRADO")
     void deve_responder_404_sem_clube() {
-        MvcTestResult resposta =
-                publicar(CLUBE_INEXISTENTE, corpo("Quiz", 100, PERGUNTA_VALIDA));
+        MvcTestResult resposta = publicar(CLUBE_INEXISTENTE, corpo("Quiz", 100, PERGUNTA_VALIDA));
 
         assertThat(resposta).hasStatus(HttpStatus.NOT_FOUND);
-        assertThat(resposta)
-                .bodyJson()
-                .extractingPath("$.code")
-                .isEqualTo("CLUBE_NAO_ENCONTRADO");
+        assertThat(resposta).bodyJson().extractingPath("$.code").isEqualTo("CLUBE_NAO_ENCONTRADO");
     }
 
     @ParameterizedTest(name = "corpo inválido responde 400 QUIZ_INVALIDO e não grava nada: {0}")

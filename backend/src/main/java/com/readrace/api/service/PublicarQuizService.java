@@ -61,8 +61,8 @@ public class PublicarQuizService {
     }
 
     /**
-     * A ordem das falhas é a do contrato: clube inexistente (404), quem não é administrador (403) e,
-     * só então, o corpo (400). Nada é gravado se qualquer uma falhar.
+     * A ordem das falhas é a do contrato: clube inexistente (404), quem não é administrador (403)
+     * e, só então, o corpo (400). Nada é gravado se qualquer uma falhar.
      */
     @Transactional
     public QuizPublicadoResponse publicar(UUID clubeId, PublicarQuizRequest request) {

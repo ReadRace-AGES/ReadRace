@@ -20,6 +20,7 @@ public interface QuizRepository extends JpaRepository<Quiz, UUID> {
      * flush, depois do INSERT, e {@code uq_quiz_clube_ativo} recusaria dois ativos juntos.
      */
     @Modifying(flushAutomatically = true)
-    @Query("UPDATE Quiz quiz SET quiz.ativo = false WHERE quiz.clubeId = :clubeId AND quiz.ativo = true")
+    @Query(
+            "UPDATE Quiz quiz SET quiz.ativo = false WHERE quiz.clubeId = :clubeId AND quiz.ativo = true")
     int desativarAtivoDoClube(@Param("clubeId") UUID clubeId);
 }

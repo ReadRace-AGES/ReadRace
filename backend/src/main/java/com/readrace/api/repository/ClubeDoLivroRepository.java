@@ -17,7 +17,8 @@ public interface ClubeDoLivroRepository extends JpaRepository<ClubeDoLivro, UUID
     Optional<ClubeDoLivro> findByIdAndExcluidoEmIsNull(UUID id);
 
     @Lock(LockModeType.PESSIMISTIC_WRITE)
-    @Query("""
+    @Query(
+            """
             SELECT clube
             FROM ClubeDoLivro clube
             WHERE clube.id = :id
