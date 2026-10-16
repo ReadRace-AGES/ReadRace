@@ -3,6 +3,18 @@ import test from 'node:test';
 
 import {
   chamarCognito,
+  emailValido,
+  ErroCadastro,
+  erroDeCadastro,
+  MENSAGENS_ERRO_CADASTRO,
+  nomeValido,
+  REGRA_SENHA,
+  requisicaoCadastro,
+  requisicaoConfirmacao,
+  requisicaoReenvio,
+  senhaValida,
+  soDigitos,
+  traduzirErroCadastro,
   endpointCognito,
   ErroLogin,
   MENSAGENS_ERRO_LOGIN,
@@ -189,4 +201,170 @@ test('renovacaoEncerraSessao mantém a sessão sem rede ou com limite de chamada
 
 test('renovacaoEncerraSessao encerra com erro que não veio do Cognito', () => {
   assert.equal(renovacaoEncerraSessao(new Error('Sessão sem refresh token.')), true);
+});
+
+test('requisicaoCadastro usa SignUp com nome e e-mail aparados', () => {
+  const req = requisicaoCadastro('cli', '  Maria Lopes ', ' maria@exemplo.com ', 'Senha#123');
+  assert.equal(req.headers['X-Amz-Target'], 'AWSCognitoIdentityProviderService.SignUp');
+  assert.deepEqual(JSON.parse(req.body), {
+    ClientId: 'cli',
+    Username: 'maria@exemplo.com',
+    Password: 'Senha#123',
+    UserAttributes: [
+      { Name: 'name', Value: 'Maria Lopes' },
+      { Name: 'email', Value: 'maria@exemplo.com' },
+    ],
+  });
+});
+
+test('requisicaoConfirmacao usa ConfirmSignUp', () => {
+  const req = requisicaoConfirmacao('cli', ' maria@exemplo.com', '482913');
+  assert.equal(req.headers['X-Amz-Target'], 'AWSCognitoIdentityProviderService.ConfirmSignUp');
+  assert.deepEqual(JSON.parse(req.body), {
+    ClientId: 'cli',
+    Username: 'maria@exemplo.com',
+    ConfirmationCode: '482913',
+  });
+});
+
+test('requisicaoReenvio usa ResendConfirmationCode', () => {
+  const req = requisicaoReenvio('cli', 'maria@exemplo.com ');
+  assert.equal(
+    req.headers['X-Amz-Target'],
+    'AWSCognitoIdentityProviderService.ResendConfirmationCode'
+  );
+  assert.deepEqual(JSON.parse(req.body), { ClientId: 'cli', Username: 'maria@exemplo.com' });
+});
+
+test('nomeValido aceita de 1 a 120 caracteres sem contar as pontas', () => {
+  assert.equal(nomeValido(''), false);
+  assert.equal(nomeValido('   '), false);
+  assert.equal(nomeValido(' A '), true);
+  assert.equal(nomeValido('a'.repeat(120)), true);
+  assert.equal(nomeValido('a'.repeat(121)), false);
+});
+
+test('emailValido exige usuário, arroba e domínio com ponto', () => {
+  assert.equal(emailValido('maria@exemplo.com'), true);
+  assert.equal(emailValido(' maria@exemplo.com '), true);
+  assert.equal(emailValido('maria@exemplo'), false);
+  assert.equal(emailValido('maria.exemplo.com'), false);
+  assert.equal(emailValido('ma ria@exemplo.com'), false);
+});
+
+test('senhaValida segue a política do Cognito', () => {
+  assert.equal(senhaValida('Senha#12'), true);
+  assert.equal(senhaValida('Senh#12'), false, '7 caracteres');
+  assert.equal(senhaValida('senha#123'), false, 'sem maiúscula');
+  assert.equal(senhaValida('SENHA#123'), false, 'sem minúscula');
+  assert.equal(senhaValida('Senha#abc'), false, 'sem número');
+  assert.equal(senhaValida('Senha1234'), false, 'sem símbolo');
+});
+
+test('soDigitos descarta o que não for número', () => {
+  assert.equal(soDigitos('482 913'), '482913');
+  assert.equal(soDigitos('482-913\n'), '482913');
+  assert.equal(soDigitos('abc'), '');
+});
+
+test('traduzirErroCadastro separa limite de e-mails de tentativas demais', () => {
+  assert.equal(traduzirErroCadastro('LimitExceededException', 'cadastro'), 'limiteEmails');
+  assert.equal(traduzirErroCadastro('LimitExceededException', 'reenvio'), 'limiteEmails');
+  assert.equal(traduzirErroCadastro('LimitExceededException', 'confirmacao'), 'muitasTentativas');
+  assert.equal(traduzirErroCadastro('CodeDeliveryFailureException', 'reenvio'), 'limiteEmails');
+  assert.equal(traduzirErroCadastro('TooManyRequestsException', 'cadastro'), 'limiteEmails');
+});
+
+test('traduzirErroCadastro cobre os casos da issue', () => {
+  assert.equal(traduzirErroCadastro('UsernameExistsException', 'cadastro'), 'emailJaExiste');
+  assert.equal(traduzirErroCadastro('InvalidPasswordException', 'cadastro'), 'senhaFraca');
+  assert.equal(traduzirErroCadastro('CodeMismatchException', 'confirmacao'), 'codigoIncorreto');
+  assert.equal(traduzirErroCadastro('ExpiredCodeException', 'confirmacao'), 'codigoExpirado');
+  assert.equal(
+    traduzirErroCadastro(
+      'NotAuthorizedException',
+      'confirmacao',
+      'User cannot be confirmed. Current status is CONFIRMED'
+    ),
+    'jaConfirmada'
+  );
+  assert.equal(traduzirErroCadastro('NotAuthorizedException', 'cadastro'), 'falha');
+  assert.equal(
+    traduzirErroCadastro('com.amazonaws#UsernameExistsException', 'cadastro'),
+    'emailJaExiste'
+  );
+  assert.equal(traduzirErroCadastro(undefined, 'cadastro'), 'falha');
+});
+
+test('traduzirErroCadastro só trata como já confirmada quando o Cognito diz isso', () => {
+  assert.equal(
+    traduzirErroCadastro('NotAuthorizedException', 'confirmacao', 'User is disabled.'),
+    'falha'
+  );
+  assert.equal(traduzirErroCadastro('NotAuthorizedException', 'confirmacao'), 'falha');
+  assert.equal(
+    traduzirErroCadastro('InvalidParameterException', 'reenvio', 'User is already confirmed.'),
+    'jaConfirmada'
+  );
+  assert.equal(
+    traduzirErroCadastro('InvalidParameterException', 'reenvio', 'Username should be an email.'),
+    'falha'
+  );
+});
+
+test('traduzirErroCadastro trata código errado vezes demais como tentativas demais', () => {
+  assert.equal(
+    traduzirErroCadastro('TooManyFailedAttemptsException', 'confirmacao'),
+    'muitasTentativas'
+  );
+});
+
+test('ErroCadastro carrega a mensagem da issue', () => {
+  assert.equal(
+    new ErroCadastro('emailJaExiste').message,
+    'Já existe uma conta com este e-mail. Entre ou recupere a senha.'
+  );
+  assert.equal(new ErroCadastro('senhaFraca').message, REGRA_SENHA);
+  assert.equal(
+    MENSAGENS_ERRO_CADASTRO.falha,
+    'Não foi possível criar a conta. Verifique sua conexão e tente de novo.'
+  );
+});
+
+test('chamarCognito com erroDeCadastro traduz pela ação', async () => {
+  await assert.rejects(
+    chamarCognito(
+      respostaFalsa(400, { __type: 'CodeMismatchException', message: 'Invalid code' }),
+      'https://x/',
+      requisicaoConfirmacao('cli', 'a@b.com', '1'),
+      erroDeCadastro('confirmacao')
+    ),
+    (erro) => erro instanceof ErroCadastro && erro.tipo === 'codigoIncorreto'
+  );
+});
+
+test('chamarCognito com erroDeCadastro sem rede vira falha do cadastro', async () => {
+  const semRede = async () => {
+    throw new TypeError('Network request failed');
+  };
+  await assert.rejects(
+    chamarCognito(semRede, 'https://x/', requisicaoReenvio('c', 'a'), erroDeCadastro('reenvio')),
+    (erro) => erro instanceof ErroCadastro && erro.tipo === 'falha'
+  );
+});
+
+test('ErroCadastro não carrega a senha', async () => {
+  const senha = 'SenhaSuperSecreta#123';
+  try {
+    await chamarCognito(
+      respostaFalsa(400, { __type: 'InvalidPasswordException', message: `bad ${senha}` }),
+      'https://x/',
+      requisicaoCadastro('cli', 'Maria', 'a@b.com', senha),
+      erroDeCadastro('cadastro')
+    );
+    assert.fail('deveria ter lançado');
+  } catch (erro) {
+    assert.ok(!String(erro.message).includes(senha));
+    assert.ok(!JSON.stringify(erro).includes(senha));
+  }
 });

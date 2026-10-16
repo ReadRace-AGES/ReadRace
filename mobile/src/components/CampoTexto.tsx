@@ -1,21 +1,57 @@
-import { StyleSheet, Text, TextInput, View, type TextInputProps } from 'react-native';
+import {
+  StyleSheet,
+  Text,
+  TextInput,
+  View,
+  type TextInputProps,
+} from 'react-native';
 
 import { colors, radius, spacing, textStyles } from '@/theme';
 
-type CampoTextoProps = TextInputProps & { rotulo: string };
+type CampoTextoProps = TextInputProps & {
+  rotulo: string;
+  /** Texto cinza embaixo do campo (ex.: regra da senha). */
+  ajuda?: string;
+  /** Borda e texto vermelhos embaixo do campo. Tem prioridade sobre `ajuda`. */
+  erro?: string | null;
+};
 
 /** Rótulo e campo, como os formulários de login e cadastro do Figma. */
-export function CampoTexto({ rotulo, style, editable = true, ...props }: CampoTextoProps) {
+export function CampoTexto({
+  rotulo,
+  ajuda,
+  erro,
+  style,
+  editable = true,
+  ...props
+}: CampoTextoProps) {
+  const mensagem = erro ?? ajuda;
   return (
     <View style={styles.bloco}>
       <Text style={[textStyles.body, styles.rotulo]}>{rotulo}</Text>
       <TextInput
         accessibilityLabel={rotulo}
+        accessibilityHint={mensagem ?? undefined}
         placeholderTextColor={colors.textMuted}
         editable={editable}
-        style={[styles.campo, !editable && styles.bloqueado, style]}
+        style={[
+          styles.campo,
+          erro && styles.comErro,
+          !editable && styles.bloqueado,
+          style,
+        ]}
         {...props}
       />
+      {mensagem ? (
+        <Text
+          style={[
+            textStyles.caption,
+            erro ? styles.textoErro : styles.textoAjuda,
+          ]}
+        >
+          {mensagem}
+        </Text>
+      ) : null}
     </View>
   );
 }
@@ -35,7 +71,10 @@ const styles = StyleSheet.create({
     backgroundColor: colors.surface,
     color: colors.text,
   },
+  comErro: { borderColor: colors.danger },
   bloqueado: { opacity: 0.6 },
+  textoAjuda: { color: colors.textSecondary },
+  textoErro: { color: colors.danger },
 });
 
 export default CampoTexto;
