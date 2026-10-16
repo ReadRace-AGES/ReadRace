@@ -3,6 +3,7 @@ package com.readrace.api.exception;
 import org.springframework.http.HttpStatus;
 
 public enum CodigoErro {
+    NAO_PODE_SEGUIR_A_SI(HttpStatus.BAD_REQUEST, "Você não pode seguir a si mesmo."),
     USUARIO_NAO_ENCONTRADO(HttpStatus.NOT_FOUND, "Usuário não encontrado."),
     RESOURCE_NOT_FOUND(HttpStatus.NOT_FOUND, "Recurso não encontrado."),
     ROUTE_NOT_FOUND(HttpStatus.NOT_FOUND, "Rota não encontrada."),

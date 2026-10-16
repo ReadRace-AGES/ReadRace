@@ -15,6 +15,7 @@ import com.readrace.api.exception.UsuarioNaoEncontradoException;
 import com.readrace.api.model.CurvaDeNivel;
 import com.readrace.api.model.SequenciaDeLeitura;
 import com.readrace.api.repository.PerfilRepository;
+import com.readrace.api.repository.SeguirRepository;
 import com.readrace.api.repository.UsuarioRepository;
 
 @Service
@@ -25,12 +26,17 @@ public class PerfilService {
     private final UsuarioRepository usuarios;
     private final PerfilRepository perfis;
     private final UsuarioAtual usuarioAtual;
+    private final SeguirRepository seguir;
 
     public PerfilService(
-            UsuarioRepository usuarios, PerfilRepository perfis, UsuarioAtual usuarioAtual) {
+            UsuarioRepository usuarios,
+            PerfilRepository perfis,
+            UsuarioAtual usuarioAtual,
+            SeguirRepository seguir) {
         this.usuarios = usuarios;
         this.perfis = perfis;
         this.usuarioAtual = usuarioAtual;
+        this.seguir = seguir;
     }
 
     public PerfilResponse buscarDoUsuarioAtual() {
@@ -81,6 +87,7 @@ public class PerfilService {
         var conquistas = perfis.conquistas(id);
         int nivel = usuario.getNivel();
         int xpTotal = usuario.getXpTotal();
+        UUID eu = usuarioAtual.idDoUsuarioAtual().valor();
         return new PerfilResponse(
                 usuario.getId(),
                 usuario.getNome(),
@@ -94,6 +101,8 @@ public class PerfilService {
                 CurvaDeNivel.xpDoNivel(nivel),
                 resumo.seguidores(),
                 resumo.seguindo(),
+                !eu.equals(id) && seguir.existsBySeguidorIdAndSeguidoId(eu, id),
+                !eu.equals(id) && seguir.existsBySeguidorIdAndSeguidoId(id, eu),
                 new PerfilResponse.Estatisticas(
                         resumo.livrosLidos(),
                         resumo.paginasLidas(),
