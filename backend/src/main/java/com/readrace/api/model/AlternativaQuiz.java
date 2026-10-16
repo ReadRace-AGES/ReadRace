@@ -42,6 +42,14 @@ public class AlternativaQuiz {
     @Column(nullable = false)
     private Boolean correta;
 
+    public AlternativaQuiz(PerguntaQuiz pergunta, String letra, String texto, boolean correta) {
+        this.id = UUID.randomUUID();
+        this.pergunta = pergunta;
+        this.letra = letra;
+        this.texto = texto;
+        this.correta = correta;
+    }
+
     @Override
     public boolean equals(Object obj) {
         if (this == obj) {
