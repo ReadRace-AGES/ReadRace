@@ -1,3 +1,4 @@
+
 import { useRef, useState } from 'react';
 import {
   ActivityIndicator,
@@ -32,6 +33,11 @@ const COPY = {
   vazio: 'Nenhuma mensagem ainda. Comece a conversa!',
   soMembro: 'Só membros do clube participam do chat.',
 } as const;
+
+type ChatClubeScreenProps = {
+  clubeId: string;
+  nomeClube?: string;
+};
 
 function rotaDoClube(clubeId: string): Href {
   return `/clube/${clubeId}` as Href;
@@ -125,9 +131,21 @@ function BalaoMensagem({ mensagem }: { mensagem: MensagemClube }) {
             mensagem.minha ? styles.balaoMeu : styles.balaoOutro,
           ]}
         >
-          <Text style={styles.textoMensagem}>{mensagem.texto}</Text>
+          <Text
+            style={[
+              styles.textoMensagem,
+              mensagem.minha && styles.textoMensagemMinha,
+            ]}
+          >
+            {mensagem.texto}
+          </Text>
 
-          <Text style={styles.horario}>
+          <Text
+            style={[
+              styles.horario,
+              mensagem.minha && styles.horarioMinha,
+            ]}
+          >
             {formatarHorario(mensagem.enviadaEm)}
           </Text>
         </View>
@@ -136,7 +154,10 @@ function BalaoMensagem({ mensagem }: { mensagem: MensagemClube }) {
   );
 }
 
-export function ChatClubeScreen({ clubeId }: { clubeId: string }) {
+export function ChatClubeScreen({
+  clubeId,
+  nomeClube,
+}: ChatClubeScreenProps) {
   const router = useRouter();
   const scrollRef = useRef<ScrollView>(null);
 
@@ -147,6 +168,8 @@ export function ChatClubeScreen({ clubeId }: { clubeId: string }) {
 
   const textoValido =
     texto.trim().length > 0 && texto.trim().length <= 1000;
+
+  const titulo = nomeClube?.trim() || COPY.titulo;
 
   function voltar() {
     if (router.canGoBack()) {
@@ -173,28 +196,44 @@ export function ChatClubeScreen({ clubeId }: { clubeId: string }) {
     }
   }
 
+  const cabecalho = (
+    <AppHeader
+      variant="surface"
+      titleAlign="center"
+      showBack
+      onBackPress={voltar}
+      title={titulo}
+      titleOverflow="wrap"
+      titleNumberOfLines={2}
+    />
+  );
+
   if (chat.situacao === 'erro') {
     return (
       <View style={styles.tela}>
-        <EmptyState
-          icon={IconeChat}
-          message={chat.mensagem}
-          action={
-            <View style={styles.acoesDoErro}>
-              <PrimaryButton
-                label={COPY.tentarDeNovo}
-                onPress={recarregar}
-                variant="outline"
-              />
+        {cabecalho}
 
-              <PrimaryButton
-                label={COPY.voltar}
-                onPress={voltar}
-                variant="outline"
-              />
-            </View>
-          }
-        />
+        <View style={styles.estadoCentralizado}>
+          <EmptyState
+            icon={IconeChat}
+            message={chat.mensagem}
+            action={
+              <View style={styles.acoesDoErro}>
+                <PrimaryButton
+                  label={COPY.tentarDeNovo}
+                  onPress={recarregar}
+                  variant="outline"
+                />
+
+                <PrimaryButton
+                  label={COPY.voltar}
+                  onPress={voltar}
+                  variant="outline"
+                />
+              </View>
+            }
+          />
+        </View>
       </View>
     );
   }
@@ -202,13 +241,7 @@ export function ChatClubeScreen({ clubeId }: { clubeId: string }) {
   if (chat.situacao === 'nao_membro') {
     return (
       <View style={styles.tela}>
-        <AppHeader
-          variant="surface"
-          titleAlign="center"
-          showBack
-          onBackPress={voltar}
-          title={COPY.titulo}
-        />
+        {cabecalho}
 
         <View style={styles.estadoCentralizado}>
           <EmptyState
@@ -234,13 +267,7 @@ export function ChatClubeScreen({ clubeId }: { clubeId: string }) {
       style={styles.tela}
       behavior={Platform.OS === 'ios' ? 'padding' : undefined}
     >
-      <AppHeader
-        variant="surface"
-        titleAlign="center"
-        showBack
-        onBackPress={voltar}
-        title={COPY.titulo}
-      />
+      {cabecalho}
 
       {chat.situacao === 'carregando' && mensagens.length === 0 ? (
         <View
@@ -305,7 +332,12 @@ export function ChatClubeScreen({ clubeId }: { clubeId: string }) {
             {enviando ? (
               <ActivityIndicator color={colors.surface} size="small" />
             ) : (
-              <Svg width={22} height={22} viewBox="0 0 24 24" fill="none">
+              <Svg
+                width={22}
+                height={22}
+                viewBox="0 0 24 24"
+                fill="none"
+              >
                 <Path
                   d="M22 2 11 13"
                   stroke={colors.surface}
@@ -428,12 +460,16 @@ const styles = StyleSheet.create({
   },
 
   balaoOutro: {
-  backgroundColor: colors.surfaceMuted,
-},
+    backgroundColor: colors.surfaceMuted,
+  },
 
   textoMensagem: {
     ...textStyles.bodySmall,
     color: colors.text,
+  },
+
+  textoMensagemMinha: {
+    color: colors.surface,
   },
 
   horario: {
@@ -441,6 +477,10 @@ const styles = StyleSheet.create({
     color: colors.textSecondary,
     marginTop: spacing[1],
     alignSelf: 'flex-end',
+  },
+
+  horarioMinha: {
+    color: colors.surface,
   },
 
   areaEnvio: {

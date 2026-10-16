@@ -1,3 +1,4 @@
+
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { useFocusEffect } from 'expo-router';
 
@@ -151,11 +152,11 @@ export function useChatClube(clubeId: string) {
 
     const mensagensAtuais = mensagensRef.current;
 
-    if (mensagensAtuais.length === 0) {
-      return;
-    }
-
-    const ultimaMensagem = mensagensAtuais[mensagensAtuais.length - 1];
+    // Permite polling mesmo quando o chat ainda está vazio.
+    const ultimaMensagem =
+      mensagensAtuais.length > 0
+        ? mensagensAtuais[mensagensAtuais.length - 1]
+        : undefined;
 
     pollingEmAndamentoRef.current = true;
 
@@ -165,7 +166,7 @@ export function useChatClube(clubeId: string) {
     try {
       const resposta = await buscarMensagensDoClube(
         clubeId,
-        ultimaMensagem.enviadaEm,
+        ultimaMensagem?.enviadaEm,
         controller.signal
       );
 

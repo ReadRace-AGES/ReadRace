@@ -44,8 +44,8 @@ function rotaDoQuiz(clubeId: string): Href {
   return `/clube/${clubeId}/quiz` as Href;
 }
 
-function rotaDoChat(clubeId: string): Href {
-  return `/clube/${clubeId}/chat` as Href;
+function rotaDoChat(clubeId: string, nomeClube: string): Href {
+  return `/clube/${clubeId}/chat?nomeClube=${encodeURIComponent(nomeClube)}` as Href;
 }
 
 function IconePlus({ size, color }: PrimaryButtonIconProps) {
@@ -312,7 +312,11 @@ export function PaginaClubeScreen({ clubeId }: { clubeId: string }) {
               label={COPY.chat}
               icon={IconeChat}
               disabled={!dados}
-              onPress={() => router.push(rotaDoChat(clubeId))}
+              onPress={() => {
+                if (dados) {
+                  router.push(rotaDoChat(clubeId, dados.nome));
+                }
+              }}
             />
           </View>
 
