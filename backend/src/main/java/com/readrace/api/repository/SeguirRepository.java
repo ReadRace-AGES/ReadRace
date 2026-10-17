@@ -4,6 +4,7 @@ import java.util.List;
 import java.util.UUID;
 
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
@@ -11,6 +12,32 @@ import com.readrace.api.model.Seguir;
 import com.readrace.api.model.Usuario;
 
 public interface SeguirRepository extends JpaRepository<Seguir, UUID> {
+
+    boolean existsBySeguidorIdAndSeguidoId(UUID seguidorId, UUID seguidoId);
+
+    long countBySeguidoId(UUID seguidoId);
+
+    @Modifying
+    @Query(
+            value =
+                    """
+            INSERT INTO seguir (id, seguidor_id, seguido_id)
+            VALUES (:id, :seguidorId, :seguidoId)
+            ON CONFLICT (seguidor_id, seguido_id) DO NOTHING
+            """,
+            nativeQuery = true)
+    void criarSeAusente(
+            @Param("id") UUID id,
+            @Param("seguidorId") UUID seguidorId,
+            @Param("seguidoId") UUID seguidoId);
+
+    @Modifying
+    @Query(
+            value =
+                    "DELETE FROM seguir WHERE seguidor_id = :seguidorId AND seguido_id = :seguidoId",
+            nativeQuery = true)
+    void removerSeExistente(
+            @Param("seguidorId") UUID seguidorId, @Param("seguidoId") UUID seguidoId);
 
     @Query(
             """
