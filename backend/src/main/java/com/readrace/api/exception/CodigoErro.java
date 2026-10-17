@@ -13,6 +13,7 @@ public enum CodigoErro {
     DESAFIO_NAO_ENCONTRADO(HttpStatus.NOT_FOUND, "Desafio não encontrado."),
     OPONENTE_NAO_ENCONTRADO(HttpStatus.NOT_FOUND, "Oponente não encontrado."),
     LIVRO_NAO_ENCONTRADO(HttpStatus.NOT_FOUND, "Livro não encontrado."),
+    COMUNIDADE_NAO_ENCONTRADA(HttpStatus.NOT_FOUND, "Comunidade não encontrada."),
     POST_NAO_ENCONTRADO(HttpStatus.NOT_FOUND, "Post não encontrado."),
     POST_INVALIDO(
             HttpStatus.BAD_REQUEST, "O post deve conter texto e ter no máximo 2.000 caracteres."),
@@ -28,6 +29,8 @@ public enum CodigoErro {
     PRAZO_INVALIDO(HttpStatus.BAD_REQUEST, "O prazo deve ser de 1 a 365 dias."),
     PERFIL_INVALIDO(HttpStatus.BAD_REQUEST, "Dados do perfil inválidos."),
     USERNAME_EM_USO(HttpStatus.CONFLICT, "Esse nome de usuário já está em uso."),
+    UNICO_ADMINISTRADOR(
+            HttpStatus.CONFLICT, "Você é o único administrador desta comunidade e não pode sair."),
     UNAUTHORIZED(HttpStatus.UNAUTHORIZED, "Sessão inválida ou expirada. Entre de novo."),
     QUIZ_NAO_ENCONTRADO(HttpStatus.NOT_FOUND, "Este clube ainda não tem quiz."),
     SO_MEMBRO_RESPONDE(HttpStatus.FORBIDDEN, "Só membros do clube participam do quiz."),
