@@ -113,7 +113,7 @@ const concluir = (tree) =>
     .findAllByType('PrimaryButton')
     .find((b) => b.props.label === 'Concluir');
 
-test('mostra os 5 na ordem: nível 6 tem 3 abertos e 2 "???" que não selecionam', () => {
+test('mostra os 5 na ordem: nível 6 tem 3 abertos e 2 "???" com o nível que desbloqueia', () => {
   const { tree } = montar({ estado: { situacao: 'sucesso', dados: mascotes } });
   const header = tree.root.findByType('AppHeader');
   assert.equal(header.props.title, 'Mascotes');
@@ -124,8 +124,8 @@ test('mostra os 5 na ordem: nível 6 tem 3 abertos e 2 "???" que não selecionam
       'O Bruxo',
       'O Cinzento',
       'O Sonhador',
-      'Mascote bloqueado',
-      'Mascote bloqueado',
+      'Mascote bloqueado, desbloqueia no nível 7',
+      'Mascote bloqueado, desbloqueia no nível 9',
     ]
   );
   const textos = tree.root.findAllByType('Text').map((t) => t.props.children);
@@ -134,7 +134,9 @@ test('mostra os 5 na ordem: nível 6 tem 3 abertos e 2 "???" que não selecionam
     'O Cinzento',
     'O Sonhador',
     '???',
+    'Desbloqueia no nível 7',
     '???',
+    'Desbloqueia no nível 9',
   ]);
   assert.equal(tree.root.findAllByType('LockIcon').length, 2);
   // Carta "???" não seleciona: o toque fica desabilitado.

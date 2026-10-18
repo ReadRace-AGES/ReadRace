@@ -36,7 +36,11 @@ function CartaMascote({
       <Pressable
         cssInterop={false}
         accessibilityRole="button"
-        accessibilityLabel={bloqueado ? 'Mascote bloqueado' : mascote.nome}
+        accessibilityLabel={
+          bloqueado
+            ? `Mascote bloqueado, desbloqueia no nível ${mascote.nivelMinimo}`
+            : mascote.nome
+        }
         accessibilityState={{ selected: selecionado, disabled: bloqueado }}
         disabled={bloqueado}
         onPress={onSelecionar}
@@ -63,6 +67,11 @@ function CartaMascote({
         <Text numberOfLines={1} style={styles.nome}>
           {bloqueado ? '???' : mascote.nome}
         </Text>
+        {bloqueado && (
+          <Text numberOfLines={1} style={styles.nivel}>
+            {`Desbloqueia no nível ${mascote.nivelMinimo}`}
+          </Text>
+        )}
       </Pressable>
     </View>
   );
@@ -190,6 +199,11 @@ const styles = StyleSheet.create({
   nome: {
     ...textStyles.captionStrong,
     color: colors.text,
+    textAlign: 'center',
+  },
+  nivel: {
+    ...textStyles.caption,
+    color: colors.textSecondary,
     textAlign: 'center',
   },
   rodape: {

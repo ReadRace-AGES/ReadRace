@@ -3,7 +3,11 @@ import { Pressable, StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Avatar } from '@/components/avatar';
 import { GearIcon } from '@/components/icons/GearIcon';
-import { arteDoMascote, PROPORCAO_ARTE } from '@/features/mascotes/imagens';
+import {
+  BrasaoMascote,
+  PROPORCAO_BRASAO,
+} from '@/features/mascotes/BrasaoMascote';
+import { arteDoMascote } from '@/features/mascotes/imagens';
 import { colors, radius, sizes, spacing } from '@/theme';
 
 const cenario = require('../../../assets/images/perfil-cenario.png');
@@ -43,13 +47,15 @@ export function PerfilTopo({
         </View>
       )}
       {mascote !== undefined && (
-        <Image
-          source={arteDoMascote(mascote)}
-          style={styles.mascote}
-          contentFit="contain"
-          contentPosition="bottom"
-          accessible={false}
-        />
+        <View style={styles.mascote}>
+          <BrasaoMascote />
+          <Image
+            source={arteDoMascote(mascote)}
+            style={styles.arteMascote}
+            contentFit="contain"
+            accessible={false}
+          />
+        </View>
       )}
       <Pressable
         accessibilityRole="button"
@@ -80,10 +86,18 @@ const styles = StyleSheet.create({
   },
   mascote: {
     position: 'absolute',
-    right: '4%',
-    bottom: 0,
-    width: '32%',
-    aspectRatio: PROPORCAO_ARTE,
+    right: '19.5%',
+    bottom: '10%',
+    width: '19%',
+    aspectRatio: PROPORCAO_BRASAO,
+  },
+  // Centrado na parte larga do brasão, com folga até a borda.
+  arteMascote: {
+    position: 'absolute',
+    left: '14%',
+    top: '14%',
+    width: '72%',
+    height: '56%',
   },
   engrenagem: {
     position: 'absolute',
