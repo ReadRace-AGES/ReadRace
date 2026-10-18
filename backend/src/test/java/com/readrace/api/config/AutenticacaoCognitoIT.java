@@ -7,6 +7,8 @@ import static org.mockito.BDDMockito.then;
 import static org.mockito.Mockito.times;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.jwt;
 
+import java.util.UUID;
+
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -28,6 +30,7 @@ import com.readrace.api.TestcontainersConfiguration;
 import com.readrace.api.adapter.cognito.CognitoUserInfo;
 import com.readrace.api.adapter.cognito.CognitoUserInfoClient;
 import com.readrace.api.model.Usuario;
+import com.readrace.api.repository.SeguirRepository;
 import com.readrace.api.repository.UsuarioRepository;
 
 /**
@@ -50,6 +53,50 @@ class AutenticacaoCognitoIT {
 
     @MockitoBean private CognitoUserInfoClient userInfoClient;
 
+    @Autowired private SeguirRepository seguir;
+
+    @Test
+    void seguirUsaOUsuarioDoTokenEmVezDoUsuarioDeDemonstracao() {
+        given(userInfoClient.buscar("token-seguir"))
+                .willReturn(
+                        new CognitoUserInfo(
+                                "sub-seguir",
+                                "leitora.seguir@example.com",
+                                "true",
+                                "Leitora",
+                                null));
+        String rota = "/api/usuarios/" + ID_DANIEL + "/seguidores/eu";
+        assertThat(mvc.post().uri(rota)).hasStatus(HttpStatus.UNAUTHORIZED);
+        assertThat(mvc.delete().uri(rota)).hasStatus(HttpStatus.UNAUTHORIZED);
+        assertThat(mvc.post().uri(rota).with(token("sub-seguir", "token-seguir")))
+                .hasStatusOk()
+                .bodyJson()
+                .extractingPath("$.sigo")
+                .isEqualTo(true);
+        var leitora = usuarios.findByCognitoSubAndExcluidoEmIsNull("sub-seguir").orElseThrow();
+        assertThat(
+                        seguir.existsBySeguidorIdAndSeguidoId(
+                                leitora.getId(), UUID.fromString(ID_DANIEL)))
+                .isTrue();
+        assertThat(
+                        mvc.get()
+                                .uri("/api/usuarios/" + ID_DANIEL + "/perfil")
+                                .with(token("sub-seguir", "token-seguir")))
+                .hasStatusOk()
+                .bodyJson()
+                .extractingPath("$.sigo")
+                .isEqualTo(true);
+        assertThat(mvc.delete().uri(rota).with(token("sub-seguir", "token-seguir")))
+                .hasStatusOk()
+                .bodyJson()
+                .extractingPath("$.sigo")
+                .isEqualTo(false);
+        assertThat(
+                        seguir.existsBySeguidorIdAndSeguidoId(
+                                leitora.getId(), UUID.fromString(ID_DANIEL)))
+                .isFalse();
+    }
+
     @Autowired private JdbcTemplate jdbc;
 
     /**
@@ -59,7 +106,8 @@ class AutenticacaoCognitoIT {
      */
     @AfterTransaction
     void limparPrimeirosAcessos() {
-        jdbc.update("DELETE FROM usuario WHERE cognito_sub IN ('sub-novo', 'sub-dominio-real')");
+        jdbc.update(
+                "DELETE FROM usuario WHERE cognito_sub IN ('sub-novo', 'sub-dominio-real', 'sub-seguir')");
         jdbc.update("UPDATE usuario SET cognito_sub = NULL WHERE cognito_sub = 'sub-daniel'");
     }
 

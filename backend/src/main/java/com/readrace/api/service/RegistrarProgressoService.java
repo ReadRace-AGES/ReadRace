@@ -13,12 +13,14 @@ import com.readrace.api.exception.UsuarioNaoEncontradoException;
 import com.readrace.api.model.CurvaDeNivel;
 import com.readrace.api.model.ItemBiblioteca;
 import com.readrace.api.model.Livro;
+import com.readrace.api.model.MembroClube;
 import com.readrace.api.model.RegistroLeitura;
 import com.readrace.api.model.SequenciaDeLeitura;
 import com.readrace.api.model.Usuario;
 import com.readrace.api.model.UsuarioId;
 import com.readrace.api.repository.ItemBibliotecaRepository;
 import com.readrace.api.repository.LivroRepository;
+import com.readrace.api.repository.MembroClubeRepository;
 import com.readrace.api.repository.RegistroLeituraRepository;
 import com.readrace.api.repository.UsuarioRepository;
 
@@ -26,11 +28,13 @@ import com.readrace.api.repository.UsuarioRepository;
 public class RegistrarProgressoService {
 
     private static final int XP_CONCLUSAO = 150;
+    private static final int PONTOS_POR_PAGINA = 1;
 
     private final LivroRepository livroRepository;
     private final ItemBibliotecaRepository itemBibliotecaRepository;
     private final RegistroLeituraRepository registroLeituraRepository;
     private final UsuarioRepository usuarioRepository;
+    private final MembroClubeRepository membroClubeRepository;
     private final UsuarioAtual usuarioAtual;
     private final DesafioService desafioService;
     private final ConquistaService conquistaService;
@@ -40,6 +44,7 @@ public class RegistrarProgressoService {
             ItemBibliotecaRepository itemBibliotecaRepository,
             RegistroLeituraRepository registroLeituraRepository,
             UsuarioRepository usuarioRepository,
+            MembroClubeRepository membroClubeRepository,
             UsuarioAtual usuarioAtual,
             DesafioService desafioService,
             ConquistaService conquistaService) {
@@ -47,6 +52,7 @@ public class RegistrarProgressoService {
         this.itemBibliotecaRepository = itemBibliotecaRepository;
         this.registroLeituraRepository = registroLeituraRepository;
         this.usuarioRepository = usuarioRepository;
+        this.membroClubeRepository = membroClubeRepository;
         this.usuarioAtual = usuarioAtual;
         this.desafioService = desafioService;
         this.conquistaService = conquistaService;
@@ -76,6 +82,10 @@ public class RegistrarProgressoService {
 
         item.registrarProgresso(pagina);
         registroLeituraRepository.save(new RegistroLeitura(item, pagina));
+
+        // Antes do lock do usuário, na mesma ordem do quiz (membro do clube, depois usuário): se
+        // cada fluxo pegasse os dois locks em uma ordem, um ficaria esperando o outro (deadlock).
+        somarPontosNosClubes(usuarioAtualId.valor(), livro.getId(), paginasNovas);
 
         // Um único lock pessimista no usuário cobre a sequência de leitura e a soma de XP.
         Usuario usuario =
@@ -117,6 +127,26 @@ public class RegistrarProgressoService {
                 xpNoNivel,
                 xpDoNivel,
                 subiuDeNivel);
+    }
+
+    /**
+     * A leitura é a base da corrida do clube (#163): cada página nova vale {@value
+     * #PONTOS_POR_PAGINA} ponto em todos os clubes do usuário cujo livro atual é o livro
+     * registrado, seja ele administrador ou membro.
+     *
+     * <p>{@code Pontos} e {@code XP} são moedas separadas: os dois saem das mesmas páginas novas,
+     * cada um na sua conta, e o bônus de conclusão continua sendo só {@code XP}.
+     */
+    private void somarPontosNosClubes(UUID usuarioId, UUID livroId, int paginasNovas) {
+        // Voltar ou reler não paga, e sem página nova nem vale a pena pegar os locks.
+        if (paginasNovas == 0) {
+            return;
+        }
+
+        int pontosGanhos = paginasNovas * PONTOS_POR_PAGINA;
+        for (MembroClube membro : membroClubeRepository.buscarDoLivroComLock(usuarioId, livroId)) {
+            membro.somarPontos(pontosGanhos);
+        }
     }
 
     private int lerPagina(RegistrarProgressoRequest request) {
