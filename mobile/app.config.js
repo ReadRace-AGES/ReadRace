@@ -19,8 +19,9 @@ module.exports = () => {
       android: {
         package: 'com.readrace.app',
         versionCode: 1,
-        // Só habilita HTTP puro quando a API é http:// (backend local de teste).
-        usesCleartextTraffic: usaHttpLocal,
+        // O cleartext (HTTP) é habilitado pelo plugin expo-build-properties abaixo, que
+        // funciona no build de release — a propriedade `usesCleartextTraffic` solta aqui
+        // é ignorada no release pelo network security config padrão do Android.
         adaptiveIcon: {
           // TEMPORÁRIO (#159): o foreground é o ícone inteiro do Figma (arte + fundo embutido)
           // e o background é a cor sólida desse fundo (#A1312F, não o #732634 da marca). Solução
@@ -45,7 +46,17 @@ module.exports = () => {
           {
             backgroundColor: colors.primary,
             image: './assets/images/splash-icon.png',
-            imageWidth: 76,
+            // 150 deixa a capivara visível sem esticar demais (o PNG tem 279px de largura).
+            imageWidth: 150,
+          },
+        ],
+        // Cleartext (HTTP) só quando a API é http:// (backend local). Em produção (https://)
+        // fica false, mantendo o padrão seguro. Funciona no build de release, ao contrário
+        // de android.usesCleartextTraffic solto.
+        [
+          'expo-build-properties',
+          {
+            android: { usesCleartextTraffic: usaHttpLocal },
           },
         ],
       ],
