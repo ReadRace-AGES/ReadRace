@@ -19,6 +19,8 @@ public record PerfilResponse(
         int xpDoNivel,
         long seguidores,
         long seguindo,
+        boolean sigo,
+        boolean meSegue,
         Estatisticas estatisticas,
         List<Conquista> conquistas,
         List<Favorito> livrosFavoritos,
