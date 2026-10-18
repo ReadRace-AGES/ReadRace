@@ -60,7 +60,8 @@ public class ComunidadeService {
                                 comunidadeId);
         List<UUID> postIds = posts.stream().map(Post::getId).toList();
         Map<UUID, Usuario> autores =
-                usuarioRepository.findAllById(posts.stream().map(Post::getAutorId).distinct().toList())
+                usuarioRepository
+                        .findAllById(posts.stream().map(Post::getAutorId).distinct().toList())
                         .stream()
                         .collect(Collectors.toMap(Usuario::getId, Function.identity()));
         Map<UUID, Long> curtidas =
@@ -139,7 +140,9 @@ public class ComunidadeService {
     private MembroComunidadeResponse estado(UUID comunidadeId, UUID usuarioId) {
         return new MembroComunidadeResponse(
                 membroRepository.contarPorComunidade(comunidadeId),
-                membroRepository.findByComunidade_IdAndUsuarioId(comunidadeId, usuarioId).isPresent());
+                membroRepository
+                        .findByComunidade_IdAndUsuarioId(comunidadeId, usuarioId)
+                        .isPresent());
     }
 
     private Comunidade comunidade(UUID comunidadeId) {

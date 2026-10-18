@@ -31,8 +31,7 @@ public enum CodigoErro {
     PERFIL_INVALIDO(HttpStatus.BAD_REQUEST, "Dados do perfil inválidos."),
     USERNAME_EM_USO(HttpStatus.CONFLICT, "Esse nome de usuário já está em uso."),
     UNICO_ADMINISTRADOR(
-            HttpStatus.CONFLICT,
-            "Você é o único administrador desta comunidade e não pode sair."),
+            HttpStatus.CONFLICT, "Você é o único administrador desta comunidade e não pode sair."),
     UNAUTHORIZED(HttpStatus.UNAUTHORIZED, "Sessão inválida ou expirada. Entre de novo."),
     QUIZ_NAO_ENCONTRADO(HttpStatus.NOT_FOUND, "Este clube ainda não tem quiz."),
     SO_MEMBRO_RESPONDE(HttpStatus.FORBIDDEN, "Só membros do clube participam do quiz."),
