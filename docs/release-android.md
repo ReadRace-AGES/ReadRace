@@ -57,11 +57,35 @@ Para o release final (login ligado), definir as variáveis do Cognito no perfil 
 ### Perfis de build disponíveis (`eas.json`)
 | Perfil | API | Login | Uso |
 |---|---|---|---|
-| `preview-local` | `http://192.168.0.104:8080` (PC do dev) | desligado | testar com backend local (dev) |
+| `preview-local` | backend do PC do dev (ver abaixo) | desligado | testar com backend local (dev) |
 | `preview` | `https://3-19-247-112.sslip.io` (produção) | desligado | testar instalação contra produção |
 | `production` | produção | a ligar (Cognito) | release final |
 
-Comando: `eas build -p android --profile <perfil>`. O IP do `preview-local` muda se a rede Wi-Fi mudar.
+Comando: `eas build -p android --profile <perfil>`.
+
+### Build local (`preview-local`) — o IP é de CADA dev
+O perfil `preview-local` aponta o app para o backend rodando na máquina do próprio dev, então a URL
+depende do **IP da máquina na rede Wi-Fi** e **muda de dev para dev e a cada troca de rede**. A URL
+NÃO fica fixa no `eas.json`: ela vem da variável `EXPO_PUBLIC_API_URL` do environment `development`
+no EAS (nuvem). Para gerar um `preview-local` seu:
+
+1. Descubra o IP da sua máquina na Wi-Fi (Windows: `ipconfig` → "Endereço IPv4"; ex.: `192.168.0.104`).
+2. Defina a variável no EAS (sobrescreve a existente):
+   `eas env:create --name EXPO_PUBLIC_API_URL --value "http://SEU_IP:8080" --environment development --visibility plaintext --force`
+   Confira com `eas env:list --environment development`.
+3. Gere o APK: `eas build -p android --profile preview-local`.
+
+Para rodar no **Expo Go** (sem gerar APK), crie um `mobile/.env` com `EXPO_PUBLIC_API_URL=http://SEU_IP:8080`
+(o `.env` é lido só na sua máquina e é ignorado pelo git; não vale para o EAS Build, que usa a
+variável da nuvem).
+
+Pré-requisitos para o celular alcançar o backend local:
+- Celular e PC na **mesma rede Wi-Fi** (redes de faculdade/empresa costumam ter **isolamento de
+  clientes** e NÃO funcionam — use a produção HTTPS nesses casos).
+- Liberar a **porta 8080 no firewall** do Windows (PowerShell admin):
+  `New-NetFirewallRule -DisplayName "ReadRace API 8080 (dev)" -Direction Inbound -Protocol TCP -LocalPort 8080 -Action Allow -Profile Any`
+- O **cleartext HTTP** no APK é habilitado automaticamente pelo plugin `expo-build-properties` só
+  quando a URL é `http://` (produção HTTPS fica sem cleartext). Não precisa configurar nada.
 
 ### 3. Gerar o APK (EAS Build)
 Não há projeto EAS ainda — o primeiro build cria o projeto e grava o `projectId` no `app.config.js`.
