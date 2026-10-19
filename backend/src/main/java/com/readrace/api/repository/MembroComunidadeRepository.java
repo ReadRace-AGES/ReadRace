@@ -36,9 +36,10 @@ public interface MembroComunidadeRepository extends JpaRepository<MembroComunida
     long contarPorComunidade(@Param("comunidadeId") UUID comunidadeId);
 
     @Query(
-            "select count(mc) from MembroComunidade mc"
-                    + " where mc.comunidade.id = :comunidadeId"
-                    + " and mc.cargoComunidade = com.readrace.api.model.Cargo.ADMINISTRADOR")
+            value =
+                    "SELECT count(*) FROM membro_comunidade"
+                            + " WHERE comunidade_id = :comunidadeId AND cargo_comunidade = 'administrador'",
+            nativeQuery = true)
     long contarAdministradores(@Param("comunidadeId") UUID comunidadeId);
 
     @Modifying

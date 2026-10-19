@@ -49,7 +49,8 @@ export function useComunidade(comunidadeId: string) {
     const controller = new AbortController();
     buscarComunidade(comunidadeId, controller.signal)
       .then((dados) => {
-        if (!controller.signal.aborted) setComunidade({ situacao: 'sucesso', dados });
+        if (!controller.signal.aborted)
+          setComunidade({ situacao: 'sucesso', dados });
       })
       .catch((erro: unknown) => {
         if (!controller.signal.aborted) {
@@ -68,27 +69,41 @@ export function useComunidade(comunidadeId: string) {
     const atual = comunidadeRef.current;
     if (atual.situacao !== 'sucesso') return;
     const anterior = atual.dados;
-    setComunidade({
-      situacao: 'sucesso',
-      dados: {
-        ...anterior,
-        sigo: !anterior.sigo,
-        seguidores: anterior.seguidores + (anterior.sigo ? -1 : 1),
-      },
-    });
+    setComunidade((maisRecente) =>
+      maisRecente.situacao === 'sucesso'
+        ? {
+            situacao: 'sucesso',
+            dados: {
+              ...maisRecente.dados,
+              sigo: !anterior.sigo,
+              seguidores: anterior.seguidores + (anterior.sigo ? -1 : 1),
+            },
+          }
+        : maisRecente
+    );
     try {
       const resposta = anterior.sigo
         ? await deixarDeSeguirComunidade(comunidadeId)
         : await seguirComunidade(comunidadeId);
       setComunidade((maisRecente) =>
         maisRecente.situacao === 'sucesso'
-          ? { situacao: 'sucesso', dados: { ...maisRecente.dados, ...resposta } }
+          ? {
+              situacao: 'sucesso',
+              dados: { ...maisRecente.dados, ...resposta },
+            }
           : maisRecente
       );
     } catch (erro) {
       setComunidade((maisRecente) =>
         maisRecente.situacao === 'sucesso'
-          ? { situacao: 'sucesso', dados: anterior }
+          ? {
+              situacao: 'sucesso',
+              dados: {
+                ...maisRecente.dados,
+                sigo: anterior.sigo,
+                seguidores: anterior.seguidores,
+              },
+            }
           : maisRecente
       );
       throw erro;
@@ -100,16 +115,34 @@ export function useComunidade(comunidadeId: string) {
     if (atual.situacao !== 'sucesso') return;
     const anterior = atual.dados.posts.find((post) => post.id === postId);
     if (!anterior) return;
-    setComunidade({
-      situacao: 'sucesso',
-      dados: comPost(atual.dados, postId, (post) => ({
-        ...post,
-        curtidoPorMim: !post.curtidoPorMim,
-        totalCurtidas: post.totalCurtidas + (post.curtidoPorMim ? -1 : 1),
-      })),
-    });
+    setComunidade((maisRecente) =>
+      maisRecente.situacao === 'sucesso'
+        ? {
+            situacao: 'sucesso',
+            dados: comPost(maisRecente.dados, postId, (post) => ({
+              ...post,
+              curtidoPorMim: !post.curtidoPorMim,
+              totalCurtidas: post.totalCurtidas + (post.curtidoPorMim ? -1 : 1),
+            })),
+          }
+        : maisRecente
+    );
     try {
-      await (anterior.curtidoPorMim ? descurtir : curtir)(postId);
+      const resposta = await (anterior.curtidoPorMim ? descurtir : curtir)(
+        postId
+      );
+      setComunidade((maisRecente) =>
+        maisRecente.situacao === 'sucesso'
+          ? {
+              situacao: 'sucesso',
+              dados: comPost(maisRecente.dados, postId, (post) => ({
+                ...post,
+                totalCurtidas: resposta.totalCurtidas,
+                curtidoPorMim: resposta.curtidoPorMim,
+              })),
+            }
+          : maisRecente
+      );
     } catch (erro) {
       setComunidade((maisRecente) =>
         maisRecente.situacao === 'sucesso'

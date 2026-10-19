@@ -116,7 +116,7 @@ public class ComunidadeService {
 
     @Transactional
     public MembroComunidadeResponse seguir(UUID comunidadeId) {
-        Comunidade comunidade = comunidade(comunidadeId);
+        Comunidade comunidade = comunidadeComLock(comunidadeId);
         UUID usuarioId = usuarioAtual.idDoUsuarioAtual().valor();
         membroRepository.inserirSeAusente(UUID.randomUUID(), comunidade.getId(), usuarioId);
         return estado(comunidadeId, usuarioId);
@@ -124,7 +124,9 @@ public class ComunidadeService {
 
     @Transactional
     public MembroComunidadeResponse deixarDeSeguir(UUID comunidadeId) {
-        comunidade(comunidadeId);
+        // Serializa as alterações de participação antes de contar administradores.
+        // Bloquear apenas o membro permite que dois administradores saiam simultaneamente.
+        comunidadeComLock(comunidadeId);
         UUID usuarioId = usuarioAtual.idDoUsuarioAtual().valor();
         MembroComunidade membro =
                 membroRepository.buscarComLock(comunidadeId, usuarioId).orElse(null);
@@ -149,6 +151,12 @@ public class ComunidadeService {
         return comunidadeRepository
                 .findById(comunidadeId)
                 .filter(comunidade -> comunidade.getExcluidoEm() == null)
+                .orElseThrow(ComunidadeNaoEncontradaException::new);
+    }
+
+    private Comunidade comunidadeComLock(UUID comunidadeId) {
+        return comunidadeRepository
+                .buscarComLock(comunidadeId)
                 .orElseThrow(ComunidadeNaoEncontradaException::new);
     }
 }
