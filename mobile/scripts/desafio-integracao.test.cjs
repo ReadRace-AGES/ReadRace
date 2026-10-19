@@ -118,6 +118,7 @@ test('aba navega, recarrega ao foco e ignora respostas antigas', async () => {
     },
 
     './api': api,
+    './DesafiosSistema': { DesafiosSistema: () => null },
   };
 
   const { DesafiosScreen } = load(
