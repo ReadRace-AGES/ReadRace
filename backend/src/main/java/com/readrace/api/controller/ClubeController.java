@@ -4,14 +4,19 @@ import java.util.UUID;
 
 import jakarta.validation.Valid;
 
+import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.readrace.api.dto.request.CriarClubeRequest;
+import com.readrace.api.dto.request.CriarPostClubeRequest;
 import com.readrace.api.dto.request.ResponderPerguntaRequest;
+import com.readrace.api.dto.response.ClubeCriadoResponse;
 import com.readrace.api.dto.response.ClubeResponse;
 import com.readrace.api.dto.response.ForumClubeResponse;
 import com.readrace.api.dto.response.QuizResponse;
@@ -41,6 +46,13 @@ public class ClubeController {
         this.quizService = quizService;
     }
 
+    @PostMapping
+    @ResponseStatus(HttpStatus.CREATED)
+    @Operation(summary = "Cria um clube do livro com seus primeiros membros")
+    public ClubeCriadoResponse criar(@Valid @RequestBody CriarClubeRequest request) {
+        return clubeService.criar(request);
+    }
+
     @GetMapping("/{clubeId}")
     @Operation(
             summary = "Cabeçalho com o livro atual e o ranking de membros por Pontos",
@@ -59,6 +71,14 @@ public class ClubeController {
                             + " não entram.")
     public ForumClubeResponse buscarPosts(@PathVariable UUID clubeId) {
         return forumClubeService.buscar(clubeId);
+    }
+
+    @PostMapping("/{clubeId}/posts")
+    @ResponseStatus(HttpStatus.CREATED)
+    @Operation(summary = "Publica um post raiz no fórum do clube como membro ou administrador")
+    public ForumClubeResponse.Post publicarPost(
+            @PathVariable UUID clubeId, @RequestBody CriarPostClubeRequest request) {
+        return forumClubeService.publicar(clubeId, request.texto());
     }
 
     @GetMapping("/{clubeId}/quiz")

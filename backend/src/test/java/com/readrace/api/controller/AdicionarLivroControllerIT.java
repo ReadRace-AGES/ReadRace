@@ -107,7 +107,10 @@ class AdicionarLivroControllerIT {
     @Test
     @DisplayName("marcar como lido não concede XP: tela de progresso não é tocada")
     void marcar_como_lido_nao_mexe_em_registro_de_leitura() {
+        var usuarioAntes = jdbc.queryForMap("SELECT * FROM usuario WHERE id = ?", USUARIO_ATUAL);
         assertThat(post("br001", "lido")).hasStatus(HttpStatus.CREATED);
+        assertThat(jdbc.queryForMap("SELECT * FROM usuario WHERE id = ?", USUARIO_ATUAL))
+                .isEqualTo(usuarioAntes);
 
         Integer registros =
                 jdbc.queryForObject(

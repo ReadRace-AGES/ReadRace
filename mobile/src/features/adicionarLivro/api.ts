@@ -25,18 +25,23 @@ export type ResultadoCatalogo = {
 
 function isbnDe(info: VolumeInfo): string | null {
   const identificadores = info.industryIdentifiers ?? [];
-  return (
-    identificadores.find((i) => i.type === 'ISBN_13')?.identifier ??
-    identificadores.find((i) => i.type === 'ISBN_10')?.identifier ??
-    null
-  );
+  for (const tipo of ['ISBN_13', 'ISBN_10']) {
+    for (const identificador of identificadores) {
+      if (identificador?.type !== tipo) continue;
+      const isbn = identificador.identifier?.trim();
+      if (isbn) return isbn;
+    }
+  }
+  return null;
 }
 
 /** Sem ISBN ou sem páginas, o livro não cabe na biblioteca (decisão da sprint, #155). */
 function paraResultado(volume: GoogleBookVolume): ResultadoCatalogo | null {
+  if (!volume.volumeInfo) return null;
   const isbn = isbnDe(volume.volumeInfo);
   const paginas = volume.volumeInfo.pageCount;
-  if (!isbn || !paginas) return null;
+  if (!isbn || paginas == null || !Number.isInteger(paginas) || paginas <= 0)
+    return null;
 
   return {
     volumeId: volume.id,

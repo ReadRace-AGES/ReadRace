@@ -32,12 +32,16 @@ export function PerfilConteudo({
   onVerMaisConquistas = onPlaceholder,
   proprio = false,
   onAbrirLivro,
+  onAlternarSeguir,
+  alterandoSeguir = false,
 }: {
   perfil: Perfil;
   onPlaceholder: () => void;
   onVerMaisConquistas?: () => void;
   proprio?: boolean;
   onAbrirLivro?: (livroId: string) => void;
+  onAlternarSeguir?: () => void;
+  alterandoSeguir?: boolean;
 }) {
   const stats = perfil.estatisticas;
   const mostrarFavoritos = proprio || perfil.livrosFavoritos.length > 0;
@@ -113,6 +117,20 @@ export function PerfilConteudo({
           label="Mascotes"
           icon={PawIcon}
           onPress={onPlaceholder}
+        />
+      )}
+      {!proprio && onAlternarSeguir && (
+        <PrimaryButton
+          label={
+            perfil.sigo
+              ? 'Seguindo'
+              : perfil.meSegue
+                ? 'Seguir de volta'
+                : 'Seguir'
+          }
+          variant={perfil.sigo ? 'outline' : 'filled'}
+          loading={alterandoSeguir}
+          onPress={onAlternarSeguir}
         />
       )}
       <Text accessibilityRole="header" style={styles.heading}>
@@ -237,10 +255,17 @@ export function PerfilScreen({
   usuarioId?: string;
   rodape?: ReactNode;
 }) {
-  const { estado, recarregar, atualizar } = usePerfil(usuarioId);
+  const {
+    estado,
+    recarregar,
+    atualizar,
+    alternarSeguir,
+    alterandoSeguir,
+    proprio: perfilProprio,
+  } = usePerfil(usuarioId);
   const router = useRouter();
-  const { showToast } = useToastContext();
-  const proprio = usuarioId === undefined;
+  const { showToast, showErrorToast } = useToastContext();
+  const proprio = usuarioId === undefined || perfilProprio;
   const dados = estado.situacao === 'sucesso' ? estado.dados : undefined;
   // A aba fica montada: sem buscar de novo ao voltar, o XP e o nível de uma leitura registrada em
   // outra aba não apareceriam. O primeiro foco já é coberto pela carga inicial do hook.
@@ -251,8 +276,8 @@ export function PerfilScreen({
         primeiroFoco.current = false;
         return;
       }
-      if (proprio) atualizar();
-    }, [atualizar, proprio])
+      atualizar();
+    }, [atualizar])
   );
   return (
     <ScrollView style={styles.screen} contentContainerStyle={styles.scroll}>
@@ -260,7 +285,7 @@ export function PerfilScreen({
         <PerfilTopo
           nome={dados?.nome}
           avatar={dados?.avatar}
-          onConfiguracoes={showToast}
+          onConfiguracoes={() => router.push('/configuracoes')}
         />
       ) : (
         <AppHeader
@@ -292,6 +317,12 @@ export function PerfilScreen({
         <PerfilConteudo
           perfil={estado.dados}
           proprio={proprio}
+          alterandoSeguir={alterandoSeguir}
+          onAlternarSeguir={() => {
+            void alternarSeguir().catch((erro: Error) =>
+              showErrorToast(erro.message)
+            );
+          }}
           onPlaceholder={showToast}
           onVerMaisConquistas={
             proprio ? () => router.push('/conquistas' as Href) : undefined

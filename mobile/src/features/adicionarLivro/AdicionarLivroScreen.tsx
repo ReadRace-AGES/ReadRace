@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useRouter } from 'expo-router';
 import {
   ActivityIndicator,
+  Pressable,
   ScrollView,
   StyleSheet,
   Text,
@@ -36,12 +37,17 @@ const COPY = {
 export function AdicionarLivroScreen() {
   const router = useRouter();
   const [termo, setTermo] = useState('');
+  const [adicionouLivro, setAdicionouLivro] = useState(false);
   const { busca, recarregar } = useBuscaCatalogo(termo);
   const [livroSelecionado, setLivroSelecionado] =
     useState<ResultadoCatalogo | null>(null);
   const [confirmacao, setConfirmacao] = useState<LivroAdicionado | null>(null);
 
   function voltar() {
+    if (adicionouLivro) {
+      fecharEVoltarParaBiblioteca();
+      return;
+    }
     if (router.canGoBack()) router.back();
     else router.replace('/meus-livros');
   }
@@ -67,6 +73,15 @@ export function AdicionarLivroScreen() {
           showBack
           onBackPress={fecharEVoltarParaBiblioteca}
         />
+        <Pressable
+          accessibilityRole="button"
+          accessibilityLabel={COPY.fechar}
+          onPress={fecharEVoltarParaBiblioteca}
+          hitSlop={spacing[3]}
+          style={styles.fechar}
+        >
+          <Text style={styles.fecharTexto}>✕</Text>
+        </Pressable>
         <View style={styles.confirmacao}>
           <BookCover
             source={confirmacao.capaUrl}
@@ -141,6 +156,7 @@ export function AdicionarLivroScreen() {
           keyboardDismissMode="on-drag"
           keyboardShouldPersistTaps="handled"
         >
+          <Text style={styles.resultadosTitulo}>Resultados</Text>
           {busca.resultados.map((item) => (
             <ListItem
               key={item.volumeId}
@@ -155,11 +171,13 @@ export function AdicionarLivroScreen() {
       )}
 
       <SelecionarListaSheet
+        key={livroSelecionado?.volumeId ?? 'fechado'}
         visible={livroSelecionado !== null}
         livro={livroSelecionado}
         onClose={() => setLivroSelecionado(null)}
         onSuccess={(resultado) => {
           setLivroSelecionado(null);
+          setAdicionouLivro(true);
           setConfirmacao(resultado);
         }}
       />
@@ -168,6 +186,9 @@ export function AdicionarLivroScreen() {
 }
 
 const styles = StyleSheet.create({
+  fechar: { alignSelf: 'flex-end', padding: spacing[4] },
+  fecharTexto: { ...textStyles.h1, color: colors.text },
+  resultadosTitulo: { ...textStyles.h3, color: colors.text },
   tela: { flex: 1, backgroundColor: colors.surfaceMuted },
   buscaContainer: {
     paddingHorizontal: spacing[6],

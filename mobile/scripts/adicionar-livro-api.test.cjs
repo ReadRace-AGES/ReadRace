@@ -154,3 +154,42 @@ test('adicionarNaBiblioteca: envia volumeId e lista no corpo, via POST', async (
   assert.deepEqual(JSON.parse(corpo), { volumeId: 'v1', lista: 'desejo' });
   assert.equal(resultado.status, 'desejo');
 });
+
+test('buscarCatalogo: rejeita páginas negativas e ISBN vazio, normaliza e usa o ISBN disponível', async () => {
+  const { buscarCatalogo } = load('src/features/adicionarLivro/api.ts', {
+    '@/api/client': {
+      apiGet: async () => ({
+        items: [
+          volume('negativo', { pageCount: -1 }),
+          ...[null, '', '   '].map((identifier, index) =>
+            volume(`invalido-${index}`, {
+              industryIdentifiers: [{ type: 'ISBN_13', identifier }],
+            })
+          ),
+          volume('normalizado', {
+            industryIdentifiers: [
+              { type: 'ISBN_10', identifier: '8535910663' },
+              { type: 'ISBN_13', identifier: ' 9786586490077 ' },
+            ],
+          }),
+          volume('fallback', {
+            industryIdentifiers: [
+              { type: 'ISBN_13', identifier: '  ' },
+              { type: 'ISBN_10', identifier: ' 8535910663 ' },
+            ],
+          }),
+        ],
+      }),
+    },
+  });
+  assert.deepEqual(
+    (await buscarCatalogo('termo')).map(({ volumeId, isbn }) => ({
+      volumeId,
+      isbn,
+    })),
+    [
+      { volumeId: 'normalizado', isbn: '9786586490077' },
+      { volumeId: 'fallback', isbn: '8535910663' },
+    ]
+  );
+});

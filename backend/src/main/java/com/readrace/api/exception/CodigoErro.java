@@ -3,6 +3,7 @@ package com.readrace.api.exception;
 import org.springframework.http.HttpStatus;
 
 public enum CodigoErro {
+    NAO_PODE_SEGUIR_A_SI(HttpStatus.BAD_REQUEST, "Você não pode seguir a si mesmo."),
     USUARIO_NAO_ENCONTRADO(HttpStatus.NOT_FOUND, "Usuário não encontrado."),
     RESOURCE_NOT_FOUND(HttpStatus.NOT_FOUND, "Recurso não encontrado."),
     ROUTE_NOT_FOUND(HttpStatus.NOT_FOUND, "Rota não encontrada."),
@@ -18,12 +19,20 @@ public enum CodigoErro {
     LIVRO_SEM_ISBN_OU_PAGINAS(
             HttpStatus.UNPROCESSABLE_ENTITY,
             "O livro não tem ISBN ou número de páginas suficiente para entrar na biblioteca."),
+    POST_INVALIDO(
+            HttpStatus.BAD_REQUEST, "O post deve conter texto e ter no máximo 2.000 caracteres."),
+    SO_MEMBRO_POSTA(HttpStatus.FORBIDDEN, "Somente membros do clube podem publicar no fórum."),
+    CLUBE_NAO_ENCONTRADO(HttpStatus.NOT_FOUND, "Clube não encontrado."),
     OPONENTE_NAO_E_AMIGO(
             HttpStatus.BAD_REQUEST, "O oponente informado não é amigo do usuário atual."),
+    CLUBE_INVALIDO(
+            HttpStatus.BAD_REQUEST, "O nome do clube é obrigatório e deve ter até 120 caracteres."),
     META_INVALIDA(HttpStatus.BAD_REQUEST, "A meta de páginas deve estar entre 10 e 500."),
     LIVRO_OBRIGATORIO(
             HttpStatus.BAD_REQUEST, "O livro é obrigatório para desafios com meta por livro."),
     PRAZO_INVALIDO(HttpStatus.BAD_REQUEST, "O prazo deve ser de 1 a 365 dias."),
+    PERFIL_INVALIDO(HttpStatus.BAD_REQUEST, "Dados do perfil inválidos."),
+    USERNAME_EM_USO(HttpStatus.CONFLICT, "Esse nome de usuário já está em uso."),
     UNAUTHORIZED(HttpStatus.UNAUTHORIZED, "Sessão inválida ou expirada. Entre de novo."),
     QUIZ_NAO_ENCONTRADO(HttpStatus.NOT_FOUND, "Este clube ainda não tem quiz."),
     SO_MEMBRO_RESPONDE(HttpStatus.FORBIDDEN, "Só membros do clube participam do quiz."),

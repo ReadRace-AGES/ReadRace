@@ -1,6 +1,9 @@
 package com.readrace.api.service;
 
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
 import java.util.List;
@@ -135,5 +138,78 @@ class AdicionarLivroServiceTest {
 
         assertThatThrownBy(() -> service().adicionar(new AdicionarLivroRequest("v1", "desejo")))
                 .isInstanceOf(LivroSemIsbnOuPaginasException.class);
+    }
+
+    @Test
+    void deve_recusar_isbn_nulo_vazio_ou_em_branco_sem_gravar() {
+        for (String isbn : new String[] {null, "", "   "}) {
+            when(bookSearchPort.getById("v1"))
+                    .thenReturn(
+                            Optional.of(
+                                    GoogleBookVolume.of(
+                                            "v1",
+                                            volumeInfo(
+                                                    List.of(
+                                                            new IndustryIdentifier(
+                                                                    "ISBN_13", isbn)),
+                                                    200))));
+            assertThatThrownBy(() -> service().adicionar(new AdicionarLivroRequest("v1", "desejo")))
+                    .isInstanceOf(LivroSemIsbnOuPaginasException.class);
+        }
+        verifyNoInteractions(livroRepository, itemBibliotecaRepository);
+    }
+
+    @Test
+    void deve_recusar_paginas_negativas_sem_gravar() {
+        when(bookSearchPort.getById("v1"))
+                .thenReturn(
+                        Optional.of(
+                                GoogleBookVolume.of(
+                                        "v1",
+                                        volumeInfo(
+                                                List.of(
+                                                        new IndustryIdentifier(
+                                                                "ISBN_13", "9786586490077")),
+                                                -1))));
+        assertThatThrownBy(() -> service().adicionar(new AdicionarLivroRequest("v1", "desejo")))
+                .isInstanceOf(LivroSemIsbnOuPaginasException.class);
+        verifyNoInteractions(livroRepository, itemBibliotecaRepository);
+    }
+
+    @Test
+    void deve_normalizar_isbn13_e_preferir_ao_isbn10() {
+        conferirIsbn(
+                List.of(
+                        new IndustryIdentifier("ISBN_10", "8535910663"),
+                        new IndustryIdentifier("ISBN_13", " 9786586490077 ")),
+                "9786586490077");
+    }
+
+    @Test
+    void deve_usar_isbn10_quando_isbn13_estiver_em_branco() {
+        conferirIsbn(
+                List.of(
+                        new IndustryIdentifier("ISBN_13", "   "),
+                        new IndustryIdentifier("ISBN_10", " 8535910663 ")),
+                "8535910663");
+    }
+
+    private void conferirIsbn(List<IndustryIdentifier> identificadores, String esperado) {
+        when(bookSearchPort.getById("v1"))
+                .thenReturn(
+                        Optional.of(GoogleBookVolume.of("v1", volumeInfo(identificadores, 200))));
+        var livro = mock(com.readrace.api.model.Livro.class);
+        var livroId = java.util.UUID.randomUUID();
+        var usuarioId = java.util.UUID.randomUUID();
+        when(livro.getId()).thenReturn(livroId);
+        when(livroRepository.findByIsbn(esperado)).thenReturn(Optional.of(livro));
+        when(usuarioAtual.idDoUsuarioAtual())
+                .thenReturn(new com.readrace.api.model.UsuarioId(usuarioId));
+        var item = mock(com.readrace.api.model.ItemBiblioteca.class);
+        when(item.getStatusLeitura()).thenReturn(com.readrace.api.model.StatusLeitura.desejo);
+        when(itemBibliotecaRepository.findByUsuarioIdAndLivroId(usuarioId, livroId))
+                .thenReturn(Optional.of(item));
+        service().adicionar(new AdicionarLivroRequest("v1", "desejo"));
+        verify(livroRepository).findByIsbn(esperado);
     }
 }

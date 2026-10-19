@@ -340,3 +340,94 @@ test('"Adicionar novo livro" volta para a busca vazia; "Fechar" navega com o sin
     await act(async () => renderer.unmount());
   }
 });
+
+test('reiniciar a busca e voltar ainda atualiza a biblioteca', async () => {
+  let destino;
+  const { AdicionarLivroScreen } = montarTela({
+    buscaInicial: { situacao: 'sucesso', resultados: [livroCatalogo] },
+    postsApi: {
+      adicionarNaBiblioteca: async () => ({
+        livroId: '1',
+        titulo: 'Livro',
+        capaUrl: null,
+        status: 'desejo',
+        favorito: false,
+      }),
+    },
+    routerMocks: {
+      dismissTo: (valor) => {
+        destino = valor;
+      },
+    },
+  });
+  let renderer;
+  await act(async () => {
+    renderer = create(React.createElement(AdicionarLivroScreen));
+  });
+  try {
+    await act(async () => achar(renderer, 'ListItem').props.onPress());
+    await act(async () =>
+      achar(
+        renderer,
+        'PrimaryButton',
+        (n) => n.props.label === 'Desejos'
+      ).props.onPress()
+    );
+    assert.ok(
+      achar(
+        renderer,
+        'Pressable',
+        (n) => n.props.accessibilityLabel === 'Fechar'
+      )
+    );
+    await act(async () =>
+      achar(
+        renderer,
+        'PrimaryButton',
+        (n) => n.props.label === 'Adicionar novo livro'
+      ).props.onPress()
+    );
+    assert.equal(achar(renderer, 'SearchInput').props.value, '');
+    await act(async () => achar(renderer, 'AppHeader').props.onBackPress());
+    assert.equal(destino.pathname, '/meus-livros');
+    assert.ok(destino.params.livroAdicionado);
+  } finally {
+    await act(async () => renderer.unmount());
+  }
+});
+
+test('fechar um modal com erro e reabrir limpa a mensagem anterior', async () => {
+  const { AdicionarLivroScreen } = montarTela({
+    buscaInicial: { situacao: 'sucesso', resultados: [livroCatalogo] },
+    postsApi: {
+      adicionarNaBiblioteca: async () => {
+        throw new ApiError('Falha anterior');
+      },
+    },
+  });
+  let renderer;
+  await act(async () => {
+    renderer = create(React.createElement(AdicionarLivroScreen));
+  });
+  try {
+    await act(async () => achar(renderer, 'ListItem').props.onPress());
+    await act(async () =>
+      achar(
+        renderer,
+        'PrimaryButton',
+        (n) => n.props.label === 'Desejos'
+      ).props.onPress()
+    );
+    assert.ok(
+      achar(renderer, 'Text', (n) => n.props.children === 'Falha anterior')
+    );
+    await act(async () => achar(renderer, 'BottomSheet').props.onClose());
+    await act(async () => achar(renderer, 'ListItem').props.onPress());
+    assert.equal(
+      achar(renderer, 'Text', (n) => n.props.children === 'Falha anterior'),
+      undefined
+    );
+  } finally {
+    await act(async () => renderer.unmount());
+  }
+});

@@ -12,7 +12,7 @@ import java.util.UUID;
  * Comunidade}, nunca aos dois. Aqui só entram posts raiz deste clube — comentário é post com pai e
  * fica de fora.
  */
-public record ForumClubeResponse(Clube clube, List<Post> posts) {
+public record ForumClubeResponse(Clube clube, List<Post> posts, boolean podeEscrever) {
 
     public record Clube(UUID id, String nome, LivroAtual livroAtual) {}
 

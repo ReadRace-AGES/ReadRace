@@ -3,9 +3,12 @@ package com.readrace.api.controller;
 import java.util.UUID;
 
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.readrace.api.dto.request.AtualizarPerfilRequest;
 import com.readrace.api.dto.response.PerfilResponse;
 import com.readrace.api.service.PerfilService;
 
@@ -31,5 +34,11 @@ public class PerfilController {
     @Operation(summary = "Consulta o perfil do usuário atual, resolvido pelo backend")
     public PerfilResponse meuPerfil() {
         return service.buscarDoUsuarioAtual();
+    }
+
+    @PatchMapping("/api/me/perfil")
+    @Operation(summary = "Atualiza nome e/ou username do usuário atual; manda só o que mudou")
+    public PerfilResponse atualizarMeuPerfil(@RequestBody AtualizarPerfilRequest request) {
+        return service.atualizarDoUsuarioAtual(request);
     }
 }

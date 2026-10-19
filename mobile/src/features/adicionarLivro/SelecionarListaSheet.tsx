@@ -163,7 +163,7 @@ const styles = StyleSheet.create({
   meta: { ...textStyles.caption, color: colors.textSecondary },
   error: {
     ...textStyles.bodySmall,
-    color: colors.accent,
+    color: colors.danger,
     textAlign: 'center',
   },
   actions: { gap: spacing[2] },

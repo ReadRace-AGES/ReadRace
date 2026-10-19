@@ -87,6 +87,16 @@ public class Usuario {
         this.cognitoSub = cognitoSub;
     }
 
+    /** Edição pelas Configurações de perfil. null = manter o valor atual. */
+    public void atualizarPerfil(String nome, String nomeUsuario) {
+        if (nome != null) {
+            this.nome = nome;
+        }
+        if (nomeUsuario != null) {
+            this.nomeUsuario = nomeUsuario;
+        }
+    }
+
     @Override
     public boolean equals(Object obj) {
         if (this == obj) {

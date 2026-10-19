@@ -10,6 +10,7 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.locks.LockSupport;
 
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -19,11 +20,14 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.context.annotation.Import;
 import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.transaction.PlatformTransactionManager;
+import org.springframework.transaction.support.TransactionTemplate;
 
 import com.readrace.api.TestcontainersConfiguration;
 import com.readrace.api.dto.request.RegistrarProgressoRequest;
 import com.readrace.api.dto.response.ProgressoLeituraResponse;
 import com.readrace.api.model.SequenciaDeLeitura;
+import com.readrace.api.repository.MembroClubeRepository;
 
 @SpringBootTest
 @AutoConfigureMockMvc
@@ -33,8 +37,11 @@ class RegistrarProgressoConcorrenciaIT {
     private static final UUID USUARIO = UUID.fromString("00000000-0000-0000-0000-000000000001");
     private static final UUID DESAFIO_ATIVO =
             UUID.fromString("90000000-0000-0000-0000-000000000001");
+    private static final UUID CLUBE = UUID.fromString("59000000-0000-0000-0000-000000000002");
 
     @Autowired private RegistrarProgressoService service;
+    @Autowired private MembroClubeRepository membroClubeRepository;
+    @Autowired private PlatformTransactionManager transactionManager;
     @Autowired private JdbcTemplate jdbc;
 
     private int placarAntes;
@@ -55,6 +62,22 @@ class RegistrarProgressoConcorrenciaIT {
         jdbc.update(
                 "UPDATE usuario SET dias_consecutivos = 12, ultima_leitura_em = ? WHERE id = ?",
                 SequenciaDeLeitura.hoje().minusDays(1),
+                USUARIO);
+    }
+
+    @BeforeEach
+    void criar_clube_que_le_o_livro() {
+        // O livro do teste não é o livro atual de nenhum clube do seed: este clube existe só aqui,
+        // com o usuário como membro e zero pontos.
+        jdbc.update(
+                "INSERT INTO clube_do_livro (id, livro_id, nome) VALUES (?, ?, 'Clube do teste')",
+                CLUBE,
+                LIVRO);
+        jdbc.update(
+                "INSERT INTO membro_clube (id, clube_id, usuario_id, pontos, cargo_clube)"
+                        + " VALUES (?, ?, ?, 0, 'membro'::cargo)",
+                UUID.randomUUID(),
+                CLUBE,
                 USUARIO);
     }
 
@@ -87,6 +110,8 @@ class RegistrarProgressoConcorrenciaIT {
                 "DELETE FROM item_biblioteca WHERE usuario_id = ? AND livro_id = ?",
                 USUARIO,
                 LIVRO);
+        jdbc.update("DELETE FROM membro_clube WHERE clube_id = ?", CLUBE);
+        jdbc.update("DELETE FROM clube_do_livro WHERE id = ?", CLUBE);
     }
 
     @Test
@@ -129,9 +154,63 @@ class RegistrarProgressoConcorrenciaIT {
         // As 24 chamadas somam exatamente os mesmos 20 de XP que o item e o desafio pagaram —
         // se o lock pessimista do Usuario não estivesse lá, esse valor viria menor que 20.
         assertThat(xpDoUsuario()).isEqualTo(xpUsuarioAntes + 20);
+        // No clube vale a mesma conta: um ponto por página nova, pago uma única vez.
+        assertThat(pontosNoClube()).isEqualTo(20);
         // Vinte e quatro registros no mesmo dia contam um dia só.
         assertThat(sequencia()).isEqualTo(13);
         assertThat(ultimaLeitura()).isEqualTo(SequenciaDeLeitura.hoje());
+    }
+
+    @Test
+    void deve_preservar_pontos_somados_por_outra_transacao_durante_o_registro() throws Exception {
+        TransactionTemplate transacao = new TransactionTemplate(transactionManager);
+        CountDownLatch lockAdquirido = new CountDownLatch(1);
+
+        try (var executor = Executors.newVirtualThreadPerTaskExecutor()) {
+            // Faz o que o quiz faz em um acerto: pega o lock da linha do membro e soma 50 pontos.
+            // Só confirma depois que o registro de leitura estiver esperando por essa linha.
+            Future<?> quiz =
+                    executor.submit(
+                            () ->
+                                    transacao.executeWithoutResult(
+                                            status -> {
+                                                membroClubeRepository
+                                                        .buscarComLock(CLUBE, USUARIO)
+                                                        .orElseThrow()
+                                                        .somarPontos(50);
+                                                lockAdquirido.countDown();
+                                                esperarTransacaoBloqueada();
+                                            }));
+            assertThat(lockAdquirido.await(10, TimeUnit.SECONDS)).isTrue();
+
+            service.registrar(LIVRO, new RegistrarProgressoRequest(10));
+            quiz.get(30, TimeUnit.SECONDS);
+        }
+
+        // Sem o lock na leitura dos membros, o registro gravaria seus 10 pontos por cima dos 50 do
+        // quiz, em vez de somar aos dois.
+        assertThat(pontosNoClube()).isEqualTo(60);
+    }
+
+    private void esperarTransacaoBloqueada() {
+        for (int tentativa = 0; tentativa < 200; tentativa++) {
+            Integer bloqueadas =
+                    jdbc.queryForObject(
+                            "SELECT count(*) FROM pg_locks WHERE NOT granted", Integer.class);
+            if (bloqueadas > 0) {
+                return;
+            }
+            LockSupport.parkNanos(TimeUnit.MILLISECONDS.toNanos(50));
+        }
+        throw new IllegalStateException("O registro de leitura não esperou pelo lock do membro.");
+    }
+
+    private int pontosNoClube() {
+        return jdbc.queryForObject(
+                "SELECT pontos FROM membro_clube WHERE clube_id = ? AND usuario_id = ?",
+                Integer.class,
+                CLUBE,
+                USUARIO);
     }
 
     private int sequencia() {

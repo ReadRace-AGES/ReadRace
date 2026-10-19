@@ -1,6 +1,8 @@
 package com.readrace.api.service;
 
 import java.util.List;
+import java.util.Locale;
+import java.util.Objects;
 import java.util.Set;
 import java.util.UUID;
 
@@ -65,6 +67,9 @@ public class AdicionarLivroService {
     @Transactional
     public AdicionarLivroResponse adicionar(AdicionarLivroRequest request) {
         String lista = validarLista(request.lista());
+        if (request.volumeId() == null || request.volumeId().isBlank()) {
+            throw new LivroNaoEncontradoException();
+        }
 
         // Não confia no que o app manda: busca os detalhes do volume pelo catálogo.
         GoogleBookVolume volume =
@@ -109,23 +114,27 @@ public class AdicionarLivroService {
     }
 
     private String validarLista(String lista) {
-        if (lista == null || !LISTAS_VALIDAS.contains(lista.trim().toLowerCase())) {
+        if (lista == null || !LISTAS_VALIDAS.contains(lista.trim().toLowerCase(Locale.ROOT))) {
             throw new ListaInvalidaException();
         }
-        return lista.trim().toLowerCase();
+        return lista.trim().toLowerCase(Locale.ROOT);
     }
 
     /** Prefere o ISBN de 13 dígitos; sem ele, usa o de 10. */
     private String isbnDe(VolumeInfo info) {
-        List<IndustryIdentifier> identificadores = info.industryIdentifiers();
+        List<IndustryIdentifier> identificadores = info == null ? null : info.industryIdentifiers();
         if (identificadores == null) {
             return null;
         }
 
         String isbn13 =
                 identificadores.stream()
+                        .filter(Objects::nonNull)
                         .filter(i -> "ISBN_13".equals(i.type()))
                         .map(IndustryIdentifier::identifier)
+                        .filter(Objects::nonNull)
+                        .map(String::trim)
+                        .filter(isbn -> !isbn.isBlank())
                         .findFirst()
                         .orElse(null);
         if (isbn13 != null) {
@@ -133,8 +142,12 @@ public class AdicionarLivroService {
         }
 
         return identificadores.stream()
+                .filter(Objects::nonNull)
                 .filter(i -> "ISBN_10".equals(i.type()))
                 .map(IndustryIdentifier::identifier)
+                .filter(Objects::nonNull)
+                .map(String::trim)
+                .filter(isbn -> !isbn.isBlank())
                 .findFirst()
                 .orElse(null);
     }

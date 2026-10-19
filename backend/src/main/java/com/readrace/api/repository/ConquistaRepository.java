@@ -76,4 +76,16 @@ public interface ConquistaRepository extends JpaRepository<Conquista, UUID> {
                     """,
             nativeQuery = true)
     long contarDesafiosFinalizados(@Param("usuarioId") UUID usuarioId);
+
+    @Query(
+            value =
+                    """
+                    SELECT count(*)
+                    FROM membro_clube mc
+                    JOIN clube_do_livro c ON c.id = mc.clube_id
+                    WHERE mc.usuario_id = :usuarioId
+                      AND c.excluido_em IS NULL
+                    """,
+            nativeQuery = true)
+    long contarClubes(@Param("usuarioId") UUID usuarioId);
 }
