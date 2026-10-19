@@ -15,6 +15,10 @@ public enum CodigoErro {
     OPONENTE_NAO_ENCONTRADO(HttpStatus.NOT_FOUND, "Oponente não encontrado."),
     LIVRO_NAO_ENCONTRADO(HttpStatus.NOT_FOUND, "Livro não encontrado."),
     POST_NAO_ENCONTRADO(HttpStatus.NOT_FOUND, "Post não encontrado."),
+    LISTA_INVALIDA(HttpStatus.BAD_REQUEST, "Lista inválida. Use lido, desejo ou favorito."),
+    LIVRO_SEM_ISBN_OU_PAGINAS(
+            HttpStatus.UNPROCESSABLE_ENTITY,
+            "O livro não tem ISBN ou número de páginas suficiente para entrar na biblioteca."),
     POST_INVALIDO(
             HttpStatus.BAD_REQUEST, "O post deve conter texto e ter no máximo 2.000 caracteres."),
     SO_MEMBRO_POSTA(HttpStatus.FORBIDDEN, "Somente membros do clube podem publicar no fórum."),
