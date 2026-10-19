@@ -4,6 +4,8 @@ import java.util.List;
 import java.util.UUID;
 
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 
 import com.readrace.api.model.Post;
 
@@ -20,4 +22,19 @@ public interface PostRepository extends JpaRepository<Post, UUID> {
      * nulo e por isso também fica de fora.
      */
     List<Post> findByClubeIdAndPostPaiIdIsNullAndExcluidoEmIsNullOrderByCriadoEmDesc(UUID clubeId);
+
+    List<Post> findByComunidadeIdAndPostPaiIdIsNullAndExcluidoEmIsNullOrderByCriadoEmDesc(
+            UUID comunidadeId);
+
+    @Query(
+            "select p.postPaiId as postId, count(p) as total from Post p"
+                    + " where p.postPaiId in :postIds and p.excluidoEm is null"
+                    + " group by p.postPaiId")
+    List<ContagemComentarios> contarComentariosPorPostIds(@Param("postIds") List<UUID> postIds);
+
+    interface ContagemComentarios {
+        UUID getPostId();
+
+        long getTotal();
+    }
 }
