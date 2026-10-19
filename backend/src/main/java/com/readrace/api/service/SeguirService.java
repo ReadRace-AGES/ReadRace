@@ -5,6 +5,7 @@ import java.util.UUID;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.readrace.api.dto.response.ListaSeguidoresResponse;
 import com.readrace.api.dto.response.SeguirResponse;
 import com.readrace.api.exception.NaoPodeSeguirASiException;
 import com.readrace.api.exception.UsuarioNaoEncontradoException;
@@ -29,6 +30,20 @@ public class SeguirService {
         UUID eu = validar(seguidoId);
         seguir.criarSeAusente(UUID.randomUUID(), eu, seguidoId);
         return resposta(eu, seguidoId);
+    }
+
+    @Transactional(readOnly = true)
+    public ListaSeguidoresResponse seguidores(UUID usuarioId) {
+        usuarios.findByIdAndExcluidoEmIsNull(usuarioId)
+                .orElseThrow(UsuarioNaoEncontradoException::new);
+        return ListaSeguidoresResponse.de(seguir.buscarSeguidores(usuarioId));
+    }
+
+    @Transactional(readOnly = true)
+    public ListaSeguidoresResponse seguindo(UUID usuarioId) {
+        usuarios.findByIdAndExcluidoEmIsNull(usuarioId)
+                .orElseThrow(UsuarioNaoEncontradoException::new);
+        return ListaSeguidoresResponse.de(seguir.buscarSeguindo(usuarioId));
     }
 
     @Transactional

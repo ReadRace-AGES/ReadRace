@@ -29,6 +29,8 @@ const numero = (valor: number) => valor.toLocaleString('pt-BR');
 export function PerfilConteudo({
   perfil,
   onPlaceholder,
+  onVerSeguidores = onPlaceholder,
+  onVerSeguindo = onPlaceholder,
   onVerMaisConquistas = onPlaceholder,
   proprio = false,
   onAbrirLivro,
@@ -37,6 +39,8 @@ export function PerfilConteudo({
 }: {
   perfil: Perfil;
   onPlaceholder: () => void;
+  onVerSeguidores?: () => void;
+  onVerSeguindo?: () => void;
   onVerMaisConquistas?: () => void;
   proprio?: boolean;
   onAbrirLivro?: (livroId: string) => void;
@@ -98,7 +102,7 @@ export function PerfilConteudo({
               // Preserva o callback de estilo nativo, sem a conversão do NativeWind.
               cssInterop={false}
               accessibilityRole="button"
-              onPress={onPlaceholder}
+              onPress={index === 0 ? onVerSeguidores : onVerSeguindo}
               style={({ pressed }) => [
                 styles.socialButton,
                 pressed && styles.pressed,
@@ -251,9 +255,11 @@ export function PerfilConteudo({
 export function PerfilScreen({
   usuarioId,
   rodape,
+  origem = usuarioId === undefined ? 'perfil' : 'busca',
 }: {
   usuarioId?: string;
   rodape?: ReactNode;
+  origem?: 'perfil' | 'busca';
 }) {
   const {
     estado,
@@ -324,6 +330,18 @@ export function PerfilScreen({
             );
           }}
           onPlaceholder={showToast}
+          onVerSeguidores={() =>
+            router.push({
+              pathname: `/(tabs)/(${origem})/leitores/[usuarioId]`,
+              params: { usuarioId: estado.dados.id, tipo: 'seguidores' },
+            } as Href)
+          }
+          onVerSeguindo={() =>
+            router.push({
+              pathname: `/(tabs)/(${origem})/leitores/[usuarioId]`,
+              params: { usuarioId: estado.dados.id, tipo: 'seguindo' },
+            } as Href)
+          }
           onVerMaisConquistas={
             proprio ? () => router.push('/conquistas' as Href) : undefined
           }
