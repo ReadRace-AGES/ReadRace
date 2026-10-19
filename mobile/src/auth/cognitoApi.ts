@@ -1,7 +1,9 @@
+import * as AuthSession from 'expo-auth-session';
 import * as WebBrowser from 'expo-web-browser';
 
 import {
   chamarCognito,
+  ESCOPOS_LOGIN_GOOGLE,
   erroDeCadastro,
   requisicaoCadastro,
   requisicaoConfirmacao,
@@ -9,7 +11,9 @@ import {
   requisicaoLogin,
   requisicaoRenovacao,
   requisicaoRevogacao,
+  resultadoDoLoginGoogle,
   sessaoDaResposta,
+  sessaoDoTokenOAuth,
   urlPaginaCognito,
   type SessaoCognito,
 } from './cognitoProtocolo';
@@ -76,4 +80,49 @@ export async function reenviarCodigo(email: string): Promise<void> {
  */
 export async function abrirPaginaCognito(pagina: 'forgotPassword'): Promise<void> {
   await WebBrowser.openBrowserAsync(urlPaginaCognito(COGNITO_DOMAIN, COGNITO_CLIENT_ID, pagina));
+}
+
+const paginasOAuth = {
+  authorizationEndpoint: `${COGNITO_DOMAIN}/oauth2/authorize`,
+  tokenEndpoint: `${COGNITO_DOMAIN}/oauth2/token`,
+};
+
+/**
+ * Abre a página do Cognito indo direto para a escolha de conta do Google (identity_provider) e
+ * troca o código pelo token, com PKCE. `null` = a pessoa desistiu; qualquer outra falha lança erro.
+ * O retorno é readrace://auth num development build; no Expo Go o endereço é outro e o Cognito
+ * recusa, porque só readrace://auth está cadastrado no app client.
+ */
+export async function entrarComGoogle(): Promise<SessaoCognito | null> {
+  const redirectUri = AuthSession.makeRedirectUri({ scheme: 'readrace', path: 'auth' });
+  const pedido = new AuthSession.AuthRequest({
+    clientId: COGNITO_CLIENT_ID,
+    redirectUri,
+    scopes: ESCOPOS_LOGIN_GOOGLE,
+    usePKCE: true,
+    extraParams: { identity_provider: 'Google' },
+  });
+
+  const resposta = await pedido.promptAsync(paginasOAuth);
+  const resultado = resultadoDoLoginGoogle(
+    resposta.type,
+    'params' in resposta ? resposta.params : undefined
+  );
+  if (resultado.tipo === 'desistiu') {
+    return null;
+  }
+  if (resultado.tipo === 'erro' || !pedido.codeVerifier) {
+    throw new Error('O Cognito não devolveu o código do login com Google.');
+  }
+
+  const token = await AuthSession.exchangeCodeAsync(
+    {
+      clientId: COGNITO_CLIENT_ID,
+      code: resultado.codigo,
+      redirectUri,
+      extraParams: { code_verifier: pedido.codeVerifier },
+    },
+    paginasOAuth
+  );
+  return sessaoDoTokenOAuth(token, Date.now());
 }

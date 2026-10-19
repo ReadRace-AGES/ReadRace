@@ -3,34 +3,38 @@ import { useRef, useState } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { guardarCadastro } from '@/auth/cadastroPendente';
-import { abrirPaginaCognito, entrarComSenha } from '@/auth/cognitoApi';
-import { ErroLogin, MENSAGENS_ERRO_LOGIN } from '@/auth/cognitoProtocolo';
+import { abrirPaginaCognito, entrarComGoogle, entrarComSenha } from '@/auth/cognitoApi';
+import {
+  ErroLogin,
+  MENSAGEM_ERRO_GOOGLE,
+  MENSAGENS_ERRO_LOGIN,
+} from '@/auth/cognitoProtocolo';
 import { salvarSessao } from '@/auth/session';
 import { CampoTexto } from '@/components/CampoTexto';
 import { GoogleIcon } from '@/components/icons/GoogleIcon';
 import { PrimaryButton } from '@/components/PrimaryButton';
 import { TelaDeAcesso } from '@/components/TelaDeAcesso';
-import { useToastContext } from '@/components/toast-provider';
 import { useVoltar } from '@/components/useVoltar';
 import { colors, textStyles } from '@/theme';
 
-/** Login com e-mail e senha (frame `cadastro` do Figma, que apesar do nome é o login). */
+/** Login com e-mail e senha ou Google (frame `cadastro` do Figma, que apesar do nome é o login). */
 export default function EntrarScreen() {
   const router = useRouter();
   const voltar = useVoltar('/login');
-  const { showToast } = useToastContext();
   // Vindo do passo 2 quando o login automático falhou depois de confirmar (sem dado sensível).
   const { confirmada } = useLocalSearchParams<{ confirmada?: string }>();
 
   const [email, setEmail] = useState('');
   const [senha, setSenha] = useState('');
   const [entrando, setEntrando] = useState(false);
+  const [entrandoGoogle, setEntrandoGoogle] = useState(false);
   const [erro, setErro] = useState<string | null>(null);
   // O estado `entrando` só muda no próximo render: dois toques rápidos passariam os dois. A ref
-  // muda na hora.
+  // muda na hora. É uma só para os dois botões: um login de cada vez.
   const enviando = useRef(false);
 
-  const podeEntrar = email.trim() !== '' && senha !== '' && !entrando;
+  const ocupado = entrando || entrandoGoogle;
+  const podeEntrar = email.trim() !== '' && senha !== '' && !ocupado;
 
   async function entrar() {
     if (!podeEntrar || enviando.current) return;
@@ -56,8 +60,27 @@ export default function EntrarScreen() {
     }
   }
 
+  async function entrarPeloGoogle() {
+    if (ocupado || enviando.current) return;
+    enviando.current = true;
+    setErro(null);
+    setEntrandoGoogle(true);
+    try {
+      const sessao = await entrarComGoogle();
+      // null = desistiu na escolha de conta: volta para a tela sem mensagem.
+      if (sessao) {
+        await salvarSessao(sessao);
+      }
+    } catch {
+      setErro(MENSAGEM_ERRO_GOOGLE);
+    } finally {
+      enviando.current = false;
+      setEntrandoGoogle(false);
+    }
+  }
+
   return (
-    <TelaDeAcesso onVoltar={voltar} voltarDesabilitado={entrando}>
+    <TelaDeAcesso onVoltar={voltar} voltarDesabilitado={ocupado}>
       {confirmada === '1' && (
         <Text style={textStyles.bodySmall} className="mb-6 text-center text-text">
           Conta confirmada. Entre com seu e-mail e senha.
@@ -69,7 +92,7 @@ export default function EntrarScreen() {
           placeholder="Email"
           value={email}
           onChangeText={setEmail}
-          editable={!entrando}
+          editable={!ocupado}
           keyboardType="email-address"
           autoCapitalize="none"
           autoCorrect={false}
@@ -82,7 +105,7 @@ export default function EntrarScreen() {
           placeholder="Senha"
           value={senha}
           onChangeText={setSenha}
-          editable={!entrando}
+          editable={!ocupado}
           secureTextEntry
           autoCapitalize="none"
           autoCorrect={false}
@@ -118,8 +141,9 @@ export default function EntrarScreen() {
           label="Continuar com Google"
           variant="outline"
           icon={GoogleIcon}
-          onPress={showToast}
+          onPress={entrarPeloGoogle}
           disabled={entrando}
+          loading={entrandoGoogle}
         />
       </View>
 
