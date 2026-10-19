@@ -1,0 +1,4 @@
+# Arquivos do Terraform sempre com quebra de linha LF, inclusive no Windows. O deploy.tf leva um
+# script para a EC2 dentro do próprio arquivo: com CRLF, o apply feito do Windows mandaria o
+# script com \r para o Linux e quebraria o deploy.
+*.tf text eol=lf
