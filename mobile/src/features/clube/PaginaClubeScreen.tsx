@@ -1,4 +1,3 @@
-
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useFocusEffect, useRouter, type Href } from 'expo-router';
@@ -46,6 +45,8 @@ const COPY = {
   erroAoAbrirQuiz: 'Não foi possível abrir o quiz. Tente novamente.',
 } as const;
 
+// O Fórum é a #36 e ainda não tem rota; o `as Href` é o mesmo recurso que a #34 usou para
+// apontar para esta tela antes de ela existir.
 function rotaDoForum(clubeId: string): Href {
   return `/clube/${clubeId}/forum` as Href;
 }
@@ -105,20 +106,15 @@ function IconeLista({ size, color }: PrimaryButtonIconProps) {
 
 export function PaginaClubeScreen({ clubeId }: { clubeId: string }) {
   const router = useRouter();
-
   const { showToast, showErrorToast, showToastAfterNavigation } =
     useToastContext();
-
   const { clube, recarregar } = useClube(clubeId);
-
   const [livroDoModal, setLivroDoModal] = useState<LivroDetalhe | null>(null);
   const [abrindoModal, setAbrindoModal] = useState(false);
   const [erroDoModal, setErroDoModal] = useState<string | null>(null);
   const buscaDoLivro = useRef<AbortController | null>(null);
-
   const [abrindoQuiz, setAbrindoQuiz] = useState(false);
   const [resumoDoQuiz, setResumoDoQuiz] = useState<string | null>(null);
-
   const [confirmandoSaida, setConfirmandoSaida] = useState(false);
   const [saindoDoClube, setSaindoDoClube] = useState(false);
   const [erroAoSair, setErroAoSair] = useState<string | null>(null);
@@ -128,47 +124,37 @@ export function PaginaClubeScreen({ clubeId }: { clubeId: string }) {
     buscaDoLivro.current?.abort();
     setLivroDoModal(null);
   }, []);
-
+  // Sair da tela fecha o modal e cancela uma busca em voo, para ele não subir depois.
   useFocusEffect(useCallback(() => () => fecharModal(), [fecharModal]));
 
   const dados = clube.situacao === 'sucesso' ? clube.dados : null;
+  const podeSairDoClube = dados !== null && dados.meuCargo !== null;
 
-  const podeSairDoClube =
-    dados?.meuCargo === 'membro' || dados?.meuCargo === 'administrador';
-
-  // Ao voltar do quiz, atualiza o ranking com os novos pontos.
+  // Voltando do quiz: responder mexeu nos Pontos, então o ranking recarrega. O resumo de quem
+  // concluiu só aparece depois do ranking novo, e não ao ganhar foco: o toast é escondido na troca
+  // de rota.
   useFocusEffect(
     useCallback(() => {
       const retorno = consumirRetorno(clubeId);
       if (!retorno) return;
-
-      if (retorno.resumo) {
-        setResumoDoQuiz(textoDoResumo(retorno.resumo));
-      }
-
+      if (retorno.resumo) setResumoDoQuiz(textoDoResumo(retorno.resumo));
       recarregar();
     }, [clubeId, recarregar])
   );
 
-  // Exibe o resumo somente depois que o ranking foi recarregado.
+  // No render em que o resumo chega, `clube` ainda é o sucesso antigo: mostrar ali faria o toast
+  // subir antes da troca de rota e ser escondido por ela. Só mostra depois que a recarga passou
+  // por `carregando` e voltou.
   const recargaDoQuizComecou = useRef(false);
-
   useEffect(() => {
     if (!resumoDoQuiz) return;
-
     if (clube.situacao === 'carregando') {
       recargaDoQuizComecou.current = true;
       return;
     }
-
     if (!recargaDoQuizComecou.current) return;
-
     recargaDoQuizComecou.current = false;
-
-    if (clube.situacao === 'sucesso') {
-      showErrorToast(resumoDoQuiz);
-    }
-
+    if (clube.situacao === 'sucesso') showErrorToast(resumoDoQuiz);
     setResumoDoQuiz(null);
   }, [clube.situacao, resumoDoQuiz, showErrorToast]);
 
@@ -177,82 +163,59 @@ export function PaginaClubeScreen({ clubeId }: { clubeId: string }) {
       router.back();
       return;
     }
-
     router.replace('/feed');
   }
 
   function abrirConfirmacaoSaida() {
-    if (!podeSairDoClube || saidaEmAndamento.current) {
-      return;
-    }
-
+    if (!podeSairDoClube || saidaEmAndamento.current) return;
     setErroAoSair(null);
     setConfirmandoSaida(true);
   }
 
   function fecharConfirmacaoSaida() {
-    if (saidaEmAndamento.current) {
-      return;
-    }
-
+    if (saidaEmAndamento.current) return;
     setConfirmandoSaida(false);
     setErroAoSair(null);
   }
 
   async function confirmarSaidaDoClube() {
-    if (!podeSairDoClube || saidaEmAndamento.current) {
-      return;
-    }
-
+    if (!podeSairDoClube || saidaEmAndamento.current) return;
     saidaEmAndamento.current = true;
     setSaindoDoClube(true);
     setErroAoSair(null);
-
     try {
       await sairDoClube(clubeId);
-
       setConfirmandoSaida(false);
-
-      // Mostra a confirmação depois do redirecionamento.
       showToastAfterNavigation(COPY.sucessoSaida);
-
-      router.replace('/feed');
+      voltar();
     } catch (erro: unknown) {
-      setErroAoSair(
-        erro instanceof ApiError ? erro.message : COPY.erroSaida
-      );
+      setErroAoSair(erro instanceof ApiError ? erro.message : COPY.erroSaida);
     } finally {
       saidaEmAndamento.current = false;
       setSaindoDoClube(false);
     }
   }
 
+  /**
+   * O contrato da #35 devolve só o id do livro atual, e o modal da #33 precisa de total de
+   * páginas e progresso: o detalhe do livro (#31) entra aqui, sob demanda.
+   */
   async function abrirRegistroDeLeitura() {
-    if (!dados || abrindoModal) {
-      return;
-    }
-
+    if (!dados || abrindoModal) return;
     setAbrindoModal(true);
     setErroDoModal(null);
-
     const controller = new AbortController();
     buscaDoLivro.current = controller;
-
     try {
       const detalhe = await buscarDetalhe(
         dados.livroAtual.id,
         controller.signal
       );
-
-      if (!controller.signal.aborted) {
-        setLivroDoModal(detalhe);
-      }
+      if (!controller.signal.aborted) setLivroDoModal(detalhe);
     } catch (erro: unknown) {
       if (!controller.signal.aborted) {
         setErroDoModal(
-          erro instanceof ApiError
-            ? erro.message
-            : COPY.erroAoAbrirRegistro
+          erro instanceof ApiError ? erro.message : COPY.erroAoAbrirRegistro
         );
       }
     } finally {
@@ -260,45 +223,35 @@ export function PaginaClubeScreen({ clubeId }: { clubeId: string }) {
     }
   }
 
-  // O comportamento depende do cargo e do estado do quiz.
+  /** O que o "Acessar Quiz" faz depende de `meuCargo` e, para o membro, do estado do quiz. */
   async function acessarQuiz() {
     if (!dados || abrindoQuiz) return;
-
     if (dados.meuCargo === 'administrador') {
-      // A configuração do quiz pertence à Task #161.
+      // A configuração do quiz é a #161 (`/clube/{clubeId}/quiz/configurar`), que ainda não
+      // entrou: até lá o líder vê o aviso de funcionalidade em desenvolvimento.
       showToast();
       return;
     }
-
     if (dados.meuCargo === null) {
       showErrorToast(COPY.quizSoMembros);
       return;
     }
-
     setAbrindoQuiz(true);
-
     try {
       const quiz = await buscarQuiz(clubeId);
-
       if (quiz.proximaPergunta === null) {
         showErrorToast(COPY.quizJaRespondido);
         return;
       }
-
       router.push(rotaDoQuiz(clubeId));
     } catch (erro: unknown) {
       if (erro instanceof ApiError && erro.code === ERRO_QUIZ.semQuiz) {
         showErrorToast(COPY.quizInexistente);
-      } else if (
-        erro instanceof ApiError &&
-        erro.code === ERRO_QUIZ.soMembro
-      ) {
+      } else if (erro instanceof ApiError && erro.code === ERRO_QUIZ.soMembro) {
         showErrorToast(COPY.quizSoMembros);
       } else {
         showErrorToast(
-          erro instanceof ApiError
-            ? erro.message
-            : COPY.erroAoAbrirQuiz
+          erro instanceof ApiError ? erro.message : COPY.erroAoAbrirQuiz
         );
       }
     } finally {
@@ -306,14 +259,11 @@ export function PaginaClubeScreen({ clubeId }: { clubeId: string }) {
     }
   }
 
+  // Título do livro em negrito seguido do autor em regular, como a definição travada pede.
   const subtitulo = dados ? (
     <>
-      <Text style={styles.tituloDoLivro}>
-        {dados.livroAtual.titulo}
-      </Text>
-      {dados.livroAtual.autor
-        ? ` - ${dados.livroAtual.autor}`
-        : ''}
+      <Text style={styles.tituloDoLivro}>{dados.livroAtual.titulo}</Text>
+      {dados.livroAtual.autor ? ` - ${dados.livroAtual.autor}` : ''}
     </>
   ) : undefined;
 
@@ -365,7 +315,6 @@ export function PaginaClubeScreen({ clubeId }: { clubeId: string }) {
               loading={abrindoModal}
               onPress={abrirRegistroDeLeitura}
             />
-
             <PrimaryButton
               label={COPY.acessarQuiz}
               icon={IconeCheck}
@@ -373,7 +322,6 @@ export function PaginaClubeScreen({ clubeId }: { clubeId: string }) {
               loading={abrindoQuiz}
               onPress={acessarQuiz}
             />
-
             <PrimaryButton
               label={COPY.forum}
               icon={IconeLista}
@@ -383,10 +331,7 @@ export function PaginaClubeScreen({ clubeId }: { clubeId: string }) {
           </View>
 
           {erroDoModal && (
-            <Text
-              accessibilityRole="alert"
-              style={styles.erroDoModal}
-            >
+            <Text accessibilityRole="alert" style={styles.erroDoModal}>
               {erroDoModal}
             </Text>
           )}
@@ -429,30 +374,21 @@ export function PaginaClubeScreen({ clubeId }: { clubeId: string }) {
         accessibilityLabel="Confirmar saída do clube"
       >
         <View style={styles.confirmacaoSaida}>
-          <Text style={styles.tituloConfirmacao}>
-            {COPY.tituloConfirmacao}
-          </Text>
-
+          <Text style={styles.tituloConfirmacao}>{COPY.tituloConfirmacao}</Text>
           <Text style={styles.descricaoConfirmacao}>
             {COPY.descricaoConfirmacao}
           </Text>
-
           {erroAoSair && (
-            <Text
-              accessibilityRole="alert"
-              style={styles.erroDoModal}
-            >
+            <Text accessibilityRole="alert" style={styles.erroDoModal}>
               {erroAoSair}
             </Text>
           )}
-
           <PrimaryButton
             label={COPY.confirmarSaida}
-            onPress={confirmarSaidaDoClube}
             loading={saindoDoClube}
             disabled={saindoDoClube}
+            onPress={confirmarSaidaDoClube}
           />
-
           <PrimaryButton
             label={COPY.cancelar}
             variant="outline"
@@ -466,37 +402,18 @@ export function PaginaClubeScreen({ clubeId }: { clubeId: string }) {
 }
 
 const styles = StyleSheet.create({
-  tela: {
-    flex: 1,
-    backgroundColor: colors.surface,
-  },
-  tituloDoLivro: {
-    fontFamily: typography.fontFamily.bold,
-  },
-  rolagem: {
-    flexGrow: 1,
-    paddingBottom: spacing[10],
-  },
-  conteudo: {
-    padding: spacing[6],
-    gap: spacing[4],
-  },
-  acoes: {
-    gap: spacing[4],
-  },
-  acoesDoErro: {
-    alignSelf: 'stretch',
-    gap: spacing[2],
-  },
+  tela: { flex: 1, backgroundColor: colors.surface },
+  tituloDoLivro: { fontFamily: typography.fontFamily.bold },
+  rolagem: { flexGrow: 1, paddingBottom: spacing[10] },
+  conteudo: { padding: spacing[6], gap: spacing[4] },
+  acoes: { gap: spacing[4] },
+  acoesDoErro: { alignSelf: 'stretch', gap: spacing[2] },
   erroDoModal: {
     ...textStyles.bodySmall,
     color: colors.accent,
     textAlign: 'center',
   },
-  confirmacaoSaida: {
-    paddingBottom: spacing[6],
-    gap: spacing[4],
-  },
+  confirmacaoSaida: { paddingBottom: spacing[6], gap: spacing[4] },
   tituloConfirmacao: {
     ...textStyles.body,
     fontFamily: typography.fontFamily.bold,

@@ -1,5 +1,7 @@
 package com.readrace.api.service;
 
+import java.time.Clock;
+import java.time.OffsetDateTime;
 import java.util.List;
 import java.util.Set;
 import java.util.TreeSet;
@@ -15,6 +17,7 @@ import com.readrace.api.dto.request.CriarClubeRequest;
 import com.readrace.api.dto.response.ClubeCriadoResponse;
 import com.readrace.api.dto.response.ClubeResponse;
 import com.readrace.api.exception.ClubeInvalidoException;
+import com.readrace.api.exception.ClubeNaoEncontradoException;
 import com.readrace.api.exception.LivroNaoEncontradoException;
 import com.readrace.api.exception.NaoEMembroException;
 import com.readrace.api.exception.RecursoNaoEncontradoException;
@@ -34,6 +37,7 @@ import com.readrace.api.repository.UsuarioRepository;
 @Transactional(readOnly = true)
 public class ClubeService {
 
+    /** A Página do clube mostra 7 posições; o ranking completo está fora da sprint (#35). */
     static final int TAMANHO_DO_RANKING = 7;
 
     private final ClubeDoLivroRepository clubeRepository;
@@ -43,6 +47,7 @@ public class ClubeService {
     private final LivroRepository livroRepository;
     private final UsuarioRepository usuarioRepository;
     private final ConquistaService conquistaService;
+    private final Clock clock;
 
     public ClubeService(
             ClubeDoLivroRepository clubeRepository,
@@ -50,13 +55,15 @@ public class ClubeService {
             LivroRepository livroRepository,
             UsuarioRepository usuarioRepository,
             UsuarioAtual usuarioAtual,
-            ConquistaService conquistaService) {
+            ConquistaService conquistaService,
+            Clock clock) {
         this.clubeRepository = clubeRepository;
         this.membroClubeRepository = membroClubeRepository;
         this.livroRepository = livroRepository;
         this.usuarioRepository = usuarioRepository;
         this.usuarioAtual = usuarioAtual;
         this.conquistaService = conquistaService;
+        this.clock = clock;
     }
 
     @Transactional
@@ -69,12 +76,9 @@ public class ClubeService {
                 livroRepository
                         .findById(request.livroId())
                         .orElseThrow(LivroNaoEncontradoException::new);
-
         UUID criadorId = usuarioAtual.idDoUsuarioAtual().valor();
-
         Set<UUID> participantes = new TreeSet<>();
         participantes.add(criadorId);
-
         if (request.membros() != null) {
             participantes.addAll(request.membros());
         }
@@ -89,7 +93,6 @@ public class ClubeService {
 
         ClubeDoLivro clube =
                 clubeRepository.save(new ClubeDoLivro(request.nome(), request.descricao(), livro));
-
         membroClubeRepository.saveAll(
                 participantes.stream()
                         .map(
@@ -104,10 +107,15 @@ public class ClubeService {
 
         // avaliar faz flush antes das medições, incluindo os vínculos desta transação.
         participantes.forEach(conquistaService::avaliar);
-
         return ClubeCriadoResponse.de(clube);
     }
 
+    /**
+     * Cabeçalho e ranking de um clube do livro.
+     *
+     * <p>Um id que não é de clube — inclusive um id que só existe em {@code comunidade} — não é
+     * encontrado aqui e responde 404, como qualquer id inexistente.
+     */
     public ClubeResponse buscar(UUID clubeId) {
         ClubeDoLivro clube =
                 clubeRepository
@@ -136,10 +144,12 @@ public class ClubeService {
                 .orElse(null);
     }
 
-    // Task #152 - Sair de um clube do livro
-
     @Transactional
     public void sairDoClube(UUID clubeId) {
+        ClubeDoLivro clube =
+                clubeRepository
+                        .buscarComLock(clubeId)
+                        .orElseThrow(ClubeNaoEncontradoException::new);
         UUID usuarioId = usuarioAtual.idDoUsuarioAtual().valor();
 
         MembroClube membro =
@@ -147,20 +157,20 @@ public class ClubeService {
                         .findByClube_IdAndUsuarioId(clubeId, usuarioId)
                         .orElseThrow(NaoEMembroException::new);
 
-        if (membro.getCargoClube() == Cargo.ADMINISTRADOR) {
+        long totalMembros = membroClubeRepository.countByClube_Id(clubeId);
 
-            long totalMembros = membroClubeRepository.countByClube_Id(clubeId);
-
-            long totalAdministradores =
-                    membroClubeRepository.countByClube_IdAndCargoClube(
-                            clubeId, Cargo.ADMINISTRADOR);
-
-            if (totalAdministradores == 1 && totalMembros > 1) {
-                throw new UnicoLiderException();
-            }
+        if (totalMembros > 1
+                && membro.getCargoClube() == Cargo.ADMINISTRADOR
+                && membroClubeRepository.countByClube_IdAndCargoClube(clubeId, Cargo.ADMINISTRADOR)
+                        == 1) {
+            throw new UnicoLiderException();
         }
 
         membroClubeRepository.delete(membro);
+
+        if (totalMembros == 1) {
+            clube.excluir(OffsetDateTime.now(clock));
+        }
     }
 
     private static ClubeResponse.LivroAtual livroAtual(Livro livro) {
@@ -173,15 +183,17 @@ public class ClubeService {
                 livro.getId(), livro.getTitulo(), autor.isEmpty() ? null : autor);
     }
 
+    /**
+     * A consulta já entrega ordenado; aqui só entra a numeração de 1 a {@value
+     * #TAMANHO_DO_RANKING}.
+     */
     private static List<ClubeResponse.LinhaRanking> ranking(List<LinhaRankingClube> linhas) {
-
         return IntStream.range(0, linhas.size())
                 .mapToObj(indice -> paraLinha(indice + 1, linhas.get(indice)))
                 .toList();
     }
 
     private static ClubeResponse.LinhaRanking paraLinha(int posicao, LinhaRankingClube linha) {
-
         return new ClubeResponse.LinhaRanking(
                 posicao,
                 new ClubeResponse.Usuario(

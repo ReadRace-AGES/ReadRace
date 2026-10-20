@@ -75,7 +75,14 @@ public class ClubeController {
         return forumClubeService.buscar(clubeId);
     }
 
-    // Task #152 - Sair de um clube do livro
+    @PostMapping("/{clubeId}/posts")
+    @ResponseStatus(HttpStatus.CREATED)
+    @Operation(summary = "Publica um post raiz no fórum do clube como membro ou administrador")
+    public ForumClubeResponse.Post publicarPost(
+            @PathVariable UUID clubeId, @RequestBody CriarPostClubeRequest request) {
+        return forumClubeService.publicar(clubeId, request.texto());
+    }
+
     @DeleteMapping("/{clubeId}/membros/eu")
     @Operation(
             summary = "Sair de um clube do livro",
@@ -84,14 +91,6 @@ public class ClubeController {
     public ResponseEntity<Void> sairDoClube(@PathVariable UUID clubeId) {
         clubeService.sairDoClube(clubeId);
         return ResponseEntity.noContent().build();
-    }
-
-    @PostMapping("/{clubeId}/posts")
-    @ResponseStatus(HttpStatus.CREATED)
-    @Operation(summary = "Publica um post raiz no fórum do clube como membro ou administrador")
-    public ForumClubeResponse.Post publicarPost(
-            @PathVariable UUID clubeId, @RequestBody CriarPostClubeRequest request) {
-        return forumClubeService.publicar(clubeId, request.texto());
     }
 
     @GetMapping("/{clubeId}/quiz")
