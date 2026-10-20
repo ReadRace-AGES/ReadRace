@@ -1,4 +1,4 @@
-import { apiGet } from '@/api/client';
+import { apiGet, apiRequest } from '@/api/client';
 
 /**
  * O Fórum é do clube: um `Post` pertence a um `ClubeDoLivro` ou a uma `Comunidade`, nunca aos
@@ -15,6 +15,7 @@ export type ForumClube = {
     };
   };
   posts: PostForum[];
+  podeEscrever: boolean;
 };
 
 export type PostForum = {
@@ -36,5 +37,17 @@ export function buscarForumDoClube(clubeId: string, signal?: AbortSignal) {
   return apiGet<ForumClube>(
     `/api/clubes/${encodeURIComponent(clubeId)}/posts`,
     { signal }
+  );
+}
+
+/** `POST /api/clubes/{clubeId}/posts` — autor e data são definidos no servidor. */
+export function publicarPostDoClube(
+  clubeId: string,
+  texto: string,
+  signal?: AbortSignal
+) {
+  return apiRequest<PostForum>(
+    `/api/clubes/${encodeURIComponent(clubeId)}/posts`,
+    { method: 'POST', body: JSON.stringify({ texto }), signal }
   );
 }
