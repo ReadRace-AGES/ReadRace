@@ -1,4 +1,4 @@
-import { apiGet } from '@/api/client';
+import { apiGet, apiRequest } from '@/api/client';
 
 /**
  * A Página do clube só existe para `ClubeDoLivro`: comunidade não tem livro atual nem ranking.
@@ -24,4 +24,11 @@ export function buscarClube(clubeId: string, signal?: AbortSignal) {
   return apiGet<Clube>(`/api/clubes/${encodeURIComponent(clubeId)}`, {
     signal,
   });
+}
+
+export async function sairDoClube(clubeId: string): Promise<void> {
+  await apiRequest<void>(
+    `/api/clubes/${encodeURIComponent(clubeId)}/membros/eu`,
+    { method: 'DELETE' }
+  );
 }

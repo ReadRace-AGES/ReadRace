@@ -12,6 +12,7 @@ import org.springframework.data.jpa.repository.Lock;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
+import com.readrace.api.model.Cargo;
 import com.readrace.api.model.ClubeDoLivro;
 import com.readrace.api.model.MembroClube;
 
@@ -76,4 +77,8 @@ public interface MembroClubeRepository extends JpaRepository<MembroClube, UUID> 
                     + " and u.id = mc.usuarioId and u.excluidoEm is null"
                     + " order by mc.pontos desc, u.nome asc")
     List<LinhaRankingClube> rankingDoClube(@Param("clubeId") UUID clubeId, Pageable limite);
+
+    long countByClube_Id(UUID clubeId);
+
+    long countByClube_IdAndCargoClube(UUID clubeId, Cargo cargoClube);
 }
