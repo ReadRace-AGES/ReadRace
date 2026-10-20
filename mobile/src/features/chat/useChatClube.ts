@@ -80,6 +80,7 @@ export function useChatClube(clubeId: string) {
   });
 
   const [enviando, setEnviando] = useState(false);
+  const [focado, setFocado] = useState(false);
   const [erroEnvio, setErroEnvio] = useState<string | null>(null);
 
   const mensagensRef = useRef<MensagemClube[]>([]);
@@ -180,8 +181,26 @@ export function useChatClube(clubeId: string) {
       );
 
       atualizarMensagens(atualizadas);
-    } catch {
-      // Falhas de polling são silenciosas para não interromper o uso do chat.
+    } catch (erro: unknown) {
+      if (controller.signal.aborted || !(erro instanceof ApiError)) return;
+
+      if (erro.code === 'SO_MEMBRO_NO_CHAT') {
+        mensagensRef.current = [];
+        setChat({
+          situacao: 'nao_membro',
+          mensagens: [],
+          mensagem: COPY.soMembro,
+        });
+        return;
+      }
+
+      if (erro.code === 'CLUBE_NAO_ENCONTRADO') {
+        setChat({
+          situacao: 'erro',
+          mensagens: mensagensRef.current,
+          mensagem: mensagemDeErro(erro, COPY.erroCarregar),
+        });
+      }
     } finally {
       pollingEmAndamentoRef.current = false;
     }
@@ -245,7 +264,8 @@ export function useChatClube(clubeId: string) {
 
         return false;
       } finally {
-        if (!controller.signal.aborted) {
+        if (requisicaoEnvioRef.current === controller) {
+          requisicaoEnvioRef.current = null;
           setEnviando(false);
         }
       }
@@ -255,19 +275,20 @@ export function useChatClube(clubeId: string) {
 
   useFocusEffect(
     useCallback(() => {
+      setFocado(true);
       void carregar();
 
       return () => {
+        setFocado(false);
         requisicaoInicialRef.current?.abort();
         requisicaoPollingRef.current?.abort();
-        requisicaoEnvioRef.current?.abort();
         pollingEmAndamentoRef.current = false;
       };
     }, [carregar])
   );
 
   useEffect(() => {
-    if (chat.situacao !== 'sucesso') {
+    if (!focado || chat.situacao !== 'sucesso') {
       return;
     }
 
@@ -280,7 +301,7 @@ export function useChatClube(clubeId: string) {
       requisicaoPollingRef.current?.abort();
       pollingEmAndamentoRef.current = false;
     };
-  }, [buscarNovasMensagens, chat.situacao]);
+  }, [buscarNovasMensagens, chat.situacao, focado]);
 
   return {
     chat,

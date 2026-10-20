@@ -6,6 +6,8 @@ import java.time.OffsetDateTime;
 import java.util.List;
 import java.util.UUID;
 
+import jakarta.persistence.EntityManager;
+
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -38,6 +40,8 @@ class MensagemClubeControllerIT {
     @Autowired private MockMvcTester mvc;
 
     @Autowired private JdbcTemplate jdbc;
+
+    @Autowired private EntityManager entityManager;
 
     @Test
     void deve_listar_mensagens_do_clube() {
@@ -95,6 +99,7 @@ class MensagemClubeControllerIT {
     }
 
     @Test
+    @Transactional
     void deve_enviar_mensagem_e_persistir_no_banco() {
         String texto = "Mensagem criada pelo teste de integração";
 
@@ -112,6 +117,8 @@ class MensagemClubeControllerIT {
                 .bodyJson()
                 .extractingPath("$.texto")
                 .isEqualTo(texto);
+
+        entityManager.flush();
 
         Integer quantidade =
                 jdbc.queryForObject(

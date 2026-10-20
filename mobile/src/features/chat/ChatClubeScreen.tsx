@@ -1,16 +1,17 @@
 
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import {
   ActivityIndicator,
   Image,
-  KeyboardAvoidingView,
-  Platform,
   ScrollView,
   StyleSheet,
   Text,
   TextInput,
   TouchableOpacity,
   View,
+  useWindowDimensions,
+  type NativeScrollEvent,
+  type NativeSyntheticEvent,
 } from 'react-native';
 import { useRouter, type Href } from 'expo-router';
 import Svg, { Path } from 'react-native-svg';
@@ -18,10 +19,13 @@ import Svg, { Path } from 'react-native-svg';
 import { AppHeader } from '@/components/AppHeader';
 import { EmptyState } from '@/components/EmptyState';
 import { PrimaryButton } from '@/components/PrimaryButton';
+import { useAlturaTeclado } from '@/components/useAlturaTeclado';
 import { colors, spacing, textStyles, typography } from '@/theme';
 
 import type { MensagemClube } from './api';
 import { useChatClube } from './useChatClube';
+
+const DISTANCIA_DO_FIM = 80;
 
 const COPY = {
   titulo: 'Chat do clube',
@@ -160,6 +164,12 @@ export function ChatClubeScreen({
 }: ChatClubeScreenProps) {
   const router = useRouter();
   const scrollRef = useRef<ScrollView>(null);
+  const telaRef = useRef<View>(null);
+  const noFimRef = useRef(true);
+  const alturaTeclado = useAlturaTeclado();
+  const { height: alturaJanela } = useWindowDimensions();
+  const [distanciaAteFundo, setDistanciaAteFundo] = useState(0);
+  const sobreposicaoTeclado = Math.max(0, alturaTeclado - distanciaAteFundo);
 
   const { chat, enviando, erroEnvio, enviar, recarregar } =
     useChatClube(clubeId);
@@ -170,6 +180,26 @@ export function ChatClubeScreen({
     texto.trim().length > 0 && texto.trim().length <= 1000;
 
   const titulo = nomeClube?.trim() || COPY.titulo;
+
+  useEffect(() => {
+    if (alturaTeclado > 0 && noFimRef.current) {
+      scrollRef.current?.scrollToEnd({ animated: true });
+    }
+  }, [alturaTeclado]);
+
+  function medirTela() {
+    telaRef.current?.measureInWindow((_x, y, _largura, altura) => {
+      setDistanciaAteFundo(Math.max(0, alturaJanela - (y + altura)));
+    });
+  }
+
+  function aoRolar(evento: NativeSyntheticEvent<NativeScrollEvent>) {
+    const { contentOffset, contentSize, layoutMeasurement } =
+      evento.nativeEvent;
+    noFimRef.current =
+      contentOffset.y + layoutMeasurement.height >=
+      contentSize.height - DISTANCIA_DO_FIM;
+  }
 
   function voltar() {
     if (router.canGoBack()) {
@@ -189,6 +219,7 @@ export function ChatClubeScreen({
 
     if (enviado) {
       setTexto('');
+      noFimRef.current = true;
 
       requestAnimationFrame(() => {
         scrollRef.current?.scrollToEnd({ animated: true });
@@ -263,9 +294,10 @@ export function ChatClubeScreen({
   const mensagens = chat.mensagens;
 
   return (
-    <KeyboardAvoidingView
-      style={styles.tela}
-      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+    <View
+      ref={telaRef}
+      style={[styles.tela, { paddingBottom: sobreposicaoTeclado }]}
+      onLayout={medirTela}
     >
       {cabecalho}
 
@@ -285,8 +317,12 @@ export function ChatClubeScreen({
             mensagens.length === 0 && styles.listaVazia,
           ]}
           keyboardShouldPersistTaps="handled"
+          onScroll={aoRolar}
+          scrollEventThrottle={100}
           onContentSizeChange={() => {
-            scrollRef.current?.scrollToEnd({ animated: false });
+            if (noFimRef.current) {
+              scrollRef.current?.scrollToEnd({ animated: false });
+            }
           }}
         >
           {mensagens.length === 0 ? (
@@ -359,7 +395,7 @@ export function ChatClubeScreen({
 
         <Text style={styles.contador}>{texto.length}/1000</Text>
       </View>
-    </KeyboardAvoidingView>
+    </View>
   );
 }
 
