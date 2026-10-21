@@ -12,6 +12,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -68,8 +69,10 @@ public class ClubeController {
 
     @GetMapping("/{clubeId}/ranking")
     @Operation(summary = "Ranking completo de membros do clube por Pontos")
-    public RankingClubeResponse buscarRanking(@PathVariable UUID clubeId) {
-        return clubeService.buscarRanking(clubeId);
+    public RankingClubeResponse buscarRanking(
+            @PathVariable UUID clubeId,
+            @RequestParam(name = "cursor", required = false) String cursor) {
+        return clubeService.buscarRanking(clubeId, cursor);
     }
 
     @GetMapping("/{clubeId}/posts")

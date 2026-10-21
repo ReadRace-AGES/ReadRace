@@ -379,7 +379,11 @@ export function PaginaClubeScreen({ clubeId }: { clubeId: string }) {
           <RankingCard
             ranking={dados?.ranking ?? null}
             onLinhaPress={showToast}
-            onVerTodosPress={() => router.push(rotaDoRanking(clubeId))}
+            onVerTodosPress={
+              dados?.meuCargo
+                ? () => router.push(rotaDoRanking(clubeId))
+                : undefined
+            }
           />
 
           {podeSairDoClube && (

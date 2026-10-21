@@ -165,7 +165,7 @@ class RankingClubeControllerIT {
                 .hasStatus(HttpStatus.NOT_FOUND)
                 .bodyJson()
                 .extractingPath("$.code")
-                .isEqualTo("CLUBE_NAO_ENCONTRADO");
+                .isEqualTo("RESOURCE_NOT_FOUND");
     }
 
     @Test
@@ -175,7 +175,7 @@ class RankingClubeControllerIT {
                 .hasStatus(HttpStatus.NOT_FOUND)
                 .bodyJson()
                 .extractingPath("$.code")
-                .isEqualTo("CLUBE_NAO_ENCONTRADO");
+                .isEqualTo("RESOURCE_NOT_FOUND");
     }
 
     private String corpo(String url) {

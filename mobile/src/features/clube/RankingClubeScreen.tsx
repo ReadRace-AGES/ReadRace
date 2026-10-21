@@ -1,14 +1,22 @@
 import { useRouter } from 'expo-router';
-import { ScrollView, StyleSheet, View } from 'react-native';
+import {
+  ActivityIndicator,
+  FlatList,
+  Pressable,
+  StyleSheet,
+  View,
+} from 'react-native';
 
 import { AppHeader } from '@/components/AppHeader';
+import { Card } from '@/components/Card';
 import { EmptyState } from '@/components/EmptyState';
 import { BookIcon } from '@/components/icons/BookIcon';
 import { PrimaryButton } from '@/components/PrimaryButton';
+import { RankingRow } from '@/components/RankingRow';
 import { useToastContext } from '@/components/toast-provider';
 import { colors, spacing } from '@/theme';
 
-import { RankingCard } from './RankingCard';
+import { FaixaQuadriculada, RankingCard } from './RankingCard';
 import { useRankingClube } from './useRankingClube';
 
 const COPY = {
@@ -20,7 +28,7 @@ const COPY = {
 export function RankingClubeScreen({ clubeId }: { clubeId: string }) {
   const router = useRouter();
   const { showToast } = useToastContext();
-  const { ranking, recarregar } = useRankingClube(clubeId);
+  const { ranking, recarregar, carregarMais } = useRankingClube(clubeId);
 
   function voltar() {
     if (router.canGoBack()) {
@@ -59,31 +67,61 @@ export function RankingClubeScreen({ clubeId }: { clubeId: string }) {
 
   return (
     <View style={styles.tela}>
-      <ScrollView contentContainerStyle={styles.rolagem}>
-        <AppHeader
-          variant="surface"
-          titleAlign="center"
-          showBack
-          onBackPress={voltar}
-          title={COPY.titulo}
-          subtitle={dados?.clube.nome}
-        />
+      <AppHeader
+        variant="surface"
+        titleAlign="center"
+        showBack
+        onBackPress={voltar}
+        title={COPY.titulo}
+        subtitle={dados?.clube.nome}
+      />
 
+      {dados && dados.ranking.length > 0 ? (
+        <Card style={styles.card} surfaceStyle={styles.superficie}>
+          <FaixaQuadriculada />
+          <FlatList
+            data={dados.ranking}
+            keyExtractor={(linha) => linha.usuario.id}
+            renderItem={({ item }) => (
+              <Pressable onPress={showToast}>
+                <RankingRow
+                  position={item.posicao}
+                  name={item.usuario.nome}
+                  points={item.pontos}
+                  photoUrl={item.usuario.avatarUrl}
+                />
+              </Pressable>
+            )}
+            onEndReached={carregarMais}
+            onEndReachedThreshold={0.5}
+            ListFooterComponent={
+              ranking.situacao === 'sucesso' && ranking.carregandoMais ? (
+                <ActivityIndicator
+                  color={colors.primary}
+                  style={styles.carregandoMais}
+                />
+              ) : null
+            }
+          />
+        </Card>
+      ) : (
         <View style={styles.conteudo}>
           <RankingCard
             ranking={dados?.ranking ?? null}
             onLinhaPress={showToast}
           />
         </View>
-      </ScrollView>
+      )}
     </View>
   );
 }
 
 const styles = StyleSheet.create({
   tela: { flex: 1, backgroundColor: colors.surface },
-  rolagem: { flexGrow: 1, paddingBottom: spacing[10] },
   conteudo: { padding: spacing[6] },
+  card: { flex: 1, margin: spacing[6] },
+  superficie: { flex: 1, padding: spacing[0] },
+  carregandoMais: { padding: spacing[4] },
   acoesDoErro: { alignSelf: 'stretch', gap: spacing[2] },
 });
 
