@@ -12,6 +12,10 @@ function rotaDoClube(clubeId: string): Href {
   return `/clube/${clubeId}` as Href;
 }
 
+function rotaDaComunidade(comunidadeId: string): Href {
+  return `/comunidade/${comunidadeId}` as Href;
+}
+
 export default function FeedScreen() {
   const { feed, recarregar, atualizar } = useFeedComunidades();
   const { showToast } = useToastContext();
@@ -46,7 +50,9 @@ export default function FeedScreen() {
         onVerTodosPress={showToast}
         onCriarGrupoPress={() => setModalAberto(true)}
         onClubePress={(clube) => router.push(rotaDoClube(clube.id))}
-        onComunidadePress={showToast}
+        onComunidadePress={(comunidade) =>
+          router.push(rotaDaComunidade(comunidade.id))
+        }
       />
       <CriarGrupoSheet
         visible={modalAberto}

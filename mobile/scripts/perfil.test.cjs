@@ -34,6 +34,8 @@ const perfil = {
   xpAtual: 2450,
   seguidores: 4,
   seguindo: 2,
+  sigo: false,
+  meSegue: false,
   estatisticas: {
     livrosLidos: 5,
     paginasLidas: 6231,
@@ -214,7 +216,12 @@ test('próprio perfil mostra anel, Mascotes, engrenagem e slot de favorito', () 
   const rotas = [];
   let avisos = 0,
     tree,
-    dados = { ...perfil, xpNoNivel: 521, xpDoNivel: 833 };
+    dados = {
+      ...perfil,
+      xpNoNivel: 521,
+      xpDoNivel: 833,
+      mascote: { nome: 'O Cinzento', imagem: 'o-cinzento' },
+    };
   const { PerfilScreen } = load('features/perfil/PerfilScreen.tsx', {
     ...dependencies,
     'expo-router': {
@@ -253,9 +260,15 @@ test('próprio perfil mostra anel, Mascotes, engrenagem e slot de favorito', () 
     adicionar.props.onPress();
     tree.root.findByType('PerfilTopo').props.onConfiguracoes();
   });
-  assert.equal(avisos, 4);
+  // Seguidores, Seguindo e o slot de favorito ainda são aviso; Mascotes abre a tela.
+  assert.equal(avisos, 3);
+  assert.equal(tree.root.findByType('PerfilTopo').props.mascote, 'o-cinzento');
   act(() => capa.props.onPress());
-  assert.deepEqual(rotas, ['/configuracoes', '/perfil-livro/livro']);
+  assert.deepEqual(rotas, [
+    '/mascotes',
+    '/configuracoes',
+    '/perfil-livro/livro',
+  ]);
   dados = { ...dados, livrosFavoritos: [] };
   act(() => tree.update(React.createElement(PerfilScreen)));
   assert.match(JSON.stringify(tree.toJSON()), /Livros favoritos/);
@@ -297,7 +310,7 @@ test('próprio perfil busca de novo ao voltar para a aba, sem repetir a carga in
   assert.equal(atualizacoes, 1);
   act(() => tree.update(React.createElement(PerfilScreen, { usuarioId: '1' })));
   act(() => focar());
-  assert.equal(atualizacoes, 1);
+  assert.equal(atualizacoes, 2);
   act(() => tree.unmount());
 });
 
@@ -324,6 +337,7 @@ test('hook cancela perfil antigo, ignora resposta atrasada e permite tentar nova
   const { usePerfil } = load('features/perfil/usePerfil.ts', {
     '@/api/client': { ApiError },
     './api': {
+      buscarUsuarioAtual: async () => ({ id: 'eu' }),
       buscarPerfil: (id, signal) =>
         new Promise((resolve, reject) =>
           pending.push({ id, signal, resolve, reject })
@@ -383,4 +397,290 @@ test('atualização de fundo mantém o perfil na tela, inclusive se falhar', asy
   assert.equal(current.estado.situacao, 'sucesso');
   assert.equal(current.estado.dados.nivel, 8);
   act(() => tree.unmount());
+});
+
+test('seguir usa POST e DELETE idempotentes, com o ID do perfil e cancelamento', async () => {
+  const requests = [];
+  const { alterarSeguir, buscarUsuarioAtual } = load('features/perfil/api.ts', {
+    '@/api/client': {
+      apiRequest: async (...args) => {
+        requests.push(args);
+      },
+      apiGet: async (...args) => {
+        requests.push(args);
+      },
+    },
+  });
+  const { signal } = new AbortController();
+  await alterarSeguir('outro/id', true, signal);
+  await alterarSeguir('outro/id', false, signal);
+  await buscarUsuarioAtual(signal);
+  assert.deepEqual(requests, [
+    ['/api/usuarios/outro%2Fid/seguidores/eu', { method: 'POST', signal }],
+    ['/api/usuarios/outro%2Fid/seguidores/eu', { method: 'DELETE', signal }],
+    ['/api/me', { signal }],
+  ]);
+});
+
+test('botão tem os três textos e contorno; nunca aparece no próprio perfil', () => {
+  const { PerfilConteudo } = load(
+    'features/perfil/PerfilScreen.tsx',
+    dependencies
+  );
+  let tree;
+  for (const [sigo, meSegue, label] of [
+    [false, false, 'Seguir'],
+    [false, true, 'Seguir de volta'],
+    [true, true, 'Seguindo'],
+  ]) {
+    act(() => {
+      tree = create(
+        React.createElement(PerfilConteudo, {
+          perfil: { ...perfil, sigo, meSegue },
+          onPlaceholder() {},
+          onAlternarSeguir() {},
+          alterandoSeguir: true,
+        })
+      );
+    });
+    const button = tree.root.findByType('PrimaryButton');
+    assert.equal(button.props.label, label);
+    assert.equal(button.props.variant, sigo ? 'outline' : 'filled');
+    assert.equal(button.props.loading, true);
+    act(() => tree.unmount());
+  }
+  act(() => {
+    tree = create(
+      React.createElement(PerfilConteudo, {
+        perfil,
+        proprio: true,
+        onPlaceholder() {},
+        onAlternarSeguir() {},
+      })
+    );
+  });
+  assert.equal(tree.root.findByType('PrimaryButton').props.label, 'Mascotes');
+  act(() => tree.unmount());
+});
+
+function carregarHookSeguir() {
+  const leituras = [],
+    alteracoes = [];
+  const hook = load('features/perfil/usePerfil.ts', {
+    '@/api/client': { ApiError },
+    './api': {
+      buscarUsuarioAtual: async () => ({ id: 'eu' }),
+      buscarPerfil: (id, signal) =>
+        new Promise((resolve, reject) =>
+          leituras.push({ id, signal, resolve, reject })
+        ),
+      alterarSeguir: (id, seguir, signal) =>
+        new Promise((resolve, reject) =>
+          alteracoes.push({ id, seguir, signal, resolve, reject })
+        ),
+    },
+  });
+  return { ...hook, leituras, alteracoes };
+}
+
+test('desabilitar o perfil cancela seguir e bloqueia chamadas até reabilitar', async () => {
+  const { usePerfil, leituras, alteracoes } = carregarHookSeguir();
+  let atual, tree, envio;
+  function Probe({ habilitado }) {
+    atual = usePerfil('1', habilitado);
+    return null;
+  }
+  await act(async () => {
+    tree = create(React.createElement(Probe, { habilitado: false }));
+  });
+  assert.equal(leituras.length, 0);
+  await act(async () => atual.alternarSeguir());
+  assert.equal(alteracoes.length, 0);
+  await act(async () =>
+    tree.update(React.createElement(Probe, { habilitado: true }))
+  );
+  await act(async () => leituras[0].resolve(perfil));
+  act(() => {
+    envio = atual.alternarSeguir();
+  });
+  await act(async () =>
+    tree.update(React.createElement(Probe, { habilitado: false }))
+  );
+  assert.equal(alteracoes[0].signal.aborted, true);
+  assert.equal(atual.estado.situacao, 'carregando');
+  await act(async () => {
+    alteracoes[0].resolve({ seguidores: 5, sigo: true, meSegue: false });
+    await envio;
+    await atual.alternarSeguir();
+  });
+  assert.equal(alteracoes.length, 1);
+  assert.equal(atual.estado.situacao, 'carregando');
+  await act(async () =>
+    tree.update(React.createElement(Probe, { habilitado: true }))
+  );
+  await act(async () => leituras[1].resolve(perfil));
+  assert.equal(atual.estado.situacao, 'sucesso');
+  assert.equal(atual.alterandoSeguir, false);
+  act(() => tree.unmount());
+});
+
+test('falha ao seguir restaura o perfil e permite nova tentativa, mesmo com foco no mesmo ciclo', async () => {
+  const { usePerfil, leituras, alteracoes } = carregarHookSeguir();
+  let atual, tree, envio;
+  function Probe() {
+    atual = usePerfil('1');
+    return null;
+  }
+  await act(async () => {
+    tree = create(React.createElement(Probe));
+  });
+  await act(async () => leituras[0].resolve(perfil));
+  act(() => {
+    atual.atualizar();
+    envio = atual.alternarSeguir();
+  });
+  assert.equal(leituras.length, 1, 'recarga agendada não concorre com o envio');
+  assert.equal(atual.estado.dados.sigo, true);
+  assert.equal(atual.estado.dados.seguidores, 5);
+  const erro = assert.rejects(envio, /Não foi possível atualizar/);
+  await act(async () => {
+    alteracoes[0].reject(new Error('offline'));
+    await erro;
+  });
+  assert.equal(atual.estado.dados.sigo, false);
+  assert.equal(atual.estado.dados.seguidores, 4);
+  assert.equal(atual.alterandoSeguir, false);
+  act(() => {
+    envio = atual.alternarSeguir();
+  });
+  await act(async () => {
+    alteracoes[1].resolve({ seguidores: 5, sigo: true, meSegue: false });
+    await envio;
+  });
+  assert.equal(atual.estado.dados.sigo, true);
+  act(() => tree.unmount());
+});
+
+test('fluxo segue de volta imediatamente, bloqueia toque duplo e restaura com toast ao falhar', async () => {
+  const { usePerfil, leituras, alteracoes } = carregarHookSeguir();
+  const avisos = [];
+  const { PerfilScreen } = load('features/perfil/PerfilScreen.tsx', {
+    ...dependencies,
+    'expo-router': { useFocusEffect() {}, useRouter: () => ({}) },
+    '@/components/toast-provider': {
+      useToastContext: () => ({
+        showToast() {},
+        showErrorToast: (msg) => avisos.push(msg),
+      }),
+    },
+    './usePerfil': { usePerfil },
+  });
+  let tree;
+  await act(async () => {
+    tree = create(React.createElement(PerfilScreen, { usuarioId: '1' }));
+  });
+  await act(async () => leituras[0].resolve({ ...perfil, meSegue: true }));
+  const button = () => tree.root.findByType('PrimaryButton');
+  const contador = () =>
+    tree.root.findAllByType('Pressable')[0].findAllByType('Text')[1].props
+      .children;
+  assert.equal(button().props.label, 'Seguir de volta');
+  const tocar = button().props.onPress;
+  act(() => {
+    tocar();
+    tocar();
+  });
+  assert.equal(alteracoes.length, 1);
+  assert.equal(button().props.label, 'Seguindo');
+  assert.equal(button().props.loading, true);
+  assert.equal(contador(), '5');
+  await act(async () =>
+    alteracoes[0].resolve({ seguidores: 7, sigo: true, meSegue: true })
+  );
+  assert.equal(contador(), '7', 'reconcilia o contador com o servidor');
+  assert.equal(button().props.loading, false);
+  act(() => button().props.onPress());
+  assert.equal(alteracoes[1].seguir, false);
+  assert.equal(contador(), '6');
+  assert.equal(button().props.label, 'Seguir de volta');
+  await act(async () =>
+    alteracoes[1].reject(
+      new ApiError(500, { message: 'Falha ao deixar de seguir.' })
+    )
+  );
+  assert.equal(contador(), '7');
+  assert.equal(button().props.label, 'Seguindo');
+  assert.equal(button().props.loading, false);
+  assert.deepEqual(avisos, ['Falha ao deixar de seguir.']);
+  act(() => button().props.onPress());
+  await act(async () =>
+    alteracoes[2].resolve({ seguidores: 6, sigo: false, meSegue: true })
+  );
+  assert.equal(contador(), '6');
+  assert.equal(button().props.label, 'Seguir de volta');
+  act(() => tree.unmount());
+});
+
+test('perfil próprio aberto pela Busca não permite seguir', async () => {
+  const { usePerfil, leituras, alteracoes } = carregarHookSeguir();
+  let atual, tree;
+  function Probe() {
+    atual = usePerfil('eu');
+    return null;
+  }
+  await act(async () => {
+    tree = create(React.createElement(Probe));
+  });
+  await act(async () => leituras[0].resolve({ ...perfil, id: 'eu' }));
+  assert.equal(atual.proprio, true);
+  await act(async () => atual.alternarSeguir());
+  assert.equal(alteracoes.length, 0);
+  act(() => tree.unmount());
+});
+
+test('mutação ignora leitura anterior e resposta de outro perfil, inclusive ao voltar ao mesmo ID', async () => {
+  const { usePerfil, leituras, alteracoes } = carregarHookSeguir();
+  let atual, tree;
+  function Probe({ id }) {
+    atual = usePerfil(id);
+    return null;
+  }
+  await act(async () => {
+    tree = create(React.createElement(Probe, { id: '1' }));
+  });
+  await act(async () => leituras[0].resolve(perfil));
+  act(() => atual.atualizar());
+  let envio;
+  act(() => {
+    envio = atual.alternarSeguir();
+  });
+  await act(async () => leituras[1].resolve(perfil));
+  assert.equal(atual.estado.dados.sigo, true, 'GET antigo não desfaz o toque');
+  act(() => atual.atualizar());
+  assert.equal(
+    leituras.length,
+    2,
+    'foco durante envio não dispara GET concorrente'
+  );
+  await act(async () => tree.update(React.createElement(Probe, { id: '2' })));
+  assert.equal(alteracoes[0].signal.aborted, true);
+  await act(async () => leituras[2].resolve({ ...perfil, id: '2' }));
+  await act(async () => tree.update(React.createElement(Probe, { id: '1' })));
+  await act(async () => leituras[3].resolve(perfil));
+  await act(async () => {
+    alteracoes[0].resolve({ seguidores: 9, sigo: true, meSegue: true });
+    await envio;
+  });
+  assert.equal(atual.estado.dados.sigo, false);
+  assert.equal(atual.estado.dados.seguidores, 4);
+  assert.equal(atual.alterandoSeguir, false);
+  act(() => {
+    envio = atual.alternarSeguir();
+  });
+  act(() => tree.unmount());
+  assert.equal(alteracoes[1].signal.aborted, true);
+  await act(async () => {
+    alteracoes[1].reject(new Error('cancelado'));
+    await envio;
+  });
 });

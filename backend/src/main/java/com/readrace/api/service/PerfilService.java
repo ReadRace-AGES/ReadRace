@@ -15,6 +15,7 @@ import com.readrace.api.exception.UsuarioNaoEncontradoException;
 import com.readrace.api.model.CurvaDeNivel;
 import com.readrace.api.model.SequenciaDeLeitura;
 import com.readrace.api.repository.PerfilRepository;
+import com.readrace.api.repository.SeguirRepository;
 import com.readrace.api.repository.UsuarioRepository;
 
 @Service
@@ -25,12 +26,20 @@ public class PerfilService {
     private final UsuarioRepository usuarios;
     private final PerfilRepository perfis;
     private final UsuarioAtual usuarioAtual;
+    private final SeguirRepository seguir;
+    private final MascoteService mascotes;
 
     public PerfilService(
-            UsuarioRepository usuarios, PerfilRepository perfis, UsuarioAtual usuarioAtual) {
+            UsuarioRepository usuarios,
+            PerfilRepository perfis,
+            UsuarioAtual usuarioAtual,
+            SeguirRepository seguir,
+            MascoteService mascotes) {
         this.usuarios = usuarios;
         this.perfis = perfis;
         this.usuarioAtual = usuarioAtual;
+        this.seguir = seguir;
+        this.mascotes = mascotes;
     }
 
     public PerfilResponse buscarDoUsuarioAtual() {
@@ -81,11 +90,13 @@ public class PerfilService {
         var conquistas = perfis.conquistas(id);
         int nivel = usuario.getNivel();
         int xpTotal = usuario.getXpTotal();
+        UUID eu = usuarioAtual.idDoUsuarioAtual().valor();
+        boolean proprio = id.equals(eu);
         return new PerfilResponse(
                 usuario.getId(),
                 usuario.getNome(),
                 usuario.getNomeUsuario(),
-                id.equals(usuarioAtual.idDoUsuarioAtual().valor()) ? usuario.getEmail() : null,
+                proprio ? usuario.getEmail() : null,
                 usuario.getAvatarUrl(),
                 usuario.getTitulo(),
                 nivel,
@@ -94,12 +105,15 @@ public class PerfilService {
                 CurvaDeNivel.xpDoNivel(nivel),
                 resumo.seguidores(),
                 resumo.seguindo(),
+                !eu.equals(id) && seguir.existsBySeguidorIdAndSeguidoId(eu, id),
+                !eu.equals(id) && seguir.existsBySeguidorIdAndSeguidoId(id, eu),
                 new PerfilResponse.Estatisticas(
                         resumo.livrosLidos(),
                         resumo.paginasLidas(),
                         usuario.sequenciaExibida(SequenciaDeLeitura.hoje()),
                         conquistas.stream().filter(PerfilResponse.Conquista::desbloqueada).count()),
                 conquistas,
-                perfis.favoritos(id));
+                perfis.favoritos(id),
+                proprio ? PerfilResponse.Mascote.de(mascotes.escolhidoDe(usuario)) : null);
     }
 }
