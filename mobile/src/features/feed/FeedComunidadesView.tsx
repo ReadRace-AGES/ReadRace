@@ -25,6 +25,7 @@ const COPY = {
   meusGrupos: 'Meus Grupos',
   verTodos: 'Ver todos',
   criarGrupo: 'Criar Grupo',
+  comunidadesSugeridas: 'Comunidades sugeridas',
   tentarDeNovo: 'Tentar de novo',
   // Sem copy aprovada no Figma para o erro e para as listas vazias (pendencia de design):
   // com o seed de #13 os vazios nao aparecem em uso normal, existem como defesa.
@@ -186,16 +187,19 @@ export function FeedComunidadesView({
           {feed.dados.comunidades.length === 0 ? (
             <EmptyState icon={BookIcon} message={COPY.semComunidades} />
           ) : (
-            feed.dados.comunidades.map((comunidade) => (
-              <ListItem
-                key={comunidade.id}
-                variant="community"
-                title={comunidade.nome}
-                imageUrl={comunidade.capaUrl}
-                memberCount={comunidade.totalMembros}
-                onPress={() => onComunidadePress(comunidade)}
-              />
-            ))
+            <>
+              <CabecalhoSecao titulo={COPY.comunidadesSugeridas} />
+              {feed.dados.comunidades.map((comunidade) => (
+                <ListItem
+                  key={comunidade.id}
+                  variant="community"
+                  title={comunidade.nome}
+                  imageUrl={comunidade.capaUrl}
+                  memberCount={comunidade.totalMembros}
+                  onPress={() => onComunidadePress(comunidade)}
+                />
+              ))}
+            </>
           )}
         </ScrollView>
       )}

@@ -16,6 +16,7 @@ import { PrimaryButton } from '@/components/PrimaryButton';
 import { colors, sizes, spacing, textStyles } from '@/theme';
 
 import { listarTodosOsDesafios, type Desafio } from './api';
+import { DesafiosSistema } from './DesafiosSistema';
 
 type Estado =
   | { situacao: 'carregando' }
@@ -301,6 +302,8 @@ export function DesafiosScreen() {
           gap: spacing[4],
         }}
       >
+        <DesafiosSistema />
+
         <Text style={[textStyles.h3, { color: colors.text }]}>
           Desafio com amigos
         </Text>

@@ -123,6 +123,15 @@ class AutenticacaoCognitoIT {
                 .isEqualTo("UNAUTHORIZED");
     }
 
+    @Test
+    void desafios_de_sistema_exigem_token() {
+        assertThat(mvc.get().uri("/api/desafios/sistema"))
+                .hasStatus(HttpStatus.UNAUTHORIZED)
+                .bodyJson()
+                .extractingPath("$.code")
+                .isEqualTo("UNAUTHORIZED");
+    }
+
     // O 401 do Spring Security, antes do controller, segue o mesmo envelope de erro da API.
     @Test
     void deve_recusar_token_invalido_no_envelope_de_erro() {

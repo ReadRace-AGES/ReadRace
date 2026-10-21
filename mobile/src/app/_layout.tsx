@@ -55,6 +55,7 @@ function RootStack() {
         <Stack.Screen name="(tabs)" />
         <Stack.Screen name="desafiar-amigo" />
         <Stack.Screen name="escolher-livro" />
+        <Stack.Screen name="adicionar-livro" />
       </Stack.Protected>
 
       {/* Destino do redirect do OAuth: acessível com ou sem sessão. */}

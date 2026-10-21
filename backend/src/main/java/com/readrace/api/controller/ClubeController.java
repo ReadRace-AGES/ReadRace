@@ -5,6 +5,8 @@ import java.util.UUID;
 import jakarta.validation.Valid;
 
 import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -79,6 +81,16 @@ public class ClubeController {
     public ForumClubeResponse.Post publicarPost(
             @PathVariable UUID clubeId, @RequestBody CriarPostClubeRequest request) {
         return forumClubeService.publicar(clubeId, request.texto());
+    }
+
+    @DeleteMapping("/{clubeId}/membros/eu")
+    @Operation(
+            summary = "Sair de um clube do livro",
+            description =
+                    "Remove o usuário autenticado do clube, respeitando a regra do único líder.")
+    public ResponseEntity<Void> sairDoClube(@PathVariable UUID clubeId) {
+        clubeService.sairDoClube(clubeId);
+        return ResponseEntity.noContent().build();
     }
 
     @GetMapping("/{clubeId}/quiz")

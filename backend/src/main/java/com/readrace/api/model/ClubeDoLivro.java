@@ -50,6 +50,10 @@ public class ClubeDoLivro {
         this.capaUrl = livro.getCapaUrl();
     }
 
+    public void excluir(OffsetDateTime momento) {
+        this.excluidoEm = momento;
+    }
+
     @Override
     public boolean equals(Object obj) {
         if (this == obj) {
