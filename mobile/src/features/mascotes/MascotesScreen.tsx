@@ -16,10 +16,23 @@ import { LockIcon } from '@/components/icons/LockIcon';
 import { PawIcon } from '@/components/icons/PawIcon';
 import { PrimaryButton } from '@/components/PrimaryButton';
 import { useToastContext } from '@/components/toast-provider';
-import { colors, radius, sizes, spacing, textStyles } from '@/theme';
+import {
+  colors,
+  radius,
+  sizes,
+  spacing,
+  textStyles,
+  typography,
+} from '@/theme';
 import { escolherMascote, type Mascote } from './api';
 import { arteDoMascote, PROPORCAO_ARTE, SILHUETA } from './imagens';
 import { useMascotes } from './useMascotes';
+
+// O nome e o "Desbloqueia no nível N" usam a linha da legenda (caption). Toda carta reserva as
+// duas linhas, bloqueada ou não, para as cartas da grade terem a mesma altura.
+const ALTURA_LINHA_LEGENDA = Math.round(
+  typography.fontSize.caption * typography.lineHeight.normal
+);
 
 function CartaMascote({
   mascote,
@@ -64,14 +77,16 @@ function CartaMascote({
             </View>
           )}
         </View>
-        <Text numberOfLines={1} style={styles.nome}>
-          {bloqueado ? '???' : mascote.nome}
-        </Text>
-        {bloqueado && (
-          <Text numberOfLines={1} style={styles.nivel}>
-            {`Desbloqueia no nível ${mascote.nivelMinimo}`}
+        <View style={styles.legenda}>
+          <Text numberOfLines={1} style={styles.nome}>
+            {bloqueado ? '???' : mascote.nome}
           </Text>
-        )}
+          {bloqueado && (
+            <Text numberOfLines={1} style={styles.nivel}>
+              {`Desbloqueia no nível ${mascote.nivelMinimo}`}
+            </Text>
+          )}
+        </View>
       </Pressable>
     </View>
   );
@@ -195,6 +210,10 @@ const styles = StyleSheet.create({
     ...StyleSheet.absoluteFill,
     alignItems: 'center',
     justifyContent: 'center',
+  },
+  legenda: {
+    gap: spacing[2],
+    minHeight: ALTURA_LINHA_LEGENDA * 2 + spacing[2],
   },
   nome: {
     ...textStyles.captionStrong,

@@ -84,20 +84,21 @@ const styles = StyleSheet.create({
     borderRadius: radius.pill,
     backgroundColor: colors.surface,
   },
+  // No canto direito, ao lado do avatar sem cobrir a foto e sem a ponta ser cortada pela borda.
   mascote: {
     position: 'absolute',
-    right: '19.5%',
-    bottom: '10%',
-    width: '19%',
+    right: '3%',
+    bottom: '4%',
+    width: '30%',
     aspectRatio: PROPORCAO_BRASAO,
   },
-  // Centrado na parte larga do brasão, com folga até a borda.
+  // Ocupa a parte larga do brasão, com folga até a borda.
   arteMascote: {
     position: 'absolute',
-    left: '14%',
-    top: '14%',
-    width: '72%',
-    height: '56%',
+    left: '8%',
+    top: '8%',
+    width: '84%',
+    height: '64%',
   },
   engrenagem: {
     position: 'absolute',
