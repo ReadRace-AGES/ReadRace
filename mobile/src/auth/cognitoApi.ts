@@ -2,6 +2,10 @@ import * as WebBrowser from 'expo-web-browser';
 
 import {
   chamarCognito,
+  erroDeCadastro,
+  requisicaoCadastro,
+  requisicaoConfirmacao,
+  requisicaoReenvio,
   requisicaoLogin,
   requisicaoRenovacao,
   requisicaoRevogacao,
@@ -38,10 +42,38 @@ export async function revogarSessao(refreshToken: string): Promise<void> {
   );
 }
 
+/** Lança ErroCadastro com a mensagem pronta para a tela. O Cognito manda o código por e-mail. */
+export async function criarConta(nome: string, email: string, senha: string): Promise<void> {
+  await chamarCognito(
+    fetch,
+    ENDPOINT_COGNITO,
+    requisicaoCadastro(COGNITO_CLIENT_ID, nome, email, senha),
+    erroDeCadastro('cadastro')
+  );
+}
+
+export async function confirmarConta(email: string, codigo: string): Promise<void> {
+  await chamarCognito(
+    fetch,
+    ENDPOINT_COGNITO,
+    requisicaoConfirmacao(COGNITO_CLIENT_ID, email, codigo),
+    erroDeCadastro('confirmacao')
+  );
+}
+
+export async function reenviarCodigo(email: string): Promise<void> {
+  await chamarCognito(
+    fetch,
+    ENDPOINT_COGNITO,
+    requisicaoReenvio(COGNITO_CLIENT_ID, email),
+    erroDeCadastro('reenvio')
+  );
+}
+
 /**
- * Criar conta e recuperar senha continuam na página do Cognito (#157 traz o cadastro para o app).
- * Navegador simples, sem esperar código: depois a pessoa entra pela tela do app.
+ * Recuperar senha continua na página do Cognito. Navegador simples, sem esperar código: depois a
+ * pessoa entra pela tela do app.
  */
-export async function abrirPaginaCognito(pagina: 'signup' | 'forgotPassword'): Promise<void> {
+export async function abrirPaginaCognito(pagina: 'forgotPassword'): Promise<void> {
   await WebBrowser.openBrowserAsync(urlPaginaCognito(COGNITO_DOMAIN, COGNITO_CLIENT_ID, pagina));
 }
