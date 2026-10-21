@@ -48,6 +48,8 @@ public enum CodigoErro {
     SO_MEMBRO_RESPONDE(HttpStatus.FORBIDDEN, "Só membros do clube participam do quiz."),
     PERGUNTA_JA_RESPONDIDA(HttpStatus.CONFLICT, "Você já respondeu esta pergunta."),
     ALTERNATIVA_INVALIDA(HttpStatus.BAD_REQUEST, "A alternativa não pertence a esta pergunta."),
+    QUIZ_INVALIDO(HttpStatus.BAD_REQUEST, "Quiz inválido."),
+    SO_LIDER_CRIA_QUIZ(HttpStatus.FORBIDDEN, "Só o administrador do clube cria o quiz."),
     MASCOTE_NAO_ENCONTRADO(HttpStatus.NOT_FOUND, "Mascote não encontrado."),
     MASCOTE_BLOQUEADO(HttpStatus.CONFLICT, "Este mascote ainda está bloqueado para o seu nível."),
     METHOD_NOT_ALLOWED(HttpStatus.METHOD_NOT_ALLOWED, "Método não permitido para esta rota."),

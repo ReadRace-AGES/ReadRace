@@ -54,6 +54,10 @@ function rotaDoQuiz(clubeId: string): Href {
   return `/clube/${clubeId}/quiz` as Href;
 }
 
+function rotaDaConfiguracaoDoQuiz(clubeId: string): Href {
+  return `/clube/${clubeId}/quiz/configurar` as Href;
+}
+
 function rotaDoChat(clubeId: string, nomeClube: string): Href {
   return `/clube/${clubeId}/chat?nomeClube=${encodeURIComponent(nomeClube)}` as Href;
 }
@@ -249,9 +253,7 @@ export function PaginaClubeScreen({ clubeId }: { clubeId: string }) {
   async function acessarQuiz() {
     if (!dados || abrindoQuiz) return;
     if (dados.meuCargo === 'administrador') {
-      // A configuração do quiz é a #161 (`/clube/{clubeId}/quiz/configurar`), que ainda não
-      // entrou: até lá o líder vê o aviso de funcionalidade em desenvolvimento.
-      showToast();
+      router.push(rotaDaConfiguracaoDoQuiz(clubeId));
       return;
     }
     if (dados.meuCargo === null) {

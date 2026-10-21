@@ -17,14 +17,17 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.readrace.api.dto.request.CriarClubeRequest;
 import com.readrace.api.dto.request.CriarPostClubeRequest;
+import com.readrace.api.dto.request.PublicarQuizRequest;
 import com.readrace.api.dto.request.ResponderPerguntaRequest;
 import com.readrace.api.dto.response.ClubeCriadoResponse;
 import com.readrace.api.dto.response.ClubeResponse;
 import com.readrace.api.dto.response.ForumClubeResponse;
+import com.readrace.api.dto.response.QuizPublicadoResponse;
 import com.readrace.api.dto.response.QuizResponse;
 import com.readrace.api.dto.response.RespostaQuizResponse;
 import com.readrace.api.service.ClubeService;
 import com.readrace.api.service.ForumClubeService;
+import com.readrace.api.service.PublicarQuizService;
 import com.readrace.api.service.QuizService;
 
 import io.swagger.v3.oas.annotations.Operation;
@@ -38,14 +41,17 @@ public class ClubeController {
     private final ClubeService clubeService;
     private final ForumClubeService forumClubeService;
     private final QuizService quizService;
+    private final PublicarQuizService publicarQuizService;
 
     public ClubeController(
             ClubeService clubeService,
             ForumClubeService forumClubeService,
-            QuizService quizService) {
+            QuizService quizService,
+            PublicarQuizService publicarQuizService) {
         this.clubeService = clubeService;
         this.forumClubeService = forumClubeService;
         this.quizService = quizService;
+        this.publicarQuizService = publicarQuizService;
     }
 
     @PostMapping
@@ -115,5 +121,15 @@ public class ClubeController {
             @PathVariable UUID perguntaId,
             @Valid @RequestBody ResponderPerguntaRequest request) {
         return quizService.responder(clubeId, perguntaId, request);
+    }
+
+    @PostMapping("/{clubeId}/quiz")
+    @ResponseStatus(HttpStatus.CREATED)
+    @Operation(
+            summary = "Publica ou substitui o quiz ativo do clube",
+            description = "Somente o administrador do clube pode publicar um quiz.")
+    public QuizPublicadoResponse publicarQuiz(
+            @PathVariable UUID clubeId, @Valid @RequestBody PublicarQuizRequest request) {
+        return publicarQuizService.publicar(clubeId, request);
     }
 }

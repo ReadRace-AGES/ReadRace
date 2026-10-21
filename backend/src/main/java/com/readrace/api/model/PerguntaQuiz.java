@@ -37,6 +37,13 @@ public class PerguntaQuiz {
     @OrderBy("letra")
     private List<AlternativaQuiz> alternativas = new ArrayList<>();
 
+    public PerguntaQuiz(UUID quizId, String enunciado, int ordem) {
+        this.id = UUID.randomUUID();
+        this.quizId = quizId;
+        this.enunciado = enunciado;
+        this.ordem = (short) ordem;
+    }
+
     @Override
     public boolean equals(Object obj) {
         if (this == obj) {
