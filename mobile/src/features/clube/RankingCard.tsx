@@ -62,7 +62,7 @@ export type RankingCardProps = {
   /** `null` enquanto a página carrega. */
   ranking: LinhaRanking[] | null;
   onLinhaPress: () => void;
-  onVerTodosPress: () => void;
+  onVerTodosPress?: () => void;
 };
 
 /**
@@ -101,7 +101,7 @@ export function RankingCard({
         ))
       )}
 
-      {ranking !== null && (
+      {ranking !== null && onVerTodosPress && (
         <View style={styles.rodape}>
           <Text
             accessibilityRole="button"
