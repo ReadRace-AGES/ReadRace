@@ -10,17 +10,21 @@ import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Slice;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.readrace.api.dto.request.CriarClubeRequest;
 import com.readrace.api.dto.response.ClubeCriadoResponse;
 import com.readrace.api.dto.response.ClubeResponse;
+import com.readrace.api.dto.response.RankingClubeResponse;
 import com.readrace.api.exception.ClubeInvalidoException;
 import com.readrace.api.exception.ClubeNaoEncontradoException;
 import com.readrace.api.exception.LivroNaoEncontradoException;
 import com.readrace.api.exception.NaoEMembroException;
+import com.readrace.api.exception.ParametroInvalidoException;
 import com.readrace.api.exception.RecursoNaoEncontradoException;
+import com.readrace.api.exception.SoMembroVeRankingException;
 import com.readrace.api.exception.UnicoLiderException;
 import com.readrace.api.exception.UsuarioNaoEncontradoException;
 import com.readrace.api.model.Cargo;
@@ -40,6 +44,8 @@ public class ClubeService {
 
     /** A Página do clube mostra 7 posições; o ranking completo está fora da sprint (#35). */
     static final int TAMANHO_DO_RANKING = 7;
+
+    static final int TAMANHO_DA_PAGINA_DO_RANKING = 50;
 
     private final ClubeDoLivroRepository clubeRepository;
     private final MembroClubeRepository membroClubeRepository;
@@ -135,9 +141,43 @@ public class ClubeService {
                 clube.getId(),
                 clube.getNome(),
                 livroAtual(clube.getLivro()),
-                ranking(linhas),
+                ranking(linhas, 0),
                 meuCargo(clubeId),
                 quizRepository.existsByClubeIdAndAtivoTrue(clubeId));
+    }
+
+    public RankingClubeResponse buscarRanking(UUID clubeId, String cursor) {
+        ClubeDoLivro clube =
+                clubeRepository
+                        .findByIdAndExcluidoEmIsNull(clubeId)
+                        .orElseThrow(
+                                () -> new RecursoNaoEncontradoException("Clube não encontrado."));
+
+        if (meuCargo(clubeId) == null) {
+            throw new SoMembroVeRankingException();
+        }
+
+        int pagina = paginaDoCursor(cursor);
+        Slice<LinhaRankingClube> linhas =
+                membroClubeRepository.paginaDoRanking(
+                        clubeId, PageRequest.of(pagina, TAMANHO_DA_PAGINA_DO_RANKING));
+
+        return new RankingClubeResponse(
+                new RankingClubeResponse.Clube(clube.getId(), clube.getNome()),
+                ranking(linhas.getContent(), pagina * TAMANHO_DA_PAGINA_DO_RANKING),
+                linhas.hasNext() ? String.valueOf(pagina + 1) : null);
+    }
+
+    private static int paginaDoCursor(String cursor) {
+        if (cursor == null) {
+            return 0;
+        }
+
+        if (!cursor.matches("\\d{1,6}")) {
+            throw new ParametroInvalidoException("O parâmetro 'cursor' é inválido.");
+        }
+
+        return Integer.parseInt(cursor);
     }
 
     private String meuCargo(UUID clubeId) {
@@ -189,12 +229,13 @@ public class ClubeService {
     }
 
     /**
-     * A consulta já entrega ordenado; aqui só entra a numeração de 1 a {@value
-     * #TAMANHO_DO_RANKING}.
+     * A consulta já entrega ordenado; aqui só entra a numeração, a partir da posição seguinte a
+     * {@code deslocamento}.
      */
-    private static List<ClubeResponse.LinhaRanking> ranking(List<LinhaRankingClube> linhas) {
+    private static List<ClubeResponse.LinhaRanking> ranking(
+            List<LinhaRankingClube> linhas, int deslocamento) {
         return IntStream.range(0, linhas.size())
-                .mapToObj(indice -> paraLinha(indice + 1, linhas.get(indice)))
+                .mapToObj(indice -> paraLinha(deslocamento + indice + 1, linhas.get(indice)))
                 .toList();
     }
 

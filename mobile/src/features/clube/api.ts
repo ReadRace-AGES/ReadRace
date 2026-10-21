@@ -34,3 +34,21 @@ export async function sairDoClube(clubeId: string): Promise<void> {
     { method: 'DELETE' }
   );
 }
+
+export type RankingClube = {
+  clube: { id: string; nome: string };
+  ranking: LinhaRanking[];
+  proximoCursor: string | null;
+};
+
+export function buscarRankingClube(
+  clubeId: string,
+  cursor: string | null,
+  signal?: AbortSignal
+) {
+  const consulta = cursor ? `?cursor=${encodeURIComponent(cursor)}` : '';
+  return apiGet<RankingClube>(
+    `/api/clubes/${encodeURIComponent(clubeId)}/ranking${consulta}`,
+    { signal }
+  );
+}

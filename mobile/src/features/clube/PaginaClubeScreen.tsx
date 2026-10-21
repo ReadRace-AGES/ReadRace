@@ -62,6 +62,10 @@ function rotaDoChat(clubeId: string, nomeClube: string): Href {
   return `/clube/${clubeId}/chat?nomeClube=${encodeURIComponent(nomeClube)}` as Href;
 }
 
+function rotaDoRanking(clubeId: string): Href {
+  return `/clube/${clubeId}/ranking` as Href;
+}
+
 function IconePlus({ size, color }: PrimaryButtonIconProps) {
   return (
     <Svg width={size} height={size} viewBox="0 0 24 24" fill="none">
@@ -377,7 +381,11 @@ export function PaginaClubeScreen({ clubeId }: { clubeId: string }) {
           <RankingCard
             ranking={dados?.ranking ?? null}
             onLinhaPress={showToast}
-            onVerTodosPress={showToast}
+            onVerTodosPress={
+              dados?.meuCargo
+                ? () => router.push(rotaDoRanking(clubeId))
+                : undefined
+            }
           />
 
           {podeSairDoClube && (

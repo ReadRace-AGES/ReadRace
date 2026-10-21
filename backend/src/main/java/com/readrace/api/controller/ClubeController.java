@@ -12,6 +12,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -24,6 +25,7 @@ import com.readrace.api.dto.response.ClubeResponse;
 import com.readrace.api.dto.response.ForumClubeResponse;
 import com.readrace.api.dto.response.QuizPublicadoResponse;
 import com.readrace.api.dto.response.QuizResponse;
+import com.readrace.api.dto.response.RankingClubeResponse;
 import com.readrace.api.dto.response.RespostaQuizResponse;
 import com.readrace.api.service.ClubeService;
 import com.readrace.api.service.ForumClubeService;
@@ -69,6 +71,14 @@ public class ClubeController {
                             + " qualquer id inexistente.")
     public ClubeResponse buscar(@PathVariable UUID clubeId) {
         return clubeService.buscar(clubeId);
+    }
+
+    @GetMapping("/{clubeId}/ranking")
+    @Operation(summary = "Ranking completo de membros do clube por Pontos")
+    public RankingClubeResponse buscarRanking(
+            @PathVariable UUID clubeId,
+            @RequestParam(name = "cursor", required = false) String cursor) {
+        return clubeService.buscarRanking(clubeId, cursor);
     }
 
     @GetMapping("/{clubeId}/posts")
