@@ -6,6 +6,7 @@ import { colors, sizes } from '@/theme';
 
 import { Avatar, StreakBadge } from './avatar';
 import { Card } from './Card';
+import Comments from './icons/Comments';
 
 // Linhas visiveis do texto recolhido, antes do "Ler mais" (`tela livro` 2011-674).
 const LINHAS_RECOLHIDO = 4;
@@ -19,6 +20,7 @@ export type PostCardProps = {
   timeAgo: string;
   text: string;
   likes: number;
+  comments?: number;
   likedByMe?: boolean;
   /** Sem handler, o coração fica só exibição (ex.: quem ainda não tem postId). */
   onLikePress?: () => void;
@@ -110,6 +112,7 @@ export function PostCard({
   timeAgo,
   text,
   likes,
+  comments,
   likedByMe = false,
   onLikePress,
   likeDisabled = false,
@@ -147,33 +150,47 @@ export function PostCard({
         </View>
       )}
 
-      {onLikePress ? (
-        <Pressable
-          accessibilityRole="button"
-          accessibilityState={{ disabled: likeDisabled, selected: likedByMe }}
-          accessibilityLabel={`${likes} curtidas${likedByMe ? ', curtido por você' : ''}`}
-          disabled={likeDisabled}
-          onPress={onLikePress}
-          hitSlop={8}
-          className="mt-3 flex-row items-center gap-1 self-start"
-        >
-          <HeartIcon filled={likedByMe} />
-          <Text className="text-bodySmall font-inter text-text-secondary">
-            {likes}
-          </Text>
-        </Pressable>
-      ) : (
-        <View
-          accessible
-          accessibilityLabel={`${likes} curtidas${likedByMe ? ', curtido por você' : ''}`}
-          className="mt-3 flex-row items-center gap-1"
-        >
-          <HeartIcon filled={likedByMe} />
-          <Text className="text-bodySmall font-inter text-text-secondary">
-            {likes}
-          </Text>
-        </View>
-      )}
+      <View className="mt-3 flex-row items-center gap-4">
+        {onLikePress ? (
+          <Pressable
+            accessibilityRole="button"
+            accessibilityState={{ disabled: likeDisabled, selected: likedByMe }}
+            accessibilityLabel={`${likes} curtidas${likedByMe ? ', curtido por você' : ''}`}
+            disabled={likeDisabled}
+            onPress={onLikePress}
+            hitSlop={8}
+            className="flex-row items-center gap-1"
+          >
+            <HeartIcon filled={likedByMe} />
+            <Text className="text-bodySmall font-inter text-text-secondary">
+              {likes}
+            </Text>
+          </Pressable>
+        ) : (
+          <View
+            accessible
+            accessibilityLabel={`${likes} curtidas${likedByMe ? ', curtido por você' : ''}`}
+            className="flex-row items-center gap-1"
+          >
+            <HeartIcon filled={likedByMe} />
+            <Text className="text-bodySmall font-inter text-text-secondary">
+              {likes}
+            </Text>
+          </View>
+        )}
+        {comments !== undefined && (
+          <View
+            accessible
+            accessibilityLabel={`${comments} comentários`}
+            className="flex-row items-center gap-1"
+          >
+            <Comments size={sizes.iconSmall} />
+            <Text className="text-bodySmall font-inter text-text-secondary">
+              {comments}
+            </Text>
+          </View>
+        )}
+      </View>
     </Card>
   );
 }

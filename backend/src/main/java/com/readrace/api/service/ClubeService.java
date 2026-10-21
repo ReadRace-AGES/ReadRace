@@ -1,5 +1,7 @@
 package com.readrace.api.service;
 
+import java.time.Clock;
+import java.time.OffsetDateTime;
 import java.util.List;
 import java.util.Set;
 import java.util.TreeSet;
@@ -15,8 +17,11 @@ import com.readrace.api.dto.request.CriarClubeRequest;
 import com.readrace.api.dto.response.ClubeCriadoResponse;
 import com.readrace.api.dto.response.ClubeResponse;
 import com.readrace.api.exception.ClubeInvalidoException;
+import com.readrace.api.exception.ClubeNaoEncontradoException;
 import com.readrace.api.exception.LivroNaoEncontradoException;
+import com.readrace.api.exception.NaoEMembroException;
 import com.readrace.api.exception.RecursoNaoEncontradoException;
+import com.readrace.api.exception.UnicoLiderException;
 import com.readrace.api.exception.UsuarioNaoEncontradoException;
 import com.readrace.api.model.Cargo;
 import com.readrace.api.model.ClubeDoLivro;
@@ -42,6 +47,7 @@ public class ClubeService {
     private final LivroRepository livroRepository;
     private final UsuarioRepository usuarioRepository;
     private final ConquistaService conquistaService;
+    private final Clock clock;
 
     public ClubeService(
             ClubeDoLivroRepository clubeRepository,
@@ -49,13 +55,15 @@ public class ClubeService {
             LivroRepository livroRepository,
             UsuarioRepository usuarioRepository,
             UsuarioAtual usuarioAtual,
-            ConquistaService conquistaService) {
+            ConquistaService conquistaService,
+            Clock clock) {
         this.clubeRepository = clubeRepository;
         this.membroClubeRepository = membroClubeRepository;
         this.livroRepository = livroRepository;
         this.usuarioRepository = usuarioRepository;
         this.usuarioAtual = usuarioAtual;
         this.conquistaService = conquistaService;
+        this.clock = clock;
     }
 
     @Transactional
@@ -134,6 +142,35 @@ public class ClubeService {
                 .findByClube_IdAndUsuarioId(clubeId, usuarioId)
                 .map(membro -> membro.getCargoClube().getValor())
                 .orElse(null);
+    }
+
+    @Transactional
+    public void sairDoClube(UUID clubeId) {
+        ClubeDoLivro clube =
+                clubeRepository
+                        .buscarComLock(clubeId)
+                        .orElseThrow(ClubeNaoEncontradoException::new);
+        UUID usuarioId = usuarioAtual.idDoUsuarioAtual().valor();
+
+        MembroClube membro =
+                membroClubeRepository
+                        .findByClube_IdAndUsuarioId(clubeId, usuarioId)
+                        .orElseThrow(NaoEMembroException::new);
+
+        long totalMembros = membroClubeRepository.countByClube_Id(clubeId);
+
+        if (totalMembros > 1
+                && membro.getCargoClube() == Cargo.ADMINISTRADOR
+                && membroClubeRepository.countByClube_IdAndCargoClube(clubeId, Cargo.ADMINISTRADOR)
+                        == 1) {
+            throw new UnicoLiderException();
+        }
+
+        membroClubeRepository.delete(membro);
+
+        if (totalMembros == 1) {
+            clube.excluir(OffsetDateTime.now(clock));
+        }
     }
 
     private static ClubeResponse.LivroAtual livroAtual(Livro livro) {

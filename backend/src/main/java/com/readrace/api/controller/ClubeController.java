@@ -5,6 +5,8 @@ import java.util.UUID;
 import jakarta.validation.Valid;
 
 import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -14,6 +16,7 @@ import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.readrace.api.dto.request.CriarClubeRequest;
+import com.readrace.api.dto.request.CriarPostClubeRequest;
 import com.readrace.api.dto.request.ResponderPerguntaRequest;
 import com.readrace.api.dto.response.ClubeCriadoResponse;
 import com.readrace.api.dto.response.ClubeResponse;
@@ -70,6 +73,24 @@ public class ClubeController {
                             + " não entram.")
     public ForumClubeResponse buscarPosts(@PathVariable UUID clubeId) {
         return forumClubeService.buscar(clubeId);
+    }
+
+    @PostMapping("/{clubeId}/posts")
+    @ResponseStatus(HttpStatus.CREATED)
+    @Operation(summary = "Publica um post raiz no fórum do clube como membro ou administrador")
+    public ForumClubeResponse.Post publicarPost(
+            @PathVariable UUID clubeId, @RequestBody CriarPostClubeRequest request) {
+        return forumClubeService.publicar(clubeId, request.texto());
+    }
+
+    @DeleteMapping("/{clubeId}/membros/eu")
+    @Operation(
+            summary = "Sair de um clube do livro",
+            description =
+                    "Remove o usuário autenticado do clube, respeitando a regra do único líder.")
+    public ResponseEntity<Void> sairDoClube(@PathVariable UUID clubeId) {
+        clubeService.sairDoClube(clubeId);
+        return ResponseEntity.noContent().build();
     }
 
     @GetMapping("/{clubeId}/quiz")

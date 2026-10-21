@@ -23,6 +23,9 @@ public class Livro {
 
     @Id private UUID id;
 
+    @Column(nullable = false, unique = true, length = 13)
+    private String isbn;
+
     @Column(nullable = false, length = 255)
     private String titulo;
 

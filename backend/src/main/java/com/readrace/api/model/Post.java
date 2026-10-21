@@ -26,6 +26,9 @@ public class Post {
     @Column(name = "clube_id")
     private UUID clubeId;
 
+    @Column(name = "comunidade_id")
+    private UUID comunidadeId;
+
     @Column(name = "post_pai_id")
     private UUID postPaiId;
 
@@ -39,6 +42,18 @@ public class Post {
     private OffsetDateTime excluidoEm;
 
     protected Post() {}
+
+    /** Cria um post raiz de clube, sem vínculo com livro ou comunidade. */
+    public static Post criarRaizDeClube(UUID autorId, UUID clubeId, String texto) {
+        String conteudo = ValidadorTextoPost.validar(texto);
+        Post post = new Post();
+        post.id = UUID.randomUUID();
+        post.autorId = autorId;
+        post.clubeId = clubeId;
+        post.conteudo = conteudo;
+        post.criadoEm = OffsetDateTime.now();
+        return post;
+    }
 
     public UUID getId() {
         return id;
@@ -54,6 +69,10 @@ public class Post {
 
     public UUID getClubeId() {
         return clubeId;
+    }
+
+    public UUID getComunidadeId() {
+        return comunidadeId;
     }
 
     public UUID getPostPaiId() {
