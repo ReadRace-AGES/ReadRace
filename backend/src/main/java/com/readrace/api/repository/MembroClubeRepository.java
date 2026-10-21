@@ -12,6 +12,7 @@ import org.springframework.data.jpa.repository.Lock;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
+import com.readrace.api.model.Cargo;
 import com.readrace.api.model.ClubeDoLivro;
 import com.readrace.api.model.MembroClube;
 
@@ -31,6 +32,22 @@ public interface MembroClubeRepository extends JpaRepository<MembroClube, UUID> 
             """)
     Optional<MembroClube> buscarComLock(
             @Param("clubeId") UUID clubeId, @Param("usuarioId") UUID usuarioId);
+
+    // Registrar leitura soma pontos nas linhas do usuário em todos os clubes cujo livro atual é o
+    // livro registrado (#163). O lock é o mesmo do quiz, para as duas somas na mesma linha não se
+    // sobrescreverem; a ordem por id faz transações diferentes pegarem os locks na mesma sequência.
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
+    @Query(
+            """
+            SELECT membro
+            FROM MembroClube membro
+            WHERE membro.usuarioId = :usuarioId
+              AND membro.clube.livro.id = :livroId
+              AND membro.clube.excluidoEm IS NULL
+            ORDER BY membro.id
+            """)
+    List<MembroClube> buscarDoLivroComLock(
+            @Param("usuarioId") UUID usuarioId, @Param("livroId") UUID livroId);
 
     @Query(
             "select mc.clube from MembroClube mc"
@@ -60,4 +77,8 @@ public interface MembroClubeRepository extends JpaRepository<MembroClube, UUID> 
                     + " and u.id = mc.usuarioId and u.excluidoEm is null"
                     + " order by mc.pontos desc, u.nome asc")
     List<LinhaRankingClube> rankingDoClube(@Param("clubeId") UUID clubeId, Pageable limite);
+
+    long countByClube_Id(UUID clubeId);
+
+    long countByClube_IdAndCargoClube(UUID clubeId, Cargo cargoClube);
 }

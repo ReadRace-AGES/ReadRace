@@ -17,12 +17,6 @@ public interface ClubeDoLivroRepository extends JpaRepository<ClubeDoLivro, UUID
     Optional<ClubeDoLivro> findByIdAndExcluidoEmIsNull(UUID id);
 
     @Lock(LockModeType.PESSIMISTIC_WRITE)
-    @Query(
-            """
-            SELECT clube
-            FROM ClubeDoLivro clube
-            WHERE clube.id = :id
-              AND clube.excluidoEm IS NULL
-            """)
-    Optional<ClubeDoLivro> buscarAtivoComLock(@Param("id") UUID id);
+    @Query("select c from ClubeDoLivro c where c.id = :id and c.excluidoEm is null")
+    Optional<ClubeDoLivro> buscarComLock(@Param("id") UUID id);
 }

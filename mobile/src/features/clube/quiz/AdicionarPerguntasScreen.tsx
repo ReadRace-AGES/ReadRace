@@ -1,6 +1,16 @@
-import { useEffect, useState } from 'react';
-import { Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
+import { useEffect, useRef, useState } from 'react';
+import {
+  KeyboardAvoidingView,
+  Platform,
+  Pressable,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TextInput,
+  View,
+} from 'react-native';
 import { useRouter } from 'expo-router';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Svg, { Path } from 'react-native-svg';
 
 import { ApiError } from '@/api/client';
@@ -8,7 +18,6 @@ import { AppHeader } from '@/components/AppHeader';
 import { Card } from '@/components/Card';
 import { PrimaryButton } from '@/components/PrimaryButton';
 import { useToastContext } from '@/components/toast-provider';
-import { buscarQuiz } from '@/features/quiz/api';
 import { colors, radius, sizes, spacing, textStyles } from '@/theme';
 
 import { publicarQuiz, type PerguntaNova } from './api';
@@ -70,31 +79,27 @@ export type AdicionarPerguntasScreenProps = {
   clubeId: string;
   titulo: string;
   recompensaXp: number;
+  /** Vem de `temQuizAtivo` do clube: o líder não pode abrir `GET /quiz` para descobrir. */
+  temQuizAtivo: boolean;
 };
 
 export function AdicionarPerguntasScreen({
   clubeId,
   titulo,
   recompensaXp,
+  temQuizAtivo,
 }: AdicionarPerguntasScreenProps) {
   const router = useRouter();
+  const insets = useSafeAreaInsets();
   const { showErrorToast } = useToastContext();
   const [perguntas, setPerguntas] = useState<PerguntaNova[]>([]);
   const [formulario, setFormulario] =
     useState<FormularioPergunta>(FORMULARIO_VAZIO);
   const [publicando, setPublicando] = useState(false);
-  const [clubeTemQuiz, setClubeTemQuiz] = useState(false);
   const [publicado, setPublicado] = useState(false);
-
-  // O aviso de substituição só faz sentido se já existe um quiz ativo. 404 (sem quiz) ou
-  // qualquer falha aqui só deixam o aviso de fora; não impedem de montar o quiz.
-  useEffect(() => {
-    const cancelar = new AbortController();
-    buscarQuiz(clubeId, cancelar.signal)
-      .then(() => setClubeTemQuiz(true))
-      .catch(() => {});
-    return () => cancelar.abort();
-  }, [clubeId]);
+  // O estado `publicando` só muda no próximo render: dois toques rápidos publicariam dois quizzes.
+  // A ref muda na hora.
+  const publicacaoEmAndamento = useRef(false);
 
   // Some sozinho depois de confirmar — sem exigir mais um toque do líder.
   useEffect(() => {
@@ -143,12 +148,15 @@ export function AdicionarPerguntasScreen({
   }
 
   async function finalizarQuiz() {
-    if (perguntas.length === 0 || publicando) return;
+    if (perguntas.length === 0 || publicacaoEmAndamento.current) return;
+    publicacaoEmAndamento.current = true;
     setPublicando(true);
     try {
       await publicarQuiz(clubeId, { titulo, recompensaXp, perguntas });
+      // A trava continua fechada: a tela some sozinha depois de publicar.
       setPublicado(true);
     } catch (erroCapturado: unknown) {
+      publicacaoEmAndamento.current = false;
       showErrorToast(
         erroCapturado instanceof ApiError
           ? erroCapturado.message
@@ -168,7 +176,10 @@ export function AdicionarPerguntasScreen({
   }
 
   return (
-    <View style={styles.tela}>
+    <KeyboardAvoidingView
+      style={styles.tela}
+      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+    >
       <AppHeader
         variant="surface"
         titleAlign="center"
@@ -177,7 +188,14 @@ export function AdicionarPerguntasScreen({
         title={COPY.titulo}
       />
 
-      <View style={styles.conteudo}>
+      <ScrollView
+        keyboardDismissMode="on-drag"
+        keyboardShouldPersistTaps="handled"
+        contentContainerStyle={[
+          styles.conteudo,
+          { paddingBottom: insets.bottom + spacing[8] },
+        ]}
+      >
         {perguntas.length > 0 && (
           <View style={styles.listaPerguntas}>
             <Text style={styles.secao}>{COPY.listaPerguntas}</Text>
@@ -264,7 +282,7 @@ export function AdicionarPerguntasScreen({
           />
         </Card>
 
-        {clubeTemQuiz && (
+        {temQuizAtivo && (
           <Text style={styles.avisoSubstituicao}>{COPY.avisoSubstituicao}</Text>
         )}
 
@@ -274,14 +292,14 @@ export function AdicionarPerguntasScreen({
           loading={publicando}
           onPress={finalizarQuiz}
         />
-      </View>
-    </View>
+      </ScrollView>
+    </KeyboardAvoidingView>
   );
 }
 
 const styles = StyleSheet.create({
   tela: { flex: 1, backgroundColor: colors.surface },
-  conteudo: { padding: spacing[6], gap: spacing[4] },
+  conteudo: { flexGrow: 1, padding: spacing[6], gap: spacing[4] },
   secao: { ...textStyles.bodyStrong, color: colors.text },
   listaPerguntas: { gap: spacing[3] },
   linhaPergunta: {

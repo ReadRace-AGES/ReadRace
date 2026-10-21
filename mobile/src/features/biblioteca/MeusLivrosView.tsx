@@ -12,7 +12,6 @@ import { AppHeader } from '@/components/AppHeader';
 import { BookCover } from '@/components/BookCover';
 import { EmptyState } from '@/components/EmptyState';
 import { BookIcon } from '@/components/icons/BookIcon';
-import { useToastContext } from '@/components/toast-provider';
 import {
   bookCover,
   colors,
@@ -32,6 +31,8 @@ import type {
 export type MeusLivrosViewProps = BibliotecaState & {
   /** A tela decide o destino; a view só avisa qual livro foi tocado. */
   onLivroPress: (livro: LivroBiblioteca) => void;
+  /** "+ Adicionar livro" e o slot "adicionar favorito +" (#155). */
+  onAdicionarLivro: () => void;
 };
 
 // Copy da aba lida do frame 2043-609 (#30, "Definições travadas").
@@ -307,9 +308,8 @@ export function MeusLivrosView({
   recarregar,
   carregarMais,
   onLivroPress,
+  onAdicionarLivro,
 }: MeusLivrosViewProps) {
-  const { showToast } = useToastContext();
-
   // "Livros lidos" é a lista que cresce sem limite e fica no fim da página, então ela
   // carrega sozinha no scroll. As outras pedem página com "Ver mais", senão duas listas
   // disputariam o mesmo fim de scroll. Se a primeira página não enche a tela, o scroll
@@ -354,13 +354,13 @@ export function MeusLivrosView({
             dados={biblioteca.dados}
             onLivroPress={onLivroPress}
             onVerMais={carregarMais}
-            onAdicionarFavorito={showToast}
+            onAdicionarFavorito={onAdicionarLivro}
           />
         )}
 
         <Pressable
           accessibilityRole="button"
-          onPress={showToast}
+          onPress={onAdicionarLivro}
           className="items-center justify-center rounded-pill bg-primary"
           style={[{ height: sizes.buttonHeight }, shadows.button]}
         >

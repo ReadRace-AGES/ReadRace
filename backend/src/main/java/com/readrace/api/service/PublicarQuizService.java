@@ -70,7 +70,7 @@ public class PublicarQuizService {
 
         ClubeDoLivro clube =
                 clubeRepository
-                        .buscarAtivoComLock(clubeId)
+                        .buscarComLock(clubeId)
                         .orElseThrow(ClubeNaoEncontradoException::new);
         exigirAdministrador(membroClubeRepository.findByClube_IdAndUsuarioId(clubeId, usuarioId));
 

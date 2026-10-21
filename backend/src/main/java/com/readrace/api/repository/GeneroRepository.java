@@ -4,6 +4,7 @@ import java.util.Optional;
 import java.util.UUID;
 
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
@@ -23,4 +24,21 @@ public interface GeneroRepository extends JpaRepository<Genero, UUID> {
                     """,
             nativeQuery = true)
     Optional<Genero> buscarPorLivroId(@Param("livroId") UUID livroId);
+
+    Optional<Genero> findByNome(String nome);
+
+    // nome é UNIQUE: o mesmo gênero vindo do catálogo não duplica entre livros diferentes.
+    @Modifying
+    @Query(
+            value =
+                    "INSERT INTO genero (id, nome) VALUES (:id, :nome) ON CONFLICT (nome) DO NOTHING",
+            nativeQuery = true)
+    void criarSeAusente(@Param("id") UUID id, @Param("nome") String nome);
+
+    @Modifying
+    @Query(
+            value =
+                    "INSERT INTO livro_genero (livro_id, genero_id) VALUES (:livroId, :generoId) ON CONFLICT DO NOTHING",
+            nativeQuery = true)
+    void vincular(@Param("livroId") UUID livroId, @Param("generoId") UUID generoId);
 }

@@ -15,6 +15,8 @@ public interface QuizRepository extends JpaRepository<Quiz, UUID> {
     /** No máximo um, garantido por {@code uq_quiz_clube_ativo}. */
     Optional<Quiz> findByClubeIdAndAtivoTrue(UUID clubeId);
 
+    boolean existsByClubeIdAndAtivoTrue(UUID clubeId);
+
     /**
      * Executa na hora, antes do INSERT do quiz novo. Um {@code UPDATE} por entidade só sairia no
      * flush, depois do INSERT, e {@code uq_quiz_clube_ativo} recusaria dois ativos juntos.

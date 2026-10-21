@@ -1,12 +1,16 @@
 import { useState } from 'react';
 import {
   ActivityIndicator,
+  KeyboardAvoidingView,
+  Platform,
+  ScrollView,
   StyleSheet,
   Text,
   TextInput,
   View,
 } from 'react-native';
 import { useRouter } from 'expo-router';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { AppHeader } from '@/components/AppHeader';
 import { Card } from '@/components/Card';
@@ -47,6 +51,7 @@ export type ConfigurarQuizScreenProps = {
 
 export function ConfigurarQuizScreen({ clubeId }: ConfigurarQuizScreenProps) {
   const router = useRouter();
+  const insets = useSafeAreaInsets();
   const { showToast } = useToastContext();
   const { clube, recarregar } = useClube(clubeId);
   const [titulo, setTitulo] = useState('');
@@ -64,13 +69,14 @@ export function ConfigurarQuizScreen({ clubeId }: ConfigurarQuizScreenProps) {
   }
 
   function avancar() {
-    if (!tituloValido) return;
+    if (!tituloValido || !dados) return;
     router.push({
       pathname: '/clube/[clubeId]/quiz/adicionar-perguntas',
       params: {
         clubeId,
         titulo: titulo.trim(),
         recompensaXp: String(recompensaXp),
+        temQuizAtivo: String(dados.temQuizAtivo),
       },
     });
   }
@@ -101,7 +107,10 @@ export function ConfigurarQuizScreen({ clubeId }: ConfigurarQuizScreenProps) {
   }
 
   return (
-    <View style={styles.tela}>
+    <KeyboardAvoidingView
+      style={styles.tela}
+      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+    >
       <AppHeader
         variant="surface"
         titleAlign="center"
@@ -110,7 +119,14 @@ export function ConfigurarQuizScreen({ clubeId }: ConfigurarQuizScreenProps) {
         title={COPY.titulo}
       />
 
-      <View style={styles.conteudo}>
+      <ScrollView
+        keyboardDismissMode="on-drag"
+        keyboardShouldPersistTaps="handled"
+        contentContainerStyle={[
+          styles.conteudo,
+          { paddingBottom: insets.bottom + spacing[8] },
+        ]}
+      >
         <Text style={styles.apoio}>{COPY.apoio}</Text>
 
         <Text style={styles.secao}>{COPY.secaoIdentificacao}</Text>
@@ -190,17 +206,17 @@ export function ConfigurarQuizScreen({ clubeId }: ConfigurarQuizScreenProps) {
 
         <PrimaryButton
           label={COPY.proximo}
-          disabled={!tituloValido}
+          disabled={!tituloValido || !dados}
           onPress={avancar}
         />
-      </View>
-    </View>
+      </ScrollView>
+    </KeyboardAvoidingView>
   );
 }
 
 const styles = StyleSheet.create({
   tela: { flex: 1, backgroundColor: colors.surface },
-  conteudo: { padding: spacing[6], gap: spacing[4] },
+  conteudo: { flexGrow: 1, padding: spacing[6], gap: spacing[4] },
   apoio: { ...textStyles.bodySmall, color: colors.textSecondary },
   secao: {
     ...textStyles.captionStrong,
