@@ -35,6 +35,7 @@ import com.readrace.api.repository.ClubeDoLivroRepository;
 import com.readrace.api.repository.LinhaRankingClube;
 import com.readrace.api.repository.LivroRepository;
 import com.readrace.api.repository.MembroClubeRepository;
+import com.readrace.api.repository.QuizRepository;
 import com.readrace.api.repository.UsuarioRepository;
 
 @Service
@@ -48,6 +49,7 @@ public class ClubeService {
 
     private final ClubeDoLivroRepository clubeRepository;
     private final MembroClubeRepository membroClubeRepository;
+    private final QuizRepository quizRepository;
     private final UsuarioAtual usuarioAtual;
 
     private final LivroRepository livroRepository;
@@ -58,6 +60,7 @@ public class ClubeService {
     public ClubeService(
             ClubeDoLivroRepository clubeRepository,
             MembroClubeRepository membroClubeRepository,
+            QuizRepository quizRepository,
             LivroRepository livroRepository,
             UsuarioRepository usuarioRepository,
             UsuarioAtual usuarioAtual,
@@ -65,6 +68,7 @@ public class ClubeService {
             Clock clock) {
         this.clubeRepository = clubeRepository;
         this.membroClubeRepository = membroClubeRepository;
+        this.quizRepository = quizRepository;
         this.livroRepository = livroRepository;
         this.usuarioRepository = usuarioRepository;
         this.usuarioAtual = usuarioAtual;
@@ -138,7 +142,8 @@ public class ClubeService {
                 clube.getNome(),
                 livroAtual(clube.getLivro()),
                 ranking(linhas, 0),
-                meuCargo(clubeId));
+                meuCargo(clubeId),
+                quizRepository.existsByClubeIdAndAtivoTrue(clubeId));
     }
 
     public RankingClubeResponse buscarRanking(UUID clubeId, String cursor) {

@@ -11,6 +11,8 @@ export type Clube = {
   ranking: LinhaRanking[];
   /** Cargo do usuário atual neste clube; `null` quando ele não participa (#160). */
   meuCargo: 'administrador' | 'membro' | null;
+  /** Se o clube já tem quiz publicado: o líder não pode abrir `GET /quiz` para descobrir (#161). */
+  temQuizAtivo: boolean;
 };
 
 export type LinhaRanking = {
