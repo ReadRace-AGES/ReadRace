@@ -22,6 +22,7 @@ import com.readrace.api.dto.response.ClubeCriadoResponse;
 import com.readrace.api.dto.response.ClubeResponse;
 import com.readrace.api.dto.response.ForumClubeResponse;
 import com.readrace.api.dto.response.QuizResponse;
+import com.readrace.api.dto.response.RankingClubeResponse;
 import com.readrace.api.dto.response.RespostaQuizResponse;
 import com.readrace.api.service.ClubeService;
 import com.readrace.api.service.ForumClubeService;
@@ -63,6 +64,12 @@ public class ClubeController {
                             + " qualquer id inexistente.")
     public ClubeResponse buscar(@PathVariable UUID clubeId) {
         return clubeService.buscar(clubeId);
+    }
+
+    @GetMapping("/{clubeId}/ranking")
+    @Operation(summary = "Ranking completo de membros do clube por Pontos")
+    public RankingClubeResponse buscarRanking(@PathVariable UUID clubeId) {
+        return clubeService.buscarRanking(clubeId);
     }
 
     @GetMapping("/{clubeId}/posts")

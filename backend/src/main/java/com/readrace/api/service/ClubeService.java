@@ -10,12 +10,14 @@ import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.readrace.api.dto.request.CriarClubeRequest;
 import com.readrace.api.dto.response.ClubeCriadoResponse;
 import com.readrace.api.dto.response.ClubeResponse;
+import com.readrace.api.dto.response.RankingClubeResponse;
 import com.readrace.api.exception.ClubeInvalidoException;
 import com.readrace.api.exception.ClubeNaoEncontradoException;
 import com.readrace.api.exception.LivroNaoEncontradoException;
@@ -133,6 +135,19 @@ public class ClubeService {
                 livroAtual(clube.getLivro()),
                 ranking(linhas),
                 meuCargo(clubeId));
+    }
+
+    public RankingClubeResponse buscarRanking(UUID clubeId) {
+        ClubeDoLivro clube =
+                clubeRepository
+                        .findByIdAndExcluidoEmIsNull(clubeId)
+                        .orElseThrow(ClubeNaoEncontradoException::new);
+
+        List<LinhaRankingClube> linhas =
+                membroClubeRepository.rankingDoClube(clubeId, Pageable.unpaged());
+
+        return new RankingClubeResponse(
+                new RankingClubeResponse.Clube(clube.getId(), clube.getNome()), ranking(linhas));
     }
 
     private String meuCargo(UUID clubeId) {
