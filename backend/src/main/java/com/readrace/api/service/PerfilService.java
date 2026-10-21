@@ -27,16 +27,19 @@ public class PerfilService {
     private final PerfilRepository perfis;
     private final UsuarioAtual usuarioAtual;
     private final SeguirRepository seguir;
+    private final MascoteService mascotes;
 
     public PerfilService(
             UsuarioRepository usuarios,
             PerfilRepository perfis,
             UsuarioAtual usuarioAtual,
-            SeguirRepository seguir) {
+            SeguirRepository seguir,
+            MascoteService mascotes) {
         this.usuarios = usuarios;
         this.perfis = perfis;
         this.usuarioAtual = usuarioAtual;
         this.seguir = seguir;
+        this.mascotes = mascotes;
     }
 
     public PerfilResponse buscarDoUsuarioAtual() {
@@ -88,11 +91,12 @@ public class PerfilService {
         int nivel = usuario.getNivel();
         int xpTotal = usuario.getXpTotal();
         UUID eu = usuarioAtual.idDoUsuarioAtual().valor();
+        boolean proprio = id.equals(eu);
         return new PerfilResponse(
                 usuario.getId(),
                 usuario.getNome(),
                 usuario.getNomeUsuario(),
-                id.equals(usuarioAtual.idDoUsuarioAtual().valor()) ? usuario.getEmail() : null,
+                proprio ? usuario.getEmail() : null,
                 usuario.getAvatarUrl(),
                 usuario.getTitulo(),
                 nivel,
@@ -109,6 +113,7 @@ public class PerfilService {
                         usuario.sequenciaExibida(SequenciaDeLeitura.hoje()),
                         conquistas.stream().filter(PerfilResponse.Conquista::desbloqueada).count()),
                 conquistas,
-                perfis.favoritos(id));
+                perfis.favoritos(id),
+                proprio ? PerfilResponse.Mascote.de(mascotes.escolhidoDe(usuario)) : null);
     }
 }

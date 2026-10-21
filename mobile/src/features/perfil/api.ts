@@ -35,6 +35,8 @@ export type Perfil = {
     autor: string | null;
     capa: string | null;
   }[];
+  /** Só no perfil próprio (/api/me/perfil). */
+  mascote?: { nome: string; imagem: string };
 };
 
 export type RelacaoSeguir = Pick<Perfil, 'seguidores' | 'sigo' | 'meSegue'>;
