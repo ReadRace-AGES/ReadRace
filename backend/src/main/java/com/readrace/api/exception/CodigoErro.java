@@ -50,6 +50,8 @@ public enum CodigoErro {
     ALTERNATIVA_INVALIDA(HttpStatus.BAD_REQUEST, "A alternativa não pertence a esta pergunta."),
     QUIZ_INVALIDO(HttpStatus.BAD_REQUEST, "Quiz inválido."),
     SO_LIDER_CRIA_QUIZ(HttpStatus.FORBIDDEN, "Só o administrador do clube cria o quiz."),
+    MASCOTE_NAO_ENCONTRADO(HttpStatus.NOT_FOUND, "Mascote não encontrado."),
+    MASCOTE_BLOQUEADO(HttpStatus.CONFLICT, "Este mascote ainda está bloqueado para o seu nível."),
     METHOD_NOT_ALLOWED(HttpStatus.METHOD_NOT_ALLOWED, "Método não permitido para esta rota."),
     UNSUPPORTED_MEDIA_TYPE(HttpStatus.UNSUPPORTED_MEDIA_TYPE, "Formato de conteúdo não suportado."),
     EXTERNAL_SERVICE_UNAVAILABLE(

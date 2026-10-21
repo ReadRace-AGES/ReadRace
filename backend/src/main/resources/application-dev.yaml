@@ -12,6 +12,14 @@
 # Nada aqui deve valer em produção.
 # =============================================================
 
+spring:
+  config:
+    # Lê o .env da raiz (o mesmo do docker compose) quando a API roda pelo ./mvnw, cujo diretório
+    # é backend/. Assim o modo de login (AUTH_MODO e COGNITO_*) se troca no .env, sem export.
+    # Variável exportada no terminal tem prioridade sobre o arquivo. No container o arquivo não
+    # existe ("optional"): lá o compose já passa as variáveis.
+    import: "optional:file:../.env[.properties]"
+
 readrace:
   cors:
     # Em dev o app roda em Expo web, emulador e device físico — cada um

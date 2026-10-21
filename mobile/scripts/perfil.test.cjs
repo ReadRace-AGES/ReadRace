@@ -216,7 +216,12 @@ test('próprio perfil mostra anel, Mascotes, engrenagem e slot de favorito', () 
   const rotas = [];
   let avisos = 0,
     tree,
-    dados = { ...perfil, xpNoNivel: 521, xpDoNivel: 833 };
+    dados = {
+      ...perfil,
+      xpNoNivel: 521,
+      xpDoNivel: 833,
+      mascote: { nome: 'O Cinzento', imagem: 'o-cinzento' },
+    };
   const { PerfilScreen } = load('features/perfil/PerfilScreen.tsx', {
     ...dependencies,
     'expo-router': {
@@ -255,9 +260,15 @@ test('próprio perfil mostra anel, Mascotes, engrenagem e slot de favorito', () 
     adicionar.props.onPress();
     tree.root.findByType('PerfilTopo').props.onConfiguracoes();
   });
-  assert.equal(avisos, 4);
+  // Seguidores, Seguindo e o slot de favorito ainda são aviso; Mascotes abre a tela.
+  assert.equal(avisos, 3);
+  assert.equal(tree.root.findByType('PerfilTopo').props.mascote, 'o-cinzento');
   act(() => capa.props.onPress());
-  assert.deepEqual(rotas, ['/configuracoes', '/perfil-livro/livro']);
+  assert.deepEqual(rotas, [
+    '/mascotes',
+    '/configuracoes',
+    '/perfil-livro/livro',
+  ]);
   dados = { ...dados, livrosFavoritos: [] };
   act(() => tree.update(React.createElement(PerfilScreen)));
   assert.match(JSON.stringify(tree.toJSON()), /Livros favoritos/);
