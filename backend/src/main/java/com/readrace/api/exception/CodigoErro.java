@@ -23,6 +23,10 @@ public enum CodigoErro {
     POST_INVALIDO(
             HttpStatus.BAD_REQUEST, "O post deve conter texto e ter no máximo 2.000 caracteres."),
     SO_MEMBRO_POSTA(HttpStatus.FORBIDDEN, "Somente membros do clube podem publicar no fórum."),
+    COMENTARIO_INVALIDO(
+            HttpStatus.BAD_REQUEST,
+            "O comentário deve conter texto e ter no máximo 1.000 caracteres."),
+    SO_QUEM_SEGUE_COMENTA(HttpStatus.FORBIDDEN, "Siga a comunidade para comentar."),
     CLUBE_NAO_ENCONTRADO(HttpStatus.NOT_FOUND, "Clube não encontrado."),
     NAO_E_MEMBRO(HttpStatus.NOT_FOUND, "Você não é membro deste clube."),
     UNICO_LIDER(HttpStatus.CONFLICT, "Você é o único líder deste clube e não pode sair."),

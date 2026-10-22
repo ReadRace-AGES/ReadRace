@@ -11,12 +11,14 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.NullAndEmptySource;
 import org.junit.jupiter.params.provider.ValueSource;
 
+import com.readrace.api.exception.ComentarioInvalidoException;
 import com.readrace.api.exception.PostInvalidoException;
 
 class PostTest {
 
     private static final UUID AUTOR_ID = UUID.randomUUID();
     private static final UUID CLUBE_ID = UUID.randomUUID();
+    private static final UUID POST_PAI_ID = UUID.randomUUID();
 
     @Test
     void cria_post_raiz_de_clube_com_id_e_data_do_servidor() {
@@ -59,5 +61,39 @@ class PostTest {
         Post post = Post.criarRaizDeClube(AUTOR_ID, CLUBE_ID, texto);
 
         assertThat(post.getConteudo()).isSameAs(texto);
+    }
+
+    @Test
+    void cria_comentario_com_pai_e_sem_escopo_proprio() {
+        OffsetDateTime antes = OffsetDateTime.now();
+
+        Post comentario = Post.criarComentario(AUTOR_ID, POST_PAI_ID, "Concordo!");
+
+        OffsetDateTime depois = OffsetDateTime.now();
+        assertThat(comentario.getAutorId()).isEqualTo(AUTOR_ID);
+        assertThat(comentario.getPostPaiId()).isEqualTo(POST_PAI_ID);
+        assertThat(comentario.getConteudo()).isEqualTo("Concordo!");
+        assertThat(comentario.getId()).isNotNull();
+        assertThat(comentario.getCriadoEm()).isBetween(antes, depois);
+        assertThat(comentario.getClubeId()).isNull();
+        assertThat(comentario.getComunidadeId()).isNull();
+        assertThat(comentario.getLivroId()).isNull();
+        assertThat(comentario.getExcluidoEm()).isNull();
+    }
+
+    @ParameterizedTest
+    @NullAndEmptySource
+    @ValueSource(strings = {" ", "\t", "\n", "\u00A0"})
+    void rejeita_comentario_ausente_ou_em_branco(String texto) {
+        assertThatThrownBy(() -> Post.criarComentario(AUTOR_ID, POST_PAI_ID, texto))
+                .isInstanceOf(ComentarioInvalidoException.class);
+    }
+
+    @Test
+    void comentario_aceita_1000_e_rejeita_1001_unidades_utf16() {
+        assertThat(Post.criarComentario(AUTOR_ID, POST_PAI_ID, "a".repeat(1000)).getConteudo())
+                .hasSize(1000);
+        assertThatThrownBy(() -> Post.criarComentario(AUTOR_ID, POST_PAI_ID, "a".repeat(1001)))
+                .isInstanceOf(ComentarioInvalidoException.class);
     }
 }

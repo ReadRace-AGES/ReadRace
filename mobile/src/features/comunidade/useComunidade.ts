@@ -156,5 +156,26 @@ export function useComunidade(comunidadeId: string) {
     }
   }, []);
 
-  return { comunidade, recarregar, alternarSeguimento, alternarCurtida };
+  /** Comentário criado no painel (#150): o balão sobe 1 sem recarregar a comunidade. */
+  const somarComentario = useCallback((postId: string) => {
+    setComunidade((maisRecente) =>
+      maisRecente.situacao === 'sucesso'
+        ? {
+            situacao: 'sucesso',
+            dados: comPost(maisRecente.dados, postId, (post) => ({
+              ...post,
+              totalComentarios: post.totalComentarios + 1,
+            })),
+          }
+        : maisRecente
+    );
+  }, []);
+
+  return {
+    comunidade,
+    recarregar,
+    alternarSeguimento,
+    alternarCurtida,
+    somarComentario,
+  };
 }

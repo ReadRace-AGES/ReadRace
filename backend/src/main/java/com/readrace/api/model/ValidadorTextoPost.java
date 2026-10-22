@@ -1,5 +1,7 @@
 package com.readrace.api.model;
 
+import java.util.function.Supplier;
+
 import com.readrace.api.exception.PostInvalidoException;
 
 /**
@@ -11,17 +13,23 @@ public final class ValidadorTextoPost {
 
     private ValidadorTextoPost() {}
 
+    /** Regra do post raiz: até 2.000 unidades UTF-16, {@link PostInvalidoException} se falhar. */
+    public static String validar(String texto) {
+        return validar(texto, LIMITE_UNIDADES_UTF16, PostInvalidoException::new);
+    }
+
     /**
      * Retorna o texto original, sem trim ou normalização. Branco é a união de {@link
      * Character#isWhitespace(int)} e {@link Character#isSpaceChar(int)}, incluindo NBSP. O limite
      * usa {@link String#length()}, em unidades UTF-16, e inclui os espaços nas extremidades.
      */
-    public static String validar(String texto) {
+    public static String validar(
+            String texto, int limite, Supplier<? extends RuntimeException> erro) {
         if (texto == null
-                || texto.length() > LIMITE_UNIDADES_UTF16
+                || texto.length() > limite
                 || texto.codePoints()
                         .allMatch(c -> Character.isWhitespace(c) || Character.isSpaceChar(c))) {
-            throw new PostInvalidoException();
+            throw erro.get();
         }
         return texto;
     }
