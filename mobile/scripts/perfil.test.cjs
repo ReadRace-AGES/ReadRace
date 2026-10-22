@@ -266,7 +266,12 @@ test('próprio perfil mostra anel, Mascotes, engrenagem e slot de favorito', () 
   const rotas = [];
   let avisos = 0,
     tree,
-    dados = { ...perfil, xpNoNivel: 521, xpDoNivel: 833 };
+    dados = {
+      ...perfil,
+      xpNoNivel: 521,
+      xpDoNivel: 833,
+      mascote: { nome: 'O Cinzento', imagem: 'o-cinzento' },
+    };
   const { PerfilScreen } = load('features/perfil/PerfilScreen.tsx', {
     ...dependencies,
     'expo-router': {
@@ -305,7 +310,9 @@ test('próprio perfil mostra anel, Mascotes, engrenagem e slot de favorito', () 
     adicionar.props.onPress();
     tree.root.findByType('PerfilTopo').props.onConfiguracoes();
   });
-  assert.equal(avisos, 2);
+  // Só o slot de favorito continua como aviso; listas e Mascotes abrem suas telas.
+  assert.equal(avisos, 1);
+  assert.equal(tree.root.findByType('PerfilTopo').props.mascote, 'o-cinzento');
   act(() => capa.props.onPress());
   assert.deepEqual(rotas, [
     {
@@ -316,6 +323,7 @@ test('próprio perfil mostra anel, Mascotes, engrenagem e slot de favorito', () 
       pathname: '/(tabs)/(perfil)/leitores/[usuarioId]',
       params: { usuarioId: '1', tipo: 'seguindo' },
     },
+    '/mascotes',
     '/configuracoes',
     '/perfil-livro/livro',
   ]);

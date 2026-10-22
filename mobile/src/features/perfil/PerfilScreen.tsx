@@ -34,6 +34,7 @@ export function PerfilConteudo({
   onVerMaisConquistas = onPlaceholder,
   proprio = false,
   onAbrirLivro,
+  onMascotes = onPlaceholder,
   onAlternarSeguir,
   alterandoSeguir = false,
 }: {
@@ -44,6 +45,7 @@ export function PerfilConteudo({
   onVerMaisConquistas?: () => void;
   proprio?: boolean;
   onAbrirLivro?: (livroId: string) => void;
+  onMascotes?: () => void;
   onAlternarSeguir?: () => void;
   alterandoSeguir?: boolean;
 }) {
@@ -117,11 +119,7 @@ export function PerfilConteudo({
         ))}
       </View>
       {proprio && (
-        <PrimaryButton
-          label="Mascotes"
-          icon={PawIcon}
-          onPress={onPlaceholder}
-        />
+        <PrimaryButton label="Mascotes" icon={PawIcon} onPress={onMascotes} />
       )}
       {!proprio && onAlternarSeguir && (
         <PrimaryButton
@@ -270,6 +268,10 @@ export function PerfilScreen({
     proprio: perfilProprio,
   } = usePerfil(usuarioId);
   const router = useRouter();
+  const rotaLeitores =
+    origem === 'perfil'
+      ? '/(tabs)/(perfil)/leitores/[usuarioId]'
+      : '/(tabs)/(busca)/leitores/[usuarioId]';
   const { showToast, showErrorToast } = useToastContext();
   const proprio = usuarioId === undefined || perfilProprio;
   const dados = estado.situacao === 'sucesso' ? estado.dados : undefined;
@@ -291,6 +293,7 @@ export function PerfilScreen({
         <PerfilTopo
           nome={dados?.nome}
           avatar={dados?.avatar}
+          mascote={dados?.mascote?.imagem}
           onConfiguracoes={() => router.push('/configuracoes')}
         />
       ) : (
@@ -332,18 +335,21 @@ export function PerfilScreen({
           onPlaceholder={showToast}
           onVerSeguidores={() =>
             router.push({
-              pathname: `/(tabs)/(${origem})/leitores/[usuarioId]`,
+              pathname: rotaLeitores,
               params: { usuarioId: estado.dados.id, tipo: 'seguidores' },
-            } as Href)
+            })
           }
           onVerSeguindo={() =>
             router.push({
-              pathname: `/(tabs)/(${origem})/leitores/[usuarioId]`,
+              pathname: rotaLeitores,
               params: { usuarioId: estado.dados.id, tipo: 'seguindo' },
-            } as Href)
+            })
           }
           onVerMaisConquistas={
             proprio ? () => router.push('/conquistas' as Href) : undefined
+          }
+          onMascotes={
+            proprio ? () => router.push('/mascotes' as Href) : undefined
           }
           onAbrirLivro={
             proprio

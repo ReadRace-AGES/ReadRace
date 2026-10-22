@@ -23,7 +23,15 @@ public enum CodigoErro {
     POST_INVALIDO(
             HttpStatus.BAD_REQUEST, "O post deve conter texto e ter no máximo 2.000 caracteres."),
     SO_MEMBRO_POSTA(HttpStatus.FORBIDDEN, "Somente membros do clube podem publicar no fórum."),
+    SO_MEMBRO_VE_RANKING(HttpStatus.FORBIDDEN, "Só membros do clube veem o ranking completo."),
+
+    // Chat do clube - Task #151
     CLUBE_NAO_ENCONTRADO(HttpStatus.NOT_FOUND, "Clube não encontrado."),
+    NAO_E_MEMBRO(HttpStatus.NOT_FOUND, "Você não é membro deste clube."),
+    UNICO_LIDER(HttpStatus.CONFLICT, "Você é o único líder deste clube e não pode sair."),
+    MENSAGEM_INVALIDA(HttpStatus.BAD_REQUEST, "Mensagem inválida."),
+    SO_MEMBRO_NO_CHAT(HttpStatus.FORBIDDEN, "Só membros do clube participam do chat."),
+
     OPONENTE_NAO_E_AMIGO(
             HttpStatus.BAD_REQUEST, "O oponente informado não é amigo do usuário atual."),
     CLUBE_INVALIDO(
@@ -41,6 +49,10 @@ public enum CodigoErro {
     SO_MEMBRO_RESPONDE(HttpStatus.FORBIDDEN, "Só membros do clube participam do quiz."),
     PERGUNTA_JA_RESPONDIDA(HttpStatus.CONFLICT, "Você já respondeu esta pergunta."),
     ALTERNATIVA_INVALIDA(HttpStatus.BAD_REQUEST, "A alternativa não pertence a esta pergunta."),
+    QUIZ_INVALIDO(HttpStatus.BAD_REQUEST, "Quiz inválido."),
+    SO_LIDER_CRIA_QUIZ(HttpStatus.FORBIDDEN, "Só o administrador do clube cria o quiz."),
+    MASCOTE_NAO_ENCONTRADO(HttpStatus.NOT_FOUND, "Mascote não encontrado."),
+    MASCOTE_BLOQUEADO(HttpStatus.CONFLICT, "Este mascote ainda está bloqueado para o seu nível."),
     METHOD_NOT_ALLOWED(HttpStatus.METHOD_NOT_ALLOWED, "Método não permitido para esta rota."),
     UNSUPPORTED_MEDIA_TYPE(HttpStatus.UNSUPPORTED_MEDIA_TYPE, "Formato de conteúdo não suportado."),
     EXTERNAL_SERVICE_UNAVAILABLE(
@@ -49,7 +61,6 @@ public enum CodigoErro {
     INTERNAL_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, "Erro interno. Tente novamente.");
 
     private final HttpStatus status;
-
     private final String mensagemPadrao;
 
     CodigoErro(HttpStatus status, String mensagemPadrao) {

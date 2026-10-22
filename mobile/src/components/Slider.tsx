@@ -11,6 +11,8 @@ export type SliderProps = {
   value: number;
   minimumLabel: string;
   maximumLabel: string;
+  /** Marca opcional entre as duas pontas (ex.: o valor do meio). */
+  middleLabel?: string;
   accessibilityLabel: string;
   onValueChange: (value: number) => void;
   onSlidingStart?: () => void;
@@ -24,6 +26,7 @@ export function Slider({
   value,
   minimumLabel,
   maximumLabel,
+  middleLabel,
   accessibilityLabel,
   onValueChange,
   onSlidingStart,
@@ -154,6 +157,11 @@ export function Slider({
         <Text className="font-inter text-bodySmall text-text-secondary">
           {minimumLabel}
         </Text>
+        {middleLabel ? (
+          <Text className="font-inter text-bodySmall text-text-secondary">
+            {middleLabel}
+          </Text>
+        ) : null}
         <Text className="font-inter text-bodySmall text-text-secondary">
           {maximumLabel}
         </Text>

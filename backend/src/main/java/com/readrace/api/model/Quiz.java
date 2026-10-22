@@ -40,6 +40,20 @@ public class Quiz {
     @Column(nullable = false)
     private Boolean ativo;
 
+    @Column(name = "criado_por", nullable = false)
+    private UUID criadoPor;
+
+    /** Nasce ativo; quem publica desativa o anterior do clube antes (um ativo por clube). */
+    public Quiz(UUID clubeId, Livro livro, UUID criadoPor, String titulo, int recompensaXp) {
+        this.id = UUID.randomUUID();
+        this.clubeId = clubeId;
+        this.livro = livro;
+        this.criadoPor = criadoPor;
+        this.titulo = titulo;
+        this.recompensaXp = recompensaXp;
+        this.ativo = true;
+    }
+
     @Override
     public boolean equals(Object obj) {
         if (this == obj) {
