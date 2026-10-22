@@ -105,10 +105,11 @@ resource "aws_cognito_user_pool_client" "app" {
     "ALLOW_USER_PASSWORD_AUTH", # login do app por e-mail e senha, sem Amplify
     "ALLOW_USER_SRP_AUTH",
   ]
-  supported_identity_providers = ["COGNITO"]
+  # A referência ao provedor faz o Terraform criá-lo antes de ligá-lo aqui.
+  supported_identity_providers = ["COGNITO", aws_cognito_identity_provider.google.provider_name]
 
-  # O app pede openid, email e profile na página de login. O backend usa o /oauth2/userInfo,
-  # que exige openid. aws.cognito.signin.user.admin fica para chamadas diretas à API do Cognito.
+  # No primeiro acesso, o backend lê o perfil pelo GetUser, que exige aws.cognito.signin.user.admin.
+  # O login por senha já traz esse escopo; o login com Google pela página do Cognito pede os quatro.
   allowed_oauth_flows_user_pool_client = true
   allowed_oauth_flows                  = ["code"]
   allowed_oauth_scopes                 = ["email", "openid", "profile", "aws.cognito.signin.user.admin"]
@@ -157,4 +158,42 @@ resource "aws_cognito_managed_login_branding" "app" {
   user_pool_id                = aws_cognito_user_pool.principal.id
   client_id                   = aws_cognito_user_pool_client.app.id
   use_cognito_provided_values = true
+}
+
+# Login com Google (#158). Quem fala com o Google é o Cognito, pelo cliente OAuth do projeto
+# readrace-prod no Google Cloud; o app só abre a página do Cognito com identity_provider=Google.
+resource "aws_cognito_identity_provider" "google" {
+  user_pool_id  = aws_cognito_user_pool.principal.id
+  provider_name = "Google"
+  provider_type = "Google"
+
+  provider_details = {
+    client_id        = var.google_client_id
+    client_secret    = var.google_client_secret
+    authorize_scopes = "openid email profile"
+  }
+
+  # name é obrigatório no pool: sem ele, o Cognito recusa o primeiro login pelo Google.
+  # email_verified é o que deixa a API ligar a conta Google à conta de senha do mesmo e-mail;
+  # sem ele, o ProvisionamentoUsuario cria um perfil novo.
+  attribute_mapping = {
+    email          = "email"
+    email_verified = "email_verified"
+    name           = "name"
+    picture        = "picture"
+    username       = "sub"
+  }
+
+  # O Cognito completa o provider_details com os endereços do Google. Sem ignorá-los, todo plan
+  # mostraria uma diferença que não existe.
+  lifecycle {
+    ignore_changes = [
+      provider_details["attributes_url"],
+      provider_details["attributes_url_add_attributes"],
+      provider_details["authorize_url"],
+      provider_details["oidc_issuer"],
+      provider_details["token_request_method"],
+      provider_details["token_url"],
+    ]
+  }
 }

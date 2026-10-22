@@ -1,5 +1,6 @@
-import { Redirect } from 'expo-router';
+import { Redirect, useRouter } from 'expo-router';
 import * as WebBrowser from 'expo-web-browser';
+import { useEffect, useRef } from 'react';
 
 import { useAuth } from '@/auth/AuthProvider';
 
@@ -9,10 +10,21 @@ WebBrowser.maybeCompleteAuthSession();
 
 export default function AuthCallback() {
   const { status } = useAuth();
+  const router = useRouter();
+  const saiu = useRef(false);
 
-  // O app chega aqui antes de a tela de login trocar o código pelo token. Ainda sem sessão, "/"
-  // está bloqueada e o redirect não acontece; quando a sessão chega, /auth continua permitida e o
-  // app ficava preso nesta tela vazia. Voltar para o login, onde a troca acontece, resolve: ao
-  // terminar, o guard do _layout leva às abas, e se falhar, o erro aparece lá.
-  return <Redirect href={status === 'logado' ? '/' : '/login'} />;
+  // No Android, o readrace://auth do login com Google também abre esta rota, por cima da tela de
+  // login que está trocando o código pelo token. Voltar (e não ir para /login) mantém essa tela
+  // viva: ao terminar, o guard do _layout leva às abas; se falhar, o erro aparece nela.
+  useEffect(() => {
+    if (status === 'logado' || saiu.current) return;
+    saiu.current = true;
+    if (router.canGoBack()) {
+      router.back();
+    } else {
+      router.replace('/login');
+    }
+  }, [status, router]);
+
+  return status === 'logado' ? <Redirect href="/" /> : null;
 }

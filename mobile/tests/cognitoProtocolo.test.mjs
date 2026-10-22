@@ -26,6 +26,10 @@ import {
   sessaoDaResposta,
   traduzirErroLogin,
   urlPaginaCognito,
+  ESCOPOS_LOGIN_GOOGLE,
+  MENSAGEM_ERRO_GOOGLE,
+  resultadoDoLoginGoogle,
+  sessaoDoTokenOAuth,
 } from '../src/auth/cognitoProtocolo.ts';
 
 const DOMINIO = 'https://us-east-2mevipejhy.auth.us-east-2.amazoncognito.com';
@@ -367,4 +371,53 @@ test('ErroCadastro não carrega a senha', async () => {
     assert.ok(!String(erro.message).includes(senha));
     assert.ok(!JSON.stringify(erro).includes(senha));
   }
+});
+
+test('resultadoDoLoginGoogle devolve o código quando a página volta com sucesso', () => {
+  assert.deepEqual(resultadoDoLoginGoogle('success', { code: 'abc123', state: 'x' }), {
+    tipo: 'codigo',
+    codigo: 'abc123',
+  });
+});
+
+test('resultadoDoLoginGoogle trata fechar a página e cancelar no Google como desistência', () => {
+  assert.deepEqual(resultadoDoLoginGoogle('cancel', undefined), { tipo: 'desistiu' });
+  assert.deepEqual(resultadoDoLoginGoogle('dismiss', undefined), { tipo: 'desistiu' });
+  assert.deepEqual(resultadoDoLoginGoogle('error', { error: 'access_denied' }), {
+    tipo: 'desistiu',
+  });
+});
+
+test('resultadoDoLoginGoogle trata o resto como erro', () => {
+  assert.deepEqual(resultadoDoLoginGoogle('error', { error: 'invalid_request' }), {
+    tipo: 'erro',
+  });
+  assert.deepEqual(resultadoDoLoginGoogle('success', {}), { tipo: 'erro' });
+  assert.deepEqual(resultadoDoLoginGoogle('locked', undefined), { tipo: 'erro' });
+});
+
+test('sessaoDoTokenOAuth monta a mesma sessão do login por senha', () => {
+  assert.deepEqual(
+    sessaoDoTokenOAuth({ accessToken: 'acc', refreshToken: 'ref', expiresIn: 3600 }, 1_000),
+    { accessToken: 'acc', refreshToken: 'ref', expiresAt: 1_000 + 3_600_000 }
+  );
+  assert.deepEqual(sessaoDoTokenOAuth({ accessToken: 'acc' }, 0), {
+    accessToken: 'acc',
+    refreshToken: null,
+    expiresAt: 3_600_000,
+  });
+});
+
+test('sessaoDoTokenOAuth recusa resposta sem access token', () => {
+  assert.throws(() => sessaoDoTokenOAuth({ refreshToken: 'ref' }, 0));
+});
+
+test('MENSAGEM_ERRO_GOOGLE é o texto da issue', () => {
+  assert.equal(MENSAGEM_ERRO_GOOGLE, 'Não foi possível entrar com o Google. Tente de novo.');
+});
+
+// Sem esse escopo o GetUser da API recusa o token: o app entra e logo perde a sessão (401).
+test('ESCOPOS_LOGIN_GOOGLE pede o escopo que a API usa para ler o perfil', () => {
+  assert.ok(ESCOPOS_LOGIN_GOOGLE.includes('aws.cognito.signin.user.admin'));
+  assert.ok(ESCOPOS_LOGIN_GOOGLE.includes('openid'));
 });

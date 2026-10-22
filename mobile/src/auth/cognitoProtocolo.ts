@@ -314,3 +314,56 @@ export function sessaoDaResposta(
     expiresAt: agora + (resultado.ExpiresIn ?? 3600) * 1000,
   };
 }
+
+export const MENSAGEM_ERRO_GOOGLE = 'Não foi possível entrar com o Google. Tente de novo.';
+
+/**
+ * Escopos pedidos no login pela página do Cognito. aws.cognito.signin.user.admin é o que deixa a API
+ * ler o perfil pelo GetUser no primeiro acesso: sem ele, ela responde 401 e o app perde a sessão
+ * logo depois de entrar.
+ */
+export const ESCOPOS_LOGIN_GOOGLE = ['openid', 'email', 'profile', 'aws.cognito.signin.user.admin'];
+
+export type ResultadoGoogle =
+  | { tipo: 'codigo'; codigo: string }
+  | { tipo: 'desistiu' }
+  | { tipo: 'erro' };
+
+/**
+ * Como a página do Cognito voltou. Fechar o navegador e tocar em "Cancelar" na escolha de conta do
+ * Google (access_denied) são desistência: a tela volta sem mensagem de erro.
+ */
+export function resultadoDoLoginGoogle(
+  tipo: string,
+  params: Record<string, string> | undefined
+): ResultadoGoogle {
+  if (tipo === 'success' && params?.code) {
+    return { tipo: 'codigo', codigo: params.code };
+  }
+  if (tipo === 'cancel' || tipo === 'dismiss') {
+    return { tipo: 'desistiu' };
+  }
+  if (tipo === 'error' && params?.error === 'access_denied') {
+    return { tipo: 'desistiu' };
+  }
+  return { tipo: 'erro' };
+}
+
+/** Token que volta do /oauth2/token, já lido pelo expo-auth-session. */
+export type TokenOAuth = {
+  accessToken?: string;
+  refreshToken?: string;
+  expiresIn?: number;
+};
+
+/** O login pelo Google rende a mesma sessão do login por senha: a renovação e a saída não mudam. */
+export function sessaoDoTokenOAuth(token: TokenOAuth, agora: number): SessaoCognito {
+  if (!token?.accessToken) {
+    throw new Error('Resposta do Cognito sem access token.');
+  }
+  return {
+    accessToken: token.accessToken,
+    refreshToken: token.refreshToken ?? null,
+    expiresAt: agora + (token.expiresIn ?? 3600) * 1000,
+  };
+}
