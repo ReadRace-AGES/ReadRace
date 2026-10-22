@@ -7,6 +7,7 @@ import java.util.UUID;
 import jakarta.persistence.LockModeType;
 
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Slice;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Lock;
 import org.springframework.data.jpa.repository.Query;
@@ -17,6 +18,14 @@ import com.readrace.api.model.ClubeDoLivro;
 import com.readrace.api.model.MembroClube;
 
 public interface MembroClubeRepository extends JpaRepository<MembroClube, UUID> {
+
+    String RANKING_DO_CLUBE =
+            "select u.id as usuarioId, u.nome as nome, u.avatarUrl as avatarUrl,"
+                    + " mc.pontos as pontos"
+                    + " from MembroClube mc, Usuario u"
+                    + " where mc.clube.id = :clubeId"
+                    + " and u.id = mc.usuarioId and u.excluidoEm is null"
+                    + " order by mc.pontos desc, u.nome asc, u.id asc";
 
     Optional<MembroClube> findByClube_IdAndUsuarioId(UUID clubeId, UUID usuarioId);
 
@@ -69,14 +78,11 @@ public interface MembroClubeRepository extends JpaRepository<MembroClube, UUID> 
      * mas sem uma segunda chave a ordem do banco seria arbitrária e a posição mudaria entre
      * chamadas.
      */
-    @Query(
-            "select u.id as usuarioId, u.nome as nome, u.avatarUrl as avatarUrl,"
-                    + " mc.pontos as pontos"
-                    + " from MembroClube mc, Usuario u"
-                    + " where mc.clube.id = :clubeId"
-                    + " and u.id = mc.usuarioId and u.excluidoEm is null"
-                    + " order by mc.pontos desc, u.nome asc")
+    @Query(RANKING_DO_CLUBE)
     List<LinhaRankingClube> rankingDoClube(@Param("clubeId") UUID clubeId, Pageable limite);
+
+    @Query(RANKING_DO_CLUBE)
+    Slice<LinhaRankingClube> paginaDoRanking(@Param("clubeId") UUID clubeId, Pageable pagina);
 
     long countByClube_Id(UUID clubeId);
 

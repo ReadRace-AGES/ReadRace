@@ -64,6 +64,28 @@ valida o token (épico #131).
   propor recriar o pool, o que apaga todas as contas.
 - Política de senha: em aberto, decisão do time. Mudar é in-place.
 
+### Login com Google
+
+O Google é um provedor do Cognito (`aws_cognito_identity_provider.google`, #158). O app
+abre a página do Cognito com `identity_provider=Google` e recebe o mesmo token do login
+por senha; a API não muda.
+
+- Cliente OAuth "Aplicativo da Web" no projeto `readrace-prod` do Google Cloud, com o
+  retorno `https://us-east-2mevipejhy.auth.us-east-2.amazoncognito.com/oauth2/idpresponse`.
+- O ID e a chave secreta ficam no `terraform.tfvars` (`google_client_id` e
+  `google_client_secret`), fora do git. A chave também fica no state, criptografado no S3.
+- Enquanto o app estiver em modo de teste no Google, só os e-mails da lista "Usuários de
+  teste" (Google Auth Platform → Público-alvo) conseguem entrar.
+- Conta Google com o mesmo e-mail de uma conta com senha entra no mesmo perfil: o
+  Cognito repassa o `email_verified` do Google e a API liga as contas pelo e-mail.
+- O retorno cadastrado é só `readrace://auth`, o do app compilado. O Expo Go volta para
+  `exp://<IP do computador>:8081/--/auth`, que o Cognito recusa. Para testar no Expo Go,
+  acrescente esse endereço em `callback_urls` só durante o teste (`apply`) e tire depois.
+- Depois de sair do app, o próximo "Continuar com Google" entra direto, sem escolher a
+  conta, enquanto o navegador do celular guardar a sessão do Google e do Cognito.
+- O GetUser da API exige o escopo `aws.cognito.signin.user.admin`: o app o pede no login
+  com Google. Sem ele, a API responde 401 e o app perde a sessão logo depois de entrar.
+
 ### Ligar a autenticação na API
 
 A API recebe a configuração pelo `infra/producao/docker-compose.yml`
@@ -72,9 +94,9 @@ fica **desligado** (`AUTH_MODO` com padrão `seed`) até o app com login ser lan
 ligar, trocar o padrão para `cognito` no compose, num PR, e fazer o deploy: em `seed`, a
 API atende todo mundo como o usuário do seed.
 
-O app faz o login na própria tela, com e-mail e senha, falando direto com a API do Cognito
-(#156). A página do Cognito (domínio `us-east-2mevipejhy`) continua sendo usada para criar
-conta, até o cadastro no app (#157), e para recuperar a senha. O login com Google é a #158.
+O app faz o login (#156) e o cadastro com o código de confirmação (#157) nas próprias telas,
+falando direto com a API do Cognito. A página do Cognito (domínio `us-east-2mevipejhy`) é usada
+para recuperar a senha e, indo direto para o Google, no login com Google (#158).
 
 Ao ligar, quem estiver com o app sem as variáveis do Cognito no `mobile/.env` para de
 funcionar: o app não manda token e a API responde 401 em tudo. Combinar a data com o time,

@@ -9,6 +9,8 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 
+import com.readrace.api.exception.MascoteBloqueadoException;
+
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -50,6 +52,10 @@ public class Usuario {
 
     @Column(name = "cognito_sub", length = 255)
     private String cognitoSub;
+
+    /** null = nunca escolheu; vale o mascote padrão, o do nível 1. */
+    @Column(name = "mascote_id")
+    private UUID mascoteId;
 
     public void receberXp(int xp) {
         xpTotal += xp;
@@ -95,6 +101,14 @@ public class Usuario {
         if (nomeUsuario != null) {
             this.nomeUsuario = nomeUsuario;
         }
+    }
+
+    /** O nível nunca cai, então quem já está desbloqueado continua desbloqueado. */
+    public void escolherMascote(Mascote mascote) {
+        if (!mascote.desbloqueadoNoNivel(nivel)) {
+            throw new MascoteBloqueadoException();
+        }
+        this.mascoteId = mascote.getId();
     }
 
     @Override

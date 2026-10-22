@@ -47,7 +47,11 @@ function RootStack() {
       {/* Primeiro da lista: sem sessão, é a primeira tela disponível e vira o destino padrão. */}
       <Stack.Protected guard={!logado}>
         <Stack.Screen name="login" />
-        <Stack.Screen name="entrar" />
+        {/* Uma cópia só de cada: o router enfileira a navegação e dois toques rápidos no botão que
+            abre a tela empilhariam duas. */}
+        <Stack.Screen name="entrar" dangerouslySingular />
+        <Stack.Screen name="criar-conta" dangerouslySingular />
+        <Stack.Screen name="confirmar-email" dangerouslySingular />
       </Stack.Protected>
 
       <Stack.Protected guard={logado}>

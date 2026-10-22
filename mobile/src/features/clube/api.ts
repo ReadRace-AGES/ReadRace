@@ -11,6 +11,8 @@ export type Clube = {
   ranking: LinhaRanking[];
   /** Cargo do usuário atual neste clube; `null` quando ele não participa (#160). */
   meuCargo: 'administrador' | 'membro' | null;
+  /** Se o clube já tem quiz publicado: o líder não pode abrir `GET /quiz` para descobrir (#161). */
+  temQuizAtivo: boolean;
 };
 
 export type LinhaRanking = {
@@ -30,5 +32,23 @@ export async function sairDoClube(clubeId: string): Promise<void> {
   await apiRequest<void>(
     `/api/clubes/${encodeURIComponent(clubeId)}/membros/eu`,
     { method: 'DELETE' }
+  );
+}
+
+export type RankingClube = {
+  clube: { id: string; nome: string };
+  ranking: LinhaRanking[];
+  proximoCursor: string | null;
+};
+
+export function buscarRankingClube(
+  clubeId: string,
+  cursor: string | null,
+  signal?: AbortSignal
+) {
+  const consulta = cursor ? `?cursor=${encodeURIComponent(cursor)}` : '';
+  return apiGet<RankingClube>(
+    `/api/clubes/${encodeURIComponent(clubeId)}/ranking${consulta}`,
+    { signal }
   );
 }
