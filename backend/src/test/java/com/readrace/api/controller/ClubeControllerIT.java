@@ -29,6 +29,7 @@ class ClubeControllerIT {
     private static final String DOM_CASMURRO = "30000000-0000-0000-0000-000000000001";
     private static final String USUARIO_1 = "00000000-0000-0000-0000-000000000001";
     private static final String USUARIO_2 = "00000000-0000-0000-0000-000000000002";
+    private static final String CLUBE_2 = "50000000-0000-0000-0000-000000000002";
     private static final String CLUBE_3 = "50000000-0000-0000-0000-000000000003";
     private static final String CLUBE_4 = "50000000-0000-0000-0000-000000000004";
     private static final String URL = "/api/clubes/" + CLUBE;
@@ -173,6 +174,48 @@ class ClubeControllerIT {
                 .bodyJson()
                 .extractingPath("$.temQuizAtivo")
                 .isEqualTo(false);
+    }
+
+    @Test
+    @DisplayName("clube 3 (V17): o usuário de demonstração começa em 5º, com 790, logo atrás do 4º")
+    void deve_colocar_o_usuario_de_demonstracao_em_quinto_no_clube_3() {
+        assertThat(mvc.get().uri("/api/clubes/{id}", CLUBE_3))
+                .hasStatusOk()
+                .bodyJson()
+                .extractingPath("$.ranking[*].pontos")
+                .asList()
+                .containsExactly(1066, 983, 900, 817, 790, 734, 651);
+        assertThat(mvc.get().uri("/api/clubes/{id}", CLUBE_3))
+                .bodyJson()
+                .extractingPath("$.ranking[4].usuario.id")
+                .isEqualTo(USUARIO_1);
+    }
+
+    @Test
+    @DisplayName("clube 3 (V17): continua com os mesmos 9 membros e um único quiz ativo")
+    void deve_manter_os_membros_e_o_quiz_do_clube_3() {
+        assertThat(
+                        jdbc.queryForObject(
+                                "SELECT count(*) FROM membro_clube WHERE clube_id = ?::uuid",
+                                Integer.class,
+                                CLUBE_3))
+                .isEqualTo(9);
+        assertThat(
+                        jdbc.queryForObject(
+                                "SELECT count(*) FROM quiz WHERE clube_id = ?::uuid AND ativo",
+                                Integer.class,
+                                CLUBE_3))
+                .isEqualTo(1);
+    }
+
+    @Test
+    @DisplayName("clube 2 (V17 não mexe): o usuário de demonstração segue em 1º")
+    void deve_manter_o_usuario_de_demonstracao_em_primeiro_no_clube_2() {
+        assertThat(mvc.get().uri("/api/clubes/{id}", CLUBE_2))
+                .hasStatusOk()
+                .bodyJson()
+                .extractingPath("$.ranking[0].usuario.id")
+                .isEqualTo(USUARIO_1);
     }
 
     @Test
