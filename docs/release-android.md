@@ -35,31 +35,44 @@ melhoria de design para uma próxima iteração.
 ## Checklist operacional
 
 ### 1. Cognito (AWS Console)
-- [ ] Confirmar/criar o **App client** do ReadRace e anotar o **Client ID**.
-- [ ] Confirmar o **domínio** do Cognito (ex.: `https://<dominio>.auth.us-east-1.amazoncognito.com`).
-- [ ] Adicionar as **callback/redirect URLs** do app: `readrace://` (o `scheme` do app).
-- [ ] Garantir que o fluxo de **Authorization Code** está habilitado para o app client.
+O login no app agora é **nativo** (login por e-mail/senha e cadastro por e-mail falam direto com a
+API do Cognito; o Google é federado pelo Cognito via OAuth/PKCE). Valores atuais (públicos, do
+`mobile/.env.example`): domínio `https://us-east-2mevipejhy.auth.us-east-2.amazoncognito.com`,
+client id `5f06kagodbku0mvveakmsim8qu`.
+- [ ] Confirmar o **App client** e o **domínio** acima (conferir com o time se são os de produção).
+- [ ] Garantir a **callback/redirect URL** `readrace://auth` cadastrada no app client (é o que o
+      login Google usa; sem ela o Cognito recusa o retorno).
+- [ ] Confirmar que **Authorization Code + PKCE** está habilitado e o provedor **Google** ativo.
 
-### 2. Preencher as variáveis do build
-Para o release final (login ligado), definir as variáveis do Cognito no perfil `production`:
-- [ ] `EXPO_PUBLIC_API_URL` → URL da API de produção (já configurada).
-- [ ] `EXPO_PUBLIC_COGNITO_DOMAIN` → domínio do Cognito.
-- [ ] `EXPO_PUBLIC_COGNITO_CLIENT_ID` → Client ID do app client.
+### 2. Definir as variáveis do build (EAS Environment Variables — nuvem)
+As variáveis `EXPO_PUBLIC_*` **não** ficam no `env` do `eas.json` (o inline não é embutido no
+bundle de forma confiável). Cada perfil puxa as variáveis do seu **environment** no EAS. Defina-as
+na nuvem com `eas env:create` (são públicas, use `--visibility plaintext`):
 
-> **Atenção ao schema do `eas.json`:** ele **não aceita `env` vazio nem variável com string vazia**
-> (`""`). Por isso os perfis de teste (`preview-local`, `preview`) **omitem** as variáveis do
-> Cognito — a ausência já significa "login desligado" (modo seed) no app. Só adicione as chaves
-> `EXPO_PUBLIC_COGNITO_*` quando for preenchê-las com valores reais.
->
-> Como são valores de produção, o ideal é usar **EAS Secrets** (`eas secret:create`) em vez de
-> commitar no `eas.json`.
+Para o environment `production` (perfil `production`, login ligado):
+```
+eas env:create --name EXPO_PUBLIC_API_URL --value "https://3-19-247-112.sslip.io" --environment production --visibility plaintext
+eas env:create --name EXPO_PUBLIC_COGNITO_DOMAIN --value "https://us-east-2mevipejhy.auth.us-east-2.amazoncognito.com" --environment production --visibility plaintext
+eas env:create --name EXPO_PUBLIC_COGNITO_CLIENT_ID --value "5f06kagodbku0mvveakmsim8qu" --environment production --visibility plaintext
+```
+Para o environment `preview` (perfil `preview`, login desligado — só a URL de produção):
+```
+eas env:create --name EXPO_PUBLIC_API_URL --value "https://3-19-247-112.sslip.io" --environment preview --visibility plaintext
+```
+Confira com `eas env:list --environment <env>`. Use `--force` para sobrescrever um valor existente.
+
+> **Login só funciona em APK (development/production build), não no Expo Go** — o Google exige o
+> retorno `readrace://auth`, que o Expo Go não fornece. O login por e-mail/senha e cadastro
+> funcionam no Expo Go; só o Google exige o build.
 
 ### Perfis de build disponíveis (`eas.json`)
-| Perfil | API | Login | Uso |
-|---|---|---|---|
-| `preview-local` | backend do PC do dev (ver abaixo) | desligado | testar com backend local (dev) |
-| `preview` | `https://3-19-247-112.sslip.io` (produção) | desligado | testar instalação contra produção |
-| `production` | produção | a ligar (Cognito) | release final |
+Cada perfil puxa as variáveis do seu **environment** no EAS (seção 2). Nenhum `env` inline no `eas.json`.
+
+| Perfil | Environment | API | Login | Uso |
+|---|---|---|---|---|
+| `preview-local` | `development` | backend do PC do dev (ver abaixo) | desligado | testar com backend local |
+| `preview` | `preview` | produção HTTPS | desligado (seed) | testar instalação contra produção |
+| `production` | `production` | produção HTTPS | ligado (Cognito) | release final |
 
 Comando: `eas build -p android --profile <perfil>`.
 
@@ -119,6 +132,16 @@ Não há projeto EAS ainda — o primeiro build cria o projeto e grava o `projec
 4. Chamar a API de produção **sem token** pelo terminal → **401**.
 5. Conferir no README o link e as instruções.
 
+## Pré-requisito: merge `dev → main`
+A produção sobe a partir da `main`, que ainda está na **sprint 2** (bem atrás da `dev`). Gerar o
+APK de **produção** e virar `AUTH_MODO=cognito` **antes** do merge faria as telas novas chamarem
+rotas que não existem em produção. Então os passos 3–6 (APK de produção, virar o modo, release)
+dependem do merge `dev → main` acontecer primeiro.
+
 ## Fora de escopo (não fazer nesta task)
-iOS e Play Store; atualização automática do app; telas de login (#156) e cadastro (#157) dentro do
-app — o primeiro APK usa a página do Cognito; login com Google (#158).
+iOS e Play Store; atualização automática do app.
+
+> Nota: as telas de login (#156), cadastro (#157) e login com Google (#158) **já foram
+> implementadas** e estão na `dev` — o login no app é nativo. A observação original da issue (de
+> que o primeiro APK usaria a página web do Cognito) não vale mais. Só a **recuperação de senha**
+> ainda abre a página web do Cognito.

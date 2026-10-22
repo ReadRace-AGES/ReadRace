@@ -24,9 +24,6 @@
       "environment": "preview",
       "android": {
         "buildType": "apk"
-      },
-      "env": {
-        "EXPO_PUBLIC_API_URL": "https://3-19-247-112.sslip.io"
       }
     },
     "production": {
@@ -34,9 +31,6 @@
       "environment": "production",
       "android": {
         "buildType": "apk"
-      },
-      "env": {
-        "EXPO_PUBLIC_API_URL": "https://3-19-247-112.sslip.io"
       }
     }
   },
