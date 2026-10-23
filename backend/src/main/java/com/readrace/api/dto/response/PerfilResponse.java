@@ -12,6 +12,7 @@ public record PerfilResponse(
         String username,
         String email,
         String avatar,
+        String planoFundo,
         String titulo,
         int nivel,
         int xpAtual,

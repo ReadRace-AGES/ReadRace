@@ -28,7 +28,12 @@ const dependencies = {
     __esModule: true,
     default: 'Svg',
     Circle: 'Circle',
+    ClipPath: 'ClipPath',
+    Defs: 'Defs',
+    Ellipse: 'Ellipse',
+    Line: 'Line',
     Path: 'Path',
+    Rect: 'Rect',
   },
   'expo-image': { Image: 'Image' },
   '@/theme': theme,
@@ -51,6 +56,7 @@ function load(file) {
   );
   return module.exports;
 }
+dependencies['./bonecos'] = load('bonecos.tsx');
 for (const name of ['Card', 'BookCover', 'avatar']) {
   dependencies[`@/components/${name}`] = load(`${name}.tsx`);
 }

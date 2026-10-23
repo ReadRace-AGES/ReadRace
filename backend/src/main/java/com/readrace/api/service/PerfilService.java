@@ -12,6 +12,7 @@ import com.readrace.api.dto.response.PerfilResponse;
 import com.readrace.api.exception.PerfilInvalidoException;
 import com.readrace.api.exception.UsernameEmUsoException;
 import com.readrace.api.exception.UsuarioNaoEncontradoException;
+import com.readrace.api.model.AparenciaDoPerfil;
 import com.readrace.api.model.CurvaDeNivel;
 import com.readrace.api.model.SequenciaDeLeitura;
 import com.readrace.api.repository.PerfilRepository;
@@ -72,7 +73,15 @@ public class PerfilService {
             }
         }
 
-        usuario.atualizarPerfil(nome, username);
+        if (request.avatar() != null && !AparenciaDoPerfil.AVATARES.contains(request.avatar())) {
+            throw new PerfilInvalidoException("Escolha um dos avatares disponíveis.");
+        }
+        if (request.planoFundo() != null
+                && !AparenciaDoPerfil.PLANOS_DE_FUNDO.contains(request.planoFundo())) {
+            throw new PerfilInvalidoException("Escolha um dos planos de fundo disponíveis.");
+        }
+
+        usuario.atualizarPerfil(nome, username, request.avatar(), request.planoFundo());
         try {
             usuarios.flush();
         } catch (DataIntegrityViolationException e) {
@@ -98,6 +107,7 @@ public class PerfilService {
                 usuario.getNomeUsuario(),
                 proprio ? usuario.getEmail() : null,
                 usuario.getAvatarUrl(),
+                usuario.getPlanoFundo(),
                 usuario.getTitulo(),
                 nivel,
                 xpTotal,

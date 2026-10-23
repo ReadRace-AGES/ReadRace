@@ -37,7 +37,10 @@ public class PerfilController {
     }
 
     @PatchMapping("/api/me/perfil")
-    @Operation(summary = "Atualiza nome e/ou username do usuário atual; manda só o que mudou")
+    @Operation(
+            summary =
+                    "Atualiza nome, username, avatar e/ou plano de fundo do usuário atual; manda só"
+                            + " o que mudou")
     public PerfilResponse atualizarMeuPerfil(@RequestBody AtualizarPerfilRequest request) {
         return service.atualizarDoUsuarioAtual(request);
     }

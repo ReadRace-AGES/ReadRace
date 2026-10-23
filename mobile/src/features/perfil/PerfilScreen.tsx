@@ -293,6 +293,7 @@ export function PerfilScreen({
         <PerfilTopo
           nome={dados?.nome}
           avatar={dados?.avatar}
+          planoFundo={dados?.planoFundo}
           mascote={dados?.mascote?.imagem}
           onConfiguracoes={() => router.push('/configuracoes')}
         />

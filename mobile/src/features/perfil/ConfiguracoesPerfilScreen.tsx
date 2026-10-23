@@ -1,5 +1,5 @@
 import { useRouter } from 'expo-router';
-import { useState } from 'react';
+import { useState, type ReactNode } from 'react';
 import {
   ActivityIndicator,
   Pressable,
@@ -12,12 +12,21 @@ import {
 
 import { ApiError } from '@/api/client';
 import { AppHeader } from '@/components/AppHeader';
+import { Avatar } from '@/components/avatar';
+import { Boneco, ehBoneco, OPCOES_BONECOS } from '@/components/bonecos';
 import { PrimaryButton } from '@/components/PrimaryButton';
 import { useToastContext } from '@/components/toast-provider';
 import { colors, radius, sizes, spacing, textStyles } from '@/theme';
 
 import { atualizarPerfil, type AtualizacaoPerfil, type Perfil } from './api';
 import { ConfiguracoesGeraisSheet } from './ConfiguracoesGeraisSheet';
+import { EscolhaAparenciaSheet } from './EscolhaAparenciaSheet';
+import {
+  PLANO_DE_FUNDO_PADRAO,
+  PLANOS_DE_FUNDO,
+  PlanoDeFundo,
+  PROPORCAO_CENARIO,
+} from './planosDeFundo';
 import { usePerfil } from './usePerfil';
 
 const TAMANHO_MAX_NOME = 120;
@@ -73,9 +82,14 @@ function Formulario({
   perfil: Perfil;
   aoConcluir: () => void;
 }) {
-  const { showToast, showErrorToast } = useToastContext();
+  const { showErrorToast } = useToastContext();
   const [nome, setNome] = useState(perfil.nome);
   const [username, setUsername] = useState(perfil.username);
+  const [avatar, setAvatar] = useState(perfil.avatar);
+  const fundoAtual = perfil.planoFundo ?? PLANO_DE_FUNDO_PADRAO;
+  const [planoFundo, setPlanoFundo] = useState(fundoAtual);
+  const [avatarAberto, setAvatarAberto] = useState(false);
+  const [fundoAberto, setFundoAberto] = useState(false);
   const [erroNome, setErroNome] = useState<string | null>(null);
   const [erroUsername, setErroUsername] = useState<string | null>(null);
   const [salvando, setSalvando] = useState(false);
@@ -94,6 +108,8 @@ function Formulario({
     const mudancas: AtualizacaoPerfil = {};
     if (nomeLimpo !== perfil.nome) mudancas.nome = nomeLimpo;
     if (usernameLimpo !== perfil.username) mudancas.username = usernameLimpo;
+    if (avatar !== perfil.avatar && ehBoneco(avatar)) mudancas.avatar = avatar;
+    if (planoFundo !== fundoAtual) mudancas.planoFundo = planoFundo;
     if (Object.keys(mudancas).length === 0) {
       aoConcluir();
       return;
@@ -139,13 +155,45 @@ function Formulario({
         autoCapitalize="none"
       />
       <Campo label="E-mail" value={perfil.email ?? ''} editable={false} />
-      <Opcao label="Avatar" onPress={showToast} />
-      <Opcao label="Plano de fundo" onPress={showToast} />
+      <Opcao
+        label="Avatar"
+        onPress={() => setAvatarAberto(true)}
+        previa={<Avatar name={nome} photoUrl={avatar} size={sizes.avatar} />}
+      />
+      <Opcao
+        label="Plano de fundo"
+        onPress={() => setFundoAberto(true)}
+        previa={
+          <View style={styles.previaFundo}>
+            <PlanoDeFundo chave={planoFundo} />
+          </View>
+        }
+      />
       <Opcao
         label="Configurações gerais"
         onPress={() => setGeraisAberto(true)}
       />
       <PrimaryButton label="Concluir" onPress={concluir} loading={salvando} />
+      <EscolhaAparenciaSheet
+        visible={avatarAberto}
+        onClose={() => setAvatarAberto(false)}
+        titulo="Avatar"
+        opcoes={OPCOES_BONECOS}
+        selecionada={avatar}
+        onEscolher={setAvatar}
+        renderArte={(chave) => ehBoneco(chave) && <Boneco chave={chave} />}
+        formato="circulo"
+      />
+      <EscolhaAparenciaSheet
+        visible={fundoAberto}
+        onClose={() => setFundoAberto(false)}
+        titulo="Plano de fundo"
+        opcoes={PLANOS_DE_FUNDO}
+        selecionada={planoFundo}
+        onEscolher={setPlanoFundo}
+        renderArte={(chave) => <PlanoDeFundo chave={chave} />}
+        formato="retangulo"
+      />
       <ConfiguracoesGeraisSheet
         visible={geraisAberto}
         onClose={() => setGeraisAberto(false)}
@@ -192,10 +240,20 @@ function Campo({
   );
 }
 
-function Opcao({ label, onPress }: { label: string; onPress: () => void }) {
+function Opcao({
+  label,
+  onPress,
+  previa,
+}: {
+  label: string;
+  onPress: () => void;
+  /** Mostra o que está escolhido antes da seta. */
+  previa?: ReactNode;
+}) {
   return (
     <Pressable accessibilityRole="button" onPress={onPress} style={styles.opcao}>
       <Text style={styles.opcaoTexto}>{label}</Text>
+      {previa}
       <Text style={styles.opcaoSeta}>›</Text>
     </Pressable>
   );
@@ -234,10 +292,17 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
+    gap: spacing[3],
     paddingVertical: spacing[3],
     borderBottomWidth: sizes.borderWidth,
     borderBottomColor: colors.border,
   },
-  opcaoTexto: { ...textStyles.body, color: colors.text },
+  opcaoTexto: { ...textStyles.body, color: colors.text, flex: 1 },
+  previaFundo: {
+    height: sizes.avatar,
+    aspectRatio: PROPORCAO_CENARIO,
+    borderRadius: radius.sm,
+    overflow: 'hidden',
+  },
   opcaoSeta: { ...textStyles.h2, color: colors.textMuted },
 });
