@@ -1,10 +1,14 @@
-import { apiGet } from '@/api/client';
+import { apiGet, apiRequest } from '@/api/client';
 
 export type Perfil = {
   id: string;
   nome: string;
   username: string;
+  email: string | null;
+  /** URL da foto ou chave de um boneco (`boneco-1`...). */
   avatar: string | null;
+  /** Chave do plano de fundo; null = cenário padrão. */
+  planoFundo: string | null;
   titulo: string;
   nivel: number;
   xpAtual: number;
@@ -12,6 +16,8 @@ export type Perfil = {
   xpDoNivel: number;
   seguidores: number;
   seguindo: number;
+  sigo: boolean;
+  meSegue: boolean;
   estatisticas: {
     livrosLidos: number;
     paginasLidas: number;
@@ -32,7 +38,26 @@ export type Perfil = {
     autor: string | null;
     capa: string | null;
   }[];
+  /** Só no perfil próprio (/api/me/perfil). */
+  mascote?: { nome: string; imagem: string };
 };
+
+export type RelacaoSeguir = Pick<Perfil, 'seguidores' | 'sigo' | 'meSegue'>;
+
+export function buscarUsuarioAtual(signal: AbortSignal) {
+  return apiGet<{ id: string }>('/api/me', { signal });
+}
+
+export function alterarSeguir(
+  usuarioId: string,
+  seguir: boolean,
+  signal: AbortSignal
+) {
+  return apiRequest<RelacaoSeguir>(
+    `/api/usuarios/${encodeURIComponent(usuarioId)}/seguidores/eu`,
+    { method: seguir ? 'POST' : 'DELETE', signal }
+  );
+}
 
 export function buscarPerfil(
   usuarioId: string | undefined,
@@ -43,4 +68,18 @@ export function buscarPerfil(
       ? '/api/me/perfil'
       : `/api/usuarios/${encodeURIComponent(usuarioId)}/perfil`;
   return apiGet<Perfil>(caminho, { signal });
+}
+
+export type AtualizacaoPerfil = {
+  nome?: string;
+  username?: string;
+  avatar?: string;
+  planoFundo?: string;
+};
+
+export function atualizarPerfil(dados: AtualizacaoPerfil) {
+  return apiRequest<Perfil>('/api/me/perfil', {
+    method: 'PATCH',
+    body: JSON.stringify(dados),
+  });
 }

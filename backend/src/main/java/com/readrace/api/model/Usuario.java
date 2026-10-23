@@ -9,6 +9,8 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 
+import com.readrace.api.exception.MascoteBloqueadoException;
+
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -51,6 +53,14 @@ public class Usuario {
     @Column(name = "cognito_sub", length = 255)
     private String cognitoSub;
 
+    /** null = nunca escolheu; vale o mascote padrão, o do nível 1. */
+    @Column(name = "mascote_id")
+    private UUID mascoteId;
+
+    /** null = nunca escolheu; vale o cenário padrão. */
+    @Column(name = "plano_fundo", length = 30)
+    private String planoFundo;
+
     public void receberXp(int xp) {
         xpTotal += xp;
         nivel = CurvaDeNivel.nivelDoXp(xpTotal);
@@ -85,6 +95,30 @@ public class Usuario {
     /** Liga um usuário já existente (ex.: seed) à identidade do Cognito. */
     public void vincularCognito(String cognitoSub) {
         this.cognitoSub = cognitoSub;
+    }
+
+    /** Edição pelas Configurações de perfil. null = manter o valor atual. */
+    public void atualizarPerfil(String nome, String nomeUsuario, String avatar, String planoFundo) {
+        if (nome != null) {
+            this.nome = nome;
+        }
+        if (nomeUsuario != null) {
+            this.nomeUsuario = nomeUsuario;
+        }
+        if (avatar != null) {
+            this.avatarUrl = avatar;
+        }
+        if (planoFundo != null) {
+            this.planoFundo = planoFundo;
+        }
+    }
+
+    /** O nível nunca cai, então quem já está desbloqueado continua desbloqueado. */
+    public void escolherMascote(Mascote mascote) {
+        if (!mascote.desbloqueadoNoNivel(nivel)) {
+            throw new MascoteBloqueadoException();
+        }
+        this.mascoteId = mascote.getId();
     }
 
     @Override

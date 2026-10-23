@@ -25,6 +25,7 @@ const COPY = {
   meusGrupos: 'Meus Grupos',
   verTodos: 'Ver todos',
   criarGrupo: 'Criar Grupo',
+  comunidadesSugeridas: 'Comunidades sugeridas',
   tentarDeNovo: 'Tentar de novo',
   // Sem copy aprovada no Figma para o erro e para as listas vazias (pendencia de design):
   // com o seed de #13 os vazios nao aparecem em uso normal, existem como defesa.
@@ -32,6 +33,13 @@ const COPY = {
   semClubes: 'Você ainda não participa de nenhum clube do livro.',
   semComunidades: 'Você ainda não participa de nenhuma comunidade.',
 } as const;
+
+// A sequência aguenta até 7 dias sem leitura: enquanto a de hoje não é registrada, o badge
+// mostra quanto falta para perdê-la.
+function avisoSequencia(diasAtePerder: number | null | undefined) {
+  if (diasAtePerder == null) return undefined;
+  return `Perde em ${diasAtePerder} ${diasAtePerder === 1 ? 'dia' : 'dias'}`;
+}
 
 function IconePlus({ size, color }: PrimaryButtonIconProps) {
   return (
@@ -105,7 +113,8 @@ export function FeedComunidadesView({
         title={usuario ? `Olá, ${usuario.nome}!` : 'Olá!'}
         subtitle={COPY.subtitulo}
         streakDays={usuario?.sequenciaDias}
-        streakActive={(usuario?.sequenciaDias ?? 0) > 0}
+        streakActive={usuario?.leuHoje}
+        streakHint={avisoSequencia(usuario?.diasAtePerder)}
       />
 
       <View className="px-6 pb-2 pt-6">
@@ -178,16 +187,19 @@ export function FeedComunidadesView({
           {feed.dados.comunidades.length === 0 ? (
             <EmptyState icon={BookIcon} message={COPY.semComunidades} />
           ) : (
-            feed.dados.comunidades.map((comunidade) => (
-              <ListItem
-                key={comunidade.id}
-                variant="community"
-                title={comunidade.nome}
-                imageUrl={comunidade.capaUrl}
-                memberCount={comunidade.totalMembros}
-                onPress={() => onComunidadePress(comunidade)}
-              />
-            ))
+            <>
+              <CabecalhoSecao titulo={COPY.comunidadesSugeridas} />
+              {feed.dados.comunidades.map((comunidade) => (
+                <ListItem
+                  key={comunidade.id}
+                  variant="community"
+                  title={comunidade.nome}
+                  imageUrl={comunidade.capaUrl}
+                  memberCount={comunidade.totalMembros}
+                  onPress={() => onComunidadePress(comunidade)}
+                />
+              ))}
+            </>
           )}
         </ScrollView>
       )}

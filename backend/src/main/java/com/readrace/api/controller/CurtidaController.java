@@ -16,7 +16,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 
 @RestController
 @RequestMapping("/api/posts/{postId}/curtida")
-@Tag(name = "Posts", description = "Curtir e descurtir posts")
+@Tag(name = "Posts", description = "Curtidas e comentários de posts")
 public class CurtidaController {
 
     private final CurtidaService curtidaService;

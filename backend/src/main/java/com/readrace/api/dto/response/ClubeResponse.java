@@ -13,9 +13,21 @@ import java.util.UUID;
  *
  * <p>A moeda do ranking é {@code Pontos} ({@code membro_clube.pontos}), do clube. Nenhum campo de
  * {@code XP} entra nesta resposta (produto §5).
+ *
+ * <p>{@code meuCargo} é {@code "administrador"} ou {@code "membro"} quando o usuário atual
+ * participa do clube, e {@code null} quando não participa (#160).
+ *
+ * <p>{@code temQuizAtivo} diz se o clube já tem um quiz publicado. O administrador não pode abrir
+ * {@code GET /quiz} (responde 403), e é por aqui que a configuração sabe se vai substituir um quiz
+ * (#161).
  */
 public record ClubeResponse(
-        UUID id, String nome, LivroAtual livroAtual, List<LinhaRanking> ranking) {
+        UUID id,
+        String nome,
+        LivroAtual livroAtual,
+        List<LinhaRanking> ranking,
+        String meuCargo,
+        boolean temQuizAtivo) {
 
     /** {@code id} vem porque "Registrar leitura" precisa saber sobre qual livro o modal abre. */
     public record LivroAtual(UUID id, String titulo, String autor) {}

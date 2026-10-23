@@ -108,6 +108,40 @@ cd backend
 
 ---
 
+### Não misture as duas opções
+
+O `docker compose up` sem nome de serviço sobe **banco e API**. Se depois você rodar o
+`./mvnw spring-boot:run`, as duas APIs disputam a porta 8080 e uma delas não sobe (`Port 8080
+was already in use` no Maven, ou `port is already allocated` no Docker). Escolha uma:
+
+| Quero... | Comandos |
+|---|---|
+| Mexer no backend | `docker compose up db -d` e depois `./mvnw spring-boot:run` (opção 2) |
+| Só a API rodando para testar o app | `docker compose up --build -d` e **não** rode o `./mvnw` (opção 1) |
+
+Na opção 1, a API do container usa o código do último `--build`: depois de mudar o backend, rode
+`docker compose up --build -d` de novo.
+
+---
+
+### Modo de login: `seed` ou `cognito`
+
+O `.env` da raiz escolhe como a API trata o login, e vale para as duas opções acima (o perfil
+`dev` do `./mvnw` também lê esse arquivo):
+
+- **`seed`** (padrão, linhas de autenticação comentadas): sem login, todo request é o usuário do
+  seed. Para trabalhar nas telas sem criar conta.
+- **`cognito`** (descomente as quatro linhas de autenticação do `.env`): exige o token do Cognito.
+  Para testar login e cadastro de verdade. Confira com
+  `curl -s -o /dev/null -w "%{http_code}\n" http://localhost:8080/api/feed/comunidades`: tem que
+  dar `401`.
+
+Depois de mudar o `.env`, reinicie a API. Uma variável exportada no terminal tem prioridade sobre o
+arquivo. O app também precisa combinar: com a API em `cognito`, descomente as duas linhas do
+Cognito no `mobile/.env` (ver `mobile/.env.example`) e rode `npx expo start -c`.
+
+---
+
 ## Mobile — Como rodar
 
 ### Problema comum no Windows: script bloqueado pelo PowerShell

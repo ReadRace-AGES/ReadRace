@@ -5,6 +5,7 @@ import {
   useContext,
   useEffect,
   useMemo,
+  useRef,
   type ReactNode,
 } from 'react';
 
@@ -14,7 +15,10 @@ type ToastContextValue = {
   showToast: () => void;
   /** Mensagem específica de erro (ex.: falha ao curtir) — não confundir com {@link showToast}. */
   showErrorToast: (message: string) => void;
+  showToastAfterNavigation: (message: string) => void;
 };
+
+const VALIDADE_DO_TOAST_PENDENTE_MS = 2000;
 
 const ToastContext = createContext<ToastContextValue | null>(null);
 
@@ -26,9 +30,22 @@ export function ToastProvider({ children }: ToastProviderProps) {
   const { visible, message, show, hide } = useToast();
   const pathname = usePathname();
 
+  const pendingToast = useRef<{ message: string; criadoEm: number } | null>(
+    null
+  );
+
   useEffect(() => {
+    const pendente = pendingToast.current;
+    pendingToast.current = null;
+    if (
+      pendente &&
+      Date.now() - pendente.criadoEm <= VALIDADE_DO_TOAST_PENDENTE_MS
+    ) {
+      show(pendente.message);
+      return;
+    }
     hide();
-  }, [pathname, hide]);
+  }, [pathname, show, hide]);
 
   // Sem parâmetros de propósito: várias telas passam `showToast` direto para `onPress`, e um
   // evento de toque não pode virar mensagem do toast.
@@ -37,10 +54,13 @@ export function ToastProvider({ children }: ToastProviderProps) {
     (mensagem: string) => show(mensagem),
     [show]
   );
+  const showToastAfterNavigation = useCallback((mensagem: string) => {
+    pendingToast.current = { message: mensagem, criadoEm: Date.now() };
+  }, []);
 
   const value = useMemo<ToastContextValue>(
-    () => ({ showToast, showErrorToast }),
-    [showToast, showErrorToast]
+    () => ({ showToast, showErrorToast, showToastAfterNavigation }),
+    [showToast, showErrorToast, showToastAfterNavigation]
   );
 
   return (

@@ -10,6 +10,11 @@ resource "aws_iam_openid_connect_provider" "github" {
 
 locals {
   repositorio_github = "ReadRace-AGES/ReadRace"
+  # O repositório usa o "sub" imutável do GitHub, que leva o ID numérico da organização
+  # e do repositório junto do nome. Um repositório apagado e recriado com o mesmo nome
+  # ganha IDs novos e não herda o acesso. Conferir em
+  # gh api repos/ReadRace-AGES/ReadRace/actions/oidc/customization/sub
+  sub_github = "repo:ReadRace-AGES@317697324/ReadRace@1334676753"
 }
 
 # Só um workflow rodando na main deste repositório assume a role. Fork, outra branch
@@ -29,7 +34,7 @@ data "aws_iam_policy_document" "deploy_assume" {
     condition {
       test     = "StringEquals"
       variable = "token.actions.githubusercontent.com:sub"
-      values   = ["repo:${local.repositorio_github}:ref:refs/heads/main"]
+      values   = ["${local.sub_github}:ref:refs/heads/main"]
     }
   }
 }
@@ -112,10 +117,10 @@ resource "aws_ssm_document" "deploy" {
             - COMMIT="{{ Commit }}"
             - mkdir -p /opt/readrace && cd /opt/readrace
             - BASE="https://raw.githubusercontent.com/${local.repositorio_github}/$COMMIT/infra/producao"
-            - ARQUIVOS="docker-compose.yml Caddyfile subir.sh backup-banco.sh readrace-backup.service readrace-backup.timer"
+            - ARQUIVOS="docker-compose.yml Caddyfile subir.sh backup-banco.sh readrace-backup.service readrace-backup.timer saude.sh readrace-saude.service readrace-saude.timer"
             - for f in $ARQUIVOS; do curl -fsSL "$BASE/$f" -o "$f.novo"; done
             - for f in $ARQUIVOS; do mv "$f.novo" "$f"; done
-            - chmod 755 subir.sh backup-banco.sh
+            - chmod 755 subir.sh backup-banco.sh saude.sh
             - ./subir.sh "$${COMMIT:0:12}"
   DOC
 }

@@ -7,6 +7,8 @@ import static org.mockito.BDDMockito.then;
 import static org.mockito.Mockito.times;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.jwt;
 
+import java.util.UUID;
+
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -14,16 +16,21 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.context.annotation.Import;
 import org.springframework.http.HttpStatus;
+import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.security.oauth2.jwt.BadJwtException;
 import org.springframework.security.oauth2.jwt.JwtDecoder;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
+import org.springframework.test.context.transaction.AfterTransaction;
 import org.springframework.test.web.servlet.assertj.MockMvcTester;
 import org.springframework.test.web.servlet.request.RequestPostProcessor;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.server.ResponseStatusException;
 
 import com.readrace.api.TestcontainersConfiguration;
 import com.readrace.api.adapter.cognito.CognitoUserInfo;
 import com.readrace.api.adapter.cognito.CognitoUserInfoClient;
 import com.readrace.api.model.Usuario;
+import com.readrace.api.repository.SeguirRepository;
 import com.readrace.api.repository.UsuarioRepository;
 
 /**
@@ -46,9 +53,112 @@ class AutenticacaoCognitoIT {
 
     @MockitoBean private CognitoUserInfoClient userInfoClient;
 
+    @Autowired private SeguirRepository seguir;
+
+    @Test
+    void seguirUsaOUsuarioDoTokenEmVezDoUsuarioDeDemonstracao() {
+        given(userInfoClient.buscar("token-seguir"))
+                .willReturn(
+                        new CognitoUserInfo(
+                                "sub-seguir",
+                                "leitora.seguir@example.com",
+                                "true",
+                                "Leitora",
+                                null));
+        String rota = "/api/usuarios/" + ID_DANIEL + "/seguidores/eu";
+        assertThat(mvc.post().uri(rota)).hasStatus(HttpStatus.UNAUTHORIZED);
+        assertThat(mvc.delete().uri(rota)).hasStatus(HttpStatus.UNAUTHORIZED);
+        assertThat(mvc.post().uri(rota).with(token("sub-seguir", "token-seguir")))
+                .hasStatusOk()
+                .bodyJson()
+                .extractingPath("$.sigo")
+                .isEqualTo(true);
+        var leitora = usuarios.findByCognitoSubAndExcluidoEmIsNull("sub-seguir").orElseThrow();
+        assertThat(
+                        seguir.existsBySeguidorIdAndSeguidoId(
+                                leitora.getId(), UUID.fromString(ID_DANIEL)))
+                .isTrue();
+        assertThat(
+                        mvc.get()
+                                .uri("/api/usuarios/" + ID_DANIEL + "/perfil")
+                                .with(token("sub-seguir", "token-seguir")))
+                .hasStatusOk()
+                .bodyJson()
+                .extractingPath("$.sigo")
+                .isEqualTo(true);
+        assertThat(mvc.delete().uri(rota).with(token("sub-seguir", "token-seguir")))
+                .hasStatusOk()
+                .bodyJson()
+                .extractingPath("$.sigo")
+                .isEqualTo(false);
+        assertThat(
+                        seguir.existsBySeguidorIdAndSeguidoId(
+                                leitora.getId(), UUID.fromString(ID_DANIEL)))
+                .isFalse();
+    }
+
+    @Autowired private JdbcTemplate jdbc;
+
+    /**
+     * O primeiro acesso grava em transação própria (REQUIRES_NEW), que o rollback do teste não
+     * desfaz. Depois do rollback, apaga os perfis criados aqui e desliga o Daniel do seed, para não
+     * vazar estado para outros testes.
+     */
+    @AfterTransaction
+    void limparPrimeirosAcessos() {
+        jdbc.update(
+                "DELETE FROM usuario WHERE cognito_sub IN ('sub-novo', 'sub-dominio-real', 'sub-seguir')");
+        jdbc.update("UPDATE usuario SET cognito_sub = NULL WHERE cognito_sub = 'sub-daniel'");
+    }
+
     @Test
     void deve_recusar_request_sem_token() {
-        assertThat(mvc.get().uri("/api/me")).hasStatus(HttpStatus.UNAUTHORIZED);
+        var resposta = mvc.get().uri("/api/me").exchange();
+
+        assertThat(resposta).headers().containsHeader("WWW-Authenticate");
+        assertThat(resposta)
+                .hasStatus(HttpStatus.UNAUTHORIZED)
+                .bodyJson()
+                .extractingPath("$.code")
+                .isEqualTo("UNAUTHORIZED");
+    }
+
+    @Test
+    void desafios_de_sistema_exigem_token() {
+        assertThat(mvc.get().uri("/api/desafios/sistema"))
+                .hasStatus(HttpStatus.UNAUTHORIZED)
+                .bodyJson()
+                .extractingPath("$.code")
+                .isEqualTo("UNAUTHORIZED");
+    }
+
+    // O 401 do Spring Security, antes do controller, segue o mesmo envelope de erro da API.
+    @Test
+    void deve_recusar_token_invalido_no_envelope_de_erro() {
+        given(jwtDecoder.decode("token-ruim"))
+                .willThrow(new BadJwtException("assinatura inválida"));
+
+        assertThat(mvc.get().uri("/api/me").header("Authorization", "Bearer token-ruim"))
+                .hasStatus(HttpStatus.UNAUTHORIZED)
+                .bodyJson()
+                .extractingPath("$.code")
+                .isEqualTo("UNAUTHORIZED");
+    }
+
+    // O 401 do primeiro acesso (Cognito recusou o token no GetUser) passa pelo
+    // GlobalExceptionHandler, que precisa do código próprio em vez de INTERNAL_ERROR.
+    @Test
+    void deve_responder_401_no_envelope_quando_o_cognito_recusa_no_primeiro_acesso() {
+        given(userInfoClient.buscar("token-recusado"))
+                .willThrow(
+                        new ResponseStatusException(
+                                HttpStatus.UNAUTHORIZED, "Sessão inválida. Entre de novo."));
+
+        assertThat(mvc.get().uri("/api/me").with(token("sub-novo", "token-recusado")))
+                .hasStatus(HttpStatus.UNAUTHORIZED)
+                .bodyJson()
+                .extractingPath("$.code")
+                .isEqualTo("UNAUTHORIZED");
     }
 
     @Test

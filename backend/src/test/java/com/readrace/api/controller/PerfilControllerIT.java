@@ -10,8 +10,10 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.context.annotation.Import;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.test.web.servlet.assertj.MockMvcTester;
+import org.springframework.test.web.servlet.assertj.MvcTestResult;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.readrace.api.TestcontainersConfiguration;
@@ -112,5 +114,123 @@ class PerfilControllerIT {
         assertThat(perfil.xpAtual()).isEqualTo(2450);
         assertThat(perfil.xpNoNivel()).isEqualTo(521);
         assertThat(perfil.xpDoNivel()).isEqualTo(833);
+    }
+
+    @Test
+    void emailSoApareceNoPerfilDoProprioUsuario() {
+        String email =
+                jdbc.queryForObject("SELECT email FROM usuario WHERE id = ?", String.class, FIXO);
+        var outro = UUID.fromString("00000000-0000-0000-0000-000000000002");
+
+        assertThat(mvc.get().uri("/api/me/perfil"))
+                .hasStatusOk()
+                .bodyJson()
+                .extractingPath("$.email")
+                .isEqualTo(email);
+        assertThat(mvc.get().uri("/api/usuarios/" + outro + "/perfil"))
+                .hasStatusOk()
+                .bodyJson()
+                .extractingPath("$.email")
+                .isNull();
+    }
+
+    private MvcTestResult patchPerfil(String json) {
+        return mvc.patch()
+                .uri("/api/me/perfil")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(json)
+                .exchange();
+    }
+
+    private String usernameNoBanco() {
+        return jdbc.queryForObject(
+                "SELECT nome_usuario FROM usuario WHERE id = ?", String.class, FIXO);
+    }
+
+    @Test
+    @Transactional
+    void atualizaNomeEUsernameDoUsuarioAtual() {
+        var resposta = patchPerfil("{\"nome\": \"Daniel R.\", \"username\": \"daniel_r\"}");
+
+        assertThat(resposta).hasStatusOk();
+        assertThat(resposta).bodyJson().extractingPath("$.nome").isEqualTo("Daniel R.");
+        assertThat(resposta).bodyJson().extractingPath("$.username").isEqualTo("daniel_r");
+        assertThat(usernameNoBanco()).isEqualTo("daniel_r");
+    }
+
+    @Test
+    @Transactional
+    void mandarSoONomeMantemOUsername() {
+        var resposta = patchPerfil("{\"nome\": \"Daniel R.\"}");
+
+        assertThat(resposta).hasStatusOk();
+        assertThat(resposta).bodyJson().extractingPath("$.username").isEqualTo("danielribeiro");
+    }
+
+    @Test
+    @Transactional
+    void usernameDeOutroUsuarioRetorna409ENaoGrava() {
+        var resposta = patchPerfil("{\"username\": \"anasilva\"}");
+
+        assertThat(resposta).hasStatus(HttpStatus.CONFLICT);
+        assertThat(resposta).bodyJson().extractingPath("$.code").isEqualTo("USERNAME_EM_USO");
+        assertThat(usernameNoBanco()).isEqualTo("danielribeiro");
+    }
+
+    @Test
+    @Transactional
+    void mandarOProprioUsernameNaoEhConflito() {
+        assertThat(patchPerfil("{\"username\": \"danielribeiro\"}")).hasStatusOk();
+    }
+
+    @Test
+    @Transactional
+    void usernameForaDoFormatoRetorna400() {
+        var resposta = patchPerfil("{\"username\": \"Daniel Ribeiro!\"}");
+
+        assertThat(resposta).hasStatus(HttpStatus.BAD_REQUEST);
+        assertThat(resposta).bodyJson().extractingPath("$.code").isEqualTo("PERFIL_INVALIDO");
+    }
+
+    @Test
+    @Transactional
+    void nomeEmBrancoRetorna400() {
+        var resposta = patchPerfil("{\"nome\": \"   \"}");
+
+        assertThat(resposta).hasStatus(HttpStatus.BAD_REQUEST);
+        assertThat(resposta).bodyJson().extractingPath("$.code").isEqualTo("PERFIL_INVALIDO");
+    }
+
+    @Test
+    @Transactional
+    void atualizaAvatarEPlanoDeFundoMantendoONome() {
+        var resposta = patchPerfil("{\"avatar\": \"boneco-3\", \"planoFundo\": \"noite\"}");
+
+        assertThat(resposta).hasStatusOk();
+        assertThat(resposta).bodyJson().extractingPath("$.avatar").isEqualTo("boneco-3");
+        assertThat(resposta).bodyJson().extractingPath("$.planoFundo").isEqualTo("noite");
+        assertThat(resposta).bodyJson().extractingPath("$.username").isEqualTo("danielribeiro");
+    }
+
+    @Test
+    @Transactional
+    void avatarForaDoCatalogoRetorna400ENaoGrava() {
+        var resposta = patchPerfil("{\"avatar\": \"https://exemplo.com/foto.png\"}");
+
+        assertThat(resposta).hasStatus(HttpStatus.BAD_REQUEST);
+        assertThat(resposta).bodyJson().extractingPath("$.code").isEqualTo("PERFIL_INVALIDO");
+        assertThat(
+                        jdbc.queryForObject(
+                                "SELECT avatar_url FROM usuario WHERE id = ?", String.class, FIXO))
+                .isEqualTo("https://i.pravatar.cc/300?img=12");
+    }
+
+    @Test
+    @Transactional
+    void planoDeFundoForaDoCatalogoRetorna400() {
+        var resposta = patchPerfil("{\"planoFundo\": \"praia\"}");
+
+        assertThat(resposta).hasStatus(HttpStatus.BAD_REQUEST);
+        assertThat(resposta).bodyJson().extractingPath("$.code").isEqualTo("PERFIL_INVALIDO");
     }
 }

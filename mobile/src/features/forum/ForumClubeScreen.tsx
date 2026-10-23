@@ -18,6 +18,7 @@ import { tempoRelativo } from '@/features/livro/model';
 import { colors, spacing, typography } from '@/theme';
 
 import { useForumClube } from './useForumClube';
+import { NovoPostSheet } from './NovoPostSheet';
 
 const COPY = {
   tentarDeNovo: 'Tentar de novo',
@@ -32,18 +33,24 @@ function rotaDoClube(clubeId: string): Href {
 }
 
 export function ForumClubeScreen({ clubeId }: { clubeId: string }) {
+  return <ForumDoClube key={clubeId} clubeId={clubeId} />;
+}
+
+function ForumDoClube({ clubeId }: { clubeId: string }) {
   const router = useRouter();
-  const { forum, recarregar, alternarCurtida } = useForumClube(clubeId);
+  const {
+    forum,
+    recarregar,
+    alternarCurtida,
+    curtidasPendentes,
+    adicionarPost,
+  } = useForumClube(clubeId);
   const { showErrorToast } = useToastContext();
-  const [curtidasPendentes, setCurtidasPendentes] = useState<Set<string>>(
-    new Set()
-  );
+  const [novoPostAberto, setNovoPostAberto] = useState(false);
 
   const dados = forum.situacao === 'sucesso' ? forum.dados : null;
 
   async function curtirPost(postId: string) {
-    if (curtidasPendentes.has(postId)) return;
-    setCurtidasPendentes((atual) => new Set(atual).add(postId));
     try {
       await alternarCurtida(postId);
     } catch (erro) {
@@ -52,12 +59,6 @@ export function ForumClubeScreen({ clubeId }: { clubeId: string }) {
           ? erro.message
           : 'Não foi possível registrar sua curtida. Tente novamente.'
       );
-    } finally {
-      setCurtidasPendentes((atual) => {
-        const proximo = new Set(atual);
-        proximo.delete(postId);
-        return proximo;
-      });
     }
   }
 
@@ -118,6 +119,13 @@ export function ForumClubeScreen({ clubeId }: { clubeId: string }) {
         />
 
         <View style={styles.conteudo}>
+          {dados?.podeEscrever === true && (
+            <PrimaryButton
+              label="Escrever post"
+              variant="outline"
+              onPress={() => setNovoPostAberto(true)}
+            />
+          )}
           {dados === null ? (
             <View
               style={styles.carregando}
@@ -145,6 +153,14 @@ export function ForumClubeScreen({ clubeId }: { clubeId: string }) {
           )}
         </View>
       </ScrollView>
+      {dados?.podeEscrever === true && (
+        <NovoPostSheet
+          visible={novoPostAberto}
+          clubeId={clubeId}
+          onClose={() => setNovoPostAberto(false)}
+          onSuccess={adicionarPost}
+        />
+      )}
     </View>
   );
 }

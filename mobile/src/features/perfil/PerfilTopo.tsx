@@ -3,32 +3,34 @@ import { Pressable, StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Avatar } from '@/components/avatar';
 import { GearIcon } from '@/components/icons/GearIcon';
+import {
+  BrasaoMascote,
+  PROPORCAO_BRASAO,
+} from '@/features/mascotes/BrasaoMascote';
+import { arteDoMascote } from '@/features/mascotes/imagens';
 import { colors, radius, sizes, spacing } from '@/theme';
 
-const capivara = require('../../../assets/images/perfil-capivara.png');
-const cenario = require('../../../assets/images/perfil-cenario.png');
-
-const PROPORCAO_CENARIO = 786 / 722;
-const PROPORCAO_CAPIVARA = 334 / 222;
+import { PlanoDeFundo, PROPORCAO_CENARIO } from './planosDeFundo';
 
 export function PerfilTopo({
   nome,
   avatar,
+  planoFundo,
+  mascote,
   onConfiguracoes,
 }: {
   nome?: string;
   avatar?: string | null;
+  /** Chave do plano de fundo escolhido; sem ela, vale o cenário padrão. */
+  planoFundo?: string | null;
+  /** Chave da arte do mascote escolhido; sem ela, o perfil ainda não carregou. */
+  mascote?: string;
   onConfiguracoes: () => void;
 }) {
   const insets = useSafeAreaInsets();
   return (
     <View style={styles.topo}>
-      <Image
-        source={cenario}
-        style={StyleSheet.absoluteFill}
-        contentFit="cover"
-        accessible={false}
-      />
+      <PlanoDeFundo chave={planoFundo} />
       {nome !== undefined && (
         <View style={styles.avatar}>
           <View style={styles.avatarFrame}>
@@ -40,12 +42,17 @@ export function PerfilTopo({
           </View>
         </View>
       )}
-      <Image
-        source={capivara}
-        style={styles.capivara}
-        contentFit="contain"
-        accessible={false}
-      />
+      {mascote !== undefined && (
+        <View style={styles.mascote}>
+          <BrasaoMascote />
+          <Image
+            source={arteDoMascote(mascote)}
+            style={styles.arteMascote}
+            contentFit="contain"
+            accessible={false}
+          />
+        </View>
+      )}
       <Pressable
         accessibilityRole="button"
         accessibilityLabel="Configurações"
@@ -73,12 +80,21 @@ const styles = StyleSheet.create({
     borderRadius: radius.pill,
     backgroundColor: colors.surface,
   },
-  capivara: {
+  // No canto direito, ao lado do avatar sem cobrir a foto e sem a ponta ser cortada pela borda.
+  mascote: {
     position: 'absolute',
-    right: '4%',
-    bottom: 0,
-    width: '32%',
-    aspectRatio: PROPORCAO_CAPIVARA,
+    right: '3%',
+    bottom: '4%',
+    width: '30%',
+    aspectRatio: PROPORCAO_BRASAO,
+  },
+  // Ocupa a parte larga do brasão, com folga até a borda.
+  arteMascote: {
+    position: 'absolute',
+    left: '8%',
+    top: '8%',
+    width: '84%',
+    height: '64%',
   },
   engrenagem: {
     position: 'absolute',

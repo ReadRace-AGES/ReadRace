@@ -4,6 +4,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.MediaType;
 import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
@@ -13,8 +14,15 @@ import org.springframework.security.oauth2.jwt.JwtClaimValidator;
 import org.springframework.security.oauth2.jwt.JwtDecoder;
 import org.springframework.security.oauth2.jwt.JwtValidators;
 import org.springframework.security.oauth2.jwt.NimbusJwtDecoder;
+import org.springframework.security.oauth2.server.resource.web.BearerTokenAuthenticationEntryPoint;
+import org.springframework.security.web.AuthenticationEntryPoint;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.util.Assert;
+
+import com.readrace.api.dto.response.ErroResponse;
+import com.readrace.api.exception.CodigoErro;
+
+import tools.jackson.databind.ObjectMapper;
 
 /**
  * Dois modos, escolhidos por {@code readrace.auth.modo}:
@@ -45,12 +53,31 @@ public class SecurityConfig {
 
     @Bean
     @ConditionalOnProperty(name = "readrace.auth.modo", havingValue = "cognito")
-    SecurityFilterChain comCognito(HttpSecurity http) throws Exception {
+    SecurityFilterChain comCognito(HttpSecurity http, ObjectMapper json) throws Exception {
         return base(http)
                 .authorizeHttpRequests(
                         a -> a.requestMatchers(PUBLICOS).permitAll().anyRequest().authenticated())
-                .oauth2ResourceServer(o -> o.jwt(Customizer.withDefaults()))
+                .oauth2ResourceServer(
+                        o ->
+                                o.authenticationEntryPoint(naoAutenticadoNoEnvelope(json))
+                                        .jwt(Customizer.withDefaults()))
                 .build();
+    }
+
+    /**
+     * Sem token, ou com token inválido ou expirado, o Spring Security responde 401 antes do
+     * controller, e o GlobalExceptionHandler não vê o erro. O padrão é um corpo vazio; aqui ele
+     * ganha o mesmo envelope de erro do resto da API (#10). O cabeçalho WWW-Authenticate do Bearer
+     * continua o do Spring.
+     */
+    private static AuthenticationEntryPoint naoAutenticadoNoEnvelope(ObjectMapper json) {
+        BearerTokenAuthenticationEntryPoint bearer = new BearerTokenAuthenticationEntryPoint();
+        return (request, response, excecao) -> {
+            bearer.commence(request, response, excecao);
+            response.setContentType(MediaType.APPLICATION_JSON_VALUE);
+            response.setCharacterEncoding("UTF-8");
+            json.writeValue(response.getOutputStream(), ErroResponse.de(CodigoErro.UNAUTHORIZED));
+        };
     }
 
     /**

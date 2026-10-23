@@ -1,92 +1,49 @@
-import * as AuthSession from 'expo-auth-session';
-import * as WebBrowser from 'expo-web-browser';
-import { useEffect, useState } from 'react';
-import { Text, View } from 'react-native';
+import { router } from 'expo-router';
+import { StatusBar } from 'expo-status-bar';
+import { Text, useWindowDimensions, View } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import {
-  COGNITO_CLIENT_ID,
-  discovery,
-  REDIRECT_PATH,
-  SCHEME,
-} from '@/auth/config';
-import { salvarRespostaDeToken } from '@/auth/session';
 import { PrimaryButton } from '@/components/PrimaryButton';
 import { ReadRaceLogo } from '@/components/readracelogo';
+import { textStyles } from '@/theme';
 
-WebBrowser.maybeCompleteAuthSession();
-
+/**
+ * Tela de entrada (frame `login` do Figma): ENTRAR leva ao login do app; CRIAR CONTA, ao cadastro
+ * do app.
+ */
 export default function LoginScreen() {
-  const [erro, setErro] = useState<string | null>(null);
-  const [entrando, setEntrando] = useState(false);
+  const { width } = useWindowDimensions();
+  const insets = useSafeAreaInsets();
 
-  const redirectUri = AuthSession.makeRedirectUri({
-    scheme: SCHEME,
-    path: REDIRECT_PATH,
-  });
-
-  const [request, response, promptAsync] = AuthSession.useAuthRequest(
-    {
-      clientId: COGNITO_CLIENT_ID,
-      redirectUri,
-      scopes: ['openid', 'email', 'profile'],
-      usePKCE: true,
-      // Sem forçar provedor: a página do Cognito mostra e-mail e senha, cadastro, código de
-      // confirmação e "esqueci a senha". O Google entra como botão nessa mesma página quando
-      // for configurado como provedor no Cognito.
-      extraParams: { lang: 'pt-BR' },
-    },
-    discovery
-  );
-
-  useEffect(() => {
-    // Este valor precisa estar cadastrado nas callback URLs do app client no Cognito.
-    console.log('[auth] redirectUri =', redirectUri);
-  }, [redirectUri]);
-
-  useEffect(() => {
-    if (response?.type === 'error') {
-      setErro(
-        response.params.error_description ??
-          'Não foi possível entrar. Tente de novo.'
-      );
-      return;
-    }
-    if (response?.type !== 'success' || !request?.codeVerifier) {
-      return;
-    }
-
-    setEntrando(true);
-    AuthSession.exchangeCodeAsync(
-      {
-        clientId: COGNITO_CLIENT_ID,
-        code: response.params.code,
-        redirectUri,
-        extraParams: { code_verifier: request.codeVerifier },
-      },
-      discovery
-    )
-      // Ao salvar, o AuthProvider percebe a sessão e o _layout libera as abas.
-      .then(salvarRespostaDeToken)
-      .catch(() => setErro('Não foi possível entrar. Tente de novo.'))
-      .finally(() => setEntrando(false));
-  }, [response, request, redirectUri]);
+  // No frame do Figma o logo ocupa ~76% da largura e os botões ~65%.
+  const tamanhoLogo = Math.min(width * 0.76, 320);
 
   return (
-    <View className="flex-1 items-center justify-center gap-8 bg-surface p-6">
-      <ReadRaceLogo />
-      <View className="w-full gap-3">
-        <PrimaryButton
-          label="Entrar"
-          onPress={() => {
-            setErro(null);
-            promptAsync();
-          }}
-          disabled={!request}
-          loading={entrando}
-        />
-        {erro && (
-          <Text className="text-center text-body text-accent">{erro}</Text>
-        )}
+    <View
+      className="flex-1 bg-primary"
+      style={{ paddingTop: insets.top, paddingBottom: insets.bottom }}
+    >
+      <StatusBar style="light" />
+      <View className="flex-1 items-center justify-center gap-6 px-6">
+        <ReadRaceLogo size={tamanhoLogo} />
+        <Text style={textStyles.h3} className="text-logo-cream">
+          Uma leitura imersiva
+        </Text>
+      </View>
+
+      <View className="items-center gap-4 pb-10">
+        <View className="w-2/3 gap-4">
+          <PrimaryButton
+            label="ENTRAR"
+            variant="inverse"
+            onPress={() => router.push('/entrar')}
+          />
+          <PrimaryButton
+            label="CRIAR CONTA"
+            variant="outlineInverse"
+            onPress={() => router.push('/criar-conta')}
+          />
+        </View>
       </View>
     </View>
   );

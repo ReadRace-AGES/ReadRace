@@ -1,11 +1,12 @@
 import { useState } from 'react';
 import { Pressable, Text, View } from 'react-native';
-import Svg, { Path } from 'react-native-svg';
 
-import { colors, sizes } from '@/theme';
+import { sizes } from '@/theme';
 
 import { Avatar, StreakBadge } from './avatar';
 import { Card } from './Card';
+import { CommentsIcon } from './icons/CommentsIcon';
+import { HeartIcon } from './icons/HeartIcon';
 
 // Linhas visiveis do texto recolhido, antes do "Ler mais" (`tela livro` 2011-674).
 const LINHAS_RECOLHIDO = 4;
@@ -19,27 +20,16 @@ export type PostCardProps = {
   timeAgo: string;
   text: string;
   likes: number;
+  /** Sem valor, o balão de comentários não aparece (Fórum do clube, Detalhe do livro). */
+  comments?: number;
   likedByMe?: boolean;
   /** Sem handler, o coração fica só exibição (ex.: quem ainda não tem postId). */
   onLikePress?: () => void;
   /** Desabilita o toque enquanto a curtida/descurtida deste post está em andamento. */
   likeDisabled?: boolean;
+  /** Sem handler, o balão fica só exibição; com ele, abre os comentários (#150). */
+  onCommentsPress?: () => void;
 };
-
-function HeartIcon({ filled }: { filled: boolean }) {
-  return (
-    <Svg width={sizes.iconSmall} height={sizes.iconSmall} viewBox="0 0 24 24">
-      <Path
-        d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"
-        fill={filled ? colors.accent : 'none'}
-        stroke={colors.accent}
-        strokeWidth={2}
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-    </Svg>
-  );
-}
 
 /**
  * Texto do post com "Ler mais".
@@ -98,10 +88,12 @@ function PostBody({ text }: { text: string }) {
 }
 
 /**
- * Cartao de post do Forum do clube, do Detalhe do livro e do Feed (#22).
+ * Cartao de post do Forum do clube, do Detalhe do livro, do Feed (#22) e do
+ * perfil da comunidade (#147).
  *
  * Curtir e descurtir (#101): com `onLikePress`, o coracao e o numero viram um
- * botao. Sem handler, continuam so exibicao.
+ * botao. Sem handler, continuam so exibicao. O balao de comentarios segue a
+ * mesma regra com `comments` e `onCommentsPress` (#150).
  */
 export function PostCard({
   authorName,
@@ -110,9 +102,11 @@ export function PostCard({
   timeAgo,
   text,
   likes,
+  comments,
   likedByMe = false,
   onLikePress,
   likeDisabled = false,
+  onCommentsPress,
 }: PostCardProps) {
   const temSequencia = authorStreak != null && authorStreak !== '';
   const temTexto = text.trim() !== '';
@@ -147,33 +141,62 @@ export function PostCard({
         </View>
       )}
 
-      {onLikePress ? (
-        <Pressable
-          accessibilityRole="button"
-          accessibilityState={{ disabled: likeDisabled, selected: likedByMe }}
-          accessibilityLabel={`${likes} curtidas${likedByMe ? ', curtido por você' : ''}`}
-          disabled={likeDisabled}
-          onPress={onLikePress}
-          hitSlop={8}
-          className="mt-3 flex-row items-center gap-1 self-start"
-        >
-          <HeartIcon filled={likedByMe} />
-          <Text className="text-bodySmall font-inter text-text-secondary">
-            {likes}
-          </Text>
-        </Pressable>
-      ) : (
-        <View
-          accessible
-          accessibilityLabel={`${likes} curtidas${likedByMe ? ', curtido por você' : ''}`}
-          className="mt-3 flex-row items-center gap-1"
-        >
-          <HeartIcon filled={likedByMe} />
-          <Text className="text-bodySmall font-inter text-text-secondary">
-            {likes}
-          </Text>
-        </View>
-      )}
+      <View className="mt-3 flex-row items-center gap-4">
+        {onLikePress ? (
+          <Pressable
+            accessibilityRole="button"
+            accessibilityState={{ disabled: likeDisabled, selected: likedByMe }}
+            accessibilityLabel={`${likes} curtidas${likedByMe ? ', curtido por você' : ''}`}
+            disabled={likeDisabled}
+            onPress={onLikePress}
+            hitSlop={8}
+            className="flex-row items-center gap-1"
+          >
+            <HeartIcon filled={likedByMe} />
+            <Text className="text-bodySmall font-inter text-text-secondary">
+              {likes}
+            </Text>
+          </Pressable>
+        ) : (
+          <View
+            accessible
+            accessibilityLabel={`${likes} curtidas${likedByMe ? ', curtido por você' : ''}`}
+            className="flex-row items-center gap-1"
+          >
+            <HeartIcon filled={likedByMe} />
+            <Text className="text-bodySmall font-inter text-text-secondary">
+              {likes}
+            </Text>
+          </View>
+        )}
+        {comments !== undefined &&
+          (onCommentsPress ? (
+            <Pressable
+              accessibilityRole="button"
+              accessibilityLabel={`${comments} comentários`}
+              accessibilityHint="Abre os comentários"
+              onPress={onCommentsPress}
+              hitSlop={8}
+              className="flex-row items-center gap-1"
+            >
+              <CommentsIcon size={sizes.iconSmall} />
+              <Text className="text-bodySmall font-inter text-text-secondary">
+                {comments}
+              </Text>
+            </Pressable>
+          ) : (
+            <View
+              accessible
+              accessibilityLabel={`${comments} comentários`}
+              className="flex-row items-center gap-1"
+            >
+              <CommentsIcon size={sizes.iconSmall} />
+              <Text className="text-bodySmall font-inter text-text-secondary">
+                {comments}
+              </Text>
+            </View>
+          ))}
+      </View>
     </Card>
   );
 }

@@ -4,6 +4,15 @@
 #
 # Não suba à mão com "docker compose up": use ./subir.sh, que busca os segredos.
 
+# Cada serviço manda a saída do container para o seu grupo no CloudWatch Logs
+# (/readrace/prod/<serviço>, criados pelo Terraform em monitoramento.tf). Se o CloudWatch
+# ficar lento, o modo non-blocking descarta log em vez de travar o container. O
+# "docker logs" na máquina continua funcionando: o Docker guarda uma cópia local.
+x-awslogs: &awslogs
+  awslogs-region: us-east-2
+  mode: non-blocking
+  max-buffer-size: 4m
+
 services:
 
   db:
@@ -22,6 +31,11 @@ services:
       timeout: 5s
       retries: 10
     mem_limit: 384m
+    logging:
+      driver: awslogs
+      options:
+        <<: *awslogs
+        awslogs-group: /readrace/prod/db
 
   api:
     image: "${IMAGEM_API:?informe a imagem, ex.: <ecr>/readrace-api:<commit>}"
@@ -52,6 +66,11 @@ services:
     # O Dockerfile usa MaxRAMPercentage=75, então 768 MB deixam ~576 MB de heap.
     # Medido localmente: a API sobrevive a carga com 512 MB e é morta com 384 MB.
     mem_limit: 768m
+    logging:
+      driver: awslogs
+      options:
+        <<: *awslogs
+        awslogs-group: /readrace/prod/api
 
   caddy:
     image: caddy:2-alpine
@@ -70,6 +89,11 @@ services:
     depends_on:
       - api
     mem_limit: 128m
+    logging:
+      driver: awslogs
+      options:
+        <<: *awslogs
+        awslogs-group: /readrace/prod/caddy
 
 volumes:
   pgdata:

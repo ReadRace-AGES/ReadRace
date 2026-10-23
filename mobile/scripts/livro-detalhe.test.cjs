@@ -177,7 +177,7 @@ for (const origem of ['/buscar', '/meus-livros']) {
 test('cada entrada abre um caminho exclusivo dentro da própria aba', () => {
   const destinos = [];
   const dependencies = {
-    react: { useState: (inicial) => [inicial, () => {}] },
+    react: { useState: (inicial) => [inicial, () => {}], useEffect: () => {} },
     'expo-router': {
       router: { push: (destino) => destinos.push(destino) },
       useLocalSearchParams: () => ({ livroId: '1' }),

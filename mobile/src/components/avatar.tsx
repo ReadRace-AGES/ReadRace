@@ -3,6 +3,7 @@ import { View, Text } from "react-native";
 import { Image } from "expo-image";
 import Svg, { Path } from "react-native-svg";
 import { colors, sizes, textStyles, typography } from "@/theme";
+import { Boneco, ehBoneco } from "./bonecos";
 
 /**
  * Cores que o design usa mas o tema ainda nao nomeia.
@@ -100,7 +101,10 @@ export function Avatar({ name, photoUrl, size = sizes.avatar }: AvatarProps) {
       className="items-center justify-center overflow-hidden rounded-pill"
       style={{ width: size, height: size, backgroundColor: colors.primary }}
     >
-      {showPhoto ? (
+      {/* O avatar escolhido entre os bonecos chega como chave no lugar da URL da foto. */}
+      {ehBoneco(photoUrl) ? (
+        <Boneco chave={photoUrl} size={size} />
+      ) : showPhoto ? (
         <Image
           source={{ uri: photoUrl! }}
           style={{ width: size, height: size }}
