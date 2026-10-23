@@ -148,7 +148,12 @@ export function useComunidade(comunidadeId: string) {
         maisRecente.situacao === 'sucesso'
           ? {
               situacao: 'sucesso',
-              dados: comPost(maisRecente.dados, postId, () => anterior),
+              // Só a curtida volta: o resto do post pode ter mudado no meio tempo
+              dados: comPost(maisRecente.dados, postId, (post) => ({
+                ...post,
+                curtidoPorMim: anterior.curtidoPorMim,
+                totalCurtidas: anterior.totalCurtidas,
+              })),
             }
           : maisRecente
       );

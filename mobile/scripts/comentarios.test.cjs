@@ -772,3 +772,114 @@ test('quem não segue vê o convite no rodapé; carregando e erro não têm roda
     await h.dispose();
   }
 });
+
+// Revisão do PR #211: reabrir reaproveitava a chave da abertura anterior. O painel mostrava a
+// lista velha com o campo liberado, e a busca atrasada apagava o comentário recém-criado.
+test('reabrir mostra carregando sem campo; comentário feito depois não some com a busca', async () => {
+  const h = await mount();
+  try {
+    await act(async () =>
+      h.gets[0].resolve({ comentarios: [comentario('c1')], podeComentar: true })
+    );
+    await act(async () => h.sheet().props.onClose());
+    await h.set({ visible: true });
+    assert.equal(h.gets.length, 2);
+    assert.equal(h.all('ActivityIndicator').length, 1);
+    assert.equal(h.all('TextInput').length, 0);
+    assert.equal(h.textos().includes('c1'), false);
+
+    await act(async () =>
+      h.gets[1].resolve({ comentarios: [comentario('c1')], podeComentar: true })
+    );
+    await h.type('Novo');
+    await h.send();
+    await act(async () => h.posts[0].resolve(comentario('novo', 'Novo')));
+    assert.ok(h.textos().includes('Novo'));
+    assert.deepEqual(h.comentados, ['p1']);
+  } finally {
+    await h.dispose();
+  }
+});
+
+test('resposta atrasada de uma abertura anterior não sobrescreve a atual', async () => {
+  const h = await mount();
+  try {
+    const primeira = h.gets[0];
+    await act(async () => h.sheet().props.onClose());
+    await h.set({ visible: true });
+    await act(async () =>
+      h.gets[1].resolve({
+        comentarios: [comentario('atual')],
+        podeComentar: true,
+      })
+    );
+    await act(async () =>
+      primeira.resolve({
+        comentarios: [comentario('velha')],
+        podeComentar: true,
+      })
+    );
+    assert.ok(h.textos().includes('atual'));
+    assert.equal(h.textos().includes('velha'), false);
+  } finally {
+    await h.dispose();
+  }
+});
+
+// Revisão do PR #211: a falha da curtida restaurava o post inteiro e desfazia o balão.
+test('comunidade: falha da curtida não desfaz o comentário somado no meio tempo', async () => {
+  let curtida;
+  const { useComunidade } = load('features/comunidade/useComunidade.ts', {
+    '@/api/client': client,
+    '@/features/posts/api': {
+      curtir: () =>
+        new Promise((resolve, reject) => {
+          curtida = { resolve, reject };
+        }),
+      descurtir: async () => {},
+    },
+    './api': {
+      buscarComunidade: async () => ({
+        id: 'c1',
+        sigo: true,
+        seguidores: 1,
+        posts: [
+          {
+            id: 'a',
+            totalCurtidas: 4,
+            curtidoPorMim: false,
+            totalComentarios: 3,
+          },
+        ],
+      }),
+      seguirComunidade: async () => ({}),
+      deixarDeSeguirComunidade: async () => ({}),
+    },
+  });
+  let hook;
+  function Probe() {
+    hook = useComunidade('c1');
+    return null;
+  }
+  let tree;
+  await act(async () => {
+    tree = create(React.createElement(Probe));
+  });
+  let pendente;
+  await act(async () => {
+    pendente = hook.alternarCurtida('a').catch((erro) => erro);
+  });
+  assert.equal(hook.comunidade.dados.posts[0].totalCurtidas, 5);
+  await act(async () => hook.somarComentario('a'));
+  await act(async () => {
+    curtida.reject(new Error('falhou'));
+    await pendente;
+  });
+  assert.deepEqual(hook.comunidade.dados.posts[0], {
+    id: 'a',
+    totalCurtidas: 4,
+    curtidoPorMim: false,
+    totalComentarios: 4,
+  });
+  await act(async () => tree.unmount());
+});

@@ -46,10 +46,20 @@ function naThread(
  * abertura busca de novo.
  *
  * A carga guarda de qual busca veio (`chave`): enquanto a busca atual não responde,
- * o hook devolve "carregando", sem `setState` dentro do efeito.
+ * o hook devolve "carregando", sem `setState` dentro do efeito. A chave inclui a
+ * abertura do painel, então reabrir o mesmo post não reaproveita a lista anterior e
+ * uma resposta atrasada de outra abertura nunca sobrescreve a atual.
  */
 export function useComentarios(postId: string | null) {
   const [versao, setVersao] = useState(0);
+  // Cada vez que o painel abre (postId deixa de ser nulo ou troca), conta uma abertura.
+  // Ajuste de estado durante o render, a partir do render anterior (padrão do React).
+  const [postAnterior, setPostAnterior] = useState<string | null>(null);
+  const [abertura, setAbertura] = useState(0);
+  if (postId !== postAnterior) {
+    setPostAnterior(postId);
+    if (postId) setAbertura((valor) => valor + 1);
+  }
   const [estado, setEstado] = useState<Estado>({
     chave: null,
     carga: CARREGANDO,
@@ -61,7 +71,10 @@ export function useComentarios(postId: string | null) {
   const [curtidasPendentes, setCurtidasPendentes] = useState<Set<string>>(
     () => new Set()
   );
-  const chave = postId ? `${postId}#${versao}` : null;
+  const chave =
+    postId && postId === postAnterior
+      ? `${postId}#${abertura}#${versao}`
+      : null;
 
   useEffect(() => {
     if (!postId || !chave) return;
