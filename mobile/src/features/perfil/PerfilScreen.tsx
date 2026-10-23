@@ -29,6 +29,8 @@ const numero = (valor: number) => valor.toLocaleString('pt-BR');
 export function PerfilConteudo({
   perfil,
   onPlaceholder,
+  onVerSeguidores = onPlaceholder,
+  onVerSeguindo = onPlaceholder,
   onVerMaisConquistas = onPlaceholder,
   proprio = false,
   onAbrirLivro,
@@ -38,6 +40,8 @@ export function PerfilConteudo({
 }: {
   perfil: Perfil;
   onPlaceholder: () => void;
+  onVerSeguidores?: () => void;
+  onVerSeguindo?: () => void;
   onVerMaisConquistas?: () => void;
   proprio?: boolean;
   onAbrirLivro?: (livroId: string) => void;
@@ -100,7 +104,7 @@ export function PerfilConteudo({
               // Preserva o callback de estilo nativo, sem a conversão do NativeWind.
               cssInterop={false}
               accessibilityRole="button"
-              onPress={onPlaceholder}
+              onPress={index === 0 ? onVerSeguidores : onVerSeguindo}
               style={({ pressed }) => [
                 styles.socialButton,
                 pressed && styles.pressed,
@@ -115,11 +119,7 @@ export function PerfilConteudo({
         ))}
       </View>
       {proprio && (
-        <PrimaryButton
-          label="Mascotes"
-          icon={PawIcon}
-          onPress={onMascotes}
-        />
+        <PrimaryButton label="Mascotes" icon={PawIcon} onPress={onMascotes} />
       )}
       {!proprio && onAlternarSeguir && (
         <PrimaryButton
@@ -253,9 +253,11 @@ export function PerfilConteudo({
 export function PerfilScreen({
   usuarioId,
   rodape,
+  origem = usuarioId === undefined ? 'perfil' : 'busca',
 }: {
   usuarioId?: string;
   rodape?: ReactNode;
+  origem?: 'perfil' | 'busca';
 }) {
   const {
     estado,
@@ -266,6 +268,10 @@ export function PerfilScreen({
     proprio: perfilProprio,
   } = usePerfil(usuarioId);
   const router = useRouter();
+  const rotaLeitores =
+    origem === 'perfil'
+      ? '/(tabs)/(perfil)/leitores/[usuarioId]'
+      : '/(tabs)/(busca)/leitores/[usuarioId]';
   const { showToast, showErrorToast } = useToastContext();
   const proprio = usuarioId === undefined || perfilProprio;
   const dados = estado.situacao === 'sucesso' ? estado.dados : undefined;
@@ -287,6 +293,7 @@ export function PerfilScreen({
         <PerfilTopo
           nome={dados?.nome}
           avatar={dados?.avatar}
+          planoFundo={dados?.planoFundo}
           mascote={dados?.mascote?.imagem}
           onConfiguracoes={() => router.push('/configuracoes')}
         />
@@ -327,6 +334,18 @@ export function PerfilScreen({
             );
           }}
           onPlaceholder={showToast}
+          onVerSeguidores={() =>
+            router.push({
+              pathname: rotaLeitores,
+              params: { usuarioId: estado.dados.id, tipo: 'seguidores' },
+            })
+          }
+          onVerSeguindo={() =>
+            router.push({
+              pathname: rotaLeitores,
+              params: { usuarioId: estado.dados.id, tipo: 'seguindo' },
+            })
+          }
           onVerMaisConquistas={
             proprio ? () => router.push('/conquistas' as Href) : undefined
           }

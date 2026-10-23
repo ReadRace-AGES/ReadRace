@@ -57,6 +57,10 @@ public class Usuario {
     @Column(name = "mascote_id")
     private UUID mascoteId;
 
+    /** null = nunca escolheu; vale o cenário padrão. */
+    @Column(name = "plano_fundo", length = 30)
+    private String planoFundo;
+
     public void receberXp(int xp) {
         xpTotal += xp;
         nivel = CurvaDeNivel.nivelDoXp(xpTotal);
@@ -94,12 +98,18 @@ public class Usuario {
     }
 
     /** Edição pelas Configurações de perfil. null = manter o valor atual. */
-    public void atualizarPerfil(String nome, String nomeUsuario) {
+    public void atualizarPerfil(String nome, String nomeUsuario, String avatar, String planoFundo) {
         if (nome != null) {
             this.nome = nome;
         }
         if (nomeUsuario != null) {
             this.nomeUsuario = nomeUsuario;
+        }
+        if (avatar != null) {
+            this.avatarUrl = avatar;
+        }
+        if (planoFundo != null) {
+            this.planoFundo = planoFundo;
         }
     }
 

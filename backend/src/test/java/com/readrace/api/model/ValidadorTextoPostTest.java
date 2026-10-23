@@ -96,4 +96,13 @@ class ValidadorTextoPostTest {
     void aceita_caracteres_fora_da_regra_de_branco(String texto) {
         assertThat(ValidadorTextoPost.validar(texto)).isSameAs(texto);
     }
+
+    @Test
+    void aplica_limite_e_erro_informados() {
+        IllegalStateException erro = new IllegalStateException();
+
+        assertThat(ValidadorTextoPost.validar("abc", 3, () -> erro)).isEqualTo("abc");
+        assertThatThrownBy(() -> ValidadorTextoPost.validar("abcd", 3, () -> erro)).isSameAs(erro);
+        assertThatThrownBy(() -> ValidadorTextoPost.validar(" ", 3, () -> erro)).isSameAs(erro);
+    }
 }

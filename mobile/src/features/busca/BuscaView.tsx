@@ -9,6 +9,7 @@ import {
 
 import { AppHeader } from '@/components/AppHeader';
 import { Avatar } from '@/components/avatar';
+import { LinhaUsuario } from '@/components/LinhaUsuario';
 import { BookCover } from '@/components/BookCover';
 import { EmptyState } from '@/components/EmptyState';
 import { SearchIcon } from '@/components/icons/SearchIcon';
@@ -191,17 +192,11 @@ function Resultados({
         <Lista
           itens={dados.itens}
           renderItem={(usuario) => (
-            <Linha
-              imagem={
-                <Avatar
-                  name={usuario.nome}
-                  photoUrl={usuario.avatar}
-                  size={sizes.avatarLarge}
-                />
-              }
-              titulo={usuario.nome}
-              subtitulo={`@${usuario.username}`}
-              metadado={usuario.titulo}
+            <LinhaUsuario
+              nome={usuario.nome}
+              nomeUsuario={usuario.username}
+              avatarUrl={usuario.avatar}
+              titulo={usuario.titulo}
               onPress={() => onUsuarioPress(usuario)}
             />
           )}

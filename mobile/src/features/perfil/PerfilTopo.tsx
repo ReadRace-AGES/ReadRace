@@ -10,18 +10,19 @@ import {
 import { arteDoMascote } from '@/features/mascotes/imagens';
 import { colors, radius, sizes, spacing } from '@/theme';
 
-const cenario = require('../../../assets/images/perfil-cenario.png');
-
-const PROPORCAO_CENARIO = 786 / 722;
+import { PlanoDeFundo, PROPORCAO_CENARIO } from './planosDeFundo';
 
 export function PerfilTopo({
   nome,
   avatar,
+  planoFundo,
   mascote,
   onConfiguracoes,
 }: {
   nome?: string;
   avatar?: string | null;
+  /** Chave do plano de fundo escolhido; sem ela, vale o cenário padrão. */
+  planoFundo?: string | null;
   /** Chave da arte do mascote escolhido; sem ela, o perfil ainda não carregou. */
   mascote?: string;
   onConfiguracoes: () => void;
@@ -29,12 +30,7 @@ export function PerfilTopo({
   const insets = useSafeAreaInsets();
   return (
     <View style={styles.topo}>
-      <Image
-        source={cenario}
-        style={StyleSheet.absoluteFill}
-        contentFit="cover"
-        accessible={false}
-      />
+      <PlanoDeFundo chave={planoFundo} />
       {nome !== undefined && (
         <View style={styles.avatar}>
           <View style={styles.avatarFrame}>

@@ -77,6 +77,56 @@ const dependencies = {
   './PerfilTopo': { PerfilTopo: 'PerfilTopo' },
   './usePerfil': {},
 };
+
+test('perfil de outro leitor abre as duas listas no stack de origem', async () => {
+  for (const origem of ['busca', 'perfil']) {
+    const rotas = [];
+    const { PerfilScreen } = load('features/perfil/PerfilScreen.tsx', {
+      ...dependencies,
+      'expo-router': {
+        useFocusEffect: () => {},
+        useRouter: () => ({ push: (rota) => rotas.push(rota) }),
+      },
+      '@/components/toast-provider': {
+        useToastContext: () => ({
+          showToast: () => assert.fail('Não deve exibir aviso'),
+        }),
+      },
+      './usePerfil': {
+        usePerfil: () => ({
+          estado: { situacao: 'sucesso', dados: perfil },
+          recarregar: () => {},
+        }),
+      },
+      '@/components/Card': { Card: 'Card' },
+      '@/components/AppHeader': { AppHeader: 'AppHeader' },
+      '@/components/BookCover': { BookCover: 'BookCover' },
+      '@/components/EmptyState': { EmptyState: 'EmptyState' },
+      '@/components/PrimaryButton': { PrimaryButton: 'PrimaryButton' },
+    });
+    let tree;
+    await act(async () => {
+      tree = create(
+        React.createElement(PerfilScreen, { usuarioId: '1', origem })
+      );
+    });
+    try {
+      const botoes = tree.root
+        .findAllByType('Pressable')
+        .filter((b) => b.props.accessibilityLabel !== 'Ver mais conquistas');
+      await act(async () => botoes.forEach((b) => b.props.onPress()));
+      assert.deepEqual(
+        rotas,
+        ['seguidores', 'seguindo'].map((tipo) => ({
+          pathname: `/(tabs)/(${origem})/leitores/[usuarioId]`,
+          params: { usuarioId: '1', tipo },
+        }))
+      );
+    } finally {
+      await act(async () => tree.unmount());
+    }
+  }
+});
 for (const name of [
   'Card',
   'AppHeader',
@@ -260,11 +310,19 @@ test('próprio perfil mostra anel, Mascotes, engrenagem e slot de favorito', () 
     adicionar.props.onPress();
     tree.root.findByType('PerfilTopo').props.onConfiguracoes();
   });
-  // Seguidores, Seguindo e o slot de favorito ainda são aviso; Mascotes abre a tela.
-  assert.equal(avisos, 3);
+  // Só o slot de favorito continua como aviso; listas e Mascotes abrem suas telas.
+  assert.equal(avisos, 1);
   assert.equal(tree.root.findByType('PerfilTopo').props.mascote, 'o-cinzento');
   act(() => capa.props.onPress());
   assert.deepEqual(rotas, [
+    {
+      pathname: '/(tabs)/(perfil)/leitores/[usuarioId]',
+      params: { usuarioId: '1', tipo: 'seguidores' },
+    },
+    {
+      pathname: '/(tabs)/(perfil)/leitores/[usuarioId]',
+      params: { usuarioId: '1', tipo: 'seguindo' },
+    },
     '/mascotes',
     '/configuracoes',
     '/perfil-livro/livro',

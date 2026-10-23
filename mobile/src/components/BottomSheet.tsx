@@ -23,6 +23,8 @@ export type BottomSheetProps = {
   children: ReactNode;
   accessibilityLabel?: string;
   dismissible?: boolean;
+  /** Fica fixo embaixo, fora da rolagem, e sobe com o teclado (ex.: campo de comentário). */
+  footer?: ReactNode;
 };
 
 const ANIMATION_MS = 220;
@@ -36,6 +38,7 @@ export function BottomSheet({
   children,
   accessibilityLabel = 'Painel inferior',
   dismissible = true,
+  footer,
 }: BottomSheetProps) {
   const insets = useSafeAreaInsets();
   const { height } = useWindowDimensions();
@@ -192,6 +195,7 @@ export function BottomSheet({
           >
             {children}
           </ScrollView>
+          {footer != null && <View style={styles.footer}>{footer}</View>}
         </Animated.View>
       </KeyboardAvoidingView>
     </Modal>
@@ -230,5 +234,11 @@ const styles = StyleSheet.create({
   },
   content: {
     flexShrink: 1,
+  },
+  footer: {
+    flexShrink: 0,
+    paddingTop: spacing[3],
+    borderTopWidth: sizes.borderWidth,
+    borderTopColor: colors.border,
   },
 });

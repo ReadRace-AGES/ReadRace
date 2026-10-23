@@ -23,6 +23,10 @@ public enum CodigoErro {
     POST_INVALIDO(
             HttpStatus.BAD_REQUEST, "O post deve conter texto e ter no máximo 2.000 caracteres."),
     SO_MEMBRO_POSTA(HttpStatus.FORBIDDEN, "Somente membros do clube podem publicar no fórum."),
+    COMENTARIO_INVALIDO(
+            HttpStatus.BAD_REQUEST,
+            "O comentário deve conter texto e ter no máximo 1.000 caracteres."),
+    SO_QUEM_SEGUE_COMENTA(HttpStatus.FORBIDDEN, "Siga a comunidade para comentar."),
     SO_MEMBRO_VE_RANKING(HttpStatus.FORBIDDEN, "Só membros do clube veem o ranking completo."),
 
     // Chat do clube - Task #151

@@ -200,4 +200,37 @@ class PerfilControllerIT {
         assertThat(resposta).hasStatus(HttpStatus.BAD_REQUEST);
         assertThat(resposta).bodyJson().extractingPath("$.code").isEqualTo("PERFIL_INVALIDO");
     }
+
+    @Test
+    @Transactional
+    void atualizaAvatarEPlanoDeFundoMantendoONome() {
+        var resposta = patchPerfil("{\"avatar\": \"boneco-3\", \"planoFundo\": \"noite\"}");
+
+        assertThat(resposta).hasStatusOk();
+        assertThat(resposta).bodyJson().extractingPath("$.avatar").isEqualTo("boneco-3");
+        assertThat(resposta).bodyJson().extractingPath("$.planoFundo").isEqualTo("noite");
+        assertThat(resposta).bodyJson().extractingPath("$.username").isEqualTo("danielribeiro");
+    }
+
+    @Test
+    @Transactional
+    void avatarForaDoCatalogoRetorna400ENaoGrava() {
+        var resposta = patchPerfil("{\"avatar\": \"https://exemplo.com/foto.png\"}");
+
+        assertThat(resposta).hasStatus(HttpStatus.BAD_REQUEST);
+        assertThat(resposta).bodyJson().extractingPath("$.code").isEqualTo("PERFIL_INVALIDO");
+        assertThat(
+                        jdbc.queryForObject(
+                                "SELECT avatar_url FROM usuario WHERE id = ?", String.class, FIXO))
+                .isEqualTo("https://i.pravatar.cc/300?img=12");
+    }
+
+    @Test
+    @Transactional
+    void planoDeFundoForaDoCatalogoRetorna400() {
+        var resposta = patchPerfil("{\"planoFundo\": \"praia\"}");
+
+        assertThat(resposta).hasStatus(HttpStatus.BAD_REQUEST);
+        assertThat(resposta).bodyJson().extractingPath("$.code").isEqualTo("PERFIL_INVALIDO");
+    }
 }
