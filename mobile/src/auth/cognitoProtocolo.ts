@@ -367,3 +367,24 @@ export function sessaoDoTokenOAuth(token: TokenOAuth, agora: number): SessaoCogn
     expiresAt: agora + (token.expiresIn ?? 3600) * 1000,
   };
 }
+
+/** User pool do projeto (us-east-2). Valores públicos: vão dentro do app e o client não tem segredo. */
+const DOMINIO_PADRAO = 'https://us-east-2mevipejhy.auth.us-east-2.amazoncognito.com';
+const CLIENT_ID_PADRAO = '5f06kagodbku0mvveakmsim8qu';
+
+/**
+ * O login é o padrão (#159): sem a variável no .env, vale o pool do projeto, e um APK gerado sem
+ * .env já vem com login. Variável vazia desliga o login, para quem roda a API em AUTH_MODO=seed.
+ */
+export function configCognito(
+  dominio: string | undefined,
+  clientId: string | undefined
+): { dominio: string; clientId: string; habilitada: boolean } {
+  const dominioFinal = (dominio ?? DOMINIO_PADRAO).replace(/\/+$/, '');
+  const clientIdFinal = clientId ?? CLIENT_ID_PADRAO;
+  return {
+    dominio: dominioFinal,
+    clientId: clientIdFinal,
+    habilitada: dominioFinal !== '' && clientIdFinal !== '',
+  };
+}

@@ -1,0 +1,6 @@
+# Só nos testes: o Spring lê config/application.yaml por cima do application.yaml principal, e
+# este arquivo não vai para o jar. Os testes usam o usuário do seed; os de autenticação ligam o
+# Cognito com @SpringBootTest(properties = "readrace.auth.modo=cognito").
+readrace:
+  auth:
+    modo: seed
