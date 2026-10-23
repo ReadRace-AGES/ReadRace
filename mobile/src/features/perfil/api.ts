@@ -5,7 +5,10 @@ export type Perfil = {
   nome: string;
   username: string;
   email: string | null;
+  /** URL da foto ou chave de um boneco (`boneco-1`...). */
   avatar: string | null;
+  /** Chave do plano de fundo; null = cenário padrão. */
+  planoFundo: string | null;
   titulo: string;
   nivel: number;
   xpAtual: number;
@@ -70,6 +73,8 @@ export function buscarPerfil(
 export type AtualizacaoPerfil = {
   nome?: string;
   username?: string;
+  avatar?: string;
+  planoFundo?: string;
 };
 
 export function atualizarPerfil(dados: AtualizacaoPerfil) {

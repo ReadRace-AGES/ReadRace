@@ -17,6 +17,7 @@ import { useRouter, type Href } from 'expo-router';
 import Svg, { Path } from 'react-native-svg';
 
 import { AppHeader } from '@/components/AppHeader';
+import { Boneco, ehBoneco } from '@/components/bonecos';
 import { EmptyState } from '@/components/EmptyState';
 import { PrimaryButton } from '@/components/PrimaryButton';
 import { useAlturaTeclado } from '@/components/useAlturaTeclado';
@@ -81,6 +82,18 @@ function AvatarMensagem({
   nome: string;
   avatarUrl: string | null;
 }) {
+  // O avatar escolhido entre os bonecos chega como chave no lugar da URL da foto.
+  if (ehBoneco(avatarUrl)) {
+    return (
+      <View
+        style={[styles.avatar, { overflow: 'hidden' }]}
+        accessibilityLabel={`Avatar de ${nome}`}
+      >
+        <Boneco chave={avatarUrl} />
+      </View>
+    );
+  }
+
   if (avatarUrl) {
     return (
       <Image
