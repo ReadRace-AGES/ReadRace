@@ -11,6 +11,7 @@ import { BookIcon } from '@/components/icons/BookIcon';
 import { PostCard } from '@/components/PostCard';
 import { PrimaryButton } from '@/components/PrimaryButton';
 import { useToastContext } from '@/components/toast-provider';
+import { ComentariosSheet } from '@/features/comentarios/ComentariosSheet';
 import { tempoRelativo } from '@/features/livro/model';
 import { colors } from '@/theme';
 
@@ -23,16 +24,25 @@ const COPY = {
   maisRecentes: 'Mais recentes',
   emAlta: 'Em alta',
   erroSeguimento: 'Não foi possível atualizar sua participação. Tente novamente.',
+  erroCurtida: 'Não foi possível registrar sua curtida. Tente novamente.',
 } as const;
 
 export function ComunidadeScreen({ comunidadeId }: { comunidadeId: string }) {
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const { showToast, showErrorToast } = useToastContext();
-  const { comunidade, recarregar, alternarSeguimento, alternarCurtida } =
-    useComunidade(comunidadeId);
+  const {
+    comunidade,
+    recarregar,
+    alternarSeguimento,
+    alternarCurtida,
+    somarComentario,
+  } = useComunidade(comunidadeId);
   const [seguimentoPendente, setSeguimentoPendente] = useState(false);
   const [curtidasPendentes, setCurtidasPendentes] = useState<Set<string>>(new Set());
+  // O id fica depois de fechar, para o painel não esvaziar enquanto desce.
+  const [postDosComentarios, setPostDosComentarios] = useState<string | null>(null);
+  const [comentariosAbertos, setComentariosAbertos] = useState(false);
   const dados = comunidade.situacao === 'sucesso' ? comunidade.dados : null;
 
   async function alternar() {
@@ -55,11 +65,7 @@ export function ComunidadeScreen({ comunidadeId }: { comunidadeId: string }) {
     try {
       await alternarCurtida(postId);
     } catch (erro) {
-      showErrorToast(
-        erro instanceof Error
-          ? erro.message
-          : 'Não foi possível registrar sua curtida. Tente novamente.'
-      );
+      showErrorToast(erro instanceof ApiError ? erro.message : COPY.erroCurtida);
     } finally {
       setCurtidasPendentes((atual) => {
         const proximo = new Set(atual);
@@ -152,6 +158,10 @@ export function ComunidadeScreen({ comunidadeId }: { comunidadeId: string }) {
                       likedByMe={post.curtidoPorMim}
                       likeDisabled={curtidasPendentes.has(post.id)}
                       onLikePress={() => curtirPost(post.id)}
+                      onCommentsPress={() => {
+                        setPostDosComentarios(post.id);
+                        setComentariosAbertos(true);
+                      }}
                     />
                   </View>
                 ))
@@ -160,6 +170,12 @@ export function ComunidadeScreen({ comunidadeId }: { comunidadeId: string }) {
           )}
         </View>
       </ScrollView>
+      <ComentariosSheet
+        visible={comentariosAbertos}
+        postId={postDosComentarios}
+        onClose={() => setComentariosAbertos(false)}
+        onComentado={somarComentario}
+      />
     </View>
   );
 }

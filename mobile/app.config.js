@@ -28,6 +28,8 @@ module.exports = {
     plugins: [
       'expo-router',
       'expo-secure-store',
+      // Login com Google (#158): o navegador de login do expo-auth-session.
+      'expo-web-browser',
       [
         'expo-splash-screen',
         {

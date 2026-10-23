@@ -1,2 +1,6 @@
 # Copie para terraform.tfvars (ignorado pelo git) e preencha.
 regiao = "<regiao>"
+
+# Login com Google (#158): cliente OAuth "Aplicativo da Web" do projeto readrace-prod no Google Cloud.
+google_client_id     = "<id>.apps.googleusercontent.com"
+google_client_secret = "<chave-secreta>"

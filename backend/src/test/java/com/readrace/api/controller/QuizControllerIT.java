@@ -107,6 +107,26 @@ class QuizControllerIT {
     }
 
     @Test
+    @DisplayName("acerto: o usuário de demonstração sai de 5º (790) para 4º (840) no ranking (V17)")
+    void deve_subir_para_quarto_no_ranking_ao_acertar() {
+        assertThat(mvc.get().uri("/api/clubes/{id}", CLUBE_3))
+                .bodyJson()
+                .extractingPath("$.ranking[4].usuario.id")
+                .isEqualTo(USUARIO_FIXO.toString());
+
+        assertThat(responder(PERGUNTA_1, P1_CORRETA)).hasStatusOk();
+        entityManager.flush();
+
+        MvcTestResult clube = mvc.get().uri("/api/clubes/{id}", CLUBE_3).exchange();
+        assertThat(clube)
+                .bodyJson()
+                .extractingPath("$.ranking[3].usuario.id")
+                .isEqualTo(USUARIO_FIXO.toString());
+        assertThat(clube).bodyJson().extractingPath("$.ranking[3].pontos").isEqualTo(840);
+        assertThat(clube).bodyJson().extractingPath("$.ranking[3].posicao").isEqualTo(4);
+    }
+
+    @Test
     @DisplayName("erro: 0 Pontos e a resposta não diz qual era a correta")
     void nao_deve_somar_pontos_no_erro() {
         int antes = pontosNoClube3();
