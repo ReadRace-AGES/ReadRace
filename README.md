@@ -124,21 +124,22 @@ Na opção 1, a API do container usa o código do último `--build`: depois de m
 
 ---
 
-### Modo de login: `seed` ou `cognito`
+### Modo de login: `cognito` ou `seed`
 
-O `.env` da raiz escolhe como a API trata o login, e vale para as duas opções acima (o perfil
-`dev` do `./mvnw` também lê esse arquivo):
+O login é o padrão em todos os ambientes (#159), sem nada para configurar:
 
-- **`seed`** (padrão, linhas de autenticação comentadas): sem login, todo request é o usuário do
-  seed. Para trabalhar nas telas sem criar conta.
-- **`cognito`** (descomente as quatro linhas de autenticação do `.env`): exige o token do Cognito.
-  Para testar login e cadastro de verdade. Confira com
+- **`cognito`** (padrão): a API exige o token do Cognito e o app abre na tela de entrada. Crie a
+  conta pelo CRIAR CONTA do app (o Cognito manda no máximo ~50 e-mails por dia: reaproveite
+  contas de teste). Confira com
   `curl -s -o /dev/null -w "%{http_code}\n" http://localhost:8080/api/feed/comunidades`: tem que
-  dar `401`.
+  dar `401`. A API precisa de internet ao subir, para buscar as chaves do Cognito.
+- **`seed`** (exceção): sem login, todo request é o usuário do seed. Para rodar sem internet.
+  Ponha `AUTH_MODO=seed` no `.env` da raiz e deixe as duas variáveis do Cognito vazias no
+  `mobile/.env` (ver `mobile/.env.example`). Os testes do backend já rodam assim, sem configurar.
 
-Depois de mudar o `.env`, reinicie a API. Uma variável exportada no terminal tem prioridade sobre o
-arquivo. O app também precisa combinar: com a API em `cognito`, descomente as duas linhas do
-Cognito no `mobile/.env` (ver `mobile/.env.example`) e rode `npx expo start -c`.
+Depois de mudar o `.env`, reinicie a API (o perfil `dev` do `./mvnw` também lê o `.env` da raiz) e
+rode o app com `npx expo start -c`. Uma variável exportada no terminal tem prioridade sobre o
+arquivo.
 
 ---
 

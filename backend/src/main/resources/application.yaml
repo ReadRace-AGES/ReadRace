@@ -41,16 +41,16 @@ readrace:
   usuario-seed:
     id: ${USUARIO_SEED_ID:00000000-0000-0000-0000-000000000001}
   auth:
-    # seed = sem login todo request é o usuario-seed (dev e testes)
-    # cognito = exige bearer jwt emitido pelo cognito
-    modo: ${AUTH_MODO:seed}
+    # cognito (padrão) = exige o token do Cognito; é o modo de todos os ambientes.
+    # seed = sem login, todo request é o usuario-seed. Só para os testes (src/test/resources/config)
+    # ou para rodar sem internet: AUTH_MODO=seed.
+    modo: ${AUTH_MODO:cognito}
 
+  # User pool do projeto (us-east-2). Os valores são públicos: identificam o pool, não dão acesso.
   cognito:
-    # https://cognito-idp.us-east-1.amazonaws.com/<userPoolId>
-    issuer-uri: ${COGNITO_ISSUER_URI:}
-    client-id: ${COGNITO_CLIENT_ID:}
-    # https://<dominio>.auth.us-east-1.amazoncognito.com
-    domain: ${COGNITO_DOMAIN:}
+    issuer-uri: ${COGNITO_ISSUER_URI:https://cognito-idp.us-east-2.amazonaws.com/us-east-2_MEVIpejhy}
+    client-id: ${COGNITO_CLIENT_ID:5f06kagodbku0mvveakmsim8qu}
+    domain: ${COGNITO_DOMAIN:https://us-east-2mevipejhy.auth.us-east-2.amazoncognito.com}
 
   cors:
     # Fechado por padrão. Cada ambiente declara as origens que libera —

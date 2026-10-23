@@ -30,6 +30,7 @@ import {
   MENSAGEM_ERRO_GOOGLE,
   resultadoDoLoginGoogle,
   sessaoDoTokenOAuth,
+  configCognito,
 } from '../src/auth/cognitoProtocolo.ts';
 
 const DOMINIO = 'https://us-east-2mevipejhy.auth.us-east-2.amazoncognito.com';
@@ -420,4 +421,22 @@ test('MENSAGEM_ERRO_GOOGLE é o texto da issue', () => {
 test('ESCOPOS_LOGIN_GOOGLE pede o escopo que a API usa para ler o perfil', () => {
   assert.ok(ESCOPOS_LOGIN_GOOGLE.includes('aws.cognito.signin.user.admin'));
   assert.ok(ESCOPOS_LOGIN_GOOGLE.includes('openid'));
+});
+
+test('configCognito usa o pool do projeto quando o .env não define as variáveis', () => {
+  const config = configCognito(undefined, undefined);
+  assert.equal(config.dominio, DOMINIO);
+  assert.equal(config.clientId, '5f06kagodbku0mvveakmsim8qu');
+  assert.equal(config.habilitada, true);
+});
+
+test('configCognito desliga o login quando uma variável vem vazia', () => {
+  assert.equal(configCognito('', undefined).habilitada, false);
+  assert.equal(configCognito(undefined, '').habilitada, false);
+});
+
+test('configCognito respeita os valores do .env e tira a barra do fim do domínio', () => {
+  const config = configCognito('https://outro.auth.us-east-1.amazoncognito.com/', 'abc');
+  assert.equal(config.dominio, 'https://outro.auth.us-east-1.amazoncognito.com');
+  assert.equal(config.clientId, 'abc');
 });

@@ -31,10 +31,12 @@ services:
       SERVER_PORT: 8080
       SPRING_PROFILES_ACTIVE: ${SPRING_PROFILES_ACTIVE:-dev}
       GOOGLE_BOOKS_API_KEY: ${GOOGLE_BOOKS_API_KEY:-}
-      AUTH_MODO: ${AUTH_MODO:-seed}
-      COGNITO_ISSUER_URI: ${COGNITO_ISSUER_URI:-}
-      COGNITO_CLIENT_ID: ${COGNITO_CLIENT_ID:-}
-      COGNITO_DOMAIN: ${COGNITO_DOMAIN:-}
+      # Sem valor no .env, vale o padrão do application.yaml (cognito e o pool do projeto). Passar
+      # a variável vazia apagaria esse padrão.
+      AUTH_MODO: ${AUTH_MODO:-cognito}
+      COGNITO_ISSUER_URI: ${COGNITO_ISSUER_URI:-https://cognito-idp.us-east-2.amazonaws.com/us-east-2_MEVIpejhy}
+      COGNITO_CLIENT_ID: ${COGNITO_CLIENT_ID:-5f06kagodbku0mvveakmsim8qu}
+      COGNITO_DOMAIN: ${COGNITO_DOMAIN:-https://us-east-2mevipejhy.auth.us-east-2.amazoncognito.com}
     ports:
       - "${API_PORT:-8080}:8080"
     depends_on:
