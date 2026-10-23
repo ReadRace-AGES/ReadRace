@@ -89,18 +89,18 @@ por senha; a API não muda.
 ### Ligar a autenticação na API
 
 A API recebe a configuração pelo `infra/producao/docker-compose.yml`
-(`COGNITO_ISSUER_URI`, `COGNITO_CLIENT_ID`, `COGNITO_DOMAIN`, valores públicos). O login
-fica **desligado** (`AUTH_MODO` com padrão `seed`) até o app com login ser lançado. Para
-ligar, trocar o padrão para `cognito` no compose, num PR, e fazer o deploy: em `seed`, a
-API atende todo mundo como o usuário do seed.
+(`COGNITO_ISSUER_URI`, `COGNITO_CLIENT_ID`, `COGNITO_DOMAIN`, valores públicos). O login está
+**ligado** (`AUTH_MODO` com padrão `cognito`, #159): toda rota exige o token do Cognito. Voltar
+para `seed` (todo mundo como o usuário do seed) é trocar o padrão no compose, num PR, e fazer o
+deploy.
 
 O app faz o login (#156) e o cadastro com o código de confirmação (#157) nas próprias telas,
 falando direto com a API do Cognito. A página do Cognito (domínio `us-east-2mevipejhy`) é usada
 para recuperar a senha e, indo direto para o Google, no login com Google (#158).
 
-Ao ligar, quem estiver com o app sem as variáveis do Cognito no `mobile/.env` para de
-funcionar: o app não manda token e a API responde 401 em tudo. Combinar a data com o time,
-para todo mundo atualizar o `.env` (ver `mobile/.env.example`) no mesmo dia.
+O app já traz os valores do Cognito como padrão (`mobile/src/auth/config.ts`): um build sem
+`mobile/.env` vem com login. Só um app gerado antes da #159 sem as variáveis do Cognito para de
+funcionar: ele não manda token e a API responde 401 em tudo.
 
 ### Conta de demonstração
 
@@ -287,7 +287,6 @@ exige as variáveis de segredo e se recusa a ler o arquivo sem elas.
 - Disco da EC2 sem criptografia. Ligar exige um volume novo.
 - A política `AmazonSSMManagedInstanceCore` já dá à EC2 leitura de qualquer
   parâmetro da conta; a restrição a `/readrace/prod/*` na role não limita na prática.
-- Sem login: qualquer pessoa usa a API como o usuário do seed (V4) até o Cognito
-  entrar. O Swagger está público.
+- O Swagger está público.
 - O nome sslip.io depende de um serviço de terceiros.
 - Logs da API só existem dentro da EC2 (`docker logs`); ainda não vão para o CloudWatch.
