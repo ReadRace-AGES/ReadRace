@@ -118,6 +118,7 @@ test('aba navega, recarrega ao foco e ignora respostas antigas', async () => {
     },
 
     './api': api,
+    './DesafiosSistema': { DesafiosSistema: () => null },
   };
 
   const { DesafiosScreen } = load(
@@ -134,9 +135,12 @@ test('aba navega, recarrega ao foco e ignora respostas antigas', async () => {
 
   const desafio = (id) => ({
     id,
-    status: 'pendente',
+    status: 'concluido_ganho',
     descricao: `150 páginas (${id})`,
     diasRestantes: 7,
+    tipoMeta: 'paginas',
+    meta: 150,
+    livro: null,
     oponente: {
       id: 'amigo',
       username: 'Aninha07',
@@ -268,6 +272,17 @@ test('aba navega, recarrega ao foco e ignora respostas antigas', async () => {
 
   assert.equal(tree.root.findAllByType('Card').length, 2);
   assert.equal(requests.length, 8);
+
+  act(() => button('Revanche').props.onPress());
+
+  assert.deepEqual(routes[1], {
+    pathname: '/desafiar-amigo',
+    params: {
+      oponenteId: 'amigo',
+      tipoMeta: 'paginas',
+      meta: '150',
+    },
+  });
 
   act(() => tree.unmount());
 });

@@ -28,7 +28,7 @@ const LADO_DO_QUADRO = spacing[3];
  * Faixa quadriculada do topo do card (`menu - clube do livro` 3-6). É decoração: o card do
  * ranking não tem título nem copy de cabeçalho no design.
  */
-function FaixaQuadriculada() {
+export function FaixaQuadriculada() {
   const [colunas, setColunas] = useState(0);
 
   return (
@@ -62,7 +62,7 @@ export type RankingCardProps = {
   /** `null` enquanto a página carrega. */
   ranking: LinhaRanking[] | null;
   onLinhaPress: () => void;
-  onVerTodosPress: () => void;
+  onVerTodosPress?: () => void;
 };
 
 /**
@@ -101,7 +101,7 @@ export function RankingCard({
         ))
       )}
 
-      {ranking !== null && (
+      {ranking !== null && onVerTodosPress && (
         <View style={styles.rodape}>
           <Text
             accessibilityRole="button"

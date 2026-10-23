@@ -6,7 +6,8 @@ import java.util.List;
 public enum CriterioConquista {
     LIVROS_LIDOS("livros_lidos"),
     PAGINAS_LIDAS("paginas_lidas"),
-    DESAFIOS("desafios");
+    DESAFIOS("desafios"),
+    CLUBES("clubes");
 
     private final String valor;
 

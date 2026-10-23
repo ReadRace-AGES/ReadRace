@@ -156,6 +156,26 @@ class ClubeControllerIT {
     }
 
     @Test
+    @DisplayName("temQuizAtivo: true quando o clube já tem quiz publicado (V13 criou o do clube 3)")
+    void deve_indicar_quiz_ativo_quando_o_clube_tem_quiz() {
+        assertThat(mvc.get().uri("/api/clubes/{id}", CLUBE_3))
+                .hasStatusOk()
+                .bodyJson()
+                .extractingPath("$.temQuizAtivo")
+                .isEqualTo(true);
+    }
+
+    @Test
+    @DisplayName("temQuizAtivo: false quando o clube ainda não tem quiz")
+    void deve_indicar_sem_quiz_ativo_quando_o_clube_nao_tem_quiz() {
+        assertThat(mvc.get().uri(URL))
+                .hasStatusOk()
+                .bodyJson()
+                .extractingPath("$.temQuizAtivo")
+                .isEqualTo(false);
+    }
+
+    @Test
     @Transactional
     void deve_concatenar_os_autores_na_ordem_do_vinculo() {
         jdbc.update(

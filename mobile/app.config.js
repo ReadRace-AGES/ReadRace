@@ -19,9 +19,6 @@ module.exports = () => {
       android: {
         package: 'com.readrace.app',
         versionCode: 1,
-        // O cleartext (HTTP) é habilitado pelo plugin expo-build-properties abaixo, que
-        // funciona no build de release — a propriedade `usesCleartextTraffic` solta aqui
-        // é ignorada no release pelo network security config padrão do Android.
         adaptiveIcon: {
           // TEMPORÁRIO (#159): o foreground é o ícone inteiro do Figma (arte + fundo embutido)
           // e o background é a cor sólida desse fundo (#A1312F, não o #732634 da marca). Solução
@@ -41,6 +38,8 @@ module.exports = () => {
       plugins: [
         'expo-router',
         'expo-secure-store',
+        // Login com Google (#158): o navegador de login do expo-auth-session.
+        'expo-web-browser',
         [
           'expo-splash-screen',
           {

@@ -1,55 +1,40 @@
-import { useRouter } from 'expo-router';
-import { StatusBar } from 'expo-status-bar';
-import { useEffect, useRef, useState } from 'react';
-import {
-  Pressable,
-  ScrollView,
-  StyleSheet,
-  Text,
-  useWindowDimensions,
-  View,
-} from 'react-native';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import Svg, { Path } from 'react-native-svg';
+import { useLocalSearchParams, useRouter } from 'expo-router';
+import { useRef, useState } from 'react';
+import { Pressable, StyleSheet, Text, View } from 'react-native';
 
-import { abrirPaginaCognito, entrarComSenha } from '@/auth/cognitoApi';
-import { ErroLogin, MENSAGENS_ERRO_LOGIN } from '@/auth/cognitoProtocolo';
+import { guardarCadastro } from '@/auth/cadastroPendente';
+import { abrirPaginaCognito, entrarComGoogle, entrarComSenha } from '@/auth/cognitoApi';
+import {
+  ErroLogin,
+  MENSAGEM_ERRO_GOOGLE,
+  MENSAGENS_ERRO_LOGIN,
+} from '@/auth/cognitoProtocolo';
 import { salvarSessao } from '@/auth/session';
-import { VOLTAR_PATH } from '@/components/AppHeader';
 import { CampoTexto } from '@/components/CampoTexto';
 import { GoogleIcon } from '@/components/icons/GoogleIcon';
 import { PrimaryButton } from '@/components/PrimaryButton';
-import { ReadRaceLogo } from '@/components/readracelogo';
-import { useToastContext } from '@/components/toast-provider';
-import { useAlturaTeclado } from '@/components/useAlturaTeclado';
-import { colors, spacing, textStyles } from '@/theme';
+import { TelaDeAcesso } from '@/components/TelaDeAcesso';
+import { useVoltar } from '@/components/useVoltar';
+import { colors, textStyles } from '@/theme';
 
-/** Login com e-mail e senha (frame `cadastro` do Figma, que apesar do nome é o login). */
+/** Login com e-mail e senha ou Google (frame `cadastro` do Figma, que apesar do nome é o login). */
 export default function EntrarScreen() {
   const router = useRouter();
-  const insets = useSafeAreaInsets();
-  const { width } = useWindowDimensions();
-  const { showToast } = useToastContext();
+  const voltar = useVoltar('/login');
+  // Vindo do passo 2 quando o login automático falhou depois de confirmar (sem dado sensível).
+  const { confirmada } = useLocalSearchParams<{ confirmada?: string }>();
 
   const [email, setEmail] = useState('');
   const [senha, setSenha] = useState('');
   const [entrando, setEntrando] = useState(false);
+  const [entrandoGoogle, setEntrandoGoogle] = useState(false);
   const [erro, setErro] = useState<string | null>(null);
   // O estado `entrando` só muda no próximo render: dois toques rápidos passariam os dois. A ref
-  // muda na hora.
+  // muda na hora. É uma só para os dois botões: um login de cada vez.
   const enviando = useRef(false);
 
-  const alturaTeclado = useAlturaTeclado();
-  const rolagem = useRef<ScrollView>(null);
-
-  // Com o teclado aberto, rola até o fim para o campo e o ENTRAR ficarem acima dele.
-  useEffect(() => {
-    if (alturaTeclado > 0) {
-      rolagem.current?.scrollToEnd({ animated: true });
-    }
-  }, [alturaTeclado]);
-
-  const podeEntrar = email.trim() !== '' && senha !== '' && !entrando;
+  const ocupado = entrando || entrandoGoogle;
+  const podeEntrar = email.trim() !== '' && senha !== '' && !ocupado;
 
   async function entrar() {
     if (!podeEntrar || enviando.current) return;
@@ -60,6 +45,13 @@ export default function EntrarScreen() {
       // Ao salvar, o AuthProvider percebe a sessão e o _layout leva às abas.
       await salvarSessao(await entrarComSenha(email, senha));
     } catch (e) {
+      // Conta criada e nunca confirmada: leva ao código, sem reenviar (o código vale 24 h e a cota
+      // de e-mails é do pool inteiro). O passo 2 tem o "Reenviar código".
+      if (e instanceof ErroLogin && e.tipo === 'naoConfirmado') {
+        guardarCadastro(email, senha, null);
+        router.push('/confirmar-email');
+        return;
+      }
       setErro(e instanceof ErroLogin ? e.message : MENSAGENS_ERRO_LOGIN.falha);
       setSenha('');
     } finally {
@@ -68,143 +60,107 @@ export default function EntrarScreen() {
     }
   }
 
-  // O router enfileira a navegação: dois toques na seta voltariam duas telas e esvaziariam a pilha.
-  const saindo = useRef(false);
-
-  function voltar() {
-    if (saindo.current) return;
-    saindo.current = true;
-    if (router.canGoBack()) {
-      router.back();
-    } else {
-      router.replace('/login');
+  async function entrarPeloGoogle() {
+    if (ocupado || enviando.current) return;
+    enviando.current = true;
+    setErro(null);
+    setEntrandoGoogle(true);
+    try {
+      const sessao = await entrarComGoogle();
+      // null = desistiu na escolha de conta: volta para a tela sem mensagem.
+      if (sessao) {
+        await salvarSessao(sessao);
+      }
+    } catch {
+      setErro(MENSAGEM_ERRO_GOOGLE);
+    } finally {
+      enviando.current = false;
+      setEntrandoGoogle(false);
     }
   }
 
   return (
-    <View style={styles.tela}>
-      <StatusBar style="light" />
-      <ScrollView
-        ref={rolagem}
-        contentContainerStyle={{
-          flexGrow: 1,
-          paddingTop: insets.top,
-          paddingBottom: alturaTeclado,
-        }}
-        keyboardShouldPersistTaps="handled"
+    <TelaDeAcesso onVoltar={voltar} voltarDesabilitado={ocupado}>
+      {confirmada === '1' && (
+        <Text style={textStyles.bodySmall} className="mb-6 text-center text-text">
+          Conta confirmada. Entre com seu e-mail e senha.
+        </Text>
+      )}
+      <View className="gap-6">
+        <CampoTexto
+          rotulo="Email"
+          placeholder="Email"
+          value={email}
+          onChangeText={setEmail}
+          editable={!ocupado}
+          keyboardType="email-address"
+          autoCapitalize="none"
+          autoCorrect={false}
+          autoComplete="email"
+          textContentType="emailAddress"
+          returnKeyType="next"
+        />
+        <CampoTexto
+          rotulo="Senha"
+          placeholder="Senha"
+          value={senha}
+          onChangeText={setSenha}
+          editable={!ocupado}
+          secureTextEntry
+          autoCapitalize="none"
+          autoCorrect={false}
+          autoComplete="current-password"
+          textContentType="password"
+          returnKeyType="go"
+          onSubmitEditing={entrar}
+        />
+      </View>
+
+      <Pressable
+        accessibilityRole="link"
+        onPress={() => abrirPaginaCognito('forgotPassword')}
+        className="mt-4 self-center"
       >
-        <View className="items-center gap-3 py-8">
-          <Pressable
-            accessibilityRole="button"
-            accessibilityLabel="Voltar"
-            onPress={voltar}
-            disabled={entrando}
-            hitSlop={12}
-            style={styles.voltar}
-          >
-            <Svg width={9} height={15} viewBox="0 0 9 15" fill="none">
-              <Path
-                d={VOLTAR_PATH}
-                stroke={colors.textInverse}
-                strokeWidth={2.01667}
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              />
-            </Svg>
-          </Pressable>
-          <ReadRaceLogo size={Math.min(width * 0.36, 150)} />
-          <Text style={textStyles.bodySmallStrong} className="text-logo-cream">
-            Uma leitura imersiva
+        <Text style={[textStyles.bodySmall, styles.link]}>Esqueceu a senha?</Text>
+      </Pressable>
+
+      {erro && (
+        <Text style={textStyles.bodySmall} className="mt-4 text-center text-danger">
+          {erro}
+        </Text>
+      )}
+
+      <View className="mt-8 gap-4 self-center" style={{ width: '80%' }}>
+        <PrimaryButton
+          label="ENTRAR"
+          onPress={entrar}
+          disabled={!podeEntrar}
+          loading={entrando}
+        />
+        <PrimaryButton
+          label="Continuar com Google"
+          variant="outline"
+          icon={GoogleIcon}
+          onPress={entrarPeloGoogle}
+          disabled={entrando}
+          loading={entrandoGoogle}
+        />
+      </View>
+
+      <View className="mt-8 items-center gap-1">
+        <Text style={textStyles.bodySmall} className="text-text">
+          Não tem conta?
+        </Text>
+        <Pressable accessibilityRole="link" onPress={() => router.push('/criar-conta')}>
+          <Text style={textStyles.bodySmallStrong} className="text-primary">
+            Criar uma
           </Text>
-        </View>
-
-        <View style={[styles.cartao, { paddingBottom: insets.bottom + spacing[8] }]}>
-          <View className="gap-6">
-            <CampoTexto
-              rotulo="Email"
-              placeholder="Email"
-              value={email}
-              onChangeText={setEmail}
-              editable={!entrando}
-              keyboardType="email-address"
-              autoCapitalize="none"
-              autoCorrect={false}
-              autoComplete="email"
-              textContentType="emailAddress"
-              returnKeyType="next"
-            />
-            <CampoTexto
-              rotulo="Senha"
-              placeholder="Senha"
-              value={senha}
-              onChangeText={setSenha}
-              editable={!entrando}
-              secureTextEntry
-              autoCapitalize="none"
-              autoCorrect={false}
-              autoComplete="current-password"
-              textContentType="password"
-              returnKeyType="go"
-              onSubmitEditing={entrar}
-            />
-          </View>
-
-          <Pressable
-            accessibilityRole="link"
-            onPress={() => abrirPaginaCognito('forgotPassword')}
-            className="mt-4 self-center"
-          >
-            <Text style={[textStyles.bodySmall, styles.link]}>Esqueceu a senha?</Text>
-          </Pressable>
-
-          {erro && (
-            <Text style={textStyles.bodySmall} className="mt-4 text-center text-accent">
-              {erro}
-            </Text>
-          )}
-
-          <View className="mt-8 gap-4 self-center" style={{ width: '80%' }}>
-            <PrimaryButton
-              label="ENTRAR"
-              onPress={entrar}
-              disabled={!podeEntrar}
-              loading={entrando}
-            />
-            <PrimaryButton
-              label="Continuar com Google"
-              variant="outline"
-              icon={GoogleIcon}
-              onPress={showToast}
-              disabled={entrando}
-            />
-          </View>
-
-          <View className="mt-8 items-center gap-1">
-            <Text style={textStyles.bodySmall} className="text-text">
-              Não tem conta?
-            </Text>
-            <Pressable accessibilityRole="link" onPress={() => abrirPaginaCognito('signup')}>
-              <Text style={textStyles.bodySmallStrong} className="text-primary">
-                Criar uma
-              </Text>
-            </Pressable>
-          </View>
-        </View>
-      </ScrollView>
-    </View>
+        </Pressable>
+      </View>
+    </TelaDeAcesso>
   );
 }
 
 const styles = StyleSheet.create({
-  tela: { flex: 1, backgroundColor: colors.primary },
-  cartao: {
-    flexGrow: 1,
-    backgroundColor: colors.surface,
-    borderTopLeftRadius: 40,
-    borderTopRightRadius: 40,
-    paddingHorizontal: spacing[6],
-    paddingTop: spacing[8],
-  },
   link: { color: colors.text, textDecorationLine: 'underline' },
-  voltar: { position: 'absolute', top: spacing[4], left: spacing[6] },
 });
