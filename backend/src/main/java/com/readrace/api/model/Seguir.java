@@ -1,7 +1,9 @@
 package com.readrace.api.model;
 
+import java.time.OffsetDateTime;
 import java.util.UUID;
 
+import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.Id;
@@ -20,6 +22,9 @@ import lombok.NoArgsConstructor;
 public class Seguir {
 
     @Id private UUID id;
+
+    @Column(name = "criado_em", nullable = false)
+    private OffsetDateTime criadoEm;
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "seguidor_id", nullable = false)

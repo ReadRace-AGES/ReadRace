@@ -15,7 +15,19 @@ public interface SeguirRepository extends JpaRepository<Seguir, UUID> {
 
     boolean existsBySeguidorIdAndSeguidoId(UUID seguidorId, UUID seguidoId);
 
-    long countBySeguidoId(UUID seguidoId);
+    @Query(
+            "select count(s) from Seguir s where s.seguido.id = :seguidoId and s.seguidor.excluidoEm is null")
+    long countBySeguidoId(@Param("seguidoId") UUID seguidoId);
+
+    @Query(
+            "select s.seguidor from Seguir s where s.seguido.id = :usuarioId"
+                    + " and s.seguidor.excluidoEm is null order by s.criadoEm desc, s.id asc")
+    List<Usuario> buscarSeguidores(@Param("usuarioId") UUID usuarioId);
+
+    @Query(
+            "select s.seguido from Seguir s where s.seguidor.id = :usuarioId"
+                    + " and s.seguido.excluidoEm is null order by s.criadoEm desc, s.id asc")
+    List<Usuario> buscarSeguindo(@Param("usuarioId") UUID usuarioId);
 
     @Modifying
     @Query(

@@ -22,8 +22,10 @@ public class PerfilRepository {
     public Resumo resumo(UUID id) {
         return jdbc.queryForObject(
                 """
-            SELECT (SELECT count(*) FROM seguir WHERE seguido_id = ?) AS seguidores,
-                   (SELECT count(*) FROM seguir WHERE seguidor_id = ?) AS seguindo,
+            SELECT (SELECT count(*) FROM seguir s JOIN usuario u ON u.id = s.seguidor_id
+                    WHERE s.seguido_id = ? AND u.excluido_em IS NULL) AS seguidores,
+                   (SELECT count(*) FROM seguir s JOIN usuario u ON u.id = s.seguido_id
+                    WHERE s.seguidor_id = ? AND u.excluido_em IS NULL) AS seguindo,
                    count(*) FILTER (WHERE status_leitura = 'lido') AS livros,
                    coalesce(sum(pagina_maxima), 0) AS paginas
             FROM item_biblioteca WHERE usuario_id = ?
