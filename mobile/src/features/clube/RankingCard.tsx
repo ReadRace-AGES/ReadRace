@@ -1,3 +1,4 @@
+
 import { useState } from 'react';
 import {
   ActivityIndicator,
@@ -61,15 +62,15 @@ export function FaixaQuadriculada() {
 export type RankingCardProps = {
   /** `null` enquanto a página carrega. */
   ranking: LinhaRanking[] | null;
-  onLinhaPress: () => void;
+  onLinhaPress: (usuarioId: string) => void;
   onVerTodosPress?: () => void;
 };
 
 /**
  * Card do ranking de `Pontos` do clube: até 7 linhas, já ordenadas e numeradas pelo backend.
  *
- * O `RankingRow` (#27) é só apresentação e não é tocável; quem dá o toque — que nesta sprint
- * só dispara o `Toast` — é esta tela.
+ * O `RankingRow` (#27) é só apresentação e não é tocável; quem dá o toque é este componente.
+ * Ao tocar em uma linha, o ID do usuário é enviado para a tela responsável pela navegação.
  */
 export function RankingCard({
   ranking,
@@ -90,7 +91,12 @@ export function RankingCard({
         </View>
       ) : (
         ranking.map((linha) => (
-          <Pressable key={linha.usuario.id} onPress={onLinhaPress}>
+          <Pressable
+            key={linha.usuario.id}
+            onPress={() => onLinhaPress(linha.usuario.id)}
+            accessibilityRole="button"
+            accessibilityLabel={`Abrir perfil de ${linha.usuario.nome}`}
+          >
             <RankingRow
               position={linha.posicao}
               name={linha.usuario.nome}

@@ -1,4 +1,5 @@
-import { useRouter } from 'expo-router';
+
+import { useRouter, type Href } from 'expo-router';
 import {
   ActivityIndicator,
   FlatList,
@@ -13,7 +14,6 @@ import { EmptyState } from '@/components/EmptyState';
 import { BookIcon } from '@/components/icons/BookIcon';
 import { PrimaryButton } from '@/components/PrimaryButton';
 import { RankingRow } from '@/components/RankingRow';
-import { useToastContext } from '@/components/toast-provider';
 import { colors, spacing } from '@/theme';
 
 import { FaixaQuadriculada, RankingCard } from './RankingCard';
@@ -25,9 +25,19 @@ const COPY = {
   voltar: 'Voltar',
 } as const;
 
-export function RankingClubeScreen({ clubeId }: { clubeId: string }) {
+function rotaDoPerfilUsuario(usuarioId: string): Href {
+  return {
+    pathname: '/(tabs)/(feed)/perfil-usuario/[usuarioId]',
+    params: { usuarioId },
+  } as unknown as Href;
+}
+
+export function RankingClubeScreen({
+  clubeId,
+}: {
+  clubeId: string;
+}) {
   const router = useRouter();
-  const { showToast } = useToastContext();
   const { ranking, recarregar, carregarMais } = useRankingClube(clubeId);
 
   function voltar() {
@@ -35,7 +45,13 @@ export function RankingClubeScreen({ clubeId }: { clubeId: string }) {
       router.back();
       return;
     }
+
     router.replace('/feed');
+  }
+
+  // Task #202: abre o perfil do participante selecionado.
+  function abrirPerfilDoRanking(usuarioId: string) {
+    router.push(rotaDoPerfilUsuario(usuarioId));
   }
 
   if (ranking.situacao === 'erro') {
@@ -51,6 +67,7 @@ export function RankingClubeScreen({ clubeId }: { clubeId: string }) {
                 onPress={recarregar}
                 variant="outline"
               />
+
               <PrimaryButton
                 label={COPY.voltar}
                 onPress={voltar}
@@ -63,7 +80,8 @@ export function RankingClubeScreen({ clubeId }: { clubeId: string }) {
     );
   }
 
-  const dados = ranking.situacao === 'sucesso' ? ranking.dados : null;
+  const dados =
+    ranking.situacao === 'sucesso' ? ranking.dados : null;
 
   return (
     <View style={styles.tela}>
@@ -77,13 +95,23 @@ export function RankingClubeScreen({ clubeId }: { clubeId: string }) {
       />
 
       {dados && dados.ranking.length > 0 ? (
-        <Card style={styles.card} surfaceStyle={styles.superficie}>
+        <Card
+          style={styles.card}
+          surfaceStyle={styles.superficie}
+        >
           <FaixaQuadriculada />
+
           <FlatList
             data={dados.ranking}
             keyExtractor={(linha) => linha.usuario.id}
             renderItem={({ item }) => (
-              <Pressable onPress={showToast}>
+              <Pressable
+                accessibilityRole="button"
+                accessibilityLabel={`Ver perfil de ${item.usuario.nome}`}
+                onPress={() =>
+                  abrirPerfilDoRanking(item.usuario.id)
+                }
+              >
                 <RankingRow
                   position={item.posicao}
                   name={item.usuario.nome}
@@ -95,7 +123,8 @@ export function RankingClubeScreen({ clubeId }: { clubeId: string }) {
             onEndReached={carregarMais}
             onEndReachedThreshold={0.5}
             ListFooterComponent={
-              ranking.situacao === 'sucesso' && ranking.carregandoMais ? (
+              ranking.situacao === 'sucesso' &&
+              ranking.carregandoMais ? (
                 <ActivityIndicator
                   color={colors.primary}
                   style={styles.carregandoMais}
@@ -108,7 +137,7 @@ export function RankingClubeScreen({ clubeId }: { clubeId: string }) {
         <View style={styles.conteudo}>
           <RankingCard
             ranking={dados?.ranking ?? null}
-            onLinhaPress={showToast}
+            onLinhaPress={abrirPerfilDoRanking}
           />
         </View>
       )}
@@ -117,12 +146,33 @@ export function RankingClubeScreen({ clubeId }: { clubeId: string }) {
 }
 
 const styles = StyleSheet.create({
-  tela: { flex: 1, backgroundColor: colors.surface },
-  conteudo: { padding: spacing[6] },
-  card: { flex: 1, margin: spacing[6] },
-  superficie: { flex: 1, padding: spacing[0] },
-  carregandoMais: { padding: spacing[4] },
-  acoesDoErro: { alignSelf: 'stretch', gap: spacing[2] },
+  tela: {
+    flex: 1,
+    backgroundColor: colors.surface,
+  },
+
+  conteudo: {
+    padding: spacing[6],
+  },
+
+  card: {
+    flex: 1,
+    margin: spacing[6],
+  },
+
+  superficie: {
+    flex: 1,
+    padding: spacing[0],
+  },
+
+  carregandoMais: {
+    padding: spacing[4],
+  },
+
+  acoesDoErro: {
+    alignSelf: 'stretch',
+    gap: spacing[2],
+  },
 });
 
 export default RankingClubeScreen;

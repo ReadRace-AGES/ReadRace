@@ -1,3 +1,4 @@
+
 import { useCallback, useRef } from 'react';
 import { ActivityIndicator, FlatList, View } from 'react-native';
 import {
@@ -6,49 +7,109 @@ import {
   useRouter,
   type Href,
 } from 'expo-router';
+
 import { AppHeader } from '@/components/AppHeader';
 import { EmptyState } from '@/components/EmptyState';
 import { SearchIcon } from '@/components/icons/SearchIcon';
 import { LinhaUsuario } from '@/components/LinhaUsuario';
 import { PrimaryButton } from '@/components/PrimaryButton';
 import { colors, spacing } from '@/theme';
+
 import { useListaSeguidores } from './useListaSeguidores';
 
 export function ListaSeguidoresScreen({
   origem,
 }: {
-  origem: 'perfil' | 'busca';
+  origem: 'perfil' | 'busca' | 'feed';
 }) {
   const { usuarioId, tipo } = useLocalSearchParams<{
     usuarioId: string;
     tipo?: string;
   }>();
+
   const lista = tipo === 'seguindo' ? 'seguindo' : 'seguidores';
+
   const { carga, recarregar } = useListaSeguidores(usuarioId, lista);
+
   const router = useRouter();
   const primeiroFoco = useRef(true);
+
   useFocusEffect(
     useCallback(() => {
       if (primeiroFoco.current) {
         primeiroFoco.current = false;
         return;
       }
+
       recarregar();
     }, [recarregar])
   );
+
+  function voltar() {
+    if (router.canGoBack()) {
+      router.back();
+      return;
+    }
+
+    if (origem === 'feed') {
+      router.replace('/feed');
+      return;
+    }
+
+    router.replace(origem === 'perfil' ? '/perfil' : '/buscar');
+  }
+
+  function abrirPerfilUsuario(id: string) {
+    if (carga.situacao !== 'sucesso') {
+      return;
+    }
+
+    // Se o leitor selecionado for o próprio usuário,
+    // abre a aba Perfil.
+    if (id === carga.eu) {
+      router.navigate('/(tabs)/(perfil)/perfil');
+      return;
+    }
+
+    // Task #202: mantém a navegação dentro do Feed.
+    if (origem === 'feed') {
+      router.push({
+        pathname: '/(tabs)/(feed)/perfil-usuario/[usuarioId]',
+        params: {
+          usuarioId: id,
+        },
+      } as unknown as Href);
+
+      return;
+    }
+
+    if (origem === 'perfil') {
+      router.push(
+        `/(tabs)/(perfil)/perfil-usuario/${encodeURIComponent(id)}` as Href
+      );
+
+      return;
+    }
+
+    router.push(
+      `/(tabs)/(busca)/usuario/${encodeURIComponent(id)}` as Href
+    );
+  }
+
   return (
     <View className="flex-1 bg-surface">
       <AppHeader
         compact
         title={lista === 'seguidores' ? 'Seguidores' : 'Seguindo'}
-        subtitle={carga.situacao === 'sucesso' ? carga.nome : undefined}
-        showBack
-        onBackPress={() =>
-          router.canGoBack()
-            ? router.back()
-            : router.replace(origem === 'perfil' ? '/perfil' : '/buscar')
+        subtitle={
+          carga.situacao === 'sucesso'
+            ? carga.nome
+            : undefined
         }
+        showBack
+        onBackPress={voltar}
       />
+
       {carga.situacao === 'carregando' && (
         <View className="flex-1 items-center justify-center">
           <ActivityIndicator
@@ -57,18 +118,28 @@ export function ListaSeguidoresScreen({
           />
         </View>
       )}
+
       {carga.situacao === 'erro' && (
         <EmptyState
           icon={SearchIcon}
           message={carga.mensagem}
-          action={<PrimaryButton label="Tentar de novo" onPress={recarregar} />}
+          action={
+            <PrimaryButton
+              label="Tentar de novo"
+              onPress={recarregar}
+            />
+          }
         />
       )}
+
       {carga.situacao === 'sucesso' && (
         <FlatList
           data={carga.usuarios}
           keyExtractor={(item) => item.id}
-          contentContainerStyle={{ flexGrow: 1, paddingBottom: spacing[6] }}
+          contentContainerStyle={{
+            flexGrow: 1,
+            paddingBottom: spacing[6],
+          }}
           ListEmptyComponent={
             <EmptyState
               icon={SearchIcon}
@@ -82,17 +153,7 @@ export function ListaSeguidoresScreen({
           renderItem={({ item }) => (
             <LinhaUsuario
               {...item}
-              onPress={() => {
-                if (item.id === carga.eu) {
-                  router.navigate('/(tabs)/(perfil)/perfil');
-                  return;
-                }
-                router.push(
-                  (origem === 'perfil'
-                    ? `/(tabs)/(perfil)/perfil-usuario/${encodeURIComponent(item.id)}`
-                    : `/(tabs)/(busca)/usuario/${encodeURIComponent(item.id)}`) as Href
-                );
-              }}
+              onPress={() => abrirPerfilUsuario(item.id)}
             />
           )}
         />
