@@ -1,3 +1,4 @@
+
 package com.readrace.api.repository;
 
 import java.util.List;
@@ -18,6 +19,10 @@ public interface LivroRepository extends JpaRepository<Livro, UUID> {
     List<Livro> findByTituloContainingIgnoreCase(String termo);
 
     Optional<Livro> findByIsbn(String isbn);
+
+    @EntityGraph(attributePaths = {"livroAutores", "livroAutores.autor"})
+    @Query("SELECT DISTINCT l FROM Livro l")
+    List<Livro> buscarLivrosComAutores();
 
     // O ISBN identifica o livro entre usuários (#155): a restrição única também serializa a
     // criação quando dois usuários adicionam o mesmo livro novo ao mesmo tempo.

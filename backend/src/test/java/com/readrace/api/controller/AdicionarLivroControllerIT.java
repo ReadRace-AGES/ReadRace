@@ -1,7 +1,9 @@
+
 package com.readrace.api.controller;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import java.util.Map;
 import java.util.UUID;
 
 import org.junit.jupiter.api.DisplayName;
@@ -19,12 +21,10 @@ import org.springframework.transaction.annotation.Transactional;
 import com.readrace.api.TestcontainersConfiguration;
 
 /**
- * Teste de integração de {@code POST /api/biblioteca} (#155).
+ * Testes de integração de POST /api/biblioteca.
  *
- * <p>Roda SEM profile "prod", então o catálogo é o {@code LocalBooksAdapter} a partir do {@code
- * books-seed.json} real. {@code br001} (Dom Casmurro, ISBN 9786586490077) nunca está pré-cadastrado
- * no seed do banco (V4), que usa outro ISBN para o mesmo título — por isso serve para testar a
- * criação de um livro novo em todos os testes, sem interferir no restante do seed.
+ * <p>O catálogo local pode retornar ISBNs diferentes dos livros do seed.
+ * Nesse caso, o sistema deve reutilizar o livro pelo título e primeiro autor.
  */
 @Import(TestcontainersConfiguration.class)
 @SpringBootTest
@@ -34,9 +34,12 @@ import com.readrace.api.TestcontainersConfiguration;
 class AdicionarLivroControllerIT {
 
     private static final String URL = "/api/biblioteca";
+
     private static final UUID USUARIO_ATUAL =
             UUID.fromString("00000000-0000-0000-0000-000000000001");
+
     private static final String ISBN_BR001 = "9786586490077";
+    private static final String ISBN_HOBBIT = "9788595085800";
 
     @Autowired private MockMvcTester mvc;
     @Autowired private JdbcTemplate jdbc;
@@ -55,96 +58,130 @@ class AdicionarLivroControllerIT {
 
     private Integer contarLivrosPorIsbn(String isbn) {
         return jdbc.queryForObject(
-                "SELECT COUNT(*) FROM livro WHERE isbn = ?", Integer.class, isbn);
+                "SELECT COUNT(*) FROM livro WHERE isbn = ?",
+                Integer.class,
+                isbn);
+    }
+
+    private UUID idDomCasmurroExistente() {
+        return jdbc.queryForObject(
+                "SELECT id FROM livro WHERE titulo = 'Dom Casmurro'",
+                UUID.class);
+    }
+
+    private Integer contarItens(UUID livroId) {
+        return jdbc.queryForObject(
+                "SELECT COUNT(*) FROM item_biblioteca"
+                        + " WHERE usuario_id = ? AND livro_id = ?",
+                Integer.class,
+                USUARIO_ATUAL,
+                livroId);
     }
 
     @Test
-    @DisplayName("livro novo como desejo: cria o livro (pelo ISBN) e o item, sem XP")
+    @DisplayName("Dom Casmurro reutiliza livro do seed e adiciona como desejo")
     void deve_adicionar_livro_novo_como_desejo() {
+        UUID livroExistente = idDomCasmurroExistente();
+
         assertThat(post("br001", "desejo"))
                 .hasStatus(HttpStatus.CREATED)
                 .bodyJson()
                 .extractingPath("$")
                 .asMap()
+                .containsEntry("livroId", livroExistente.toString())
                 .containsEntry("titulo", "Dom Casmurro")
-                .containsEntry("status", "desejo")
-                .containsEntry("favorito", false);
+                .containsEntry("status", "desejo");
 
-        assertThat(contarLivrosPorIsbn(ISBN_BR001)).isEqualTo(1);
-
-        Integer itens =
-                jdbc.queryForObject(
-                        "SELECT COUNT(*) FROM item_biblioteca i JOIN livro l ON l.id = i.livro_id"
-                                + " WHERE i.usuario_id = ? AND l.isbn = ? AND i.status_leitura ="
-                                + " 'desejo' AND i.favorito = false",
-                        Integer.class,
-                        USUARIO_ATUAL,
-                        ISBN_BR001);
-        assertThat(itens).isEqualTo(1);
+        assertThat(contarLivrosPorIsbn(ISBN_BR001)).isZero();
+        assertThat(contarItens(livroExistente)).isEqualTo(1);
     }
 
     @Test
-    @DisplayName("trocar para lido depois de desejo troca o status, sem duplicar livro nem item")
+    @DisplayName("trocar para lido depois de desejo não duplica livro nem item")
     void deve_trocar_status_sem_duplicar() {
+        UUID livroExistente = idDomCasmurroExistente();
+
         assertThat(post("br001", "desejo")).hasStatus(HttpStatus.CREATED);
+
         assertThat(post("br001", "lido"))
                 .hasStatus(HttpStatus.CREATED)
                 .bodyJson()
-                .extractingPath("$.status")
-                .isEqualTo("lido");
+                .extractingPath("$")
+                .asMap()
+                .containsEntry("livroId", livroExistente.toString())
+                .containsEntry("status", "lido");
 
-        assertThat(contarLivrosPorIsbn(ISBN_BR001)).isEqualTo(1);
-        Integer totalItens =
-                jdbc.queryForObject(
-                        "SELECT COUNT(*) FROM item_biblioteca i JOIN livro l ON l.id = i.livro_id"
-                                + " WHERE i.usuario_id = ? AND l.isbn = ?",
-                        Integer.class,
-                        USUARIO_ATUAL,
-                        ISBN_BR001);
-        assertThat(totalItens).isEqualTo(1);
+        assertThat(contarLivrosPorIsbn(ISBN_BR001)).isZero();
+        assertThat(contarItens(livroExistente)).isEqualTo(1);
     }
 
     @Test
-    @DisplayName("marcar como lido não concede XP: tela de progresso não é tocada")
+    @DisplayName("marcar como lido não concede XP")
     void marcar_como_lido_nao_mexe_em_registro_de_leitura() {
-        var usuarioAntes = jdbc.queryForMap("SELECT * FROM usuario WHERE id = ?", USUARIO_ATUAL);
-        assertThat(post("br001", "lido")).hasStatus(HttpStatus.CREATED);
-        assertThat(jdbc.queryForMap("SELECT * FROM usuario WHERE id = ?", USUARIO_ATUAL))
-                .isEqualTo(usuarioAntes);
+        UUID livroExistente = idDomCasmurroExistente();
 
-        Integer registros =
+        var usuarioAntes =
+                jdbc.queryForMap(
+                        "SELECT * FROM usuario WHERE id = ?",
+                        USUARIO_ATUAL);
+
+        Integer registrosAntes =
                 jdbc.queryForObject(
                         "SELECT COUNT(*) FROM registro_leitura r"
-                                + " JOIN item_biblioteca i ON i.id = r.item_biblioteca_id"
-                                + " JOIN livro l ON l.id = i.livro_id"
-                                + " WHERE l.isbn = ?",
+                                + " JOIN item_biblioteca i"
+                                + " ON i.id = r.item_biblioteca_id"
+                                + " WHERE i.usuario_id = ? AND i.livro_id = ?",
                         Integer.class,
-                        ISBN_BR001);
-        assertThat(registros).isZero();
+                        USUARIO_ATUAL,
+                        livroExistente);
+
+        assertThat(post("br001", "lido")).hasStatus(HttpStatus.CREATED);
+
+        assertThat(
+                jdbc.queryForMap(
+                        "SELECT * FROM usuario WHERE id = ?",
+                        USUARIO_ATUAL))
+                .isEqualTo(usuarioAntes);
+
+        Integer registrosDepois =
+                jdbc.queryForObject(
+                        "SELECT COUNT(*) FROM registro_leitura r"
+                                + " JOIN item_biblioteca i"
+                                + " ON i.id = r.item_biblioteca_id"
+                                + " WHERE i.usuario_id = ? AND i.livro_id = ?",
+                        Integer.class,
+                        USUARIO_ATUAL,
+                        livroExistente);
+
+        assertThat(registrosDepois).isEqualTo(registrosAntes);
     }
 
     @Test
-    @DisplayName("favoritar livro novo também entra como desejo")
+    @DisplayName("favoritar livro do catálogo retorna favorito verdadeiro")
     void deve_favoritar_livro_novo_e_entrar_como_desejo() {
         assertThat(post("br002", "favorito"))
                 .hasStatus(HttpStatus.CREATED)
                 .bodyJson()
                 .extractingPath("$")
                 .asMap()
-                .containsEntry("status", "desejo")
                 .containsEntry("favorito", true);
     }
 
     @Test
-    @DisplayName("favoritar livro que já está lendo mantém status e página, só marca a flag")
+    @DisplayName("favoritar livro em leitura mantém status e página")
     void deve_favoritar_sem_mudar_status_nem_pagina_de_livro_em_leitura() {
+        UUID livroExistente = idDomCasmurroExistente();
+
         assertThat(post("br001", "desejo")).hasStatus(HttpStatus.CREATED);
+
         jdbc.update(
-                "UPDATE item_biblioteca SET status_leitura = 'lendo', pagina_atual = 50,"
-                        + " pagina_maxima = 50 WHERE usuario_id = ? AND livro_id = (SELECT id FROM"
-                        + " livro WHERE isbn = ?)",
+                "UPDATE item_biblioteca"
+                        + " SET status_leitura = 'lendo',"
+                        + " pagina_atual = 50,"
+                        + " pagina_maxima = GREATEST(pagina_maxima, 50)"
+                        + " WHERE usuario_id = ? AND livro_id = ?",
                 USUARIO_ATUAL,
-                ISBN_BR001);
+                livroExistente);
 
         assertThat(post("br001", "favorito"))
                 .hasStatus(HttpStatus.CREATED)
@@ -156,39 +193,38 @@ class AdicionarLivroControllerIT {
 
         Integer paginaAtual =
                 jdbc.queryForObject(
-                        "SELECT pagina_atual FROM item_biblioteca i JOIN livro l ON l.id ="
-                                + " i.livro_id WHERE i.usuario_id = ? AND l.isbn = ?",
+                        "SELECT pagina_atual FROM item_biblioteca"
+                                + " WHERE usuario_id = ? AND livro_id = ?",
                         Integer.class,
                         USUARIO_ATUAL,
-                        ISBN_BR001);
+                        livroExistente);
+
         assertThat(paginaAtual).isEqualTo(50);
     }
 
     @Test
-    @DisplayName("ISBN já cadastrado por outro fluxo: reaproveita o livro existente, sem duplicar")
+    @DisplayName("ISBN existente tem prioridade sobre título e autor")
     void nao_deve_duplicar_livro_quando_isbn_ja_existe() {
         UUID livroExistente = UUID.randomUUID();
+
         jdbc.update(
-                "INSERT INTO livro (id, isbn, titulo, total_paginas) VALUES (?, ?, 'Dom Casmurro"
-                        + " (edição existente)', 300)",
+                "INSERT INTO livro (id, isbn, titulo, total_paginas)"
+                        + " VALUES (?, ?, 'Dom Casmurro (edição existente)', 300)",
                 livroExistente,
                 ISBN_BR001);
 
-        assertThat(post("br001", "desejo")).hasStatus(HttpStatus.CREATED);
+        assertThat(post("br001", "desejo"))
+                .hasStatus(HttpStatus.CREATED)
+                .bodyJson()
+                .extractingPath("$.livroId")
+                .isEqualTo(livroExistente.toString());
 
         assertThat(contarLivrosPorIsbn(ISBN_BR001)).isEqualTo(1);
-        UUID livroDoItem =
-                jdbc.queryForObject(
-                        "SELECT livro_id FROM item_biblioteca WHERE usuario_id = ? AND livro_id ="
-                                + " (SELECT id FROM livro WHERE isbn = ?)",
-                        UUID.class,
-                        USUARIO_ATUAL,
-                        ISBN_BR001);
-        assertThat(livroDoItem).isEqualTo(livroExistente);
+        assertThat(contarItens(livroExistente)).isEqualTo(1);
     }
 
     @Test
-    @DisplayName("lista fora de lido/desejo/favorito devolve 400 LISTA_INVALIDA")
+    @DisplayName("lista inválida devolve 400 LISTA_INVALIDA")
     void deve_devolver_400_para_lista_invalida() {
         assertThat(post("br001", "lendo"))
                 .hasStatus(HttpStatus.BAD_REQUEST)
@@ -198,12 +234,59 @@ class AdicionarLivroControllerIT {
     }
 
     @Test
-    @DisplayName("volumeId que o catálogo não conhece devolve 404 LIVRO_NAO_ENCONTRADO")
+    @DisplayName("volume inexistente devolve 404 LIVRO_NAO_ENCONTRADO")
     void deve_devolver_404_para_volume_inexistente() {
         assertThat(post("nao-existe-no-catalogo", "desejo"))
                 .hasStatus(HttpStatus.NOT_FOUND)
                 .bodyJson()
                 .extractingPath("$.code")
                 .isEqualTo("LIVRO_NAO_ENCONTRADO");
+    }
+
+    @Test
+    @DisplayName("O Hobbit reutiliza livro existente e preserva seus metadados")
+    void deve_reutilizar_hobbit_sem_alterar_capa_ou_paginas() {
+        Map<String, Object> livroAntes = jdbc.queryForMap(
+                "SELECT id, isbn, titulo, total_paginas, capa_url"
+                        + " FROM livro WHERE titulo = 'O Hobbit'");
+
+        UUID livroId = (UUID) livroAntes.get("id");
+        Object isbnOriginal = livroAntes.get("isbn");
+        Object paginasOriginais = livroAntes.get("total_paginas");
+        Object capaOriginal = livroAntes.get("capa_url");
+
+        Integer quantidadeAntes = jdbc.queryForObject(
+                "SELECT COUNT(*) FROM livro",
+                Integer.class);
+
+        assertThat(post("fan003", "desejo"))
+                .hasStatus(HttpStatus.CREATED)
+                .bodyJson()
+                .extractingPath("$")
+                .asMap()
+                .containsEntry("livroId", livroId.toString())
+                .containsEntry("titulo", "O Hobbit")
+                .containsEntry("status", "desejo");
+
+        Map<String, Object> livroDepois = jdbc.queryForMap(
+                "SELECT id, isbn, titulo, total_paginas, capa_url"
+                        + " FROM livro WHERE id = ?",
+                livroId);
+
+        Integer quantidadeDepois = jdbc.queryForObject(
+                "SELECT COUNT(*) FROM livro",
+                Integer.class);
+
+        assertThat(livroDepois.get("id")).isEqualTo(livroId);
+        assertThat(livroDepois.get("isbn")).isEqualTo(isbnOriginal);
+        assertThat(livroDepois.get("total_paginas")).isEqualTo(paginasOriginais);
+        assertThat(livroDepois.get("capa_url")).isEqualTo(capaOriginal);
+
+        assertThat(quantidadeDepois).isEqualTo(quantidadeAntes);
+        assertThat(contarItens(livroId)).isEqualTo(1);
+
+        if (!ISBN_HOBBIT.equals(isbnOriginal)) {
+            assertThat(contarLivrosPorIsbn(ISBN_HOBBIT)).isZero();
+        }
     }
 }
