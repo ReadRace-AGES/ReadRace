@@ -50,7 +50,10 @@ public class BuscaService {
         TipoBusca tipoBusca = TipoBusca.de(tipo);
 
         if (tipoBusca == TipoBusca.LIVROS) {
-            List<Livro> livros = livroRepository.findByTituloContainingIgnoreCase(termo);
+            List<Livro> livros =
+                    livroRepository
+                            .findDistinctByTituloContainingIgnoreCaseOrLivroAutores_Autor_NomeContainingIgnoreCase(
+                                    termo, termo);
             List<LivroBuscaResponse> itens = new ArrayList<>();
 
             for (Livro livro : livros) {

@@ -3,6 +3,7 @@ package com.readrace.api.controller;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import java.util.List;
+import java.util.UUID;
 
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -13,8 +14,10 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.context.annotation.Import;
 import org.springframework.http.HttpStatus;
+import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.test.context.jdbc.Sql;
 import org.springframework.test.web.servlet.assertj.MockMvcTester;
+import org.springframework.transaction.annotation.Transactional;
 
 import com.readrace.api.TestcontainersConfiguration;
 
@@ -26,6 +29,8 @@ class BuscaControllerIT {
 
     @Autowired private MockMvcTester mvc;
 
+    @Autowired private JdbcTemplate jdbc;
+
     @Test
     void deve_encontrar_livro_pelo_titulo() {
         assertThat(mvc.get().uri("/api/busca?q=casMUR&tipo=livros"))
@@ -33,6 +38,97 @@ class BuscaControllerIT {
                 .bodyJson()
                 .extractingPath("$.itens[0].titulo")
                 .isEqualTo("Dom Casmurro");
+    }
+
+    @Test
+    @Transactional
+    void deve_encontrar_livro_somente_pelo_titulo_mesmo_sem_autor() {
+        UUID livroId = inserirLivro("Título exclusivo xyz");
+
+        assertThat(
+                        mvc.get()
+                                .uri("/api/busca")
+                                .param("q", "TÍTULO EXCLUSIVO XYZ")
+                                .param("tipo", "livros"))
+                .hasStatusOk()
+                .bodyJson()
+                .extractingPath("$.itens[*].id")
+                .asList()
+                .containsExactly(livroId.toString());
+    }
+
+    @Test
+    @Transactional
+    void deve_encontrar_por_autor_sem_filtrar_os_demais_autores_da_resposta() {
+        UUID livroId = inserirLivro("Título de teste", "Primeira pessoa", "Autora exclusiva xyz");
+
+        var resposta =
+                mvc.get()
+                        .uri("/api/busca")
+                        .param("q", "AUTORA EXCLUSIVA XYZ")
+                        .param("tipo", "livros")
+                        .exchange();
+        assertThat(resposta)
+                .hasStatusOk()
+                .bodyJson()
+                .extractingPath("$.itens[*].id")
+                .asList()
+                .containsExactly(livroId.toString());
+        assertThat(resposta)
+                .bodyJson()
+                .extractingPath("$.itens[0].autor")
+                .isEqualTo("Primeira pessoa, Autora exclusiva xyz");
+    }
+
+    @Test
+    @Transactional
+    void nao_deve_duplicar_livro_quando_titulo_e_varios_autores_correspondem() {
+        UUID livroId =
+                inserirLivro(
+                        "Correspondência xyz", "Correspondência xyz A", "Correspondência xyz B");
+
+        assertThat(
+                        mvc.get()
+                                .uri("/api/busca")
+                                .param("q", "correspondência XYZ")
+                                .param("tipo", "livros"))
+                .hasStatusOk()
+                .bodyJson()
+                .extractingPath("$.itens[*].id")
+                .asList()
+                .containsExactly(livroId.toString());
+    }
+
+    @Test
+    @Transactional
+    void deve_preservar_a_distincao_de_acentos_no_titulo_e_no_autor() {
+        inserirLivro("Título exclusivo xyz", "Autór exclusivo xyz");
+
+        for (String termo : List.of("Titulo exclusivo xyz", "Autor exclusivo xyz")) {
+            assertThat(mvc.get().uri("/api/busca").param("q", termo).param("tipo", "livros"))
+                    .hasStatusOk()
+                    .bodyJson()
+                    .extractingPath("$.itens")
+                    .isEqualTo(List.of());
+        }
+    }
+
+    private UUID inserirLivro(String titulo, String... autores) {
+        UUID livroId = UUID.randomUUID();
+        jdbc.update(
+                "INSERT INTO livro (id, isbn, titulo, total_paginas) VALUES (?, '9999999999999', ?, 100)",
+                livroId,
+                titulo);
+        for (int i = 0; i < autores.length; i++) {
+            UUID autorId = UUID.randomUUID();
+            jdbc.update("INSERT INTO autor (id, nome) VALUES (?, ?)", autorId, autores[i]);
+            jdbc.update(
+                    "INSERT INTO livro_autor (livro_id, autor_id, ordem) VALUES (?, ?, ?)",
+                    livroId,
+                    autorId,
+                    i + 1);
+        }
+        return livroId;
     }
 
     @Test
