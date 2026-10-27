@@ -54,8 +54,23 @@ export const styles = StyleSheet.create({
   seguidores: { ...textStyles.bodySmallStrong, color: colors.text },
   rotulo: { ...textStyles.micro, color: colors.textSecondary },
   postagens: { ...textStyles.bodyStrong, color: colors.text },
-  abas: { flexDirection: 'row', gap: spacing[6] },
-  abaAtiva: { ...textStyles.caption, color: colors.accent, textDecorationLine: 'underline' },
-  aba: { ...textStyles.caption, color: colors.accent, textDecorationLine: 'underline' },
+  abas: { flexDirection: 'row', alignItems: 'center', gap: spacing[6] },
+  acao: {
+    minHeight: sizes.searchInputHeight,
+    minWidth: sizes.searchInputHeight,
+    paddingHorizontal: spacing[2],
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  abaAtiva: {
+    ...textStyles.caption,
+    color: colors.accent,
+    textDecorationLine: 'underline',
+  },
+  aba: {
+    ...textStyles.caption,
+    color: colors.accent,
+    textDecorationLine: 'underline',
+  },
   post: { gap: spacing[1] },
 });
