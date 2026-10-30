@@ -266,14 +266,14 @@ public class ClubeService {
                 livro.getId(), livro.getTitulo(), autor.isEmpty() ? null : autor);
     }
 
-        /** A consulta entrega a posição no ranking inteiro, inclusive em páginas posteriores. */
-        private static List<ClubeResponse.LinhaRanking> ranking(List<LinhaRankingClube> linhas) {
-                return linhas.stream().map(ClubeService::paraLinha).toList();
+    /** A consulta entrega a posição no ranking inteiro, inclusive em páginas posteriores. */
+    private static List<ClubeResponse.LinhaRanking> ranking(List<LinhaRankingClube> linhas) {
+        return linhas.stream().map(ClubeService::paraLinha).toList();
     }
 
-        private static ClubeResponse.LinhaRanking paraLinha(LinhaRankingClube linha) {
+    private static ClubeResponse.LinhaRanking paraLinha(LinhaRankingClube linha) {
         return new ClubeResponse.LinhaRanking(
-                                Math.toIntExact(linha.getPosicao()),
+                Math.toIntExact(linha.getPosicao()),
                 new ClubeResponse.Usuario(
                         linha.getUsuarioId(), linha.getNome(), linha.getAvatarUrl()),
                 linha.getPontos());
