@@ -1,6 +1,9 @@
 package com.readrace.api.service;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
@@ -12,6 +15,7 @@ import java.util.Optional;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
@@ -56,8 +60,13 @@ class AdicionarLivroServiceTest {
     }
 
     private VolumeInfo volumeInfo(List<IndustryIdentifier> identificadores, Integer paginas) {
+        return volumeInfo("Título de teste", identificadores, paginas);
+    }
+
+    private VolumeInfo volumeInfo(
+            String titulo, List<IndustryIdentifier> identificadores, Integer paginas) {
         return new VolumeInfo(
-                "Título de teste",
+                titulo,
                 null,
                 List.of("Autor de teste"),
                 null,
@@ -174,6 +183,81 @@ class AdicionarLivroServiceTest {
         assertThatThrownBy(() -> service().adicionar(new AdicionarLivroRequest("v1", "desejo")))
                 .isInstanceOf(LivroSemIsbnOuPaginasException.class);
         verifyNoInteractions(livroRepository, itemBibliotecaRepository);
+    }
+
+    @Test
+    @DisplayName("volume sem título (nulo, vazio ou em branco) responde como livro sem ISBN")
+    void deve_recusar_volume_sem_titulo_sem_gravar() {
+        for (String titulo : new String[] {null, "", "   "}) {
+            when(bookSearchPort.getById("v1"))
+                    .thenReturn(
+                            Optional.of(
+                                    GoogleBookVolume.of(
+                                            "v1",
+                                            volumeInfo(
+                                                    titulo,
+                                                    List.of(
+                                                            new IndustryIdentifier(
+                                                                    "ISBN_13", "9786586490077")),
+                                                    200))));
+            assertThatThrownBy(() -> service().adicionar(new AdicionarLivroRequest("v1", "desejo")))
+                    .isInstanceOf(LivroSemIsbnOuPaginasException.class);
+        }
+        verifyNoInteractions(livroRepository, itemBibliotecaRepository);
+    }
+
+    @Test
+    @DisplayName("título com mais de 255 caracteres é cortado em 255 ao criar o livro")
+    void deve_cortar_titulo_longo() {
+        assertThat(tituloGravadoPara("t".repeat(300))).hasSize(255);
+    }
+
+    @Test
+    @DisplayName("o corte do título conta caracteres, sem partir um par substituto (emoji)")
+    void deve_cortar_titulo_sem_partir_emoji() {
+        String titulo = "a".repeat(254) + "😀😀";
+
+        String gravado = tituloGravadoPara(titulo);
+
+        assertThat(gravado.codePointCount(0, gravado.length())).isEqualTo(255);
+        assertThat(gravado).endsWith("😀").doesNotEndWith("😀😀");
+    }
+
+    @Test
+    @DisplayName("título com espaços nas pontas é gravado sem eles")
+    void deve_aparar_o_titulo() {
+        assertThat(tituloGravadoPara("  Dom Casmurro  ")).isEqualTo("Dom Casmurro");
+    }
+
+    private String tituloGravadoPara(String titulo) {
+        String isbn = "9786586490077";
+        when(bookSearchPort.getById("v1"))
+                .thenReturn(
+                        Optional.of(
+                                GoogleBookVolume.of(
+                                        "v1",
+                                        volumeInfo(
+                                                titulo,
+                                                List.of(new IndustryIdentifier("ISBN_13", isbn)),
+                                                200))));
+        var livro = mock(com.readrace.api.model.Livro.class);
+        var livroId = java.util.UUID.randomUUID();
+        var usuarioId = java.util.UUID.randomUUID();
+        when(livro.getId()).thenReturn(livroId);
+        when(livroRepository.findByIsbn(isbn)).thenReturn(Optional.empty(), Optional.of(livro));
+        when(usuarioAtual.idDoUsuarioAtual())
+                .thenReturn(new com.readrace.api.model.UsuarioId(usuarioId));
+        var item = mock(com.readrace.api.model.ItemBiblioteca.class);
+        when(item.getStatusLeitura()).thenReturn(com.readrace.api.model.StatusLeitura.desejo);
+        when(itemBibliotecaRepository.findByUsuarioIdAndLivroId(usuarioId, livroId))
+                .thenReturn(Optional.of(item));
+
+        service().adicionar(new AdicionarLivroRequest("v1", "desejo"));
+
+        var capturado = ArgumentCaptor.forClass(String.class);
+        verify(livroRepository)
+                .criarSeAusente(any(), eq(isbn), capturado.capture(), eq(200), any());
+        return capturado.getValue();
     }
 
     @Test

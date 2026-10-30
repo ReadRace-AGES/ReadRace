@@ -38,6 +38,7 @@ import com.readrace.api.repository.LivroRepository;
 public class AdicionarLivroService {
 
     private static final Set<String> LISTAS_VALIDAS = Set.of("lido", "desejo", "favorito");
+    private static final int TITULO_MAXIMO = 255;
 
     private final BookSearchPort bookSearchPort;
     private final LivroRepository livroRepository;
@@ -79,11 +80,12 @@ public class AdicionarLivroService {
         VolumeInfo info = volume.volumeInfo();
 
         String isbn = isbnDe(info);
-        if (isbn == null || info.pageCount() == null || info.pageCount() <= 0) {
+        String titulo = tituloDe(info);
+        if (isbn == null || titulo == null || info.pageCount() == null || info.pageCount() <= 0) {
             throw new LivroSemIsbnOuPaginasException();
         }
 
-        Livro livro = buscarOuCriarLivro(isbn, info);
+        Livro livro = buscarOuCriarLivro(isbn, titulo, info);
         UUID usuarioId = usuarioAtual.idDoUsuarioAtual().valor();
 
         switch (lista) {
@@ -118,6 +120,21 @@ public class AdicionarLivroService {
             throw new ListaInvalidaException();
         }
         return lista.trim().toLowerCase(Locale.ROOT);
+    }
+
+    /**
+     * Título do catálogo, sem espaços nas pontas e cortado em 255 caracteres (a coluna). Conta em
+     * pontos de código, para não partir um par substituto ao cortar. Sem título, devolve null.
+     */
+    private static String tituloDe(VolumeInfo info) {
+        if (info == null || info.title() == null || info.title().isBlank()) {
+            return null;
+        }
+        String titulo = info.title().trim();
+        if (titulo.codePointCount(0, titulo.length()) <= TITULO_MAXIMO) {
+            return titulo;
+        }
+        return titulo.substring(0, titulo.offsetByCodePoints(0, TITULO_MAXIMO));
     }
 
     /** Prefere o ISBN de 13 dígitos; sem ele, usa o de 10. */
@@ -157,14 +174,14 @@ public class AdicionarLivroService {
      * foram vinculados por quem criou primeiro). Só cria autores/gêneros quando a própria chamada
      * cria a linha do livro, para não recriar vínculos de um livro já existente.
      */
-    private Livro buscarOuCriarLivro(String isbn, VolumeInfo info) {
+    private Livro buscarOuCriarLivro(String isbn, String titulo, VolumeInfo info) {
         return livroRepository
                 .findByIsbn(isbn)
                 .orElseGet(
                         () -> {
                             UUID novoId = UUID.randomUUID();
                             livroRepository.criarSeAusente(
-                                    novoId, isbn, info.title(), info.pageCount(), capaDe(info));
+                                    novoId, isbn, titulo, info.pageCount(), capaDe(info));
                             Livro livro = livroRepository.findByIsbn(isbn).orElseThrow();
 
                             if (livro.getId().equals(novoId)) {

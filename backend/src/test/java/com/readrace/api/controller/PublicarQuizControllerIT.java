@@ -234,6 +234,51 @@ class PublicarQuizControllerIT {
         assertThat(resposta).bodyJson().extractingPath("$.code").isEqualTo("QUIZ_INVALIDO");
     }
 
+    @Test
+    @DisplayName("enunciado com mais de 500 caracteres responde 400 QUIZ_INVALIDO e não grava")
+    void deve_recusar_enunciado_longo() {
+        int quizzesAntes = totalDeQuizzes(CLUBE_1);
+
+        MvcTestResult resposta =
+                publicar(CLUBE_1, corpo("Quiz", 100, perguntaComEnunciado("e".repeat(501))));
+
+        assertThat(resposta).hasStatus(HttpStatus.BAD_REQUEST);
+        assertThat(resposta).bodyJson().extractingPath("$.code").isEqualTo("QUIZ_INVALIDO");
+        assertThat(totalDeQuizzes(CLUBE_1)).isEqualTo(quizzesAntes);
+    }
+
+    @Test
+    @DisplayName("alternativa de 300 caracteres responde 400 QUIZ_INVALIDO e não grava")
+    void deve_recusar_alternativa_longa() {
+        int quizzesAntes = totalDeQuizzes(CLUBE_1);
+
+        MvcTestResult resposta =
+                publicar(CLUBE_1, corpo("Quiz", 100, perguntaComAlternativa("a".repeat(300))));
+
+        assertThat(resposta).hasStatus(HttpStatus.BAD_REQUEST);
+        assertThat(resposta).bodyJson().extractingPath("$.code").isEqualTo("QUIZ_INVALIDO");
+        assertThat(totalDeQuizzes(CLUBE_1)).isEqualTo(quizzesAntes);
+    }
+
+    @Test
+    @DisplayName("aceita enunciado de 500 e alternativa de 200 caracteres")
+    void deve_aceitar_enunciado_e_alternativa_no_limite() {
+        assertThat(publicar(CLUBE_1, corpo("Quiz", 100, perguntaComEnunciado("e".repeat(500)))))
+                .hasStatus(HttpStatus.CREATED);
+        assertThat(publicar(CLUBE_1, corpo("Quiz", 100, perguntaComAlternativa("a".repeat(200)))))
+                .hasStatus(HttpStatus.CREATED);
+    }
+
+    private static String perguntaComEnunciado(String enunciado) {
+        return "{\"enunciado\":\"%s\",\"alternativas\":[\"A\",\"B\",\"C\",\"D\"],\"correta\":0}"
+                .formatted(enunciado);
+    }
+
+    private static String perguntaComAlternativa(String alternativa) {
+        return ("{\"enunciado\":\"?\",\"alternativas\":[\"%s\",\"B\",\"C\",\"D\"],\"correta\":0}")
+                .formatted(alternativa);
+    }
+
     private MvcTestResult publicar(String clubeId, String corpo) {
         return mvc.post()
                 .uri(URL, clubeId)
