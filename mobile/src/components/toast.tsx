@@ -11,9 +11,15 @@ const DURACAO_FADE_MS = 200;
 type ToastProps = {
   visible: boolean;
   message?: string;
+  /** Altura medida da barra visível, já incluindo seu padding de área segura. */
+  tabBarHeight?: number;
 };
 
-export function Toast({ visible, message = COPY_PADRAO }: ToastProps) {
+export function Toast({
+  visible,
+  message = COPY_PADRAO,
+  tabBarHeight = 0,
+}: ToastProps) {
   const opacity = useRef(new Animated.Value(0)).current;
   const [renderizado, setRenderizado] = useState(visible);
   const insets = useSafeAreaInsets();
@@ -42,7 +48,13 @@ export function Toast({ visible, message = COPY_PADRAO }: ToastProps) {
   return (
     <View
       pointerEvents="none"
-      style={[styles.wrapper, { bottom: insets.bottom + spacing[6] }]}
+      style={[
+        styles.wrapper,
+        {
+          bottom:
+            (tabBarHeight > 0 ? tabBarHeight : insets.bottom) + spacing[6],
+        },
+      ]}
     >
       <Animated.View style={[styles.pill, shadows.floating, { opacity }]}>
         <Text className="text-bodySmall font-inter-semibold text-text-inverse">

@@ -29,9 +29,9 @@ function load(file, dependencies) {
 
 test('busca não renderiza sugestões antigas ao mudar termo, tipo ou tentar novamente', async () => {
   const requests = [];
-  const { ApiError } = load('api/client.ts', {});
+  const { ApiError, mensagemErroCarregamento } = load('api/client.ts', {});
   const { useBusca } = load('features/busca/useBusca.ts', {
-    '@/api/client': { ApiError },
+    '@/api/client': { ApiError, mensagemErroCarregamento },
     './api': {
       buscar: (termo, tipo, signal) =>
         new Promise((resolve) =>
@@ -87,7 +87,7 @@ test('busca não renderiza sugestões antigas ao mudar termo, tipo ou tentar nov
 
 test('Feed recarrega uma vez por criação e exibe os dados consultados sem alterar a lista ao fechar', async () => {
   const requests = [];
-  const { ApiError } = load('api/client.ts', {});
+  const { ApiError, mensagemErroCarregamento } = load('api/client.ts', {});
   const api = load('features/feed/api.ts', {
     '@/api/client': {
       apiGet: (url, { signal }) =>
@@ -97,7 +97,7 @@ test('Feed recarrega uma vez por criação e exibe os dados consultados sem alte
     },
   });
   const hooks = load('features/feed/useFeedComunidades.ts', {
-    '@/api/client': { ApiError },
+    '@/api/client': { ApiError, mensagemErroCarregamento },
     './api': api,
   });
   const hooksSocial = load('features/feed/useFeedSocial.ts', {
@@ -221,7 +221,12 @@ test('Feed recarrega uma vez por criação e exibe os dados consultados sem alte
   });
   assert.equal(requests.length, 3);
   await act(async () =>
-    requests[2].reject(new ApiError(503, { message: 'Feed indisponível.' }))
+    requests[2].reject(
+      new ApiError(503, {
+        code: 'EXTERNAL_SERVICE_UNAVAILABLE',
+        message: 'Feed indisponível.',
+      })
+    )
   );
   assert.deepEqual(view().props.feed.dados, atualizado);
   act(() => view().props.onCriarGrupoPress());
@@ -235,7 +240,7 @@ test('envio valida o DTO, preserva erros, confirma sucesso e permite novo clube 
   const posts = [];
   let fechamentos = 0;
   let atualizacoes = 0;
-  const { ApiError } = load('api/client.ts', {});
+  const { ApiError, mensagemErroCarregamento } = load('api/client.ts', {});
   const api = load('features/feed/api.ts', {
     '@/api/client': {
       apiRequest: (url, init) =>
@@ -265,7 +270,7 @@ test('envio valida o DTO, preserva erros, confirma sucesso e permite novo clube 
     username: 'ana',
   };
   const { CriarGrupoSheet } = load('features/feed/CriarGrupoSheet.tsx', {
-    '@/api/client': { ApiError },
+    '@/api/client': { ApiError, mensagemErroCarregamento },
     './api': api,
     '@/components/BookCover': { BookCover: 'BookCover' },
     'react-native': {
@@ -567,7 +572,7 @@ test('envio valida o DTO, preserva erros, confirma sucesso e permite novo clube 
 
 test('busca de livro seleciona, invalida e descarta respostas após troca, seleção e fechamento', async () => {
   const requests = [];
-  const { ApiError } = load('api/client.ts', {});
+  const { ApiError, mensagemErroCarregamento } = load('api/client.ts', {});
   const api = load('features/busca/api.ts', {
     '@/api/client': {
       apiGet: (url, { signal }) =>
@@ -579,11 +584,11 @@ test('busca de livro seleciona, invalida e descarta respostas após troca, sele�
     },
   });
   const hooks = load('features/busca/useBusca.ts', {
-    '@/api/client': { ApiError },
+    '@/api/client': { ApiError, mensagemErroCarregamento },
     './api': api,
   });
   const { CriarGrupoSheet } = load('features/feed/CriarGrupoSheet.tsx', {
-    '@/api/client': { ApiError },
+    '@/api/client': { ApiError, mensagemErroCarregamento },
     './api': {
       criarClube: () => assert.fail('Este teste não envia o formulário'),
     },
@@ -694,7 +699,12 @@ test('busca de livro seleciona, invalida e descarta respostas após troca, sele�
   search('Falha');
   await waitForSearch();
   await act(async () =>
-    requests[3].reject(new ApiError(503, { message: 'Catálogo indisponível.' }))
+    requests[3].reject(
+      new ApiError(503, {
+        code: 'EXTERNAL_SERVICE_UNAVAILABLE',
+        message: 'Catálogo indisponível.',
+      })
+    )
   );
   assert.equal(empty()[0].props.message, 'Catálogo indisponível.');
   assert.equal(field('Título do Livro').props.value, 'Falha');
@@ -742,9 +752,10 @@ test('busca de livro seleciona, invalida e descarta respostas após troca, sele�
 test('membros excluem criador e duplicatas, preservam formulário e cancelam buscas antigas', async () => {
   const requests = [];
   const perfis = [];
-  const { ApiError } = load('api/client.ts', {});
+  const { ApiError, mensagemErroCarregamento } = load('api/client.ts', {});
   const client = {
     ApiError,
+    mensagemErroCarregamento,
     apiGet: (url, { signal }) =>
       new Promise((resolve, reject) => {
         const chamada = { url, signal, resolve, reject };
@@ -761,7 +772,7 @@ test('membros excluem criador e duplicatas, preservam formulário e cancelam bus
     './api': load('features/perfil/api.ts', { '@/api/client': client }),
   });
   const { CriarGrupoSheet } = load('features/feed/CriarGrupoSheet.tsx', {
-    '@/api/client': { ApiError },
+    '@/api/client': { ApiError, mensagemErroCarregamento },
     './api': {
       criarClube: () => assert.fail('Este teste não envia o formulário'),
     },
@@ -848,7 +859,12 @@ test('membros excluem criador e duplicatas, preservam formulário e cancelam bus
     'Carregando membros'
   );
   await act(async () =>
-    perfis[0].reject(new ApiError(503, { message: 'Perfil indisponível.' }))
+    perfis[0].reject(
+      new ApiError(503, {
+        code: 'EXTERNAL_SERVICE_UNAVAILABLE',
+        message: 'Perfil indisponível.',
+      })
+    )
   );
   assert.equal(
     tree.root.findByType('EmptyState').props.message,
@@ -881,7 +897,12 @@ test('membros excluem criador e duplicatas, preservam formulário e cancelam bus
   search('Falha');
   await waitForSearch();
   await act(async () =>
-    requests[3].reject(new ApiError(503, { message: 'Busca indisponível.' }))
+    requests[3].reject(
+      new ApiError(503, {
+        code: 'EXTERNAL_SERVICE_UNAVAILABLE',
+        message: 'Busca indisponível.',
+      })
+    )
   );
   assert.equal(
     tree.root.findByType('EmptyState').props.message,

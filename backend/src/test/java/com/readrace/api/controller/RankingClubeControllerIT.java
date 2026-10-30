@@ -118,8 +118,8 @@ class RankingClubeControllerIT {
 
     @Test
     @Transactional
-    @DisplayName("empate em Pontos desempata pelo nome, como na Página do clube")
-    void deve_desempatar_por_nome() {
+    @DisplayName("empate em Pontos mantém a mesma posição e ordena a apresentação pelo nome")
+    void deve_ordenar_empatados_por_nome_sem_alterar_a_posicao() {
         jdbc.update(
                 "UPDATE membro_clube SET pontos = 1100 WHERE clube_id = ? AND usuario_id = ?",
                 UUID.fromString(CLUBE),
@@ -131,6 +131,138 @@ class RankingClubeControllerIT {
                 .extractingPath("$.ranking[*].usuario.nome")
                 .asList()
                 .startsWith("Ana Silva", "Daniel Ribeiro");
+        for (String url : List.of(URL, URL_DA_PAGINA)) {
+            assertThat(mvc.get().uri(url))
+                    .hasStatusOk()
+                    .bodyJson()
+                    .extractingPath("$.ranking[*].posicao")
+                    .asList()
+                    .startsWith(1, 1, 3);
+            // Daniel é o usuário autenticado: sua posição também é 1, embora venha em segundo.
+            assertThat(mvc.get().uri(url))
+                    .bodyJson()
+                    .extractingPath("$.ranking[1].usuario.id")
+                    .isEqualTo(USUARIO_1);
+        }
+    }
+
+    @Test
+    @Transactional
+    void deve_manter_empate_intermediario_e_pular_as_posicoes_ocupadas() {
+        jdbc.update(
+                "UPDATE membro_clube SET pontos = 934 WHERE clube_id = ? AND usuario_id = ?",
+                UUID.fromString(CLUBE),
+                UUID.fromString(USUARIO_2));
+
+        for (String url : List.of(URL, URL_DA_PAGINA)) {
+            assertThat(mvc.get().uri(url))
+                    .hasStatusOk()
+                    .bodyJson()
+                    .extractingPath("$.ranking[*].posicao")
+                    .asList()
+                    .startsWith(1, 2, 2, 4, 5, 6, 7);
+        }
+    }
+
+    @Test
+    @Transactional
+    void deve_ordenar_por_uuid_quando_nome_e_pontos_sao_iguais() {
+        jdbc.update(
+                "UPDATE membro_clube SET pontos = 1100 WHERE clube_id = ? AND usuario_id = ?",
+                UUID.fromString(CLUBE),
+                UUID.fromString(USUARIO_2));
+        jdbc.update(
+                "UPDATE usuario SET nome = 'Daniel Ribeiro' WHERE id = ?",
+                UUID.fromString(USUARIO_2));
+
+        for (String url : List.of(URL, URL_DA_PAGINA)) {
+            assertThat(mvc.get().uri(url))
+                    .hasStatusOk()
+                    .bodyJson()
+                    .extractingPath("$.ranking[*].usuario.id")
+                    .asList()
+                    .startsWith(USUARIO_1, USUARIO_2);
+            assertThat(mvc.get().uri(url))
+                    .bodyJson()
+                    .extractingPath("$.ranking[*].posicao")
+                    .asList()
+                    .startsWith(1, 1, 3);
+        }
+    }
+
+    @Test
+    @Transactional
+    void nao_deve_contar_usuario_excluido_nem_participante_de_outro_clube() {
+        jdbc.update(
+                "UPDATE usuario SET excluido_em = NOW() WHERE id = ?", UUID.fromString(USUARIO_1));
+        jdbc.update(
+                "UPDATE membro_clube SET pontos = 9999 WHERE clube_id <> ?",
+                UUID.fromString(CLUBE));
+
+        assertThat(mvc.get().uri(URL_DA_PAGINA))
+                .hasStatusOk()
+                .bodyJson()
+                .extractingPath("$.ranking[*].posicao")
+                .asList()
+                .containsExactly(1, 2, 3, 4, 5, 6, 7);
+        assertThat(mvc.get().uri(URL_DA_PAGINA))
+                .bodyJson()
+                .extractingPath("$.ranking[*].usuario.id")
+                .asList()
+                .doesNotContain(USUARIO_1);
+    }
+
+    @Test
+    @Transactional
+    void deve_calcular_empate_no_ranking_inteiro_antes_de_paginar_incluindo_o_usuario_atual() {
+        UUID clubeId = UUID.fromString(CLUBE);
+        jdbc.update("DELETE FROM membro_clube WHERE clube_id = ?", clubeId);
+        for (int i = 0; i < 54; i++) {
+            UUID usuarioId =
+                    i == 50 ? UUID.fromString(USUARIO_1) : new UUID(0x2220000000000000L, i);
+            String nome = "Participante %03d".formatted(i);
+            if (i == 50) {
+                jdbc.update("UPDATE usuario SET nome = ? WHERE id = ?", nome, usuarioId);
+            } else {
+                jdbc.update(
+                        "INSERT INTO usuario (id, nome, nome_usuario, email) VALUES (?, ?, ?, ?)",
+                        usuarioId,
+                        nome,
+                        "ranking222_" + i,
+                        "ranking222_" + i + "@teste.com");
+            }
+            int pontos = i < 48 ? 1000 : i < 52 ? 500 : 100;
+            jdbc.update(
+                    "INSERT INTO membro_clube (id, clube_id, usuario_id, pontos, cargo_clube) VALUES (?, ?, ?, ?, 'membro')",
+                    UUID.randomUUID(),
+                    clubeId,
+                    usuarioId,
+                    pontos);
+        }
+
+        String primeira = corpo(URL);
+        List<Integer> posicoes = JsonPath.read(primeira, "$.ranking[*].posicao");
+        assertThat(posicoes).hasSize(50);
+        assertThat(posicoes.subList(0, 48)).containsOnly(1);
+        assertThat(posicoes.subList(48, 50)).containsExactly(49, 49);
+        assertThat((String) JsonPath.read(primeira, "$.proximoCursor")).isEqualTo("1");
+
+        String segunda = corpo(URL + "?cursor=1");
+        assertThat(JsonPath.<List<Integer>>read(segunda, "$.ranking[*].posicao"))
+                .containsExactly(49, 49, 53, 53);
+        assertThat((String) JsonPath.read(segunda, "$.ranking[0].usuario.id")).isEqualTo(USUARIO_1);
+        assertThat((Object) JsonPath.read(segunda, "$.proximoCursor")).isNull();
+        List<String> idsPrimeira = JsonPath.read(primeira, "$.ranking[*].usuario.id");
+        List<String> idsSegunda = JsonPath.read(segunda, "$.ranking[*].usuario.id");
+        assertThat(idsPrimeira).doesNotContainAnyElementsOf(idsSegunda);
+        assertThat(idsSegunda).doesNotHaveDuplicates();
+
+        assertThat(mvc.get().uri(URL_DA_PAGINA))
+                .hasStatusOk()
+                .bodyJson()
+                .extractingPath("$.ranking[*].posicao")
+                .asList()
+                .containsExactly(1, 1, 1, 1, 1, 1, 1);
     }
 
     @Test

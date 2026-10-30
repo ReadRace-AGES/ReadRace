@@ -11,7 +11,7 @@ import { useRouter, type Href } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Svg, { Path } from 'react-native-svg';
 
-import { ApiError } from '@/api/client';
+import { ApiError, mensagemErroCarregamento } from '@/api/client';
 import { AppHeader } from '@/components/AppHeader';
 import { EmptyState } from '@/components/EmptyState';
 import { BookIcon } from '@/components/icons/BookIcon';
@@ -46,7 +46,6 @@ const COPY = {
   jaRespondeu: 'Você já respondeu o quiz deste clube.',
   tentarDeNovo: 'Tentar de novo',
   voltar: 'Voltar para o clube',
-  erroAoCarregar: 'Não foi possível carregar o quiz.',
   erroAoResponder: 'Não foi possível enviar sua resposta. Tente novamente.',
 } as const;
 
@@ -121,7 +120,7 @@ export function QuizScreen({ clubeId }: { clubeId: string }) {
         if (controller.signal.aborted) return;
         setCarga({
           situacao: 'erro',
-          mensagem: mensagemDe(erro, COPY.erroAoCarregar),
+          mensagem: mensagemErroCarregamento(erro),
         });
       });
     return () => controller.abort();
@@ -178,6 +177,14 @@ export function QuizScreen({ clubeId }: { clubeId: string }) {
   if (carga.situacao === 'erro') {
     return (
       <View style={styles.tela}>
+        <AppHeader
+          variant="surface"
+          showBack
+          onBackPress={voltar}
+          title={quiz ? `Quiz - ${quiz.livro.titulo}` : ''}
+          titleOverflow="wrap"
+          titleNumberOfLines={2}
+        />
         <EmptyState
           icon={BookIcon}
           message={carga.mensagem}

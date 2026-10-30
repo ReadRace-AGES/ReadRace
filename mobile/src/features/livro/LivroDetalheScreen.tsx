@@ -163,7 +163,7 @@ export function LivroDetalheScreen({
                   authorStreak={
                     post.autor.sequenciaDias == null
                       ? null
-                      : `${post.autor.sequenciaDias} dias`
+                      : `${post.autor.sequenciaDias} ${post.autor.sequenciaDias === 1 ? 'dia' : 'dias'}`
                   }
                   timeAgo={tempoRelativo(post.criadoEm)}
                   text={post.texto}

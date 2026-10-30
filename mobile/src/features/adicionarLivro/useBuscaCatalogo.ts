@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
 
-import { ApiError } from '@/api/client';
+import { mensagemErroCarregamento } from '@/api/client';
 
 import { buscarCatalogo, type ResultadoCatalogo } from './api';
 
@@ -19,9 +19,7 @@ export type BuscaCatalogoState = {
 };
 
 function mensagemDe(erro: unknown) {
-  return erro instanceof ApiError
-    ? erro.message
-    : 'Não foi possível buscar. Tente novamente.';
+  return mensagemErroCarregamento(erro);
 }
 
 /** Busca no catálogo a partir de 3 caracteres, com debounce (#155). */

@@ -3,7 +3,7 @@ import { useCallback, useRef, useState } from 'react';
 import { useFocusEffect, useRouter } from 'expo-router';
 import { ActivityIndicator, ScrollView, Text, View } from 'react-native';
 
-import { ApiError } from '@/api/client';
+import { mensagemErroCarregamento } from '@/api/client';
 import { AppHeader } from '@/components/AppHeader';
 import { Avatar } from '@/components/avatar';
 import { Card } from '@/components/Card';
@@ -118,12 +118,16 @@ function DesafioCard({ desafio, onRevanche }: DesafioCardProps) {
               {desafio.oponente.username}
             </Text>
 
-            <Text
-              numberOfLines={2}
-              style={[textStyles.caption, { color: colors.textSecondary }]}
-            >
+            <Text style={[textStyles.caption, { color: colors.textSecondary }]}>
               {desafio.descricao}
             </Text>
+            {desafio.tipoMeta === 'paginas' && (
+              <Text
+                style={[textStyles.caption, { color: colors.textSecondary }]}
+              >
+                Meta: {desafio.meta} páginas
+              </Text>
+            )}
           </View>
 
           {desafio.status !== 'concluido_empate' && (
@@ -235,10 +239,7 @@ export function DesafiosScreen() {
       setEstado((atual) => ({
         situacao: 'erro',
         desafios: atual.situacao === 'carregando' ? undefined : atual.desafios,
-        mensagem:
-          erro instanceof ApiError
-            ? erro.message
-            : 'Não foi possível carregar os desafios.',
+        mensagem: mensagemErroCarregamento(erro),
       }));
     } finally {
       if (requisicao.current === controller) {
@@ -291,6 +292,7 @@ export function DesafiosScreen() {
   return (
     <View className="flex-1 bg-surface">
       <AppHeader
+        compact
         title="Desafios"
         subtitle="Supere seus limites e ganhe recompensas"
       />
@@ -320,25 +322,21 @@ export function DesafiosScreen() {
         )}
 
         {estado.situacao === 'erro' && (
-          <View style={{ gap: spacing[4] }}>
-            <Text
-              style={[
-                textStyles.body,
-                {
-                  color: colors.textSecondary,
-                  textAlign: 'center',
-                },
-              ]}
-            >
-              {estado.mensagem}
-            </Text>
-
-            <PrimaryButton
-              label="Tentar de novo"
-              variant="outline"
-              onPress={carregarDesafios}
-            />
-          </View>
+          <Card>
+            <View style={{ gap: spacing[3] }}>
+              <Text
+                accessibilityRole="alert"
+                style={[textStyles.bodySmall, { color: colors.danger }]}
+              >
+                {estado.mensagem}
+              </Text>
+              <PrimaryButton
+                label="Tentar de novo"
+                variant="outline"
+                onPress={carregarDesafios}
+              />
+            </View>
+          </Card>
         )}
 
         {listaVazia && (

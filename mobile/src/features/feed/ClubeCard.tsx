@@ -41,7 +41,8 @@ export function ClubeCard({
 }) {
   const { titulo, autor } = clube.livroAtual;
   const subtitulo = autor ? `${titulo} - ${autor}` : titulo;
-  const label = `${clube.nome}, ${subtitulo}, ${clube.totalMembros} membros`;
+  const membros = `${clube.totalMembros} ${clube.totalMembros === 1 ? 'membro' : 'membros'}`;
+  const label = `${clube.nome}, ${subtitulo}, ${membros}`;
 
   return (
     <Card surfaceStyle={styles.surface}>
@@ -68,7 +69,7 @@ export function ClubeCard({
           </Text>
           <View style={styles.members}>
             <IconeMembros />
-            <Text style={styles.subtitle}>{clube.totalMembros} membros</Text>
+            <Text style={styles.subtitle}>{membros}</Text>
           </View>
         </View>
       </Pressable>

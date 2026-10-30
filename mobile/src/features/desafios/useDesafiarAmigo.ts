@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 
-import { ApiError } from '@/api/client';
+import { ApiError, mensagemErroCarregamento } from '@/api/client';
 
 import {
   buscarOponentes,
@@ -69,10 +69,7 @@ export function useOponentes(termo: string) {
             versao,
             estado: {
               situacao: 'erro',
-              mensagem: mensagemDe(
-                erro,
-                'Não foi possível carregar os oponentes.'
-              ),
+              mensagem: mensagemErroCarregamento(erro),
             },
           });
         });

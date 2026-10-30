@@ -12,7 +12,11 @@ import { Card } from '@/components/Card';
 import { EmptyState } from '@/components/EmptyState';
 import { BookIcon } from '@/components/icons/BookIcon';
 import { PrimaryButton } from '@/components/PrimaryButton';
-import { RankingRow } from '@/components/RankingRow';
+import {
+  RankingRow,
+  formatRankingLabel,
+  formatRankingPoints,
+} from '@/components/RankingRow';
 import { useToastContext } from '@/components/toast-provider';
 import { colors, spacing } from '@/theme';
 
@@ -41,6 +45,13 @@ export function RankingClubeScreen({ clubeId }: { clubeId: string }) {
   if (ranking.situacao === 'erro') {
     return (
       <View style={styles.tela}>
+        <AppHeader
+          variant="surface"
+          titleAlign="center"
+          showBack
+          onBackPress={voltar}
+          title={COPY.titulo}
+        />
         <EmptyState
           icon={BookIcon}
           message={ranking.mensagem}
@@ -82,10 +93,15 @@ export function RankingClubeScreen({ clubeId }: { clubeId: string }) {
           <FlatList
             data={dados.ranking}
             keyExtractor={(linha) => linha.usuario.id}
-            renderItem={({ item }) => (
-              <Pressable onPress={showToast}>
+            renderItem={({ item, index }) => (
+              <Pressable
+                onPress={showToast}
+                accessibilityRole="button"
+                accessibilityLabel={`${formatRankingLabel(item.posicao, item.usuario.nome)}, ${formatRankingPoints(item.pontos)}`}
+              >
                 <RankingRow
                   position={item.posicao}
+                  rowIndex={index}
                   name={item.usuario.nome}
                   points={item.pontos}
                   photoUrl={item.usuario.avatarUrl}
