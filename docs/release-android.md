@@ -4,11 +4,19 @@
 > README) já estão no repositório. Este checklist cobre os passos **manuais/de infraestrutura** que
 > precisam ser feitos pelo time, fora do código — e que exigem acesso ao Expo/EAS, ao AWS Cognito e
 > ao ambiente de produção.
+>
+> **Estado atual:** produção já está rodando com login (Cognito ligado por padrão desde a #214) e o
+> APK de produção já foi gerado e validado. O que resta é a parte de divulgação: conta de
+> demonstração e a distribuição do APK (hoje por link somente leitura no OneDrive).
 
 ## Resumo da task
-Gerar um APK Android do ReadRace apontando para a API de produção com login ligado, publicar num
-link fixo (release do GitHub), e virar o modo de autenticação da API de `seed` para `cognito` —
-tudo **no mesmo dia**, com **backup manual do banco antes**. Só Android (iOS fora de escopo).
+Gerar um APK Android do ReadRace apontando para a API de produção com login ligado e distribuí-lo
+(hoje por link somente leitura no OneDrive). Só Android (iOS fora de escopo).
+
+> **Atualização (#214):** o login com Cognito virou o **padrão** em todos os ambientes
+> (`AUTH_MODO` default = `cognito`). Produção já foi atualizada e **está rodando com login**. Logo,
+> o antigo passo de "virar `seed` → `cognito` no mesmo dia, com backup antes" **não é mais
+> necessário** — o modo já nasce ligado. O que sobra é gerar o APK de produção, validar e publicar.
 
 ## O que já está pronto no código
 - `mobile/app.config.js`: `name: "ReadRace"`, `slug: "readrace"`, `version: "0.1.0"`,
@@ -55,9 +63,13 @@ eas env:create --name EXPO_PUBLIC_API_URL --value "https://3-19-247-112.sslip.io
 eas env:create --name EXPO_PUBLIC_COGNITO_DOMAIN --value "https://us-east-2mevipejhy.auth.us-east-2.amazoncognito.com" --environment production --visibility plaintext
 eas env:create --name EXPO_PUBLIC_COGNITO_CLIENT_ID --value "5f06kagodbku0mvveakmsim8qu" --environment production --visibility plaintext
 ```
-Para o environment `preview` (perfil `preview`, login desligado — só a URL de produção):
+Para o environment `preview` (perfil `preview`, aponta para a produção HTTPS; como a produção está
+em `cognito`, o login fica ligado — para o `preview` ter sentido como "sem login" seria preciso uma
+API de produção em `seed`, o que não é mais o caso):
 ```
 eas env:create --name EXPO_PUBLIC_API_URL --value "https://3-19-247-112.sslip.io" --environment preview --visibility plaintext
+eas env:create --name EXPO_PUBLIC_COGNITO_DOMAIN --value "https://us-east-2mevipejhy.auth.us-east-2.amazoncognito.com" --environment preview --visibility plaintext
+eas env:create --name EXPO_PUBLIC_COGNITO_CLIENT_ID --value "5f06kagodbku0mvveakmsim8qu" --environment preview --visibility plaintext
 ```
 Confira com `eas env:list --environment <env>`. Use `--force` para sobrescrever um valor existente.
 
@@ -70,11 +82,16 @@ Cada perfil puxa as variáveis do seu **environment** no EAS (seção 2). Nenhum
 
 | Perfil | Environment | API | Login | Uso |
 |---|---|---|---|---|
-| `preview-local` | `development` | backend do PC do dev (ver abaixo) | desligado | testar com backend local |
-| `preview` | `preview` | produção HTTPS | desligado (seed) | testar instalação contra produção |
+| `preview-local` | `development` | backend do PC do dev (ver abaixo) | depende do backend local | testar com backend local |
+| `preview` | `preview` | produção HTTPS | ligado (Cognito) | testar instalação contra produção |
 | `production` | `production` | produção HTTPS | ligado (Cognito) | release final |
 
 Comando: `eas build -p android --profile <perfil>`.
+
+> **Login no `preview-local`:** desde a #214 o backend sobe em `cognito` por **padrão**, então o
+> `preview-local` também passa a exigir login. Para testar as telas **sem login** contra o backend
+> local (todo request vira o usuário do seed), defina `AUTH_MODO=seed` no `.env` da raiz, reinicie
+> a API e deixe as variáveis do Cognito vazias no `mobile/.env`.
 
 ### Build local (`preview-local`) — o IP é de CADA dev
 O perfil `preview-local` aponta o app para o backend rodando na máquina do próprio dev, então a URL
@@ -101,17 +118,24 @@ Pré-requisitos para o celular alcançar o backend local:
   quando a URL é `http://` (produção HTTPS fica sem cleartext). Não precisa configurar nada.
 
 ### 3. Gerar o APK (EAS Build)
-Não há projeto EAS ainda — o primeiro build cria o projeto e grava o `projectId` no `app.config.js`.
-- [ ] `npm i -g eas-cli` (se necessário) e `eas login`.
-- [ ] `eas build -p android --profile production` (gera o APK na nuvem).
-- [ ] Baixar o `.apk` gerado.
+O projeto EAS já existe (`@readrace/readrace`, `projectId` gravado no `app.config.js`) e já foram
+gerados builds de produção. Para gerar/regenerar:
+- [x] `eas-cli` instalado e `eas login` feito (conta `gugs123`).
+- [x] `eas build -p android --profile production` — build de produção gerado e **funcionando**.
+- [ ] Rebuildar sempre que entrarem mudanças relevantes na `dev` que o APK precise refletir
+      (ex.: correção das capas em HTTPS da #216). Baixar o `.apk` pelo link do build.
 
-### 4. Virar o login em produção (no mesmo dia do release)
-- [ ] **Backup manual do banco de produção ANTES** da troca (além do diário).
-- [ ] Trocar `AUTH_MODO=seed` → `AUTH_MODO=cognito` na API de produção e definir
-      `COGNITO_ISSUER_URI`, `COGNITO_CLIENT_ID`, `COGNITO_DOMAIN` (via SSM Parameter Store / deploy).
-- [ ] Redeploy da API (produção sobe a partir da `main`).
-- [ ] Validar: chamar uma rota de produto **sem token** → deve responder **401**.
+### 4. Login em produção — JÁ LIGADO (#214)
+Desde a #214, `AUTH_MODO` tem default `cognito` e os valores do Cognito (`issuer-uri`, `client-id`,
+`domain`) vêm embutidos como padrão no `application.yaml` (são públicos, identificam o user pool).
+Não há mais troca manual de `seed` → `cognito`: o modo já nasce ligado em todos os ambientes.
+
+- [x] Produção atualizada e **rodando com login** (confirmado pelo time).
+- [x] Validação: chamar uma rota de produto **sem token** → responde **401** (comportamento do
+      modo `cognito`).
+
+> Para **desligar** o login em algum ambiente (ex.: rodar sem internet), setar `AUTH_MODO=seed`
+> explicitamente — é a exceção agora, não o padrão.
 
 ### 5. Conta de demonstração
 - [ ] Criar a conta de demonstração no Cognito e **vinculá-la ao usuário de seed** (procedimento no
@@ -119,24 +143,29 @@ Não há projeto EAS ainda — o primeiro build cria o projeto e grava o `projec
 - [ ] As credenciais da conta de demo **NÃO** vão no README público — ficam com o gestor e com quem
       apresenta.
 
-### 6. Publicar o APK
-- [ ] Subir o `.apk` numa **release do GitHub** (link fixo citado no README).
-      Ex.: `gh release create v0.1.0 caminho/para/readrace.apk --title "ReadRace 0.1.0" --notes "..."`.
-- [ ] Conferir que o link no README aponta para essa release.
+### 6. Distribuir o APK
+A distribuição atual é pelo **OneDrive**, com link **somente leitura**. O link muda a cada build
+novo, então ele **não** fica fixo no README (o README orienta a pedir o link ao gestor).
+- [ ] Baixar o `.apk` do build no EAS, subir no OneDrive e compartilhar o link como somente leitura.
+- [ ] A cada novo build, gerar e divulgar um link novo.
+
+> Alternativa futura, se quiserem um link fixo: publicar o `.apk` numa release do GitHub
+> (`gh release create v0.1.0 caminho/para/readrace.apk --title "ReadRace 0.1.0" --notes "..."`) e
+> apontar o README para ela.
 
 ## Validação final (num Android real, de alguém que não é dev do backend)
-1. Baixar o APK pelo link do README e instalar → aparece o app **"ReadRace"** com o ícone do Figma.
+1. Baixar o APK pelo link compartilhado pelo time (OneDrive) e instalar → aparece o app **"ReadRace"** com o ícone do Figma.
 2. Entrar com a **conta de demonstração** → ver os dados do usuário de seed (nível, Meus Livros,
    clubes, desafios).
 3. Criar uma **conta nova** pelo app → perfil novo e **vazio** (não os dados da demo).
 4. Chamar a API de produção **sem token** pelo terminal → **401**.
 5. Conferir no README o link e as instruções.
 
-## Pré-requisito: merge `dev → main`
-A produção sobe a partir da `main`, que ainda está na **sprint 2** (bem atrás da `dev`). Gerar o
-APK de **produção** e virar `AUTH_MODO=cognito` **antes** do merge faria as telas novas chamarem
-rotas que não existem em produção. Então os passos 3–6 (APK de produção, virar o modo, release)
-dependem do merge `dev → main` acontecer primeiro.
+## Pré-requisito: merge `dev → main` — RESOLVIDO
+A produção sobe a partir da `main`. Esse merge **já aconteceu**: a produção foi atualizada com o
+código novo e está rodando com login (Cognito). Logo, as telas novas já encontram as rotas
+correspondentes na API de produção, e o APK de produção (gerado a partir da `feat/159` já integrada
+com a `dev`) funciona de ponta a ponta. Os passos 3–6 deixam de depender de qualquer merge pendente.
 
 ## Fora de escopo (não fazer nesta task)
 iOS e Play Store; atualização automática do app.

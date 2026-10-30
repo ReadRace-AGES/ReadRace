@@ -8,7 +8,7 @@ Aplicativo mobile de incentivo ao hábito de leitura por meio de gamificação c
 
 > Apenas Android. iOS está fora do escopo do projeto.
 
-1. Baixe o APK mais recente na página de releases: **[Releases do ReadRace](https://github.com/ReadRace-AGES/ReadRace/releases)** <!-- substituir pelo link fixo da release publicada, ex.: .../releases/tag/v0.1.0 -->
+1. Peça o link do APK mais recente ao gestor do projeto ou a quem for apresentar. O APK é compartilhado por um link de leitura que muda a cada novo build, por isso o link não fica fixo neste README.
 2. No celular, abra o arquivo `.apk` baixado. Se o Android pedir, autorize a instalação de apps de fontes desconhecidas para o navegador/gerenciador de arquivos usado.
 3. Abra o app **ReadRace** e entre com uma conta.
 
