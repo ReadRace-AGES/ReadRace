@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
 
-import { ApiError } from '@/api/client';
+import { mensagemErroCarregamento } from '@/api/client';
 
 import { buscarClube, type Clube } from './api';
 
@@ -15,9 +15,7 @@ export type ClubeState = {
 };
 
 function mensagemDe(erro: unknown) {
-  return erro instanceof ApiError
-    ? erro.message
-    : 'Não foi possível carregar o clube.';
+  return mensagemErroCarregamento(erro);
 }
 
 /**

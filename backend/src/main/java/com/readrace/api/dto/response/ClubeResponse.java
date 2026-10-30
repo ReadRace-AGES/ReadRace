@@ -33,7 +33,7 @@ public record ClubeResponse(
     /** {@code id} vem porque "Registrar leitura" precisa saber sobre qual livro o modal abre. */
     public record LivroAtual(UUID id, String titulo, String autor) {}
 
-    /** {@code posicao} começa em 1 e é calculada aqui: a tela não ordena nem numera. */
+    /** {@code posicao} vem do ranking global por Pontos (1, 1, 3): a tela não ordena nem numera. */
     public record LinhaRanking(int posicao, Usuario usuario, int pontos) {}
 
     public record Usuario(UUID id, String nome, String avatarUrl) {}

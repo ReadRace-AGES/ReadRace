@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { ApiError } from '@/api/client';
+import { mensagemErroCarregamento } from '@/api/client';
 import { buscarMinhasConquistas, type Conquista } from './api';
 
 export type EstadoConquistas =
@@ -25,10 +25,7 @@ export function useMinhasConquistas() {
       .catch((erro: unknown) =>
         atualizar({
           situacao: 'erro',
-          mensagem:
-            erro instanceof ApiError
-              ? erro.message
-              : 'Não foi possível carregar as conquistas. Tente novamente.',
+          mensagem: mensagemErroCarregamento(erro),
         })
       )
       .finally(() => clearTimeout(timeout));

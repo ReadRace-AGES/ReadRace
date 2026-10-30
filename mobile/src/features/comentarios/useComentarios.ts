@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 
-import { ApiError } from '@/api/client';
+import { mensagemErroCarregamento } from '@/api/client';
 import { curtir, descurtir } from '@/features/posts/api';
 
 import {
@@ -91,10 +91,7 @@ export function useComentarios(postId: string | null) {
           chave,
           carga: {
             situacao: 'erro',
-            mensagem:
-              erro instanceof ApiError
-                ? erro.message
-                : 'Não foi possível carregar os comentários.',
+            mensagem: mensagemErroCarregamento(erro),
           },
         });
       });

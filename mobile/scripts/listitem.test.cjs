@@ -109,7 +109,9 @@ test('ação e linha são controles irmãos com callbacks independentes', () => 
   });
   // O mock adiciona um nó host dentro de cada Pressable. A relação de
   // irmãos deve ser verificada nos componentes, como montados pelo ListItem.
-  const controls = tree.root.findAllByType(dependencies['react-native'].Pressable);
+  const controls = tree.root.findAllByType(
+    dependencies['react-native'].Pressable
+  );
   assert.equal(controls.length, 2);
   const [row, action] = controls;
   assert.ok(row.parent === action.parent, 'linha e ação devem ter o mesmo pai');
@@ -172,3 +174,34 @@ test('imagem de comunidade com erro recupera a inicial', () => {
   );
   act(() => tree.unmount());
 });
+
+for (const count of [0, 1, 2]) {
+  test(`comunidade: ${count} membro(s) no texto e na acessibilidade`, () => {
+    let tree;
+    act(() => {
+      tree = create(
+        render({
+          variant: 'community',
+          title: 'Comunidade',
+          memberCount: count,
+          onPress() {},
+        })
+      );
+    });
+    try {
+      const esperado = `${count} ${count === 1 ? 'membro' : 'membros'}`;
+      assert.ok(
+        tree.root
+          .findAllByType('Text')
+          .some((n) => n.props.children === esperado)
+      );
+      assert.ok(
+        tree.root
+          .findByType(dependencies['react-native'].Pressable)
+          .props.accessibilityLabel.endsWith(esperado)
+      );
+    } finally {
+      act(() => tree.unmount());
+    }
+  });
+}

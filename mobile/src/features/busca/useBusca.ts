@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
 
-import { ApiError } from '@/api/client';
+import { mensagemErroCarregamento } from '@/api/client';
 
 import { buscar, type ResultadoBusca, type TipoBusca } from './api';
 
@@ -18,9 +18,7 @@ export type BuscaState = {
 };
 
 function mensagemDe(erro: unknown) {
-  return erro instanceof ApiError
-    ? erro.message
-    : 'Não foi possível fazer a busca.';
+  return mensagemErroCarregamento(erro);
 }
 
 export function useBusca(termo: string, tipo: TipoBusca): BuscaState {

@@ -80,11 +80,11 @@ class TituloUsuarioIT {
                 """
                 UPDATE usuario
                 SET nivel = ?
-                WHERE id = '00000000-0000-0000-0000-000000000001'
+                WHERE id = '00000000-0000-0000-0000-000000000002'
                 """,
                 nivel);
 
-        assertThat(mvc.get().uri("/api/busca?q=danielribeiro&tipo=usuarios"))
+        assertThat(mvc.get().uri("/api/busca?q=anasilva&tipo=usuarios"))
                 .hasStatusOk()
                 .bodyJson()
                 .extractingPath("$.itens[0].titulo")

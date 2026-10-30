@@ -84,6 +84,13 @@ export function ConfigurarQuizScreen({ clubeId }: ConfigurarQuizScreenProps) {
   if (clube.situacao === 'erro') {
     return (
       <View style={styles.tela}>
+        <AppHeader
+          variant="surface"
+          titleAlign="center"
+          showBack
+          onBackPress={voltar}
+          title={COPY.titulo}
+        />
         <EmptyState
           icon={BookIcon}
           message={clube.mensagem}

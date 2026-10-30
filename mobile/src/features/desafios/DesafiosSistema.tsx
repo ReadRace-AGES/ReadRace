@@ -45,7 +45,7 @@ export function DesafioMensalCard({ desafio }: { desafio: DesafioSistema }) {
             <Text style={styles.deadlineText}>
               {desafio.cumprido
                 ? 'Desafio cumprido!'
-                : `${desafio.diasRestantes} dias restantes`}
+                : `${desafio.diasRestantes} ${desafio.diasRestantes === 1 ? 'dia restante' : 'dias restantes'}`}
             </Text>
           </View>
           <XpBadge xp={desafio.xp} />
@@ -74,8 +74,16 @@ export function DesafioSemanalCard({ desafio }: { desafio: DesafioSistema }) {
           <XpBadge xp={desafio.xp} />
         </View>
         <Barra desafio={desafio} />
-        {desafio.cumprido && (
+        {desafio.cumprido ? (
           <Text style={styles.completed}>Desafio cumprido!</Text>
+        ) : (
+          <View style={styles.deadline}>
+            <ClockIcon size={sizes.iconSmall} color={colors.textSecondary} />
+            <Text style={styles.deadlineText}>
+              {desafio.diasRestantes}{' '}
+              {desafio.diasRestantes === 1 ? 'dia restante' : 'dias restantes'}
+            </Text>
+          </View>
         )}
       </View>
     </Card>
@@ -107,7 +115,7 @@ export function DesafiosSistema() {
                   {estado.mensagem}
                 </Text>
                 <PrimaryButton
-                  label="Tentar novamente"
+                  label="Tentar de novo"
                   variant="outline"
                   onPress={recarregar}
                 />

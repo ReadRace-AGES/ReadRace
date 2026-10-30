@@ -169,9 +169,7 @@ export function MascotesScreen() {
         <EmptyState
           icon={PawIcon}
           message={estado.mensagem}
-          action={
-            <PrimaryButton label="Tentar novamente" onPress={recarregar} />
-          }
+          action={<PrimaryButton label="Tentar de novo" onPress={recarregar} />}
         />
       )}
       {estado.situacao === 'sucesso' && (

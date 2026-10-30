@@ -331,3 +331,25 @@ test('consulta detalhe encaminha cancelamento e não envia userId', async () => 
   });
   assert.equal(await buscarDetalhe('id/com espaço', signal), esperado);
 });
+
+for (const dias of [null, 0, 1, 2]) {
+  test(`sequência do autor no detalhe: ${dias}`, () => {
+    const elements = renderDetalhe({
+      livro: { id: 'livro', titulo: 'Livro', totalPaginas: 100 },
+      progresso: null,
+      posts: [
+        {
+          id: 'post',
+          autor: { nome: 'Leitor', sequenciaDias: dias },
+          texto: 'Post',
+          curtidas: 0,
+          criadoEm: new Date().toISOString(),
+        },
+      ],
+    });
+    assert.equal(
+      elements.find((e) => e.type === 'PostCard').props.authorStreak,
+      dias === null ? null : `${dias} ${dias === 1 ? 'dia' : 'dias'}`
+    );
+  });
+}

@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { sizes } from '@/theme';
 import { Pressable, Text, View } from 'react-native';
 
 type SegmentedTabsProps = {
@@ -7,11 +8,17 @@ type SegmentedTabsProps = {
   onChange: (option: string) => void;
 };
 
-export function SegmentedTabs({ options, initialOption, onChange }: SegmentedTabsProps) {
+export function SegmentedTabs({
+  options,
+  initialOption,
+  onChange,
+}: SegmentedTabsProps) {
   const [selecionada, setSelecionada] = useState(initialOption ?? options[0]);
 
   if (options.length < 2 || options.length > 3) {
-    throw new Error(`SegmentedTabs aceita 2 ou 3 opções, recebeu ${options.length}.`);
+    throw new Error(
+      `SegmentedTabs aceita 2 ou 3 opções, recebeu ${options.length}.`
+    );
   }
 
   function selecionar(option: string) {
@@ -27,14 +34,21 @@ export function SegmentedTabs({ options, initialOption, onChange }: SegmentedTab
         return (
           <Pressable
             key={option}
+            accessibilityRole="tab"
+            accessibilityLabel={option}
+            accessibilityState={{ selected: ativa }}
+            style={{
+              minHeight: sizes.searchInputHeight,
+              flexGrow: 1,
+              flexShrink: 1,
+            }}
             onPress={() => selecionar(option)}
-            className={`flex-1 items-center justify-center rounded-pill px-2 py-2 ${
+            className={`items-center justify-center rounded-pill px-2 py-2 ${
               ativa ? 'bg-surface' : ''
             }`}
           >
             <Text
-              numberOfLines={1}
-              className={`text-bodySmall font-inter-bold ${ativa ? 'text-primary' : 'text-text-secondary'}`}
+              className={`text-center text-bodySmall font-inter-bold ${ativa ? 'text-primary' : 'text-text-secondary'}`}
             >
               {option}
             </Text>

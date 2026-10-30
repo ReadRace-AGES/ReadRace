@@ -3,8 +3,13 @@ import { useRef, useState } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { guardarCadastro } from '@/auth/cadastroPendente';
-import { abrirPaginaCognito, entrarComGoogle, entrarComSenha } from '@/auth/cognitoApi';
 import {
+  abrirPaginaCognito,
+  entrarComGoogle,
+  entrarComSenha,
+} from '@/auth/cognitoApi';
+import {
+  emailValido,
   ErroLogin,
   MENSAGEM_ERRO_GOOGLE,
   MENSAGENS_ERRO_LOGIN,
@@ -28,16 +33,21 @@ export default function EntrarScreen() {
   const [senha, setSenha] = useState('');
   const [entrando, setEntrando] = useState(false);
   const [entrandoGoogle, setEntrandoGoogle] = useState(false);
+  const [erroEmail, setErroEmail] = useState<string | null>(null);
+  const [erroSenha, setErroSenha] = useState<string | null>(null);
   const [erro, setErro] = useState<string | null>(null);
   // O estado `entrando` só muda no próximo render: dois toques rápidos passariam os dois. A ref
   // muda na hora. É uma só para os dois botões: um login de cada vez.
   const enviando = useRef(false);
 
   const ocupado = entrando || entrandoGoogle;
-  const podeEntrar = email.trim() !== '' && senha !== '' && !ocupado;
 
   async function entrar() {
-    if (!podeEntrar || enviando.current) return;
+    if (ocupado || enviando.current) return;
+    const emailCorreto = emailValido(email);
+    setErroEmail(emailCorreto ? null : 'Digite um e-mail válido.');
+    setErroSenha(senha !== '' ? null : 'Digite sua senha.');
+    if (!emailCorreto || senha === '') return;
     enviando.current = true;
     setErro(null);
     setEntrando(true);
@@ -82,7 +92,10 @@ export default function EntrarScreen() {
   return (
     <TelaDeAcesso onVoltar={voltar} voltarDesabilitado={ocupado}>
       {confirmada === '1' && (
-        <Text style={textStyles.bodySmall} className="mb-6 text-center text-text">
+        <Text
+          style={textStyles.bodySmall}
+          className="mb-6 text-center text-text"
+        >
           Conta confirmada. Entre com seu e-mail e senha.
         </Text>
       )}
@@ -91,7 +104,14 @@ export default function EntrarScreen() {
           rotulo="Email"
           placeholder="Email"
           value={email}
-          onChangeText={setEmail}
+          onChangeText={(texto) => {
+            setEmail(texto);
+            setErroEmail(null);
+          }}
+          onBlur={() =>
+            setErroEmail(emailValido(email) ? null : 'Digite um e-mail válido.')
+          }
+          erro={erroEmail}
           editable={!ocupado}
           keyboardType="email-address"
           autoCapitalize="none"
@@ -104,7 +124,11 @@ export default function EntrarScreen() {
           rotulo="Senha"
           placeholder="Senha"
           value={senha}
-          onChangeText={setSenha}
+          onChangeText={(texto) => {
+            setSenha(texto);
+            setErroSenha(null);
+          }}
+          erro={erroSenha}
           editable={!ocupado}
           secureTextEntry
           autoCapitalize="none"
@@ -121,11 +145,16 @@ export default function EntrarScreen() {
         onPress={() => abrirPaginaCognito('forgotPassword')}
         className="mt-4 self-center"
       >
-        <Text style={[textStyles.bodySmall, styles.link]}>Esqueceu a senha?</Text>
+        <Text style={[textStyles.bodySmall, styles.link]}>
+          Esqueceu a senha?
+        </Text>
       </Pressable>
 
       {erro && (
-        <Text style={textStyles.bodySmall} className="mt-4 text-center text-danger">
+        <Text
+          style={textStyles.bodySmall}
+          className="mt-4 text-center text-danger"
+        >
           {erro}
         </Text>
       )}
@@ -134,7 +163,7 @@ export default function EntrarScreen() {
         <PrimaryButton
           label="ENTRAR"
           onPress={entrar}
-          disabled={!podeEntrar}
+          disabled={ocupado}
           loading={entrando}
         />
         <PrimaryButton
@@ -151,7 +180,10 @@ export default function EntrarScreen() {
         <Text style={textStyles.bodySmall} className="text-text">
           Não tem conta?
         </Text>
-        <Pressable accessibilityRole="link" onPress={() => router.push('/criar-conta')}>
+        <Pressable
+          accessibilityRole="link"
+          onPress={() => router.push('/criar-conta')}
+        >
           <Text style={textStyles.bodySmallStrong} className="text-primary">
             Criar uma
           </Text>
