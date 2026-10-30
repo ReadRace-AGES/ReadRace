@@ -7,7 +7,6 @@ import java.util.Set;
 import java.util.TreeSet;
 import java.util.UUID;
 import java.util.stream.Collectors;
-import java.util.stream.IntStream;
 
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Slice;
@@ -42,7 +41,7 @@ import com.readrace.api.repository.UsuarioRepository;
 @Transactional(readOnly = true)
 public class ClubeService {
 
-    /** A Página do clube mostra 7 posições; o ranking completo está fora da sprint (#35). */
+        /** A Página do clube mostra até 7 participantes do ranking. */
     static final int TAMANHO_DO_RANKING = 7;
 
     static final int TAMANHO_DA_PAGINA_DO_RANKING = 50;
@@ -144,7 +143,7 @@ public class ClubeService {
                 clube.getId(),
                 clube.getNome(),
                 livroAtual(clube.getLivro()),
-                ranking(linhas, 0),
+                ranking(linhas),
                 meuCargo,
                 quizRepository.existsByClubeIdAndAtivoTrue(clubeId),
                 proximoLider);
@@ -168,7 +167,7 @@ public class ClubeService {
 
         return new RankingClubeResponse(
                 new RankingClubeResponse.Clube(clube.getId(), clube.getNome()),
-                ranking(linhas.getContent(), pagina * TAMANHO_DA_PAGINA_DO_RANKING),
+                ranking(linhas.getContent()),
                 linhas.hasNext() ? String.valueOf(pagina + 1) : null);
     }
 
@@ -267,20 +266,14 @@ public class ClubeService {
                 livro.getId(), livro.getTitulo(), autor.isEmpty() ? null : autor);
     }
 
-    /**
-     * A consulta já entrega ordenado; aqui só entra a numeração, a partir da posição seguinte a
-     * {@code deslocamento}.
-     */
-    private static List<ClubeResponse.LinhaRanking> ranking(
-            List<LinhaRankingClube> linhas, int deslocamento) {
-        return IntStream.range(0, linhas.size())
-                .mapToObj(indice -> paraLinha(deslocamento + indice + 1, linhas.get(indice)))
-                .toList();
+        /** A consulta entrega a posição no ranking inteiro, inclusive em páginas posteriores. */
+        private static List<ClubeResponse.LinhaRanking> ranking(List<LinhaRankingClube> linhas) {
+                return linhas.stream().map(ClubeService::paraLinha).toList();
     }
 
-    private static ClubeResponse.LinhaRanking paraLinha(int posicao, LinhaRankingClube linha) {
+        private static ClubeResponse.LinhaRanking paraLinha(LinhaRankingClube linha) {
         return new ClubeResponse.LinhaRanking(
-                posicao,
+                                Math.toIntExact(linha.getPosicao()),
                 new ClubeResponse.Usuario(
                         linha.getUsuarioId(), linha.getNome(), linha.getAvatarUrl()),
                 linha.getPontos());

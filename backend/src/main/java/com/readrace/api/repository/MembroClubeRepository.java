@@ -21,7 +21,7 @@ public interface MembroClubeRepository extends JpaRepository<MembroClube, UUID> 
 
     String RANKING_DO_CLUBE =
             "select u.id as usuarioId, u.nome as nome, u.avatarUrl as avatarUrl,"
-                    + " mc.pontos as pontos"
+                    + " mc.pontos as pontos, rank() over (order by mc.pontos desc) as posicao"
                     + " from MembroClube mc, Usuario u"
                     + " where mc.clube.id = :clubeId"
                     + " and u.id = mc.usuarioId and u.excluidoEm is null"
@@ -89,9 +89,8 @@ public interface MembroClubeRepository extends JpaRepository<MembroClube, UUID> 
      * Ranking de um clube, do maior para o menor número de {@code Pontos}. Quem chama limita o
      * tamanho pelo {@code Pageable} — a Página do clube (#35) mostra 7.
      *
-     * <p>O desempate por nome é escolha do backend, não regra de produto: o seed não tem empate,
-     * mas sem uma segunda chave a ordem do banco seria arbitrária e a posição mudaria entre
-     * chamadas.
+        * <p>A posição considera só Pontos, antes da paginação: empates recebem 1, 1, 3. Nome e UUID
+        * estabilizam somente a ordem de apresentação entre participantes empatados.
      */
     @Query(RANKING_DO_CLUBE)
     List<LinhaRankingClube> rankingDoClube(@Param("clubeId") UUID clubeId, Pageable limite);
