@@ -41,11 +41,7 @@ import com.readrace.api.repository.UsuarioRepository;
 @Transactional(readOnly = true)
 public class ClubeService {
 
-<<<<<<< HEAD
-        /** A Página do clube mostra até 7 participantes do ranking. */
-=======
     /** A Página do clube mostra até 7 participantes do ranking. */
->>>>>>> c069aceb96b8b8c97717e288340e71e5b100277b
     static final int TAMANHO_DO_RANKING = 7;
 
     static final int TAMANHO_DA_PAGINA_DO_RANKING = 50;
@@ -144,7 +140,6 @@ public class ClubeService {
                 proximoLider(clubeId, meuCargo, usuarioAtual.idDoUsuarioAtual().valor());
 
         return new ClubeResponse(
-<<<<<<< HEAD
                 clube.getId(),
                 clube.getNome(),
                 livroAtual(clube.getLivro()),
@@ -152,15 +147,6 @@ public class ClubeService {
                 meuCargo,
                 quizRepository.existsByClubeIdAndAtivoTrue(clubeId),
                 proximoLider);
-=======
-        clube.getId(),
-        clube.getNome(),
-        livroAtual(clube.getLivro()),
-        ranking(linhas),
-        meuCargo,
-        quizRepository.existsByClubeIdAndAtivoTrue(clubeId),
-        proximoLider);
->>>>>>> c069aceb96b8b8c97717e288340e71e5b100277b
     }
 
     public RankingClubeResponse buscarRanking(UUID clubeId, String cursor) {

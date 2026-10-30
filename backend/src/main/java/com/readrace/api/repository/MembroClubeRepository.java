@@ -89,13 +89,8 @@ public interface MembroClubeRepository extends JpaRepository<MembroClube, UUID> 
      * Ranking de um clube, do maior para o menor número de {@code Pontos}. Quem chama limita o
      * tamanho pelo {@code Pageable} — a Página do clube (#35) mostra 7.
      *
-<<<<<<< HEAD
-        * <p>A posição considera só Pontos, antes da paginação: empates recebem 1, 1, 3. Nome e UUID
-        * estabilizam somente a ordem de apresentação entre participantes empatados.
-=======
      * <p>A posição considera só Pontos, antes da paginação: empates recebem 1, 1, 3. Nome e UUID
      * estabilizam somente a ordem de apresentação entre participantes empatados.
->>>>>>> c069aceb96b8b8c97717e288340e71e5b100277b
      */
     @Query(RANKING_DO_CLUBE)
     List<LinhaRankingClube> rankingDoClube(@Param("clubeId") UUID clubeId, Pageable limite);
