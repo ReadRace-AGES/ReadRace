@@ -17,6 +17,7 @@ import { BookIcon } from '@/components/icons/BookIcon';
 import { PawIcon } from '@/components/icons/PawIcon';
 import { PrimaryButton } from '@/components/PrimaryButton';
 import { useToastContext } from '@/components/toast-provider';
+import { useVoltar } from '@/components/useVoltar';
 import { IconeConquista } from '@/features/conquistas/IconeConquista';
 import { bookCover, colors, radius, sizes, spacing, textStyles } from '@/theme';
 import type { Perfil } from './api';
@@ -31,7 +32,8 @@ export function PerfilConteudo({
   onPlaceholder,
   onVerSeguidores = onPlaceholder,
   onVerSeguindo = onPlaceholder,
-  onVerMaisConquistas = onPlaceholder,
+  onVerMaisConquistas,
+  onAdicionarFavorito,
   proprio = false,
   onAbrirLivro,
   onMascotes = onPlaceholder,
@@ -42,7 +44,9 @@ export function PerfilConteudo({
   onPlaceholder: () => void;
   onVerSeguidores?: () => void;
   onVerSeguindo?: () => void;
+  /** Sem callback, o "Ver mais" não aparece (perfil de outro leitor). */
   onVerMaisConquistas?: () => void;
+  onAdicionarFavorito?: () => void;
   proprio?: boolean;
   onAbrirLivro?: (livroId: string) => void;
   onMascotes?: () => void;
@@ -160,15 +164,17 @@ export function PerfilConteudo({
         <Text accessibilityRole="header" style={styles.heading}>
           Conquistas
         </Text>
-        <Pressable
-          cssInterop={false}
-          accessibilityRole="button"
-          accessibilityLabel="Ver mais conquistas"
-          onPress={onVerMaisConquistas}
-          style={({ pressed }) => [styles.link, pressed && styles.pressed]}
-        >
-          <Text style={styles.linkText}>Ver mais</Text>
-        </Pressable>
+        {onVerMaisConquistas && (
+          <Pressable
+            cssInterop={false}
+            accessibilityRole="button"
+            accessibilityLabel="Ver mais conquistas"
+            onPress={onVerMaisConquistas}
+            style={({ pressed }) => [styles.link, pressed && styles.pressed]}
+          >
+            <Text style={styles.linkText}>Ver mais</Text>
+          </Pressable>
+        )}
       </View>
       <View style={styles.grid}>
         {perfil.conquistas.map((conquista) => (
@@ -242,7 +248,7 @@ export function PerfilConteudo({
                 <BookCover
                   variant="add-favorite"
                   accessibilityLabel="Adicionar favorito"
-                  onPress={onPlaceholder}
+                  onPress={onAdicionarFavorito ?? onPlaceholder}
                 />
               </View>
             )}
@@ -277,6 +283,13 @@ export function PerfilScreen({
       : '/(tabs)/(busca)/leitores/[usuarioId]';
   const { showToast, showErrorToast } = useToastContext();
   const proprio = usuarioId === undefined || perfilProprio;
+  // Sem histórico (ex.: app reaberto direto na rota), o voltar cai na aba de onde se veio.
+  const voltar = useVoltar(origem === 'perfil' ? '/perfil' : '/buscar');
+  // Com usuarioId, a tela foi empilhada (Busca, lista de leitores) e precisa de seta, mesmo no
+  // próprio perfil. Sem ele, é a raiz da aba Perfil.
+  const abertoPorRota = usuarioId !== undefined;
+  // O detalhe do livro abre na pilha da aba de origem, para a aba marcada não mudar.
+  const rotaLivro = origem === 'perfil' ? '/perfil-livro' : '/buscar-livro';
   const dados = estado.situacao === 'sucesso' ? estado.dados : undefined;
   // A aba fica montada: sem buscar de novo ao voltar, o XP e o nível de uma leitura registrada em
   // outra aba não apareceriam. O primeiro foco já é coberto pela carga inicial do hook.
@@ -299,16 +312,10 @@ export function PerfilScreen({
           planoFundo={dados?.planoFundo}
           mascote={dados?.mascote?.imagem}
           onConfiguracoes={() => router.push('/configuracoes')}
+          onVoltar={abertoPorRota ? voltar : undefined}
         />
       ) : (
-        <AppHeader
-          compact
-          title="Perfil"
-          showBack
-          onBackPress={() =>
-            router.canGoBack() ? router.back() : router.replace('/buscar')
-          }
-        />
+        <AppHeader compact title="Perfil" showBack onBackPress={voltar} />
       )}
       {estado.situacao === 'carregando' && (
         <ActivityIndicator
@@ -353,13 +360,11 @@ export function PerfilScreen({
           onMascotes={
             proprio ? () => router.push('/mascotes' as Href) : undefined
           }
-          onAbrirLivro={
-            proprio
-              ? (livroId) =>
-                  router.push(
-                    `/perfil-livro/${encodeURIComponent(livroId)}` as Href
-                  )
-              : undefined
+          onAdicionarFavorito={
+            proprio ? () => router.push('/adicionar-livro') : undefined
+          }
+          onAbrirLivro={(livroId) =>
+            router.push(`${rotaLivro}/${encodeURIComponent(livroId)}` as Href)
           }
         />
       )}

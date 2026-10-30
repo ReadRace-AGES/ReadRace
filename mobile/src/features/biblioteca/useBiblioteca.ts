@@ -33,6 +33,11 @@ export type BibliotecaState = {
   biblioteca: Carga<Biblioteca>;
   /** Refaz a chamada inicial; é a ação de "tentar de novo". */
   recarregar: () => void;
+  /**
+   * Busca de novo sem passar pelo "carregando": a lista atual fica na tela até a nova chegar, e
+   * um erro mantém a lista atual. Volta cada lista à primeira página.
+   */
+  atualizar: () => void;
   /** Anexa a página seguinte de uma lista. Ignora se não há mais ou se já está buscando. */
   carregarMais: (lista: ListaBiblioteca) => void;
 };
@@ -60,24 +65,24 @@ export function useBiblioteca(): BibliotecaState {
   const [biblioteca, setBiblioteca] = useState<Carga<Biblioteca>>({
     situacao: 'carregando',
   });
-  const [versao, setVersao] = useState(0);
+  const [versao, setVersao] = useState({ numero: 0, silenciosa: false });
   // Cancela as páginas em voo quando a tela recarrega ou desmonta.
   const controllers = useRef(new Set<AbortController>());
 
-  // Carrega uma vez por montagem (e a cada "tentar de novo"), nao a cada foco: refazer
-  // a chamada ao voltar do detalhe descartaria as paginas ja trazidas pelo "Ver mais" e
-  // devolveria a tela ao estado de carregando. Meus Livros nao exibe progresso, entao
-  // nao ha o que atualizar no retorno.
+  // Carrega na montagem, no "tentar de novo" (recarregar) e a cada foco da tela (atualizar,
+  // chamado por Meus Livros): um livro concluído pelo registro de leitura precisa mudar de lista.
+  // A atualização é silenciosa, para a tela não piscar; o custo é voltar as listas à primeira
+  // página, descartando o que o "Ver mais" já trouxe.
   useEffect(() => {
     const controller = new AbortController();
-    setBiblioteca({ situacao: 'carregando' });
+    if (!versao.silenciosa) setBiblioteca({ situacao: 'carregando' });
     buscarBiblioteca(controller.signal)
       .then((dados) => {
         if (controller.signal.aborted) return;
         setBiblioteca({ situacao: 'sucesso', dados: primeiraPagina(dados) });
       })
       .catch((erro: unknown) => {
-        if (controller.signal.aborted) return;
+        if (controller.signal.aborted || versao.silenciosa) return;
         setBiblioteca({ situacao: 'erro', mensagem: mensagemDe(erro) });
       });
     return () => {
@@ -87,7 +92,14 @@ export function useBiblioteca(): BibliotecaState {
     };
   }, [versao]);
 
-  const recarregar = useCallback(() => setVersao((v) => v + 1), []);
+  const recarregar = useCallback(
+    () => setVersao((v) => ({ numero: v.numero + 1, silenciosa: false })),
+    []
+  );
+  const atualizar = useCallback(
+    () => setVersao((v) => ({ numero: v.numero + 1, silenciosa: true })),
+    []
+  );
 
   const atualizarLista = useCallback(
     (
@@ -143,5 +155,5 @@ export function useBiblioteca(): BibliotecaState {
     [biblioteca, atualizarLista]
   );
 
-  return { biblioteca, recarregar, carregarMais };
+  return { biblioteca, recarregar, atualizar, carregarMais };
 }

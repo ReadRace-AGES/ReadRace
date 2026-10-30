@@ -13,7 +13,7 @@ function rotaDoClube(clubeId: string): Href {
 }
 
 function rotaDaComunidade(comunidadeId: string): Href {
-  return `/comunidade/${comunidadeId}` as Href;
+  return `/(tabs)/(feed)/comunidade/${comunidadeId}` as Href;
 }
 
 export default function FeedScreen() {

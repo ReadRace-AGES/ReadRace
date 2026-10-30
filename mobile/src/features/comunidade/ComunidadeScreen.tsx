@@ -7,7 +7,6 @@ import {
   View,
 } from 'react-native';
 import { Image } from 'expo-image';
-import { useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Svg, { Path } from 'react-native-svg';
 
@@ -17,6 +16,7 @@ import { BookIcon } from '@/components/icons/BookIcon';
 import { PostCard } from '@/components/PostCard';
 import { PrimaryButton } from '@/components/PrimaryButton';
 import { useToastContext } from '@/components/toast-provider';
+import { useVoltar } from '@/components/useVoltar';
 import { ComentariosSheet } from '@/features/comentarios/ComentariosSheet';
 import { tempoRelativo } from '@/features/livro/model';
 import { colors } from '@/theme';
@@ -34,8 +34,15 @@ const COPY = {
   erroCurtida: 'Não foi possível registrar sua curtida. Tente novamente.',
 } as const;
 
-export function ComunidadeScreen({ comunidadeId }: { comunidadeId: string }) {
-  const router = useRouter();
+export function ComunidadeScreen({
+  comunidadeId,
+  origem,
+}: {
+  comunidadeId: string;
+  /** Aba que abriu a comunidade; é para onde o voltar vai quando não há histórico. */
+  origem: '/feed' | '/buscar';
+}) {
+  const voltar = useVoltar(origem);
   const insets = useSafeAreaInsets();
   const { showToast, showErrorToast } = useToastContext();
   const {
@@ -105,7 +112,7 @@ export function ComunidadeScreen({ comunidadeId }: { comunidadeId: string }) {
           <Pressable
             accessibilityRole="button"
             accessibilityLabel="Voltar"
-            onPress={() => router.back()}
+            onPress={voltar}
             style={styles.back}
             hitSlop={12}
           >

@@ -1,5 +1,5 @@
-import { useEffect } from 'react';
-import { router, useLocalSearchParams, type Href } from 'expo-router';
+import { useCallback, useRef } from 'react';
+import { router, useFocusEffect, type Href } from 'expo-router';
 
 import { MeusLivrosView } from '@/features/biblioteca/MeusLivrosView';
 import { useBiblioteca } from '@/features/biblioteca/useBiblioteca';
@@ -11,16 +11,21 @@ function rotaDoDetalhe(livroId: string): Href {
 
 export default function MeusLivrosScreen() {
   const biblioteca = useBiblioteca();
-  // "livroAdicionado" chega só quando /adicionar-livro volta por aqui (#155); não é foco de
-  // tela, então não refaz a chamada à toa (ver comentário em useBiblioteca sobre "Ver mais").
-  const { livroAdicionado } = useLocalSearchParams<{
-    livroAdicionado?: string;
-  }>();
+  const { atualizar } = biblioteca;
 
-  useEffect(() => {
-    if (livroAdicionado) biblioteca.recarregar();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [livroAdicionado]);
+  // A aba fica montada: sem buscar de novo ao voltar, um livro concluído pelo registro de
+  // leitura (no detalhe ou no clube) ou um livro novo de /adicionar-livro não apareceriam na
+  // lista certa. O primeiro foco já é coberto pela carga inicial do hook.
+  const primeiroFoco = useRef(true);
+  useFocusEffect(
+    useCallback(() => {
+      if (primeiroFoco.current) {
+        primeiroFoco.current = false;
+        return;
+      }
+      atualizar();
+    }, [atualizar])
+  );
 
   return (
     <MeusLivrosView
