@@ -184,7 +184,8 @@ class FeedSocialControllerIT {
         assertThat(leituraDoDia.path("tipo").stringValue()).isEqualTo("leitura");
         assertThat(leituraDoDia.path("paginas").intValue()).isEqualTo(28);
         assertThat(leituraDoDia.path("xp").intValue()).isEqualTo(28);
-        assertThat(leituraDoDia.path("em").stringValue()).isEqualTo(conclusao.path("em").stringValue());
+        assertThat(leituraDoDia.path("em").stringValue())
+                .isEqualTo(conclusao.path("em").stringValue());
         assertThat(atividades.get(2).path("paginas").intValue()).isEqualTo(300);
     }
 

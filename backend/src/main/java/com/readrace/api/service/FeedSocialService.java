@@ -23,8 +23,8 @@ import com.readrace.api.repository.RegistroLeituraRepository.AtividadeSocial;
 import com.readrace.api.repository.UsuarioRepository;
 
 /**
- * Aba Social do Feed (#197, #204). Só lê: a lista sai do registro de leitura de quem o usuário atual
- * segue, sem tabela própria.
+ * Aba Social do Feed (#197, #204). Só lê: a lista sai do registro de leitura de quem o usuário
+ * atual segue, sem tabela própria.
  */
 @Service
 @Transactional(readOnly = true)
