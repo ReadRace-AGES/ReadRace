@@ -257,7 +257,7 @@ export function PerfilScreen({
 }: {
   usuarioId?: string;
   rodape?: ReactNode;
-  origem?: 'perfil' | 'busca';
+  origem?: 'perfil' | 'busca' | 'feed';
 }) {
   const {
     estado,
@@ -303,7 +303,9 @@ export function PerfilScreen({
           title="Perfil"
           showBack
           onBackPress={() =>
-            router.canGoBack() ? router.back() : router.replace('/buscar')
+            router.canGoBack()
+              ? router.back()
+              : router.replace(origem === 'feed' ? '/feed' : '/buscar')
           }
         />
       )}

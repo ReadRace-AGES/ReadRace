@@ -1,4 +1,3 @@
-import { useState } from 'react';
 import { ActivityIndicator, ScrollView, Text, View } from 'react-native';
 import Svg, { Path } from 'react-native-svg';
 
@@ -15,10 +14,13 @@ import { colors, spacing } from '@/theme';
 
 import { ClubeCard } from './ClubeCard';
 import type { ClubeFeed, ComunidadeFeed } from './api';
+import { FeedSocialView } from './FeedSocialView';
 import type { FeedComunidadesState } from './useFeedComunidades';
+import type { FeedSocialState } from './useFeedSocial';
 
-const ABAS = ['Social', 'Comunidades'] as const;
-const ABA_INICIAL = 'Comunidades';
+export const ABAS_FEED = ['Social', 'Comunidades'] as const;
+export type AbaFeed = (typeof ABAS_FEED)[number];
+export const ABA_INICIAL_FEED: AbaFeed = 'Comunidades';
 
 const COPY = {
   subtitulo: 'Continue sua jornada literária',
@@ -78,7 +80,12 @@ function CabecalhoSecao({
 }
 
 export type FeedComunidadesViewProps = FeedComunidadesState & {
-  onSocialPress: () => void;
+  aba: AbaFeed;
+  onAbaChange: (aba: AbaFeed) => void;
+  social: Pick<FeedSocialState, 'social' | 'recarregar'>;
+  onBuscarLeitoresPress: () => void;
+  onUsuarioPress: (usuarioId: string) => void;
+  onLivroPress: (livroId: string) => void;
   onVerTodosPress: () => void;
   onCriarGrupoPress: () => void;
   onClubePress: (clube: ClubeFeed) => void;
@@ -88,24 +95,18 @@ export type FeedComunidadesViewProps = FeedComunidadesState & {
 export function FeedComunidadesView({
   feed,
   recarregar,
-  onSocialPress,
+  aba,
+  onAbaChange,
+  social,
+  onBuscarLeitoresPress,
+  onUsuarioPress,
+  onLivroPress,
   onVerTodosPress,
   onCriarGrupoPress,
   onClubePress,
   onComunidadePress,
 }: FeedComunidadesViewProps) {
   const usuario = feed.situacao === 'sucesso' ? feed.dados.usuario : null;
-  // "Social" e uma acao, nao uma selecao (feed social fora da sprint): remontar o SegmentedTabs
-  // pela key devolve a pilula para "Comunidades" sem que o estado "Social" chegue a pintar, e
-  // mantem o toque em "Social" disparando o toast toda vez.
-  const [seletorKey, setSeletorKey] = useState(0);
-
-  function aoTrocarAba(aba: string) {
-    if (aba === 'Social') {
-      onSocialPress();
-      setSeletorKey((k) => k + 1);
-    }
-  }
 
   return (
     <View className="flex-1 bg-surface">
@@ -119,14 +120,23 @@ export function FeedComunidadesView({
 
       <View className="px-6 pb-2 pt-6">
         <SegmentedTabs
-          key={seletorKey}
-          options={[...ABAS]}
-          initialOption={ABA_INICIAL}
-          onChange={aoTrocarAba}
+          options={[...ABAS_FEED]}
+          value={aba}
+          onChange={(opcao) => onAbaChange(opcao as AbaFeed)}
         />
       </View>
 
-      {feed.situacao === 'carregando' && (
+      {aba === 'Social' && (
+        <FeedSocialView
+          social={social.social}
+          recarregar={social.recarregar}
+          onBuscarLeitoresPress={onBuscarLeitoresPress}
+          onUsuarioPress={onUsuarioPress}
+          onLivroPress={onLivroPress}
+        />
+      )}
+
+      {aba === 'Comunidades' && feed.situacao === 'carregando' && (
         <View
           className="flex-1 items-center justify-center p-4"
           accessibilityLabel="Carregando"
@@ -135,7 +145,7 @@ export function FeedComunidadesView({
         </View>
       )}
 
-      {feed.situacao === 'erro' && (
+      {aba === 'Comunidades' && feed.situacao === 'erro' && (
         <View className="flex-1">
           <EmptyState
             icon={BookIcon}
@@ -151,7 +161,7 @@ export function FeedComunidadesView({
         </View>
       )}
 
-      {feed.situacao === 'sucesso' && (
+      {aba === 'Comunidades' && feed.situacao === 'sucesso' && (
         <ScrollView
           className="flex-1"
           contentContainerStyle={{

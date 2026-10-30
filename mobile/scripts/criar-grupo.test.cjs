@@ -100,6 +100,10 @@ test('Feed recarrega uma vez por criação e exibe os dados consultados sem alte
     '@/api/client': { ApiError },
     './api': api,
   });
+  const hooksSocial = load('features/feed/useFeedSocial.ts', {
+    '@/api/client': { ApiError },
+    './api': api,
+  });
   const components = {
     'react-native': {
       ActivityIndicator: 'ActivityIndicator',
@@ -126,13 +130,12 @@ test('Feed recarrega uma vez por criação e exibe os dados consultados sem alte
     '@/components/SegmentedTabs': { SegmentedTabs: 'SegmentedTabs' },
   };
   const { ClubeCard } = load('features/feed/ClubeCard.tsx', components);
-  const { FeedComunidadesView } = load(
-    'features/feed/FeedComunidadesView.tsx',
-    {
-      ...components,
-      './ClubeCard': { ClubeCard },
-    }
-  );
+  const feedView = load('features/feed/FeedComunidadesView.tsx', {
+    ...components,
+    './ClubeCard': { ClubeCard },
+    './FeedSocialView': { FeedSocialView: 'FeedSocialView' },
+  });
+  const { FeedComunidadesView } = feedView;
   const { default: FeedScreen } = load('app/(tabs)/(feed)/feed.tsx', {
     'expo-router': {
       router: { push: () => assert.fail('Criar não deve navegar') },
@@ -142,11 +145,10 @@ test('Feed recarrega uma vez por criação e exibe os dados consultados sem alte
     '@/components/toast-provider': {
       useToastContext: () => ({ showToast: () => {} }),
     },
-    '@/features/feed/FeedComunidadesView': {
-      FeedComunidadesView,
-    },
+    '@/features/feed/FeedComunidadesView': feedView,
     '@/features/feed/CriarGrupoSheet': { CriarGrupoSheet: 'CriarGrupoSheet' },
     '@/features/feed/useFeedComunidades': hooks,
+    '@/features/feed/useFeedSocial': hooksSocial,
   });
   let tree;
   const view = () => tree.root.findByType(FeedComunidadesView);
