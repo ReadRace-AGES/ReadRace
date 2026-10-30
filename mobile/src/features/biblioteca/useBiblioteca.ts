@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 
-import { ApiError } from '@/api/client';
+import { mensagemErroCarregamento } from '@/api/client';
 
 import {
   buscarBiblioteca,
@@ -39,9 +39,7 @@ export type BibliotecaState = {
 
 // Só a mensagem do envelope da API é exibível (#10); erro de rede vira o texto padrão.
 function mensagemDe(erro: unknown) {
-  return erro instanceof ApiError
-    ? erro.message
-    : 'Não foi possível carregar sua biblioteca.';
+  return mensagemErroCarregamento(erro);
 }
 
 function primeiraPagina(resposta: BibliotecaResponse): Biblioteca {

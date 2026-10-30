@@ -40,6 +40,7 @@ const COPY = {
   titulo: 'Buscar',
   subtitulo: 'Encontre leitores e comunidades',
   placeholder: 'Nome de usuário ou comunidade',
+  placeholderLivros: 'Título ou autor do livro',
   vazio: 'Busque por leitores, comunidades ou livros',
   tentarDeNovo: 'Tentar de novo',
 } as const;
@@ -153,14 +154,21 @@ function Lista<T extends { id: string }>({
 
 function Resultados({
   dados,
+  termo,
   onLivroPress,
   onUsuarioPress,
   onComunidadePress,
-}: { dados: ResultadoBusca } & Pick<
+}: { dados: ResultadoBusca; termo: string } & Pick<
   BuscaViewProps,
   'onLivroPress' | 'onUsuarioPress' | 'onComunidadePress'
 >) {
-  if (dados.itens.length === 0) return <Vazio />;
+  if (dados.itens.length === 0)
+    return (
+      <EmptyState
+        icon={SearchIcon}
+        message={`Nenhum resultado para "${termo.trim()}".`}
+      />
+    );
 
   switch (dados.tipo) {
     case 'livros':
@@ -227,9 +235,9 @@ function Resultados({
 }
 
 export function BuscaView({
+  aba,
   busca,
   recarregar,
-  aba,
   termo,
   onTermoChange,
   onAbaChange,
@@ -243,7 +251,9 @@ export function BuscaView({
 
       <View className="gap-4 px-6 pb-2 pt-6">
         <SearchInput
-          placeholder={COPY.placeholder}
+          placeholder={
+            aba === 'Livros' ? COPY.placeholderLivros : COPY.placeholder
+          }
           value={termo}
           onChangeText={onTermoChange}
           returnKeyType="search"
@@ -264,6 +274,7 @@ export function BuscaView({
         {busca.situacao === 'sucesso' && (
           <Resultados
             dados={busca.dados}
+            termo={termo}
             onLivroPress={onLivroPress}
             onUsuarioPress={onUsuarioPress}
             onComunidadePress={onComunidadePress}

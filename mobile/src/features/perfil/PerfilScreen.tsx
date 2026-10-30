@@ -142,7 +142,10 @@ export function PerfilConteudo({
         {[
           ['Livros lidos', numero(stats.livrosLidos)],
           ['Páginas lidas', numero(stats.paginasLidas)],
-          ['Sequência', `${numero(stats.sequenciaDias)} dias`],
+          [
+            'Sequência',
+            `${numero(stats.sequenciaDias)} ${stats.sequenciaDias === 1 ? 'dia' : 'dias'}`,
+          ],
           ['Conquistas', numero(stats.conquistas)],
         ].map(([label, value]) => (
           <View key={label} style={styles.cell}>
@@ -318,9 +321,7 @@ export function PerfilScreen({
         <EmptyState
           icon={BookIcon}
           message={estado.mensagem}
-          action={
-            <PrimaryButton label="Tentar novamente" onPress={recarregar} />
-          }
+          action={<PrimaryButton label="Tentar de novo" onPress={recarregar} />}
         />
       )}
       {estado.situacao === 'sucesso' && (

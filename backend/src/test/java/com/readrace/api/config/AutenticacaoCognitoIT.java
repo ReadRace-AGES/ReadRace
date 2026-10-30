@@ -56,6 +56,33 @@ class AutenticacaoCognitoIT {
     @Autowired private SeguirRepository seguir;
 
     @Test
+    void buscaExcluiOUsuarioDoTokenEmVezDoUsuarioDeDemonstracao() {
+        String idAna = "00000000-0000-0000-0000-000000000002";
+        String sub = "sub-busca-222";
+        jdbc.update(
+                """
+                UPDATE usuario
+                SET nome = 'Daniel Ribeiro', cognito_sub = ?
+                WHERE id = ?
+                """,
+                sub,
+                UUID.fromString(idAna));
+
+        assertThat(
+                        mvc.get()
+                                .uri("/api/busca")
+                                .param("q", "Daniel Ribeiro")
+                                .param("tipo", "usuarios")
+                                .with(token(sub, "token-busca-222")))
+                .hasStatusOk()
+                .bodyJson()
+                .extractingPath("$.itens[*].id")
+                .asList()
+                .contains(ID_DANIEL)
+                .doesNotContain(idAna);
+    }
+
+    @Test
     void seguirUsaOUsuarioDoTokenEmVezDoUsuarioDeDemonstracao() {
         given(userInfoClient.buscar("token-seguir"))
                 .willReturn(
