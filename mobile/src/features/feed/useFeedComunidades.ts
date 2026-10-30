@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
 
-import { ApiError } from '@/api/client';
+import { mensagemErroCarregamento } from '@/api/client';
 
 import { buscarFeedComunidades, type FeedComunidades } from './api';
 
@@ -17,9 +17,7 @@ export type FeedComunidadesState = {
 };
 
 function mensagemDe(erro: unknown) {
-  return erro instanceof ApiError
-    ? erro.message
-    : 'Não foi possível carregar o feed de comunidades.';
+  return mensagemErroCarregamento(erro);
 }
 
 export function useFeedComunidades(): FeedComunidadesState {
@@ -53,11 +51,13 @@ export function useFeedComunidades(): FeedComunidadesState {
   }, [tentativa]);
 
   const recarregar = useCallback(
-    () => setTentativa(({ numero }) => ({ numero: numero + 1, silenciosa: false })),
+    () =>
+      setTentativa(({ numero }) => ({ numero: numero + 1, silenciosa: false })),
     []
   );
   const atualizar = useCallback(
-    () => setTentativa(({ numero }) => ({ numero: numero + 1, silenciosa: true })),
+    () =>
+      setTentativa(({ numero }) => ({ numero: numero + 1, silenciosa: true })),
     []
   );
 

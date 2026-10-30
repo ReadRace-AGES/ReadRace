@@ -11,8 +11,12 @@ import {
 import { Card } from '@/components/Card';
 import { EmptyState } from '@/components/EmptyState';
 import { BookIcon } from '@/components/icons/BookIcon';
-import { RankingRow } from '@/components/RankingRow';
-import { colors, spacing, textStyles, typography } from '@/theme';
+import {
+  RankingRow,
+  formatRankingLabel,
+  formatRankingPoints,
+} from '@/components/RankingRow';
+import { colors, sizes, spacing, textStyles, typography } from '@/theme';
 
 import type { LinhaRanking } from './api';
 
@@ -99,6 +103,7 @@ export function RankingCard({
           >
             <RankingRow
               position={linha.posicao}
+              rowIndex={index}
               name={linha.usuario.nome}
               points={linha.pontos}
               photoUrl={linha.usuario.avatarUrl}
@@ -109,13 +114,14 @@ export function RankingCard({
 
       {ranking !== null && onVerTodosPress && (
         <View style={styles.rodape}>
-          <Text
+          <Pressable
             accessibilityRole="button"
+            accessibilityLabel={COPY.verTodos}
             onPress={onVerTodosPress}
-            style={styles.verTodos}
+            style={styles.acao}
           >
-            {COPY.verTodos}
-          </Text>
+            <Text style={styles.verTodos}>{COPY.verTodos}</Text>
+          </Pressable>
         </View>
       )}
     </Card>
@@ -136,6 +142,13 @@ const styles = StyleSheet.create({
   carregando: { padding: spacing[6], alignItems: 'center' },
   vazio: { paddingVertical: spacing[6] },
   rodape: { alignItems: 'flex-end', padding: spacing[4] },
+  acao: {
+    minHeight: sizes.searchInputHeight,
+    minWidth: sizes.searchInputHeight,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingHorizontal: spacing[2],
+  },
   verTodos: {
     ...textStyles.bodySmall,
     fontFamily: typography.fontFamily.semibold,

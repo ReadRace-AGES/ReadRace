@@ -39,7 +39,7 @@ export function ListItem(props: ListItemProps) {
   const selected = props.variant === 'book' && props.selected === true;
   const metadata =
     props.variant === 'community' && props.memberCount !== undefined
-      ? `${props.memberCount} membros`
+      ? `${props.memberCount} ${props.memberCount === 1 ? 'membro' : 'membros'}`
       : props.variant === 'book'
         ? props.genre
         : undefined;

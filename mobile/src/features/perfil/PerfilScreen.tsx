@@ -165,7 +165,10 @@ export function PerfilConteudo({
         {[
           ['Livros lidos', numero(stats.livrosLidos)],
           ['Páginas lidas', numero(stats.paginasLidas)],
-          ['Sequência', `${numero(stats.sequenciaDias)} dias`],
+          [
+            'Sequência',
+            `${numero(stats.sequenciaDias)} ${stats.sequenciaDias === 1 ? 'dia' : 'dias'}`,
+          ],
           ['Conquistas', numero(stats.conquistas)],
         ].map(([label, value]) => (
           <View key={label} style={styles.cell}>

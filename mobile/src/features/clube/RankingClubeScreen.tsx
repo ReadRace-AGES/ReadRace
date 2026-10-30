@@ -57,6 +57,13 @@ export function RankingClubeScreen({
   if (ranking.situacao === 'erro') {
     return (
       <View style={styles.tela}>
+        <AppHeader
+          variant="surface"
+          titleAlign="center"
+          showBack
+          onBackPress={voltar}
+          title={COPY.titulo}
+        />
         <EmptyState
           icon={BookIcon}
           message={ranking.mensagem}
@@ -114,6 +121,7 @@ export function RankingClubeScreen({
               >
                 <RankingRow
                   position={item.posicao}
+                  rowIndex={index}
                   name={item.usuario.nome}
                   points={item.pontos}
                   photoUrl={item.usuario.avatarUrl}

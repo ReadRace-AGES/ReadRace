@@ -151,7 +151,7 @@ test('hook cancela carga antiga, trata erro e permite tentar novamente', async (
   const { useListaSeguidores } = load(
     'features/seguidores/useListaSeguidores.ts',
     {
-      '@/api/client': { ApiError: Error },
+      '@/api/client': load('api/client.ts'),
       '@/features/perfil/api': {
         buscarPerfil: async (id) => ({ nome: id }),
         buscarUsuarioAtual: async () => ({ id: 'eu' }),

@@ -49,7 +49,7 @@ test('busca reconcilia seleção e bloqueia envio durante loading e erro', async
     },
   };
   const hooks = load('features/desafios/useDesafiarAmigo.ts', {
-    '@/api/client': { ApiError: class ApiError extends Error {} },
+    '@/api/client': load('api/client.ts', {}),
     './api': api,
   });
   const dependencies = {
@@ -234,7 +234,7 @@ test('busca reconcilia seleção e bloqueia envio durante loading e erro', async
 test('resposta antiga e debounce não tornam a lista anterior válida', async () => {
   const requests = [];
   const { useOponentes } = load('features/desafios/useDesafiarAmigo.ts', {
-    '@/api/client': { ApiError: class ApiError extends Error {} },
+    '@/api/client': load('api/client.ts', {}),
     './api': {
       normalizarTermoOponente,
       buscarOponentes: (termo, signal) =>
