@@ -25,7 +25,7 @@ function load(file, dependencies = {}) {
   );
   return module.exports;
 }
-const { ApiError } = load('api/client.ts');
+const { ApiError, mensagemErroCarregamento } = load('api/client.ts');
 
 // Usuário no nível 6: os três primeiros desbloqueados, nunca escolheu (padrão O Bruxo).
 const mascotes = [
@@ -61,7 +61,7 @@ function montar({ estado, escolher = async () => ({}) }) {
         back: () => chamadas.voltar++,
       }),
     },
-    '@/api/client': { ApiError },
+    '@/api/client': { ApiError, mensagemErroCarregamento },
     '@/theme': { ...require('../src/theme/tokens'), textStyles: {} },
     '@/components/AppHeader': { AppHeader: 'AppHeader' },
     '@/components/EmptyState': { EmptyState: 'EmptyState' },

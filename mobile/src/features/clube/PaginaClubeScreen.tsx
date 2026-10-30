@@ -303,6 +303,16 @@ export function PaginaClubeScreen({ clubeId }: { clubeId: string }) {
   if (clube.situacao === 'erro') {
     return (
       <View style={styles.tela}>
+        <AppHeader
+          variant="surface"
+          titleAlign="center"
+          showBack
+          onBackPress={voltar}
+          title={dados?.nome ?? ''}
+          subtitle={subtitulo}
+          titleOverflow="wrap"
+          titleNumberOfLines={2}
+        />
         <EmptyState
           icon={BookIcon}
           message={clube.mensagem}

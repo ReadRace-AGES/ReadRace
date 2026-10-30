@@ -25,7 +25,7 @@ function load(file, dependencies = {}) {
   );
   return module.exports;
 }
-const { ApiError } = load('api/client.ts');
+const { ApiError, mensagemErroCarregamento } = load('api/client.ts');
 const perfil = {
   id: '1',
   nome: 'Daniel',
@@ -393,7 +393,7 @@ test('API usa somente o usuário exibido e encaminha cancelamento', async () => 
 test('hook cancela perfil antigo, ignora resposta atrasada e permite tentar novamente', async () => {
   const pending = [];
   const { usePerfil } = load('features/perfil/usePerfil.ts', {
-    '@/api/client': { ApiError },
+    '@/api/client': { ApiError, mensagemErroCarregamento },
     './api': {
       buscarUsuarioAtual: async () => ({ id: 'eu' }),
       buscarPerfil: (id, signal) =>
@@ -429,7 +429,7 @@ test('hook cancela perfil antigo, ignora resposta atrasada e permite tentar nova
 test('atualização de fundo mantém o perfil na tela, inclusive se falhar', async () => {
   const pending = [];
   const { usePerfil } = load('features/perfil/usePerfil.ts', {
-    '@/api/client': { ApiError },
+    '@/api/client': { ApiError, mensagemErroCarregamento },
     './api': {
       buscarPerfil: (id, signal) =>
         new Promise((resolve, reject) =>
@@ -525,7 +525,7 @@ function carregarHookSeguir() {
   const leituras = [],
     alteracoes = [];
   const hook = load('features/perfil/usePerfil.ts', {
-    '@/api/client': { ApiError },
+    '@/api/client': { ApiError, mensagemErroCarregamento },
     './api': {
       buscarUsuarioAtual: async () => ({ id: 'eu' }),
       buscarPerfil: (id, signal) =>
@@ -742,3 +742,32 @@ test('mutação ignora leitura anterior e resposta de outro perfil, inclusive ao
     await envio;
   });
 });
+
+for (const dias of [0, 1, 2]) {
+  test(`estatística de sequência: ${dias} dia(s)`, () => {
+    const { PerfilConteudo } = load(
+      'features/perfil/PerfilScreen.tsx',
+      dependencies
+    );
+    let tree;
+    act(() => {
+      tree = create(
+        React.createElement(PerfilConteudo, {
+          perfil: {
+            ...perfil,
+            estatisticas: { ...perfil.estatisticas, sequenciaDias: dias },
+          },
+          onPlaceholder: () => {},
+        })
+      );
+    });
+    try {
+      const textos = tree.root
+        .findAllByType('Text')
+        .map((n) => React.Children.toArray(n.props.children).join(''));
+      assert.ok(textos.includes(`${dias} ${dias === 1 ? 'dia' : 'dias'}`));
+    } finally {
+      act(() => tree.unmount());
+    }
+  });
+}

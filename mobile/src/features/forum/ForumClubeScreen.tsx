@@ -73,6 +73,14 @@ function ForumDoClube({ clubeId }: { clubeId: string }) {
   if (forum.situacao === 'erro') {
     return (
       <View style={styles.tela}>
+        <AppHeader
+          titleAlign="center"
+          showBack
+          onBackPress={voltar}
+          title=""
+          titleOverflow="wrap"
+          titleNumberOfLines={2}
+        />
         <EmptyState
           icon={BookIcon}
           message={forum.mensagem}

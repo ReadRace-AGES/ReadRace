@@ -16,4 +16,6 @@ public interface LinhaRankingClube {
     String getAvatarUrl();
 
     int getPontos();
+
+    long getPosicao();
 }
