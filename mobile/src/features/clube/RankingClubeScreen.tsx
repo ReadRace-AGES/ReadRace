@@ -1,4 +1,3 @@
-
 import { useRouter, type Href } from 'expo-router';
 import {
   ActivityIndicator,
@@ -32,11 +31,7 @@ function rotaDoPerfilUsuario(usuarioId: string): Href {
   } as unknown as Href;
 }
 
-export function RankingClubeScreen({
-  clubeId,
-}: {
-  clubeId: string;
-}) {
+export function RankingClubeScreen({ clubeId }: { clubeId: string }) {
   const router = useRouter();
   const { ranking, recarregar, carregarMais } = useRankingClube(clubeId);
 
@@ -87,8 +82,7 @@ export function RankingClubeScreen({
     );
   }
 
-  const dados =
-    ranking.situacao === 'sucesso' ? ranking.dados : null;
+  const dados = ranking.situacao === 'sucesso' ? ranking.dados : null;
 
   return (
     <View style={styles.tela}>
@@ -102,22 +96,17 @@ export function RankingClubeScreen({
       />
 
       {dados && dados.ranking.length > 0 ? (
-        <Card
-          style={styles.card}
-          surfaceStyle={styles.superficie}
-        >
+        <Card style={styles.card} surfaceStyle={styles.superficie}>
           <FaixaQuadriculada />
 
           <FlatList
             data={dados.ranking}
             keyExtractor={(linha) => linha.usuario.id}
-            renderItem={({ item }) => (
+            renderItem={({ item, index }) => (
               <Pressable
                 accessibilityRole="button"
                 accessibilityLabel={`Ver perfil de ${item.usuario.nome}`}
-                onPress={() =>
-                  abrirPerfilDoRanking(item.usuario.id)
-                }
+                onPress={() => abrirPerfilDoRanking(item.usuario.id)}
               >
                 <RankingRow
                   position={item.posicao}
@@ -131,8 +120,7 @@ export function RankingClubeScreen({
             onEndReached={carregarMais}
             onEndReachedThreshold={0.5}
             ListFooterComponent={
-              ranking.situacao === 'sucesso' &&
-              ranking.carregandoMais ? (
+              ranking.situacao === 'sucesso' && ranking.carregandoMais ? (
                 <ActivityIndicator
                   color={colors.primary}
                   style={styles.carregandoMais}

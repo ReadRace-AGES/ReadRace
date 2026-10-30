@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import {
   ActivityIndicator,
@@ -11,11 +10,7 @@ import {
 import { Card } from '@/components/Card';
 import { EmptyState } from '@/components/EmptyState';
 import { BookIcon } from '@/components/icons/BookIcon';
-import {
-  RankingRow,
-  formatRankingLabel,
-  formatRankingPoints,
-} from '@/components/RankingRow';
+import { RankingRow } from '@/components/RankingRow';
 import { colors, sizes, spacing, textStyles, typography } from '@/theme';
 
 import type { LinhaRanking } from './api';
@@ -94,7 +89,7 @@ export function RankingCard({
           <EmptyState icon={BookIcon} message={COPY.semRanking} />
         </View>
       ) : (
-        ranking.map((linha) => (
+        ranking.map((linha, index) => (
           <Pressable
             key={linha.usuario.id}
             onPress={() => onLinhaPress(linha.usuario.id)}
