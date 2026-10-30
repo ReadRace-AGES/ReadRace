@@ -46,6 +46,35 @@ export function buscarFeedComunidades(signal?: AbortSignal) {
   return apiGet<FeedComunidades>('/api/feed/comunidades', { signal });
 }
 
+/** Um card da aba Social (#197): o que alguém que eu sigo leu de um livro em um dia. */
+export type AtividadeSocial = {
+  tipo: 'leitura';
+  usuario: {
+    id: string;
+    nome: string;
+    avatarUrl: string | null;
+    sequenciaDias: number;
+  };
+  livro: {
+    id: string;
+    titulo: string;
+    autor: string | null;
+    totalPaginas: number;
+  };
+  /** Páginas novas do dia, acima da maior página já alcançada naquele livro. */
+  paginas: number;
+  xp: number;
+  /** Último registro do dia, com o deslocamento de São Paulo (ex.: `-03:00`). */
+  em: string;
+};
+
+export type FeedSocial = { atividades: AtividadeSocial[] };
+
+/** `GET /api/feed/social` — a leitura de quem o usuário atual segue, da mais recente à mais antiga. */
+export function buscarFeedSocial(signal?: AbortSignal) {
+  return apiGet<FeedSocial>('/api/feed/social', { signal });
+}
+
 export function criarClube(request: CriarClubeRequest, signal?: AbortSignal) {
   return apiRequest<ClubeCriadoResponse>('/api/clubes', {
     method: 'POST',

@@ -45,6 +45,7 @@ const COPY = {
 } as const;
 
 export type BuscaViewProps = BuscaState & {
+  aba: Aba;
   termo: string;
   onTermoChange: (termo: string) => void;
   onAbaChange: (aba: Aba) => void;
@@ -228,6 +229,7 @@ function Resultados({
 export function BuscaView({
   busca,
   recarregar,
+  aba,
   termo,
   onTermoChange,
   onAbaChange,
@@ -248,7 +250,7 @@ export function BuscaView({
         />
         <SegmentedTabs
           options={[...ABAS]}
-          initialOption={ABA_INICIAL}
+          value={aba}
           onChange={(opcao) => onAbaChange(opcao as Aba)}
         />
       </View>

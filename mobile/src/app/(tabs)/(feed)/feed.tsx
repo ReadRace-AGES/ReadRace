@@ -1,11 +1,16 @@
 import { router, useFocusEffect, type Href } from 'expo-router';
-import { useCallback, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { Keyboard } from 'react-native';
 
 import { useToastContext } from '@/components/toast-provider';
-import { FeedComunidadesView } from '@/features/feed/FeedComunidadesView';
+import {
+  ABA_INICIAL_FEED,
+  FeedComunidadesView,
+  type AbaFeed,
+} from '@/features/feed/FeedComunidadesView';
 import { CriarGrupoSheet } from '@/features/feed/CriarGrupoSheet';
 import { useFeedComunidades } from '@/features/feed/useFeedComunidades';
+import { useFeedSocial } from '@/features/feed/useFeedSocial';
 
 // A Pagina do clube (#35) e empilhada dentro da aba, mantendo a navbar.
 function rotaDoClube(clubeId: string): Href {
@@ -16,8 +21,25 @@ function rotaDaComunidade(comunidadeId: string): Href {
   return `/comunidade/${comunidadeId}` as Href;
 }
 
+// A Busca fica montada e guarda a aba escolhida: `pedidoEm` muda a cada toque, para ela trocar
+// para Usuários mesmo quando o pedido anterior foi o mesmo.
+function rotaDaBuscaDeLeitores(): Href {
+  return {
+    pathname: '/buscar',
+    params: { aba: 'Usuários', pedidoEm: String(Date.now()) },
+  } as Href;
+}
+
 export default function FeedScreen() {
   const { feed, recarregar, atualizar } = useFeedComunidades();
+  const [aba, setAba] = useState<AbaFeed>(ABA_INICIAL_FEED);
+  const social = useFeedSocial(aba === 'Social');
+  const { atualizar: atualizarSocial } = social;
+  // Lida no foco sem entrar nas dependências: trocar de aba não é voltar para a tela.
+  const abaAtual = useRef(aba);
+  useEffect(() => {
+    abaAtual.current = aba;
+  }, [aba]);
   const { showToast } = useToastContext();
   const [modalAberto, setModalAberto] = useState(false);
   const fecharModal = useCallback(() => {
@@ -37,7 +59,8 @@ export default function FeedScreen() {
         return;
       }
       atualizar();
-    }, [atualizar])
+      if (abaAtual.current === 'Social') atualizarSocial();
+    }, [atualizar, atualizarSocial])
   );
 
   return (
@@ -46,7 +69,10 @@ export default function FeedScreen() {
         feed={feed}
         recarregar={recarregar}
         atualizar={atualizar}
-        onSocialPress={showToast}
+        aba={aba}
+        onAbaChange={setAba}
+        social={social}
+        onBuscarLeitoresPress={() => router.navigate(rotaDaBuscaDeLeitores())}
         onVerTodosPress={showToast}
         onCriarGrupoPress={() => setModalAberto(true)}
         onClubePress={(clube) => router.push(rotaDoClube(clube.id))}

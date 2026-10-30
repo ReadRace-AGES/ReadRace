@@ -1,5 +1,6 @@
 package com.readrace.api.repository;
 
+import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -16,6 +17,9 @@ public interface LivroRepository extends JpaRepository<Livro, UUID> {
 
     @EntityGraph(attributePaths = {"livroAutores", "livroAutores.autor"})
     List<Livro> findByTituloContainingIgnoreCase(String termo);
+
+    @EntityGraph(attributePaths = {"livroAutores", "livroAutores.autor"})
+    List<Livro> findByIdIn(Collection<UUID> ids);
 
     Optional<Livro> findByIsbn(String isbn);
 
