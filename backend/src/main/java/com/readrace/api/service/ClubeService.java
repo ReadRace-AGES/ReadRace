@@ -18,6 +18,7 @@ import com.readrace.api.dto.request.CriarClubeRequest;
 import com.readrace.api.dto.response.ClubeCriadoResponse;
 import com.readrace.api.dto.response.ClubeResponse;
 import com.readrace.api.dto.response.RankingClubeResponse;
+import com.readrace.api.dto.response.SairDoClubeResponse;
 import com.readrace.api.exception.ClubeInvalidoException;
 import com.readrace.api.exception.ClubeNaoEncontradoException;
 import com.readrace.api.exception.LivroNaoEncontradoException;
@@ -25,7 +26,6 @@ import com.readrace.api.exception.NaoEMembroException;
 import com.readrace.api.exception.ParametroInvalidoException;
 import com.readrace.api.exception.RecursoNaoEncontradoException;
 import com.readrace.api.exception.SoMembroVeRankingException;
-import com.readrace.api.exception.UnicoLiderException;
 import com.readrace.api.exception.UsuarioNaoEncontradoException;
 import com.readrace.api.model.Cargo;
 import com.readrace.api.model.ClubeDoLivro;
@@ -136,14 +136,18 @@ public class ClubeService {
         List<LinhaRankingClube> linhas =
                 membroClubeRepository.rankingDoClube(
                         clubeId, PageRequest.of(0, TAMANHO_DO_RANKING));
+        String meuCargo = meuCargo(clubeId);
+        ClubeResponse.Usuario proximoLider =
+                proximoLider(clubeId, meuCargo, usuarioAtual.idDoUsuarioAtual().valor());
 
         return new ClubeResponse(
                 clube.getId(),
                 clube.getNome(),
                 livroAtual(clube.getLivro()),
                 ranking(linhas, 0),
-                meuCargo(clubeId),
-                quizRepository.existsByClubeIdAndAtivoTrue(clubeId));
+                meuCargo,
+                quizRepository.existsByClubeIdAndAtivoTrue(clubeId),
+                proximoLider);
     }
 
     public RankingClubeResponse buscarRanking(UUID clubeId, String cursor) {
@@ -190,7 +194,7 @@ public class ClubeService {
     }
 
     @Transactional
-    public void sairDoClube(UUID clubeId) {
+    public SairDoClubeResponse sairDoClube(UUID clubeId) {
         ClubeDoLivro clube =
                 clubeRepository
                         .buscarComLock(clubeId)
@@ -202,13 +206,25 @@ public class ClubeService {
                         .findByClube_IdAndUsuarioId(clubeId, usuarioId)
                         .orElseThrow(NaoEMembroException::new);
 
+        membroClubeRepository.buscarDoClubeComLock(clubeId);
+
         long totalMembros = membroClubeRepository.countByClube_Id(clubeId);
 
+        SairDoClubeResponse.NovoLider novoLider = null;
         if (totalMembros > 1
                 && membro.getCargoClube() == Cargo.ADMINISTRADOR
                 && membroClubeRepository.countByClube_IdAndCargoClube(clubeId, Cargo.ADMINISTRADOR)
                         == 1) {
-            throw new UnicoLiderException();
+            MembroClube sucessor =
+                    membroClubeRepository
+                            .candidatosALideranca(clubeId, usuarioId, PageRequest.of(0, 1))
+                            .getFirst();
+            sucessor.promoverAAdministrador();
+            var usuario =
+                    usuarioRepository
+                            .findByIdAndExcluidoEmIsNull(sucessor.getUsuarioId())
+                            .orElseThrow(UsuarioNaoEncontradoException::new);
+            novoLider = new SairDoClubeResponse.NovoLider(usuario.getId(), usuario.getNome());
         }
 
         membroClubeRepository.delete(membro);
@@ -216,6 +232,29 @@ public class ClubeService {
         if (totalMembros == 1) {
             clube.excluir(OffsetDateTime.now(clock));
         }
+        return new SairDoClubeResponse(novoLider);
+    }
+
+    private ClubeResponse.Usuario proximoLider(UUID clubeId, String meuCargo, UUID usuarioId) {
+        if (!Cargo.ADMINISTRADOR.getValor().equals(meuCargo)
+                || membroClubeRepository.countByClube_IdAndCargoClube(clubeId, Cargo.ADMINISTRADOR)
+                        != 1
+                || membroClubeRepository.countByClube_Id(clubeId) <= 1) {
+            return null;
+        }
+        return membroClubeRepository
+                .candidatosALideranca(clubeId, usuarioId, PageRequest.of(0, 1))
+                .stream()
+                .findFirst()
+                .flatMap(
+                        membro ->
+                                usuarioRepository.findByIdAndExcluidoEmIsNull(
+                                        membro.getUsuarioId()))
+                .map(
+                        usuario ->
+                                new ClubeResponse.Usuario(
+                                        usuario.getId(), usuario.getNome(), usuario.getAvatarUrl()))
+                .orElse(null);
     }
 
     private static ClubeResponse.LivroAtual livroAtual(Livro livro) {

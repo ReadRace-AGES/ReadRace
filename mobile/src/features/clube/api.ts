@@ -13,6 +13,7 @@ export type Clube = {
   meuCargo: 'administrador' | 'membro' | null;
   /** Se o clube já tem quiz publicado: o líder não pode abrir `GET /quiz` para descobrir (#161). */
   temQuizAtivo: boolean;
+  proximoLider: { id: string; nome: string; avatarUrl: string | null } | null;
 };
 
 export type LinhaRanking = {
@@ -28,8 +29,12 @@ export function buscarClube(clubeId: string, signal?: AbortSignal) {
   });
 }
 
-export async function sairDoClube(clubeId: string): Promise<void> {
-  await apiRequest<void>(
+export type SaidaDoClube = {
+  novoLider: { id: string; nome: string } | null;
+};
+
+export function sairDoClube(clubeId: string): Promise<SaidaDoClube> {
+  return apiRequest<SaidaDoClube>(
     `/api/clubes/${encodeURIComponent(clubeId)}/membros/eu`,
     { method: 'DELETE' }
   );

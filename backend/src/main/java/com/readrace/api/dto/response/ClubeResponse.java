@@ -27,7 +27,8 @@ public record ClubeResponse(
         LivroAtual livroAtual,
         List<LinhaRanking> ranking,
         String meuCargo,
-        boolean temQuizAtivo) {
+        boolean temQuizAtivo,
+        Usuario proximoLider) {
 
     /** {@code id} vem porque "Registrar leitura" precisa saber sobre qual livro o modal abre. */
     public record LivroAtual(UUID id, String titulo, String autor) {}
