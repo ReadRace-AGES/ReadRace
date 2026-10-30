@@ -1,4 +1,3 @@
-
 package com.readrace.api.controller;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -23,8 +22,8 @@ import com.readrace.api.TestcontainersConfiguration;
 /**
  * Testes de integração de POST /api/biblioteca.
  *
- * <p>O catálogo local pode retornar ISBNs diferentes dos livros do seed.
- * Nesse caso, o sistema deve reutilizar o livro pelo título e primeiro autor.
+ * <p>O catálogo local pode retornar ISBNs diferentes dos livros do seed. Nesse caso, o sistema deve
+ * reutilizar o livro pelo título e primeiro autor.
  */
 @Import(TestcontainersConfiguration.class)
 @SpringBootTest
@@ -58,21 +57,17 @@ class AdicionarLivroControllerIT {
 
     private Integer contarLivrosPorIsbn(String isbn) {
         return jdbc.queryForObject(
-                "SELECT COUNT(*) FROM livro WHERE isbn = ?",
-                Integer.class,
-                isbn);
+                "SELECT COUNT(*) FROM livro WHERE isbn = ?", Integer.class, isbn);
     }
 
     private UUID idDomCasmurroExistente() {
         return jdbc.queryForObject(
-                "SELECT id FROM livro WHERE titulo = 'Dom Casmurro'",
-                UUID.class);
+                "SELECT id FROM livro WHERE titulo = 'Dom Casmurro'", UUID.class);
     }
 
     private Integer contarItens(UUID livroId) {
         return jdbc.queryForObject(
-                "SELECT COUNT(*) FROM item_biblioteca"
-                        + " WHERE usuario_id = ? AND livro_id = ?",
+                "SELECT COUNT(*) FROM item_biblioteca" + " WHERE usuario_id = ? AND livro_id = ?",
                 Integer.class,
                 USUARIO_ATUAL,
                 livroId);
@@ -120,10 +115,7 @@ class AdicionarLivroControllerIT {
     void marcar_como_lido_nao_mexe_em_registro_de_leitura() {
         UUID livroExistente = idDomCasmurroExistente();
 
-        var usuarioAntes =
-                jdbc.queryForMap(
-                        "SELECT * FROM usuario WHERE id = ?",
-                        USUARIO_ATUAL);
+        var usuarioAntes = jdbc.queryForMap("SELECT * FROM usuario WHERE id = ?", USUARIO_ATUAL);
 
         Integer registrosAntes =
                 jdbc.queryForObject(
@@ -137,10 +129,7 @@ class AdicionarLivroControllerIT {
 
         assertThat(post("br001", "lido")).hasStatus(HttpStatus.CREATED);
 
-        assertThat(
-                jdbc.queryForMap(
-                        "SELECT * FROM usuario WHERE id = ?",
-                        USUARIO_ATUAL))
+        assertThat(jdbc.queryForMap("SELECT * FROM usuario WHERE id = ?", USUARIO_ATUAL))
                 .isEqualTo(usuarioAntes);
 
         Integer registrosDepois =
@@ -246,18 +235,17 @@ class AdicionarLivroControllerIT {
     @Test
     @DisplayName("O Hobbit reutiliza livro existente e preserva seus metadados")
     void deve_reutilizar_hobbit_sem_alterar_capa_ou_paginas() {
-        Map<String, Object> livroAntes = jdbc.queryForMap(
-                "SELECT id, isbn, titulo, total_paginas, capa_url"
-                        + " FROM livro WHERE titulo = 'O Hobbit'");
+        Map<String, Object> livroAntes =
+                jdbc.queryForMap(
+                        "SELECT id, isbn, titulo, total_paginas, capa_url"
+                                + " FROM livro WHERE titulo = 'O Hobbit'");
 
         UUID livroId = (UUID) livroAntes.get("id");
         Object isbnOriginal = livroAntes.get("isbn");
         Object paginasOriginais = livroAntes.get("total_paginas");
         Object capaOriginal = livroAntes.get("capa_url");
 
-        Integer quantidadeAntes = jdbc.queryForObject(
-                "SELECT COUNT(*) FROM livro",
-                Integer.class);
+        Integer quantidadeAntes = jdbc.queryForObject("SELECT COUNT(*) FROM livro", Integer.class);
 
         assertThat(post("fan003", "desejo"))
                 .hasStatus(HttpStatus.CREATED)
@@ -268,14 +256,13 @@ class AdicionarLivroControllerIT {
                 .containsEntry("titulo", "O Hobbit")
                 .containsEntry("status", "desejo");
 
-        Map<String, Object> livroDepois = jdbc.queryForMap(
-                "SELECT id, isbn, titulo, total_paginas, capa_url"
-                        + " FROM livro WHERE id = ?",
-                livroId);
+        Map<String, Object> livroDepois =
+                jdbc.queryForMap(
+                        "SELECT id, isbn, titulo, total_paginas, capa_url"
+                                + " FROM livro WHERE id = ?",
+                        livroId);
 
-        Integer quantidadeDepois = jdbc.queryForObject(
-                "SELECT COUNT(*) FROM livro",
-                Integer.class);
+        Integer quantidadeDepois = jdbc.queryForObject("SELECT COUNT(*) FROM livro", Integer.class);
 
         assertThat(livroDepois.get("id")).isEqualTo(livroId);
         assertThat(livroDepois.get("isbn")).isEqualTo(isbnOriginal);

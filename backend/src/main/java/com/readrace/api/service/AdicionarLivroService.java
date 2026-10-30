@@ -1,4 +1,3 @@
-
 package com.readrace.api.service;
 
 import java.text.Normalizer;
@@ -156,8 +155,8 @@ public class AdicionarLivroService {
     }
 
     /**
-     * Reutiliza um livro existente quando o ISBN coincide ou quando
-     * o título e o primeiro autor são equivalentes após normalização.
+     * Reutiliza um livro existente quando o ISBN coincide ou quando o título e o primeiro autor são
+     * equivalentes após normalização.
      *
      * <p>Se não encontrar correspondência, cria o livro normalmente.
      */
@@ -175,8 +174,7 @@ public class AdicionarLivroService {
         }
 
         UUID novoId = UUID.randomUUID();
-        livroRepository.criarSeAusente(
-                novoId, isbn, info.title(), info.pageCount(), capaDe(info));
+        livroRepository.criarSeAusente(novoId, isbn, info.title(), info.pageCount(), capaDe(info));
 
         Livro livro = livroRepository.findByIsbn(isbn).orElseThrow();
 
@@ -189,12 +187,14 @@ public class AdicionarLivroService {
     }
 
     /**
-     * Procura um livro pelo título e pelo primeiro autor.
-     * A comparação ignora acentos, pontuação, espaços e maiúsculas.
+     * Procura um livro pelo título e pelo primeiro autor. A comparação ignora acentos, pontuação,
+     * espaços e maiúsculas.
      */
     private Optional<Livro> buscarPorTituloEAutor(VolumeInfo info) {
-        if (info.title() == null || info.title().isBlank()
-                || info.authors() == null || info.authors().isEmpty()) {
+        if (info.title() == null
+                || info.title().isBlank()
+                || info.authors() == null
+                || info.authors().isEmpty()) {
             return Optional.empty();
         }
 
@@ -221,8 +221,8 @@ public class AdicionarLivroService {
     }
 
     /**
-     * Normaliza textos removendo acentos, pontuação, espaços
-     * e diferenças entre letras maiúsculas e minúsculas.
+     * Normaliza textos removendo acentos, pontuação, espaços e diferenças entre letras maiúsculas e
+     * minúsculas.
      */
     private String normalizarTexto(String texto) {
         if (texto == null) {
@@ -230,12 +230,9 @@ public class AdicionarLivroService {
         }
 
         String textoSemAcentos =
-                Normalizer.normalize(texto, Normalizer.Form.NFD)
-                        .replaceAll("\\p{M}+", "");
+                Normalizer.normalize(texto, Normalizer.Form.NFD).replaceAll("\\p{M}+", "");
 
-        return textoSemAcentos
-                .toLowerCase(Locale.ROOT)
-                .replaceAll("[^\\p{L}\\p{N}]", "");
+        return textoSemAcentos.toLowerCase(Locale.ROOT).replaceAll("[^\\p{L}\\p{N}]", "");
     }
 
     private void vincularAutores(Livro livro, List<String> autores) {
