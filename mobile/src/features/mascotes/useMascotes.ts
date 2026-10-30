@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { ApiError } from '@/api/client';
+import { mensagemErroCarregamento } from '@/api/client';
 import { buscarMascotes, type Mascote } from './api';
 
 export type EstadoMascotes =
@@ -25,10 +25,7 @@ export function useMascotes() {
       .catch((erro: unknown) =>
         atualizar({
           situacao: 'erro',
-          mensagem:
-            erro instanceof ApiError
-              ? erro.message
-              : 'Não foi possível carregar os mascotes. Tente novamente.',
+          mensagem: mensagemErroCarregamento(erro),
         })
       )
       .finally(() => clearTimeout(timeout));

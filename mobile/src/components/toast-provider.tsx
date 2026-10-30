@@ -6,6 +6,7 @@ import {
   useEffect,
   useMemo,
   useRef,
+  useState,
   type ReactNode,
 } from 'react';
 
@@ -16,6 +17,7 @@ type ToastContextValue = {
   /** Mensagem específica de erro (ex.: falha ao curtir) — não confundir com {@link showToast}. */
   showErrorToast: (message: string) => void;
   showToastAfterNavigation: (message: string) => void;
+  setTabBarHeight: (height: number) => void;
 };
 
 const VALIDADE_DO_TOAST_PENDENTE_MS = 2000;
@@ -29,6 +31,7 @@ type ToastProviderProps = {
 export function ToastProvider({ children }: ToastProviderProps) {
   const { visible, message, show, hide } = useToast();
   const pathname = usePathname();
+  const [tabBarHeight, setTabBarHeight] = useState(0);
 
   const pendingToast = useRef<{ message: string; criadoEm: number } | null>(
     null
@@ -59,14 +62,19 @@ export function ToastProvider({ children }: ToastProviderProps) {
   }, []);
 
   const value = useMemo<ToastContextValue>(
-    () => ({ showToast, showErrorToast, showToastAfterNavigation }),
+    () => ({
+      showToast,
+      showErrorToast,
+      showToastAfterNavigation,
+      setTabBarHeight,
+    }),
     [showToast, showErrorToast, showToastAfterNavigation]
   );
 
   return (
     <ToastContext.Provider value={value}>
       {children}
-      <Toast visible={visible} message={message} />
+      <Toast visible={visible} message={message} tabBarHeight={tabBarHeight} />
     </ToastContext.Provider>
   );
 }

@@ -1,5 +1,11 @@
 import { useState } from 'react';
-import { ActivityIndicator, ScrollView, Text, View } from 'react-native';
+import {
+  ActivityIndicator,
+  Pressable,
+  ScrollView,
+  Text,
+  View,
+} from 'react-native';
 import Svg, { Path } from 'react-native-svg';
 
 import { AppHeader } from '@/components/AppHeader';
@@ -11,7 +17,7 @@ import {
   type PrimaryButtonIconProps,
 } from '@/components/PrimaryButton';
 import { SegmentedTabs } from '@/components/SegmentedTabs';
-import { colors, spacing } from '@/theme';
+import { colors, sizes, spacing } from '@/theme';
 
 import { ClubeCard } from './ClubeCard';
 import type { ClubeFeed, ComunidadeFeed } from './api';
@@ -27,9 +33,8 @@ const COPY = {
   criarGrupo: 'Criar Grupo',
   comunidadesSugeridas: 'Comunidades sugeridas',
   tentarDeNovo: 'Tentar de novo',
-  // Sem copy aprovada no Figma para o erro e para as listas vazias (pendencia de design):
+  // Sem copy aprovada no Figma para as listas vazias (pendencia de design):
   // com o seed de #13 os vazios nao aparecem em uso normal, existem como defesa.
-  erro: 'Não foi possível carregar o feed de comunidades.',
   semClubes: 'Você ainda não participa de nenhum clube do livro.',
   semComunidades: 'Você ainda não participa de nenhuma comunidade.',
 } as const;
@@ -63,15 +68,25 @@ function CabecalhoSecao({
 }) {
   return (
     <View className="flex-row items-center justify-between">
-      <Text className="font-inter-bold text-h2 text-text">{titulo}</Text>
+      <Text className="min-w-0 flex-1 font-inter-bold text-h2 text-text">
+        {titulo}
+      </Text>
       {acao && (
-        <Text
+        <Pressable
           accessibilityRole="button"
+          accessibilityLabel={acao.label}
           onPress={acao.onPress}
-          className="font-inter-semibold text-bodySmall text-accent"
+          style={{
+            minHeight: sizes.searchInputHeight,
+            minWidth: sizes.searchInputHeight,
+            justifyContent: 'center',
+            paddingHorizontal: spacing[2],
+          }}
         >
-          {acao.label}
-        </Text>
+          <Text className="font-inter-semibold text-bodySmall text-accent">
+            {acao.label}
+          </Text>
+        </Pressable>
       )}
     </View>
   );
@@ -111,6 +126,8 @@ export function FeedComunidadesView({
     <View className="flex-1 bg-surface">
       <AppHeader
         title={usuario ? `Olá, ${usuario.nome}!` : 'Olá!'}
+        titleOverflow="wrap"
+        titleNumberOfLines={0}
         subtitle={COPY.subtitulo}
         streakDays={usuario?.sequenciaDias}
         streakActive={usuario?.leuHoje}

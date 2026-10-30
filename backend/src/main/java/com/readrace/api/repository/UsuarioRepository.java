@@ -16,8 +16,11 @@ import com.readrace.api.model.Usuario;
 public interface UsuarioRepository extends JpaRepository<Usuario, UUID> {
 
     List<Usuario>
-            findByNomeContainingIgnoreCaseAndExcluidoEmIsNullOrNomeUsuarioContainingIgnoreCaseAndExcluidoEmIsNull(
-                    String nome, String nomeUsuario);
+            findByNomeContainingIgnoreCaseAndExcluidoEmIsNullAndIdNotOrNomeUsuarioContainingIgnoreCaseAndExcluidoEmIsNullAndIdNot(
+                    String nome,
+                    UUID idExcluidoPorNome,
+                    String nomeUsuario,
+                    UUID idExcluidoPorNomeUsuario);
 
     Optional<Usuario> findByIdAndExcluidoEmIsNull(UUID id);
 

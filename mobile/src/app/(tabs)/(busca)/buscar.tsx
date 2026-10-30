@@ -29,6 +29,7 @@ export default function BuscarScreen() {
   return (
     <BuscaView
       {...busca}
+      aba={aba}
       termo={termo}
       onTermoChange={setTermo}
       onAbaChange={setAba}
