@@ -36,9 +36,14 @@ const COPY = {
   tituloConfirmacao: 'Sair do clube?',
   descricaoConfirmacao:
     'Você deixa de ver o clube nos seus grupos e perde seus pontos nele.',
+  confirmacaoSucessao: (nome: string) =>
+    `Você é o único líder. Ao sair, ${nome} passa a liderar o clube.`,
   confirmarSaida: 'Sair',
   cancelar: 'Cancelar',
-  sucessoSaida: 'Você saiu do clube.',
+  sucessoSaida: (nome?: string) =>
+    nome
+      ? `Você saiu do clube. ${nome} agora é o líder.`
+      : 'Você saiu do clube.',
   erroSaida: 'Não foi possível sair do clube. Tente novamente.',
   quizJaRespondido: 'Você já respondeu o quiz deste clube.',
   quizInexistente: 'Este clube ainda não tem quiz.',
@@ -212,10 +217,10 @@ export function PaginaClubeScreen({ clubeId }: { clubeId: string }) {
     setSaindoDoClube(true);
     setErroAoSair(null);
     try {
-      await sairDoClube(clubeId);
+      const resultado = await sairDoClube(clubeId);
       setConfirmandoSaida(false);
-      showToastAfterNavigation(COPY.sucessoSaida);
-      voltar();
+      showToastAfterNavigation(COPY.sucessoSaida(resultado.novoLider?.nome));
+      router.replace('/feed');
     } catch (erro: unknown) {
       setErroAoSair(erro instanceof ApiError ? erro.message : COPY.erroSaida);
     } finally {
@@ -432,7 +437,9 @@ export function PaginaClubeScreen({ clubeId }: { clubeId: string }) {
         <View style={styles.confirmacaoSaida}>
           <Text style={styles.tituloConfirmacao}>{COPY.tituloConfirmacao}</Text>
           <Text style={styles.descricaoConfirmacao}>
-            {COPY.descricaoConfirmacao}
+            {dados?.proximoLider
+              ? COPY.confirmacaoSucessao(dados.proximoLider.nome)
+              : COPY.descricaoConfirmacao}
           </Text>
           {erroAoSair && (
             <Text accessibilityRole="alert" style={styles.erroDoModal}>
