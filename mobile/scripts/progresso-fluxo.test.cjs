@@ -224,9 +224,28 @@ test('detalhe abre modal, valida, bloqueia toque duplo, preserva erro e aplica s
         )
         .props.onPress()
     );
-    assert.equal(renderer.root.findByType('TextInput').props.value, '');
+    // Reabre já na página atual (RQ-140).
+    assert.equal(renderer.root.findByType('TextInput').props.value, '145');
+    const temTexto = (texto) =>
+      renderer.root
+        .findAllByType('Text')
+        .some((n) => n.props.children === texto);
+    await act(async () =>
+      renderer.root.findByType('TextInput').props.onChangeText('300')
+    );
+    assert.equal(button('Atualizar Progresso').props.disabled, true);
+    assert.ok(temTexto('O livro tem 200 páginas.'));
+    await act(async () =>
+      renderer.root.findByType('TextInput').props.onChangeText('100')
+    );
+    assert.equal(button('Atualizar Progresso').props.disabled, false);
+    assert.ok(temTexto('Você já passou desta página. Ela não soma XP.'));
     await act(async () =>
       renderer.root.findByType('TextInput').props.onChangeText('150')
+    );
+    assert.equal(
+      temTexto('Você já passou desta página. Ela não soma XP.'),
+      false
     );
     await act(async () => {
       pending = button('Atualizar Progresso').props.onPress();

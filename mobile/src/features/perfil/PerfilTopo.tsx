@@ -1,6 +1,7 @@
 import { Image } from 'expo-image';
 import { Pressable, StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import Svg, { Path } from 'react-native-svg';
 import { Avatar } from '@/components/avatar';
 import { GearIcon } from '@/components/icons/GearIcon';
 import {
@@ -18,6 +19,7 @@ export function PerfilTopo({
   planoFundo,
   mascote,
   onConfiguracoes,
+  onVoltar,
 }: {
   nome?: string;
   avatar?: string | null;
@@ -26,6 +28,8 @@ export function PerfilTopo({
   /** Chave da arte do mascote escolhido; sem ela, o perfil ainda não carregou. */
   mascote?: string;
   onConfiguracoes: () => void;
+  /** Só quando o perfil foi empilhado (ex.: tocar em si mesmo na Busca). */
+  onVoltar?: () => void;
 }) {
   const insets = useSafeAreaInsets();
   return (
@@ -52,6 +56,30 @@ export function PerfilTopo({
             accessible={false}
           />
         </View>
+      )}
+      {onVoltar && (
+        <Pressable
+          accessibilityRole="button"
+          accessibilityLabel="Voltar"
+          onPress={onVoltar}
+          hitSlop={spacing[2]}
+          style={[styles.voltar, { top: insets.top + spacing[2] }]}
+        >
+          <Svg
+            width={sizes.icon}
+            height={sizes.icon}
+            viewBox="0 0 24 24"
+            fill="none"
+          >
+            <Path
+              d="M15 5l-7 7 7 7"
+              stroke={colors.primary}
+              strokeWidth={2}
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            />
+          </Svg>
+        </Pressable>
       )}
       <Pressable
         accessibilityRole="button"
@@ -95,6 +123,13 @@ const styles = StyleSheet.create({
     top: '8%',
     width: '84%',
     height: '64%',
+  },
+  voltar: {
+    position: 'absolute',
+    left: spacing[4],
+    padding: spacing[2],
+    borderRadius: radius.pill,
+    backgroundColor: colors.surfacePink,
   },
   engrenagem: {
     position: 'absolute',

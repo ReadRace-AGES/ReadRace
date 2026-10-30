@@ -397,6 +397,8 @@ test('comunidade: erro mantém hero/voltar, retry correto e transição para loa
     'features/comunidade/ComunidadeScreen.tsx',
     {
       ...screenDeps(() => back++),
+      // A comunidade volta pelo useVoltar (RQ-140), não direto pelo router.
+      '@/components/useVoltar': { useVoltar: () => () => back++ },
       './useComunidade': { useComunidade },
       './ComunidadeScreen.styles': load(
         'features/comunidade/ComunidadeScreen.styles.ts',
@@ -411,7 +413,10 @@ test('comunidade: erro mantém hero/voltar, retry correto e transição para loa
   try {
     await act(async () => {
       tree = create(
-        React.createElement(ComunidadeScreen, { comunidadeId: 'id' })
+        React.createElement(ComunidadeScreen, {
+          comunidadeId: 'id',
+          origem: '/buscar',
+        })
       );
     });
     assert.equal(calls, 1);

@@ -18,7 +18,7 @@ function rotaDoUsuario(usuarioId: string): Href {
 }
 
 function rotaDaComunidade(comunidadeId: string): Href {
-  return `/comunidade/${comunidadeId}` as Href;
+  return `/(tabs)/(busca)/comunidade/${comunidadeId}` as Href;
 }
 
 export default function BuscarScreen() {
