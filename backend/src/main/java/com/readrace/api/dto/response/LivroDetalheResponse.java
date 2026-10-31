@@ -18,7 +18,9 @@ public record LivroDetalheResponse(Livro livro, Progresso progresso, List<Post> 
             Integer paginaAtual,
             Integer paginaMaximaAlcancada,
             Integer percentual,
-            boolean concluido) {}
+            boolean concluido,
+            String statusLeitura,
+            boolean favorito) {}
 
     public record Post(
             UUID id,

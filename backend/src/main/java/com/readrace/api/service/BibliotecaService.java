@@ -6,19 +6,27 @@ import java.util.UUID;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.readrace.api.dto.response.BibliotecaItemResponse;
 import com.readrace.api.dto.response.BibliotecaResponse;
 import com.readrace.api.dto.response.LivroBibliotecaResponse;
 import com.readrace.api.dto.response.PaginaBibliotecaResponse;
+import com.readrace.api.exception.ListaInvalidaException;
+import com.readrace.api.exception.LivroComLeituraException;
+import com.readrace.api.exception.LivroEmProgressoException;
+import com.readrace.api.exception.LivroNaoEncontradoException;
 import com.readrace.api.exception.ParametroInvalidoException;
 import com.readrace.api.model.CursorBiblioteca;
 import com.readrace.api.model.ItemBiblioteca;
 import com.readrace.api.model.ListaBiblioteca;
+import com.readrace.api.model.Livro;
 import com.readrace.api.repository.ItemBibliotecaRepository;
 import com.readrace.api.repository.ItemBibliotecaRepository.GeneroDoLivro;
 import com.readrace.api.repository.ItemBibliotecaRepository.ItemPaginado;
+import com.readrace.api.repository.LivroRepository;
 
 @Service
 @Transactional(readOnly = true)
@@ -29,11 +37,87 @@ public class BibliotecaService {
 
     private final ItemBibliotecaRepository itemBibliotecaRepository;
     private final UsuarioAtual usuarioAtual;
+    private final LivroRepository livroRepository;
+
+    @Autowired
+    public BibliotecaService(
+            ItemBibliotecaRepository itemBibliotecaRepository,
+            UsuarioAtual usuarioAtual,
+            LivroRepository livroRepository) {
+        this.itemBibliotecaRepository = itemBibliotecaRepository;
+        this.usuarioAtual = usuarioAtual;
+        this.livroRepository = livroRepository;
+    }
 
     public BibliotecaService(
             ItemBibliotecaRepository itemBibliotecaRepository, UsuarioAtual usuarioAtual) {
-        this.itemBibliotecaRepository = itemBibliotecaRepository;
-        this.usuarioAtual = usuarioAtual;
+        this(itemBibliotecaRepository, usuarioAtual, null);
+    }
+
+    @Transactional
+    public BibliotecaItemResponse atualizarStatus(UUID livroId, String lista) {
+        Livro livro =
+                livroRepository.findById(livroId).orElseThrow(LivroNaoEncontradoException::new);
+        if (!"lido".equals(lista) && !"desejo".equals(lista)) {
+            throw new ListaInvalidaException();
+        }
+        UUID usuarioId = usuarioAtual.idDoUsuarioAtual().valor();
+        if ("desejo".equals(lista) || "lido".equals(lista)) {
+            itemBibliotecaRepository
+                    .findByUsuarioIdAndLivro_Id(usuarioId, livroId)
+                    .filter(item -> item.getPaginaMaxima() > 0)
+                    .ifPresent(
+                            item -> {
+                                throw new LivroEmProgressoException();
+                            });
+        }
+        itemBibliotecaRepository.definirStatus(UUID.randomUUID(), usuarioId, livro.getId(), lista);
+        return item(usuarioId, livroId);
+    }
+
+    @Transactional
+    public BibliotecaItemResponse marcarFavorito(UUID livroId) {
+        Livro livro =
+                livroRepository.findById(livroId).orElseThrow(LivroNaoEncontradoException::new);
+        UUID usuarioId = usuarioAtual.idDoUsuarioAtual().valor();
+        itemBibliotecaRepository.marcarFavorito(UUID.randomUUID(), usuarioId, livro.getId());
+        return item(usuarioId, livroId);
+    }
+
+    @Transactional
+    public BibliotecaItemResponse desmarcarFavorito(UUID livroId) {
+        Livro livro =
+                livroRepository.findById(livroId).orElseThrow(LivroNaoEncontradoException::new);
+        UUID usuarioId = usuarioAtual.idDoUsuarioAtual().valor();
+        ItemBiblioteca item =
+                itemBibliotecaRepository
+                        .findByUsuarioIdAndLivro_Id(usuarioId, livro.getId())
+                        .orElseThrow(LivroNaoEncontradoException::new);
+        item.setFavorito(false);
+        return item(usuarioId, livroId);
+    }
+
+    @Transactional
+    public void remover(UUID livroId) {
+        Livro livro =
+                livroRepository.findById(livroId).orElseThrow(LivroNaoEncontradoException::new);
+        UUID usuarioId = usuarioAtual.idDoUsuarioAtual().valor();
+        ItemBiblioteca item =
+                itemBibliotecaRepository
+                        .findByUsuarioIdAndLivro_Id(usuarioId, livro.getId())
+                        .orElse(null);
+        if (item == null) return;
+        if (item.getPaginaMaxima() > 0) throw new LivroComLeituraException();
+        itemBibliotecaRepository.delete(item);
+    }
+
+    private BibliotecaItemResponse item(UUID usuarioId, UUID livroId) {
+        ItemBiblioteca item =
+                itemBibliotecaRepository
+                        .findByUsuarioIdAndLivroId(usuarioId, livroId)
+                        .orElseThrow(LivroNaoEncontradoException::new);
+        return new BibliotecaItemResponse(
+                livroId, item.getStatusLeitura().name(), item.isFavorito());
     }
 
     /** A primeira página de cada lista, para a tela abrir com uma chamada só. */
