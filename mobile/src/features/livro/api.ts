@@ -29,6 +29,7 @@ export type PostLivro = {
   criadoEm: string;
   curtidas: number;
   curtidoPorMim: boolean;
+  totalComentarios: number;
 };
 
 export function buscarDetalhe(livroId: string, signal: AbortSignal) {

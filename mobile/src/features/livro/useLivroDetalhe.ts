@@ -32,15 +32,17 @@ type Estado =
 export function useLivroDetalhe(livroId: string) {
   const [estado, setEstado] = useState<Estado>({ situacao: 'carregando' });
   const [tentativa, setTentativa] = useState(0);
-  // Espelha `estado` de forma síncrona: o updater de setState roda no momento em que
-  // o React decide, não no momento da chamada — ler o post atual precisa de algo síncrono.
+
   const estadoRef = useRef(estado);
   estadoRef.current = estado;
+
   useEffect(() => {
     const controller = new AbortController();
     let ativo = true;
     const timeout = setTimeout(() => controller.abort(), 15000);
+
     setEstado({ situacao: 'carregando' });
+
     buscarDetalhe(livroId, controller.signal)
       .then((dados) => {
         if (ativo) setEstado({ situacao: 'sucesso', dados });
@@ -53,12 +55,14 @@ export function useLivroDetalhe(livroId: string) {
           });
       })
       .finally(() => clearTimeout(timeout));
+
     return () => {
       ativo = false;
       clearTimeout(timeout);
       controller.abort();
     };
   }, [livroId, tentativa]);
+
   const atualizarProgresso = useCallback(
     (resposta: ProgressoLeituraResponse) => {
       setEstado((atual) =>
@@ -76,6 +80,7 @@ export function useLivroDetalhe(livroId: string) {
   const alternarCurtida = useCallback(async (postId: string) => {
     const atual = estadoRef.current;
     if (atual.situacao !== 'sucesso') return;
+
     const anterior = atual.dados.posts.find((post) => post.id === postId);
     if (!anterior) return;
 
@@ -99,8 +104,23 @@ export function useLivroDetalhe(livroId: string) {
             }
           : maisRecente
       );
+
       throw new Error(mensagemDeCurtida(erro));
     }
+  }, []);
+
+  const registrarComentario = useCallback((postId: string) => {
+    setEstado((atual) =>
+      atual.situacao === 'sucesso'
+        ? {
+            situacao: 'sucesso',
+            dados: comPost(atual.dados, postId, (post) => ({
+              ...post,
+              totalComentarios: (post.totalComentarios ?? 0) + 1,
+            })),
+          }
+        : atual
+    );
   }, []);
 
   return {
@@ -108,5 +128,6 @@ export function useLivroDetalhe(livroId: string) {
     recarregar: () => setTentativa((t) => t + 1),
     atualizarProgresso,
     alternarCurtida,
+    registrarComentario,
   };
 }

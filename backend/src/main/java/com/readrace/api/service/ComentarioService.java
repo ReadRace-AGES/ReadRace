@@ -1,3 +1,4 @@
+
 package com.readrace.api.service;
 
 import java.util.Comparator;
@@ -13,22 +14,23 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.readrace.api.dto.response.ComentariosResponse;
 import com.readrace.api.exception.PostNaoEncontradoException;
+import com.readrace.api.exception.SoMembroPostaException;
 import com.readrace.api.exception.SoQuemSegueComentaException;
 import com.readrace.api.model.Post;
 import com.readrace.api.model.Usuario;
+import com.readrace.api.repository.ClubeDoLivroRepository;
 import com.readrace.api.repository.ComunidadeRepository;
 import com.readrace.api.repository.CurtidaRepository;
+import com.readrace.api.repository.MembroClubeRepository;
 import com.readrace.api.repository.MembroComunidadeRepository;
 import com.readrace.api.repository.PostRepository;
 import com.readrace.api.repository.UsuarioRepository;
 
 /**
- * Comentários em thread de post de comunidade (#150).
+ * Comentarios em threads de posts de comunidade, clube e livro (#236).
  *
- * <p>Comentário e resposta são linhas em {@code post} com {@code post_pai_id} e sem escopo próprio:
- * a comunidade vem do post raiz da thread. Responder é comentar um comentário. Só threads de post
- * raiz de comunidade aceitam comentário; post de clube ou de livro respondem 404, como um post
- * inexistente, e também qualquer post da thread que esteja excluído.
+ * Comentarios e respostas sao posts com post_pai_id.
+ * O escopo e determinado pelo post raiz.
  */
 @Service
 @Transactional(readOnly = true)
@@ -39,7 +41,9 @@ public class ComentarioService {
 
     private final PostRepository postRepository;
     private final ComunidadeRepository comunidadeRepository;
+    private final ClubeDoLivroRepository clubeRepository;
     private final MembroComunidadeRepository membroRepository;
+    private final MembroClubeRepository membroClubeRepository;
     private final CurtidaRepository curtidaRepository;
     private final UsuarioRepository usuarioRepository;
     private final UsuarioAtual usuarioAtual;
@@ -47,104 +51,213 @@ public class ComentarioService {
     public ComentarioService(
             PostRepository postRepository,
             ComunidadeRepository comunidadeRepository,
+            ClubeDoLivroRepository clubeRepository,
             MembroComunidadeRepository membroRepository,
+            MembroClubeRepository membroClubeRepository,
             CurtidaRepository curtidaRepository,
             UsuarioRepository usuarioRepository,
             UsuarioAtual usuarioAtual) {
         this.postRepository = postRepository;
         this.comunidadeRepository = comunidadeRepository;
+        this.clubeRepository = clubeRepository;
         this.membroRepository = membroRepository;
+        this.membroClubeRepository = membroClubeRepository;
         this.curtidaRepository = curtidaRepository;
         this.usuarioRepository = usuarioRepository;
         this.usuarioAtual = usuarioAtual;
     }
 
     /**
-     * A thread abaixo do post (ou do comentário) informado. Quem não segue também lê; {@code
-     * podeComentar} diz se o campo aparece.
+     * Lista a thread de comentarios de um post ou comentario.
+     * A leitura e permitida mesmo quando o usuario nao pode escrever.
      */
     public ComentariosResponse listar(UUID postId) {
         Post raiz = raizComentavel(postId);
         UUID usuarioId = usuarioAtual.idDoUsuarioAtual().valor();
 
-        List<UUID> ids = postRepository.idsDaThread(postId, PostRepository.PROFUNDIDADE_MAXIMA);
+        boolean podeComentar = podeComentar(raiz, usuarioId);
+
+        List<UUID> ids =
+                postRepository.idsDaThread(
+                        postId, PostRepository.PROFUNDIDADE_MAXIMA);
+
         if (ids.isEmpty()) {
-            return new ComentariosResponse(List.of(), segue(raiz.getComunidadeId(), usuarioId));
+            return new ComentariosResponse(List.of(), podeComentar);
         }
 
         List<Post> comentarios = postRepository.findAllById(ids);
+
         Map<UUID, List<Post>> porPai =
-                comentarios.stream().collect(Collectors.groupingBy(Post::getPostPaiId));
+                comentarios.stream()
+                        .collect(Collectors.groupingBy(Post::getPostPaiId));
+
         Map<UUID, Usuario> autores =
                 usuarioRepository
-                        .findAllById(comentarios.stream().map(Post::getAutorId).distinct().toList())
+                        .findAllById(
+                                comentarios.stream()
+                                        .map(Post::getAutorId)
+                                        .distinct()
+                                        .toList())
                         .stream()
-                        .collect(Collectors.toMap(Usuario::getId, Function.identity()));
+                        .collect(
+                                Collectors.toMap(
+                                        Usuario::getId,
+                                        Function.identity()));
+
         Map<UUID, Long> curtidas =
                 curtidaRepository.contarPorPostIds(ids).stream()
                         .collect(
                                 Collectors.toMap(
                                         CurtidaRepository.ContagemPorPost::getPostId,
                                         CurtidaRepository.ContagemPorPost::getTotal));
+
         Set<UUID> curtidosPorMim =
-                Set.copyOf(curtidaRepository.postsCurtidosPorUsuario(usuarioId, ids));
+                Set.copyOf(
+                        curtidaRepository.postsCurtidosPorUsuario(
+                                usuarioId, ids));
 
-        Arvore arvore = new Arvore(porPai, autores, curtidas, curtidosPorMim);
+        Arvore arvore =
+                new Arvore(porPai, autores, curtidas, curtidosPorMim);
+
         return new ComentariosResponse(
-                arvore.respostasDe(postId), segue(raiz.getComunidadeId(), usuarioId));
-    }
-
-    /** Com o id de um comentário, cria uma resposta a ele. */
-    @Transactional
-    public ComentariosResponse.Comentario comentar(UUID postId, String texto) {
-        Post raiz = raizComentavel(postId);
-        UUID autorId = usuarioAtual.idDoUsuarioAtual().valor();
-        if (!segue(raiz.getComunidadeId(), autorId)) {
-            throw new SoQuemSegueComentaException();
-        }
-
-        Post comentario = postRepository.save(Post.criarComentario(autorId, postId, texto));
-        return paraComentario(
-                comentario, usuarioRepository.findById(autorId).orElse(null), 0L, false, List.of());
+                arvore.respostasDe(postId), podeComentar);
     }
 
     /**
-     * O post raiz da thread de {@code postId}, se a thread aceita comentário: nenhum post do
-     * caminho excluído, a raiz é de comunidade e a comunidade não foi excluída.
+     * Cria um comentario ou uma resposta.
+     * A permissao e determinada pelo post raiz da thread.
+     */
+    @Transactional
+    public ComentariosResponse.Comentario comentar(
+            UUID postId, String texto) {
+
+        Post raiz = raizComentavel(postId);
+        UUID autorId = usuarioAtual.idDoUsuarioAtual().valor();
+
+        validarPermissao(raiz, autorId);
+
+        Post comentario =
+                postRepository.save(
+                        Post.criarComentario(autorId, postId, texto));
+
+        return paraComentario(
+                comentario,
+                usuarioRepository.findById(autorId).orElse(null),
+                0L,
+                false,
+                List.of());
+    }
+
+    /**
+     * Localiza a raiz da thread e valida o escopo.
      */
     private Post raizComentavel(UUID postId) {
-        List<UUID> caminho = postRepository.idsAteARaiz(postId, PostRepository.PROFUNDIDADE_MAXIMA);
+        List<UUID> caminho =
+                postRepository.idsAteARaiz(
+                        postId, PostRepository.PROFUNDIDADE_MAXIMA);
+
         Map<UUID, Post> posts =
                 postRepository.findAllById(caminho).stream()
-                        .collect(Collectors.toMap(Post::getId, Function.identity()));
+                        .collect(
+                                Collectors.toMap(
+                                        Post::getId,
+                                        Function.identity()));
+
         if (caminho.isEmpty()
                 || caminho.stream()
                         .map(posts::get)
-                        .anyMatch(post -> post == null || post.getExcluidoEm() != null)) {
+                        .anyMatch(
+                                post ->
+                                        post == null
+                                                || post.getExcluidoEm() != null)) {
             throw new PostNaoEncontradoException();
         }
 
         Post raiz = posts.get(caminho.getLast());
-        boolean comunidadeAtiva =
-                raiz.getPostPaiId() == null
-                        && raiz.getComunidadeId() != null
-                        && comunidadeRepository
-                                .findById(raiz.getComunidadeId())
-                                .filter(comunidade -> comunidade.getExcluidoEm() == null)
-                                .isPresent();
-        if (!comunidadeAtiva) {
+
+        if (raiz.getPostPaiId() != null) {
             throw new PostNaoEncontradoException();
         }
-        return raiz;
+
+        if (raiz.getComunidadeId() != null) {
+            boolean comunidadeAtiva =
+                    comunidadeRepository
+                            .findById(raiz.getComunidadeId())
+                            .filter(
+                                    comunidade ->
+                                            comunidade.getExcluidoEm() == null)
+                            .isPresent();
+
+            if (!comunidadeAtiva) {
+                throw new PostNaoEncontradoException();
+            }
+
+            return raiz;
+        }
+
+        if (raiz.getClubeId() != null) {
+            boolean clubeAtivo =
+                    clubeRepository
+                            .findByIdAndExcluidoEmIsNull(raiz.getClubeId())
+                            .isPresent();
+
+            if (!clubeAtivo) {
+                throw new PostNaoEncontradoException();
+            }
+
+            return raiz;
+        }
+
+        if (raiz.getLivroId() != null) {
+            return raiz;
+        }
+
+        throw new PostNaoEncontradoException();
+    }
+
+    /**
+     * Verifica se o usuario pode comentar no escopo do post.
+     */
+    private boolean podeComentar(Post raiz, UUID usuarioId) {
+        if (raiz.getComunidadeId() != null) {
+            return segue(raiz.getComunidadeId(), usuarioId);
+        }
+
+        if (raiz.getClubeId() != null) {
+            return membroClubeRepository
+                    .findByClube_IdAndUsuarioId(
+                            raiz.getClubeId(), usuarioId)
+                    .isPresent();
+        }
+
+        return raiz.getLivroId() != null;
+    }
+
+    /**
+     * Mantem as regras de permissao especificas de cada escopo.
+     */
+    private void validarPermissao(Post raiz, UUID usuarioId) {
+        if (podeComentar(raiz, usuarioId)) {
+            return;
+        }
+
+        if (raiz.getClubeId() != null) {
+            throw new SoMembroPostaException();
+        }
+
+        throw new SoQuemSegueComentaException();
     }
 
     private boolean segue(UUID comunidadeId, UUID usuarioId) {
         return membroRepository
-                .findByComunidade_IdAndUsuarioId(comunidadeId, usuarioId)
+                .findByComunidade_IdAndUsuarioId(
+                        comunidadeId, usuarioId)
                 .isPresent();
     }
 
-    /** Monta a árvore a partir dos comentários agrupados pelo pai. */
+    /**
+     * Monta a arvore de comentarios e respostas.
+     */
     private record Arvore(
             Map<UUID, List<Post>> porPai,
             Map<UUID, Usuario> autores,
@@ -158,9 +271,12 @@ public class ComentarioService {
                             comentario ->
                                     paraComentario(
                                             comentario,
-                                            autores.get(comentario.getAutorId()),
-                                            curtidas.getOrDefault(comentario.getId(), 0L),
-                                            curtidosPorMim.contains(comentario.getId()),
+                                            autores.get(
+                                                    comentario.getAutorId()),
+                                            curtidas.getOrDefault(
+                                                    comentario.getId(), 0L),
+                                            curtidosPorMim.contains(
+                                                    comentario.getId()),
                                             respostasDe(comentario.getId())))
                     .toList();
         }
@@ -172,6 +288,7 @@ public class ComentarioService {
             long totalCurtidas,
             boolean curtidoPorMim,
             List<ComentariosResponse.Comentario> respostas) {
+
         return new ComentariosResponse.Comentario(
                 comentario.getId(),
                 comentario.getConteudo(),

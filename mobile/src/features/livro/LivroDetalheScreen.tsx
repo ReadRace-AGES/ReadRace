@@ -17,6 +17,7 @@ import { PostCard } from '@/components/PostCard';
 import { PrimaryButton } from '@/components/PrimaryButton';
 import { ProgressBar } from '@/components/ProgressBar';
 import { useToastContext } from '@/components/toast-provider';
+import { ComentariosSheet } from '@/features/comentarios/ComentariosSheet';
 import { RegistrarProgressoSheet } from '@/features/progresso/RegistrarProgressoSheet';
 import { bookCover, colors, radius, sizes, spacing, textStyles } from '@/theme';
 import { tempoRelativo } from './model';
@@ -30,29 +31,47 @@ export function LivroDetalheScreen({
   origem: '/buscar' | '/meus-livros' | '/perfil';
 }) {
   const router = useRouter();
-  const { estado, recarregar, atualizarProgresso, alternarCurtida } =
-    useLivroDetalhe(livroId);
+
+  const {
+    estado,
+    recarregar,
+    atualizarProgresso,
+    alternarCurtida,
+    registrarComentario,
+  } = useLivroDetalhe(livroId);
+
   const { showErrorToast } = useToastContext();
+
   const [curtidasPendentes, setCurtidasPendentes] = useState<Set<string>>(
     new Set()
   );
+
   const [modalAberto, setModalAberto] = useState(false);
+  const [postComentariosId, setPostComentariosId] = useState<string | null>(
+    null
+  );
+
   useFocusEffect(
     useCallback(
       () => () => {
         setModalAberto(false);
+        setPostComentariosId(null);
       },
       []
     )
   );
+
   const voltar = () =>
     router.canGoBack() ? router.back() : router.replace(origem);
+
   const detalhe = estado.situacao === 'sucesso' ? estado.dados : null;
   const progresso = detalhe?.progresso;
 
   async function curtirPost(postId: string) {
     if (curtidasPendentes.has(postId)) return;
+
     setCurtidasPendentes((atual) => new Set(atual).add(postId));
+
     try {
       await alternarCurtida(postId);
     } catch (erro) {
@@ -81,6 +100,7 @@ export function LivroDetalheScreen({
           onBackPress={voltar}
           titleOverflow="expand"
         />
+
         {estado.situacao === 'carregando' && (
           <View style={styles.state}>
             <ActivityIndicator
@@ -89,6 +109,7 @@ export function LivroDetalheScreen({
             />
           </View>
         )}
+
         {estado.situacao === 'erro' && (
           <View style={styles.state}>
             <Text accessibilityRole="alert" style={styles.text}>
@@ -98,6 +119,7 @@ export function LivroDetalheScreen({
             <PrimaryButton label="Voltar" variant="outline" onPress={voltar} />
           </View>
         )}
+
         {detalhe && (
           <View style={styles.content}>
             <View style={styles.overview}>
@@ -106,11 +128,13 @@ export function LivroDetalheScreen({
                 size="detail"
                 accessibilityLabel={`Capa de ${detalhe.livro.titulo}`}
               />
+
               <View style={styles.details}>
                 <View>
                   {detalhe.livro.genero && (
                     <Text style={styles.genre}>{detalhe.livro.genero}</Text>
                   )}
+
                   <View style={styles.row}>
                     <View style={styles.pages}>
                       <BookIcon />
@@ -118,6 +142,7 @@ export function LivroDetalheScreen({
                         {detalhe.livro.totalPaginas} páginas
                       </Text>
                     </View>
+
                     <Pressable
                       accessibilityRole="button"
                       accessibilityLabel="Registrar progresso de leitura"
@@ -128,6 +153,7 @@ export function LivroDetalheScreen({
                     </Pressable>
                   </View>
                 </View>
+
                 <Pressable
                   accessibilityRole="button"
                   style={({ pressed }) => [
@@ -141,6 +167,7 @@ export function LivroDetalheScreen({
                     label="Seu progresso"
                     progress={progresso?.percentual ?? 0}
                   />
+
                   <Text style={styles.pageDetail}>
                     {progresso?.paginaAtual ?? 0} de{' '}
                     {detalhe.livro.totalPaginas} páginas
@@ -148,7 +175,9 @@ export function LivroDetalheScreen({
                 </Pressable>
               </View>
             </View>
+
             <Text style={styles.heading}>Posts sobre este livro</Text>
+
             {detalhe.posts.length === 0 ? (
               <EmptyState
                 icon={BookIcon}
@@ -163,7 +192,9 @@ export function LivroDetalheScreen({
                   authorStreak={
                     post.autor.sequenciaDias == null
                       ? null
-                      : `${post.autor.sequenciaDias} ${post.autor.sequenciaDias === 1 ? 'dia' : 'dias'}`
+                      : `${post.autor.sequenciaDias} ${
+                          post.autor.sequenciaDias === 1 ? 'dia' : 'dias'
+                        }`
                   }
                   timeAgo={tempoRelativo(post.criadoEm)}
                   text={post.texto}
@@ -171,12 +202,15 @@ export function LivroDetalheScreen({
                   likedByMe={post.curtidoPorMim}
                   likeDisabled={curtidasPendentes.has(post.id)}
                   onLikePress={() => curtirPost(post.id)}
+                  comments={post.totalComentarios ?? 0}
+                  onCommentsPress={() => setPostComentariosId(post.id)}
                 />
               ))
             )}
           </View>
         )}
       </ScrollView>
+
       {detalhe && (
         <RegistrarProgressoSheet
           visible={modalAberto}
@@ -188,6 +222,14 @@ export function LivroDetalheScreen({
           onSuccess={atualizarProgresso}
         />
       )}
+
+      <ComentariosSheet
+        visible={postComentariosId !== null}
+        postId={postComentariosId}
+        contexto="livro"
+        onClose={() => setPostComentariosId(null)}
+        onComentado={registrarComentario}
+      />
     </View>
   );
 }
@@ -202,7 +244,11 @@ const styles = StyleSheet.create({
     padding: spacing[6],
     gap: spacing[4],
   },
-  overview: { flexDirection: 'row', alignItems: 'flex-start', gap: spacing[3] },
+  overview: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    gap: spacing[3],
+  },
   details: {
     flex: 1,
     minWidth: 0,

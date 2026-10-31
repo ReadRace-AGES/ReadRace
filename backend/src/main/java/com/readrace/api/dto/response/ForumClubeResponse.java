@@ -5,12 +5,8 @@ import java.util.List;
 import java.util.UUID;
 
 /**
- * Resposta de {@code GET /api/clubes/{clubeId}/posts} (#36): os posts do clube sobre a leitura
- * atual, com o cabeçalho junto para a tela renderizar sem uma segunda chamada.
- *
- * <p>Vale a invariante do banco: um {@code Post} pertence a um {@code ClubeDoLivro} ou a uma {@code
- * Comunidade}, nunca aos dois. Aqui só entram posts raiz deste clube — comentário é post com pai e
- * fica de fora.
+ * Resposta de GET /api/clubes/{clubeId}/posts:
+ * posts raiz do clube, acompanhados do cabeçalho.
  */
 public record ForumClubeResponse(Clube clube, List<Post> posts, boolean podeEscrever) {
 
@@ -19,8 +15,8 @@ public record ForumClubeResponse(Clube clube, List<Post> posts, boolean podeEscr
     public record LivroAtual(String titulo, String autor, String capaUrl) {}
 
     /**
-     * {@code texto} vem inteiro: o corte e o "Ler mais" são decisão do {@code PostCard} (#22).
-     * {@code curtidoPorMim} reflete a curtida do usuário atual neste post (#101).
+     * totalComentarios inclui comentários e respostas da thread.
+     * curtidoPorMim indica se o usuário atual curtiu o post.
      */
     public record Post(
             UUID id,
@@ -28,8 +24,8 @@ public record ForumClubeResponse(Clube clube, List<Post> posts, boolean podeEscr
             OffsetDateTime publicadoEm,
             String texto,
             long totalCurtidas,
-            boolean curtidoPorMim) {}
+            boolean curtidoPorMim,
+            long totalComentarios) {}
 
-    /** {@code sequenciaDias} é {@code usuario.dias_consecutivos} e alimenta o badge de chama. */
     public record Autor(UUID id, String nome, String avatarUrl, Integer sequenciaDias) {}
 }

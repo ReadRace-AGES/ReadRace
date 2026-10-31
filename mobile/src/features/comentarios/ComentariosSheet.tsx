@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+﻿import { useEffect, useRef, useState } from 'react';
 import {
   ActivityIndicator,
   Pressable,
@@ -35,6 +35,8 @@ const COPY = {
   titulo: 'Comentários',
   vazio: 'Nenhum comentário ainda.',
   naoSegue: 'Siga a comunidade para comentar.',
+  naoMembro: 'Participe do clube para comentar.',
+  naoPodeComentarLivro: 'Você não tem permissão para comentar neste post.',
   placeholder: 'Escreva um comentário...',
   placeholderResposta: 'Escreva uma resposta...',
   comentar: 'Comentar',
@@ -50,6 +52,7 @@ const COPY = {
 type ComentariosSheetProps = {
   visible: boolean;
   postId: string | null;
+  contexto?: 'comunidade' | 'clube' | 'livro';
   onClose: () => void;
   /** Depois de comentar ou responder, para a tela somar 1 no balão do post. */
   onComentado: (postId: string) => void;
@@ -63,6 +66,7 @@ export function ComentariosSheet({
   postId,
   onClose,
   onComentado,
+  contexto = 'comunidade',
 }: ComentariosSheetProps) {
   const { height } = useWindowDimensions();
   const { showErrorToast } = useToastContext();
@@ -323,7 +327,13 @@ export function ComentariosSheet({
         )}
       </View>
     ) : (
-      <Text style={[styles.message, styles.status]}>{COPY.naoSegue}</Text>
+      <Text style={[styles.message, styles.status]}>
+        {contexto === 'clube'
+          ? COPY.naoMembro
+          : contexto === 'livro'
+            ? COPY.naoPodeComentarLivro
+            : COPY.naoSegue}
+      </Text>
     );
 
   return (
