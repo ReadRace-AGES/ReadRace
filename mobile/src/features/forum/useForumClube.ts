@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
+﻿import { useCallback, useEffect, useRef, useState } from 'react';
 
 import { ApiError, mensagemErroCarregamento } from '@/api/client';
 import { curtir, descurtir } from '@/features/posts/api';
@@ -16,6 +16,7 @@ export type ForumClubeState = {
   alternarCurtida: (postId: string) => Promise<void>;
   curtidasPendentes: Set<string>;
   adicionarPost: (post: PostForum) => void;
+  registrarComentario: (postId: string) => void;
 };
 
 type SessaoForum = {
@@ -32,7 +33,7 @@ function mensagemDe(erro: unknown) {
 function mensagemDeCurtida(erro: unknown) {
   return erro instanceof ApiError
     ? erro.message
-    : 'Não foi possível registrar sua curtida. Tente novamente.';
+    : 'NÃ£o foi possÃ­vel registrar sua curtida. Tente novamente.';
 }
 
 function comPost(
@@ -48,7 +49,7 @@ function comPost(
   };
 }
 
-/** Cabeçalho e posts chegam na mesma resposta: nenhum card sai meio renderizado. */
+/** CabeÃ§alho e posts chegam na mesma resposta: nenhum card sai meio renderizado. */
 export function useForumClube(clubeId: string): ForumClubeState {
   const [forum, setForum] = useState<ForumCarga>({ situacao: 'carregando' });
   const [versao, setVersao] = useState(0);
@@ -56,8 +57,8 @@ export function useForumClube(clubeId: string): ForumClubeState {
     new Set()
   );
   const sessaoRef = useRef<SessaoForum | null>(null);
-  // Espelha `forum` de forma síncrona: o updater de setState roda no momento em que
-  // o React decide, não no momento da chamada — ler o post atual precisa de algo síncrono.
+  // Espelha `forum` de forma sÃ­ncrona: o updater de setState roda no momento em que
+  // o React decide, nÃ£o no momento da chamada â€” ler o post atual precisa de algo sÃ­ncrono.
   const forumRef = useRef(forum);
   forumRef.current = forum;
 
@@ -81,8 +82,8 @@ export function useForumClube(clubeId: string): ForumClubeState {
     const controller = new AbortController();
     const cancelado = () =>
       controller.signal.aborted || sessao.controller.signal.aborted;
-    // Uma recarga mantém o conteúdo visível. Se houver mutação enquanto o GET
-    // estiver pendente, a resposta antiga não substitui posts ou curtidas locais.
+    // Uma recarga mantÃ©m o conteÃºdo visÃ­vel. Se houver mutaÃ§Ã£o enquanto o GET
+    // estiver pendente, a resposta antiga nÃ£o substitui posts ou curtidas locais.
     setForum((atual) =>
       atual.situacao === 'sucesso' ? atual : { situacao: 'carregando' }
     );
@@ -137,6 +138,34 @@ export function useForumClube(clubeId: string): ForumClubeState {
     [clubeId]
   );
 
+  const registrarComentario = useCallback(
+    (postId: string) => {
+      const sessao = sessaoRef.current;
+
+      if (
+        !sessao ||
+        sessao.clubeId !== clubeId ||
+        sessao.controller.signal.aborted
+      ) {
+        return;
+      }
+
+      sessao.revisao++;
+
+      setForum((atual) =>
+        atual.situacao === 'sucesso'
+          ? {
+              ...atual,
+              dados: comPost(atual.dados, postId, (post) => ({
+                ...post,
+                totalComentarios: (post.totalComentarios ?? 0) + 1,
+              })),
+            }
+          : atual
+      );
+    },
+    [clubeId]
+  );
   const alternarCurtida = useCallback(
     async (postId: string) => {
       const sessao = sessaoRef.current;
@@ -202,5 +231,6 @@ export function useForumClube(clubeId: string): ForumClubeState {
     alternarCurtida,
     curtidasPendentes,
     adicionarPost,
+    registrarComentario,
   };
 }
