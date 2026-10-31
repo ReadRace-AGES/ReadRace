@@ -1,3 +1,4 @@
+
 package com.readrace.api.service;
 
 import java.time.LocalDate;
@@ -64,7 +65,7 @@ public class LivroService {
         String autor =
                 livro.getLivroAutores().stream()
                         .map(vinculo -> vinculo.getAutor().getNome())
-                        .collect(java.util.stream.Collectors.joining(", "));
+                        .collect(Collectors.joining(", "));
 
         Genero genero = generoRepository.buscarPorLivroId(livroId).orElse(null);
 
@@ -110,7 +111,10 @@ public class LivroService {
                 postRepository
                         .findByLivroIdAndPostPaiIdIsNullAndExcluidoEmIsNullOrderByCriadoEmDesc(
                                 livroId);
-        if (posts.isEmpty()) return List.of();
+
+        if (posts.isEmpty()) {
+            return List.of();
+        }
 
         List<UUID> postIds = posts.stream().map(Post::getId).toList();
 
@@ -119,36 +123,62 @@ public class LivroService {
                         .findAllById(posts.stream().map(Post::getAutorId).distinct().toList())
                         .stream()
                         .collect(Collectors.toMap(Usuario::getId, Function.identity()));
+
         Map<UUID, Long> curtidas =
                 curtidaRepository.contarPorPostIds(postIds).stream()
                         .collect(
                                 Collectors.toMap(
                                         CurtidaRepository.ContagemPorPost::getPostId,
                                         CurtidaRepository.ContagemPorPost::getTotal));
+
+        Map<UUID, Long> comentarios =
+                postRepository.contarComentariosPorPostIds(postIds).stream()
+                        .collect(
+                                Collectors.toMap(
+                                        PostRepository.ContagemComentarios::getPostId,
+                                        PostRepository.ContagemComentarios::getTotal));
+
         Set<UUID> curtidosPorMim =
                 Set.copyOf(curtidaRepository.postsCurtidosPorUsuario(usuarioId, postIds));
+
         LocalDate hoje = SequenciaDeLeitura.hoje();
 
         return posts.stream()
-                .map(post -> criarPostResponse(post, autores, curtidas, curtidosPorMim, hoje))
+                .map(
+                        post ->
+                                criarPostResponse(
+                                        post,
+                                        autores,
+                                        curtidas,
+                                        comentarios,
+                                        curtidosPorMim,
+                                        hoje))
                 .toList();
     }
 
     private LivroDetalheResponse.Post criarPostResponse(
             Post post,
             Map<UUID, Usuario> autores,
-            Map<UUID, Long> contagens,
+            Map<UUID, Long> curtidasPorPost,
+            Map<UUID, Long> comentariosPorPost,
             Set<UUID> curtidosPorMim,
             LocalDate hoje) {
+
         Usuario autor = autores.get(post.getAutorId());
-        if (autor == null)
-            throw new IllegalStateException("Autor do post não encontrado: " + post.getAutorId());
+
+        if (autor == null) {
+            throw new IllegalStateException(
+                    "Autor do post não encontrado: " + post.getAutorId());
+        }
 
         LivroDetalheResponse.Autor autorResponse =
                 new LivroDetalheResponse.Autor(
-                        autor.getNome(), autor.getAvatarUrl(), autor.sequenciaExibida(hoje));
+                        autor.getNome(),
+                        autor.getAvatarUrl(),
+                        autor.sequenciaExibida(hoje));
 
-        long curtidas = contagens.getOrDefault(post.getId(), 0L);
+        long curtidas = curtidasPorPost.getOrDefault(post.getId(), 0L);
+        long totalComentarios = comentariosPorPost.getOrDefault(post.getId(), 0L);
 
         return new LivroDetalheResponse.Post(
                 post.getId(),
@@ -156,6 +186,7 @@ public class LivroService {
                 post.getConteudo(),
                 post.getCriadoEm(),
                 curtidas,
-                curtidosPorMim.contains(post.getId()));
+                curtidosPorMim.contains(post.getId()),
+                totalComentarios);
     }
 }

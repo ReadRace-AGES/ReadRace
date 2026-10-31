@@ -31,12 +31,13 @@ public class ComentarioController {
 
     @GetMapping
     @Operation(
-            summary = "Thread de comentários de um post de comunidade, em árvore",
+            summary = "Lista comentários e respostas de um post",
             description =
-                    "Cada nível vem do mais antigo para o mais novo, com curtidas e respostas. Com o"
-                            + " id de um comentário, devolve as respostas dele. Quem não segue a"
-                            + " comunidade também lê; podeComentar diz se pode escrever. Post de"
-                            + " clube ou de livro responde 404.")
+                    "Retorna os comentários de posts de comunidade, clube ou livro "
+                            + "em formato de árvore, incluindo curtidas e respostas. "
+                            + "Os comentários são ordenados do mais antigo para o mais novo. "
+                            + "O campo podeComentar indica se o usuário atual tem "
+                            + "permissão para escrever. A leitura é pública.")
     public ComentariosResponse listar(@PathVariable UUID postId) {
         return comentarioService.listar(postId);
     }
@@ -44,12 +45,21 @@ public class ComentarioController {
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
     @Operation(
-            summary = "Comenta um post de comunidade ou responde a um comentário",
+            summary = "Cria um comentário ou responde a outro comentário",
             description =
-                    "Com o id de um comentário, cria uma resposta a ele. De 1 a 1.000 caracteres;"
-                            + " só espaços não conta. 403 para quem não segue a comunidade.")
+                    "Permite comentar posts de comunidade, clube ou livro, "
+                            + "assim como responder a comentários existentes. "
+                            + "O texto deve conter de 1 a 1.000 caracteres e não "
+                            + "pode ser composto apenas por espaços. "
+                            + "Em comunidades, somente seguidores podem comentar. "
+                            + "Em clubes, somente membros podem comentar. "
+                            + "Em posts de livros, qualquer usuário autenticado pode comentar. "
+                            + "Retorna 403 quando o usuário não possui permissão "
+                            + "e 404 quando o post não existe ou foi excluído.")
     public ComentariosResponse.Comentario comentar(
-            @PathVariable UUID postId, @RequestBody CriarComentarioRequest request) {
+            @PathVariable UUID postId,
+            @RequestBody CriarComentarioRequest request) {
+
         return comentarioService.comentar(postId, request.texto());
     }
 }

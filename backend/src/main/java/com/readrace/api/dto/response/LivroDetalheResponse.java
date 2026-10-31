@@ -1,3 +1,4 @@
+
 package com.readrace.api.dto.response;
 
 import java.time.OffsetDateTime;
@@ -26,7 +27,8 @@ public record LivroDetalheResponse(Livro livro, Progresso progresso, List<Post> 
             String texto,
             OffsetDateTime criadoEm,
             long curtidas,
-            boolean curtidoPorMim) {}
+            boolean curtidoPorMim,
+            long totalComentarios) {}
 
     public record Autor(String nome, String avatarUrl, Integer sequenciaDias) {}
 }
