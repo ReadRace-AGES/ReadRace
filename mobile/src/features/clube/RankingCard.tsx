@@ -17,16 +17,16 @@ import type { LinhaRanking } from './api';
 
 const COPY = {
   verTodos: 'Ver todos',
-  // O Figma nao desenha o ranking vazio e nao ha copy aprovada; o texto abaixo foi definido
-  // com a gestao. Com o seed de #13 o estado nao aparece em uso normal: existe como defesa.
+  // O Figma não desenha o ranking vazio e não há copy aprovada; o texto abaixo foi definido
+  // com a gestão. Com o seed de #13 o estado não aparece em uso normal: existe como defesa.
   semRanking: 'Este clube ainda não tem membros no ranking.',
 } as const;
 
 const LADO_DO_QUADRO = spacing[3];
 
 /**
- * Faixa quadriculada do topo do card (`menu - clube do livro` 3-6). É decoração: o card do
- * ranking não tem título nem copy de cabeçalho no design.
+ * Faixa quadriculada do topo do card (`menu - clube do livro` 3-6).
+ * É decoração: o card do ranking não tem título nem copy de cabeçalho no design.
  */
 export function FaixaQuadriculada() {
   const [colunas, setColunas] = useState(0);
@@ -66,10 +66,14 @@ export type RankingCardProps = {
 };
 
 /**
- * Card do ranking de `Pontos` do clube: até 7 linhas, já ordenadas e numeradas pelo backend.
+ * Card do ranking de `Pontos` do clube: até 7 linhas,
+ * já ordenadas e numeradas pelo backend.
  *
- * O `RankingRow` (#27) é só apresentação e não é tocável; quem dá o toque é este componente.
- * Ao tocar em uma linha, o ID do usuário é enviado para a tela responsável pela navegação.
+ * O `RankingRow` (#27) é só apresentação e não é tocável;
+ * quem dá o toque é este componente.
+ *
+ * Ao tocar em uma linha, o ID do usuário é enviado
+ * para a tela responsável pela navegação.
  */
 export function RankingCard({
   ranking,
@@ -94,7 +98,7 @@ export function RankingCard({
             key={linha.usuario.id}
             onPress={() => onLinhaPress(linha.usuario.id)}
             accessibilityRole="button"
-            accessibilityLabel={`Abrir perfil de ${linha.usuario.nome}`}
+            accessibilityLabel={`${linha.posicao}º lugar: ${linha.usuario.nome}, ${linha.pontos} pontos`}
           >
             <RankingRow
               position={linha.posicao}
@@ -124,7 +128,8 @@ export function RankingCard({
 }
 
 const styles = StyleSheet.create({
-  // As linhas do ranking sangram até a borda: o respiro interno é delas, não do card.
+  // As linhas do ranking sangram até a borda:
+  // o respiro interno é delas, não do card.
   superficie: { padding: spacing[0] },
   faixa: { overflow: 'hidden' },
   faixaLinha: { flexDirection: 'row' },
@@ -134,9 +139,17 @@ const styles = StyleSheet.create({
     backgroundColor: colors.surface,
   },
   quadroEscuro: { backgroundColor: colors.text },
-  carregando: { padding: spacing[6], alignItems: 'center' },
-  vazio: { paddingVertical: spacing[6] },
-  rodape: { alignItems: 'flex-end', padding: spacing[4] },
+  carregando: {
+    padding: spacing[6],
+    alignItems: 'center',
+  },
+  vazio: {
+    paddingVertical: spacing[6],
+  },
+  rodape: {
+    alignItems: 'flex-end',
+    padding: spacing[4],
+  },
   acao: {
     minHeight: sizes.searchInputHeight,
     minWidth: sizes.searchInputHeight,
