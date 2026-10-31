@@ -71,6 +71,10 @@ public class ItemBiblioteca {
         this.statusLeitura = estaConcluido() ? StatusLeitura.lido : StatusLeitura.lendo;
     }
 
+    public void setFavorito(boolean favorito) {
+        this.favorito = favorito;
+    }
+
     public boolean estaConcluido() {
         return statusLeitura == StatusLeitura.lido || paginaMaxima >= livro.getTotalPaginas();
     }

@@ -14,6 +14,12 @@ export function aplicarProgresso(
       paginaMaximaAlcancada: resposta.paginaMaximaAlcancada,
       percentual: resposta.percentual,
       concluido: resposta.concluido,
+      ...(detalhe.progresso?.statusLeitura !== undefined && {
+        statusLeitura: detalhe.progresso.statusLeitura,
+      }),
+      ...(detalhe.progresso?.favorito !== undefined && {
+        favorito: detalhe.progresso.favorito,
+      }),
     },
   };
 }

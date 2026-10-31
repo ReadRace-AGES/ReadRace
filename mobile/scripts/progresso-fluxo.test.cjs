@@ -119,6 +119,9 @@ test('detalhe abre modal, valida, bloqueia toque duplo, preserva erro e aplica s
       }),
     },
     '@/features/progresso/RegistrarProgressoSheet': { RegistrarProgressoSheet },
+    '@/features/biblioteca/MinhasListasSheet': {
+      MinhasListasSheet: 'MinhasListasSheet',
+    },
   };
   for (const name of [
     'AppHeader',
