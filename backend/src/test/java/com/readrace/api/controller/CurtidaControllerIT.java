@@ -32,6 +32,8 @@ class CurtidaControllerIT {
             UUID.fromString("00000000-0000-0000-0000-000000000002");
     private static final UUID LIVRO_DOM_CASMURRO =
             UUID.fromString("30000000-0000-0000-0000-000000000001");
+    private static final UUID CLUBE_1 = UUID.fromString("50000000-0000-0000-0000-000000000001");
+    private static final UUID CLUBE_4 = UUID.fromString("50000000-0000-0000-0000-000000000004");
 
     @Autowired private MockMvcTester mvc;
     @Autowired private JdbcTemplate jdbc;
@@ -133,6 +135,52 @@ class CurtidaControllerIT {
                 .bodyJson()
                 .extractingPath("$.curtidoPorMim")
                 .isEqualTo(true);
+    }
+
+    // O usuário do seed é membro dos clubes 1, 2 e 3 e não é do clube 4 (V4 e V17).
+    private UUID criarPostDeClube(UUID clubeId) {
+        UUID postId = UUID.randomUUID();
+        jdbc.update(
+                "INSERT INTO post (id, autor_id, clube_id, conteudo) VALUES (?, ?, ?, 'Post do"
+                        + " clube')",
+                postId,
+                OUTRO_USUARIO,
+                clubeId);
+        return postId;
+    }
+
+    @Test
+    @DisplayName("curtir post do fórum de um clube sem ser membro devolve 403 e não grava curtida")
+    void deve_recusar_curtida_de_quem_nao_e_membro_do_clube() {
+        UUID postId = criarPostDeClube(CLUBE_4);
+
+        assertThat(mvc.post().uri(url(postId)))
+                .hasStatus(HttpStatus.FORBIDDEN)
+                .bodyJson()
+                .extractingPath("$.code")
+                .isEqualTo("SO_MEMBRO_POSTA");
+        assertThat(curtidasNoBanco(postId, USUARIO_ATUAL)).isEqualTo(0);
+    }
+
+    @Test
+    @DisplayName("curtir post do fórum de um clube do qual é membro devolve 200")
+    void deve_permitir_curtida_de_membro_do_clube() {
+        UUID postId = criarPostDeClube(CLUBE_1);
+
+        assertThat(mvc.post().uri(url(postId)))
+                .hasStatusOk()
+                .bodyJson()
+                .extractingPath("$.curtidoPorMim")
+                .isEqualTo(true);
+        assertThat(curtidasNoBanco(postId, USUARIO_ATUAL)).isEqualTo(1);
+    }
+
+    @Test
+    @DisplayName("descurtir segue permitido a quem já não é membro (ex.: saiu do clube)")
+    void deve_permitir_descurtir_post_de_clube_sem_ser_membro() {
+        UUID postId = criarPostDeClube(CLUBE_4);
+
+        assertThat(mvc.delete().uri(url(postId))).hasStatus(HttpStatus.OK);
     }
 
     @Test

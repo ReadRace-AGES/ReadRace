@@ -10,6 +10,7 @@ import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.context.annotation.Import;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
+import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.test.web.servlet.assertj.MockMvcTester;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -126,6 +127,30 @@ class FormatoDeErroIT {
     }
 
     @Test
+    @DisplayName("violação de restrição do banco não tratada vira 409 CONFLITO_DE_DADOS (#224)")
+    void deve_devolver_409_quando_o_banco_recusar_por_integridade() {
+        assertThat(mvc.get().uri("/teste/integridade"))
+                .hasStatus(HttpStatus.CONFLICT)
+                .bodyJson()
+                .extractingPath("$.code")
+                .isEqualTo("CONFLITO_DE_DADOS");
+    }
+
+    @Test
+    @DisplayName("o 409 de integridade não expõe SQL nem nome de tabela ou constraint")
+    void nao_deve_vazar_sql_nem_constraint_no_409() {
+        assertThat(mvc.get().uri("/teste/integridade"))
+                .bodyJson()
+                .extractingPath("$.message")
+                .isEqualTo(CodigoErro.CONFLITO_DE_DADOS.mensagemPadrao())
+                .asString()
+                .doesNotContainIgnoringCase("insert")
+                .doesNotContainIgnoringCase("usuario")
+                .doesNotContainIgnoringCase("constraint")
+                .doesNotContainIgnoringCase("pk_");
+    }
+
+    @Test
     void deve_respeitar_o_status_da_response_status_exception() {
         assertThat(mvc.get().uri("/teste/response-status"))
                 .hasStatus(HttpStatus.BAD_REQUEST)
@@ -159,6 +184,20 @@ class FormatoDeErroIT {
 
     @RestController
     static class ControllerQueExplode {
+        @Autowired private JdbcTemplate jdbc;
+
+        // Violação real do banco: copia a linha do usuário do seed com a mesma chave primária.
+        @GetMapping("/teste/integridade")
+        String integridade() {
+            jdbc.update(
+                    """
+                    INSERT INTO usuario (id, nome, nome_usuario, email)
+                    SELECT id, nome, nome_usuario, email FROM usuario
+                    WHERE id = '00000000-0000-0000-0000-000000000001'
+                    """);
+            return "nunca chega aqui";
+        }
+
         @GetMapping("/teste/explode")
         String explode() {
             throw new IllegalStateException("detalhe interno com a senha do banco");

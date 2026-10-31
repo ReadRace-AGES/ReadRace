@@ -4,6 +4,7 @@ import java.util.stream.Collectors;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
@@ -27,6 +28,18 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(ExcecaoDeNegocio.class)
     public ResponseEntity<ErroResponse> tratarNegocio(ExcecaoDeNegocio ex) {
         return resposta(ex.getCodigo(), ex.getMessage());
+    }
+
+    /**
+     * Violação de restrição do banco que nenhum service tratou (#224). A mensagem do driver traz o
+     * SQL e o nome das constraints, então vai só para o log: o corpo é sempre o texto genérico.
+     */
+    @ExceptionHandler(DataIntegrityViolationException.class)
+    public ResponseEntity<ErroResponse> tratarIntegridade(DataIntegrityViolationException ex) {
+        log.warn("Violação de integridade não tratada pelo service", ex);
+
+        return resposta(
+                CodigoErro.CONFLITO_DE_DADOS, CodigoErro.CONFLITO_DE_DADOS.mensagemPadrao());
     }
 
     @ExceptionHandler(MethodArgumentNotValidException.class)

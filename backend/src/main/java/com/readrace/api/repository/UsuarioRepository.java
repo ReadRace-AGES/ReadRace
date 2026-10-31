@@ -30,6 +30,9 @@ public interface UsuarioRepository extends JpaRepository<Usuario, UUID> {
 
     boolean existsByNomeUsuario(String nomeUsuario);
 
+    // Sem filtro de excluído: a UNIQUE de email vale também para perfis excluídos.
+    boolean existsByEmail(String email);
+
     // O registro de leitura escreve nesta linha. O lock serializa registros simultâneos do mesmo
     // usuário, para um não sobrescrever o que o outro gravou.
     @Lock(LockModeType.PESSIMISTIC_WRITE)
