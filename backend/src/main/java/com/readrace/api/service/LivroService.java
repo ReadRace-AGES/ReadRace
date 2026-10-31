@@ -105,7 +105,7 @@ public class LivroService {
                 item.getPaginaMaxima(),
                 percentual,
                 concluido,
-                item.getStatusLeitura().name(),
+                item.getStatusLeitura() == null ? null : item.getStatusLeitura().name(),
                 item.isFavorito());
     }
 
