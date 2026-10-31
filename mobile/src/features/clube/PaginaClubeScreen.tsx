@@ -1,3 +1,4 @@
+
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useFocusEffect, useRouter, type Href } from 'expo-router';
@@ -20,6 +21,7 @@ import { RegistrarProgressoSheet } from '@/features/progresso/RegistrarProgresso
 import { colors, spacing, textStyles, typography } from '@/theme';
 
 import { sairDoClube } from './api';
+import { abrirPerfilDoRanking } from './abrirPerfilDoRanking';
 import { RankingCard } from './RankingCard';
 import { useClube } from './useClube';
 
@@ -136,7 +138,7 @@ function IconeChat({ size, color }: PrimaryButtonIconProps) {
 
 export function PaginaClubeScreen({ clubeId }: { clubeId: string }) {
   const router = useRouter();
-  const { showToast, showErrorToast, showToastAfterNavigation } =
+  const { showErrorToast, showToastAfterNavigation } =
     useToastContext();
   const { clube, recarregar } = useClube(clubeId);
 
@@ -162,9 +164,8 @@ export function PaginaClubeScreen({ clubeId }: { clubeId: string }) {
   const dados = clube.situacao === 'sucesso' ? clube.dados : null;
   const podeSairDoClube = dados !== null && dados.meuCargo !== null;
 
-  // Voltando do quiz: responder mexeu nos Pontos, então o ranking recarrega. O resumo de quem
-  // concluiu só aparece depois do ranking novo, e não ao ganhar foco: o toast é escondido na troca
-  // de rota.
+  // Voltando do quiz: responder mexeu nos pontos, então o ranking recarrega.
+  // O resumo só aparece depois do ranking novo.
   useFocusEffect(
     useCallback(() => {
       const retorno = consumirRetorno(clubeId);
@@ -174,9 +175,7 @@ export function PaginaClubeScreen({ clubeId }: { clubeId: string }) {
     }, [clubeId, recarregar])
   );
 
-  // No render em que o resumo chega, `clube` ainda é o sucesso antigo: mostrar ali faria o toast
-  // subir antes da troca de rota e ser escondido por ela. Só mostra depois que a recarga passou
-  // por `carregando` e voltou.
+  // Mostra o resumo depois que a recarga passou por carregando e voltou.
   const recargaDoQuizComecou = useRef(false);
   useEffect(() => {
     if (!resumoDoQuiz) return;
@@ -197,6 +196,14 @@ export function PaginaClubeScreen({ clubeId }: { clubeId: string }) {
     }
 
     router.replace('/feed');
+  }
+
+  async function abrirPerfil(usuarioId: string) {
+    try {
+      await abrirPerfilDoRanking(usuarioId, router);
+    } catch {
+      showErrorToast('Não foi possível abrir o perfil. Tente novamente.');
+    }
   }
 
   function abrirConfirmacaoSaida() {
@@ -258,7 +265,7 @@ export function PaginaClubeScreen({ clubeId }: { clubeId: string }) {
     }
   }
 
-  /** O que o "Acessar Quiz" faz depende de `meuCargo` e, para o membro, do estado do quiz. */
+  /** O que o "Acessar Quiz" faz depende de `meuCargo` e do estado do quiz. */
   async function acessarQuiz() {
     if (!dados || abrindoQuiz) return;
     if (dados.meuCargo === 'administrador') {
@@ -292,7 +299,7 @@ export function PaginaClubeScreen({ clubeId }: { clubeId: string }) {
     }
   }
 
-  // Título do livro em negrito seguido do autor em regular, como a definição travada pede.
+  // Título do livro em negrito seguido do autor em regular.
   const subtitulo = dados ? (
     <>
       <Text style={styles.tituloDoLivro}>{dados.livroAtual.titulo}</Text>
@@ -395,7 +402,7 @@ export function PaginaClubeScreen({ clubeId }: { clubeId: string }) {
 
           <RankingCard
             ranking={dados?.ranking ?? null}
-            onLinhaPress={showToast}
+            onLinhaPress={(usuarioId) => void abrirPerfil(usuarioId)}
             onVerTodosPress={
               dados?.meuCargo
                 ? () => router.push(rotaDoRanking(clubeId))
@@ -498,12 +505,18 @@ const styles = StyleSheet.create({
     color: colors.accent,
     textAlign: 'center',
   },
-  confirmacaoSaida: { paddingBottom: spacing[6], gap: spacing[4] },
+
+  confirmacaoSaida: {
+    paddingBottom: spacing[6],
+    gap: spacing[4],
+  },
+
   tituloConfirmacao: {
     ...textStyles.body,
     fontFamily: typography.fontFamily.bold,
     textAlign: 'center',
   },
+
   descricaoConfirmacao: {
     ...textStyles.body,
     color: colors.textMuted,
