@@ -33,29 +33,21 @@ import tools.jackson.databind.ObjectMapper;
 @DisplayName("GET e POST /api/posts/{postId}/comentarios")
 class ComentarioControllerIT {
 
-    private static final UUID EU =
-            UUID.fromString("00000000-0000-0000-0000-000000000001");
+    private static final UUID EU = UUID.fromString("00000000-0000-0000-0000-000000000001");
 
-    private static final UUID OUTRO =
-            UUID.fromString("00000000-0000-0000-0000-000000000002");
+    private static final UUID OUTRO = UUID.fromString("00000000-0000-0000-0000-000000000002");
 
-    private static final UUID TERCEIRO =
-            UUID.fromString("00000000-0000-0000-0000-000000000003");
+    private static final UUID TERCEIRO = UUID.fromString("00000000-0000-0000-0000-000000000003");
 
-    private static final UUID CLUBE =
-            UUID.fromString("50000000-0000-0000-0000-000000000001");
+    private static final UUID CLUBE = UUID.fromString("50000000-0000-0000-0000-000000000001");
 
-    @Autowired
-    private MockMvcTester mvc;
+    @Autowired private MockMvcTester mvc;
 
-    @Autowired
-    private JdbcTemplate jdbc;
+    @Autowired private JdbcTemplate jdbc;
 
-    @Autowired
-    private EntityManager entityManager;
+    @Autowired private EntityManager entityManager;
 
-    @Autowired
-    private ObjectMapper mapper;
+    @Autowired private ObjectMapper mapper;
 
     // ---------------------------------------------------------
     // Metodos auxiliares
@@ -65,8 +57,7 @@ class ComentarioControllerIT {
         UUID comunidade = UUID.randomUUID();
 
         jdbc.update(
-                "INSERT INTO comunidade (id, nome) "
-                        + "VALUES (?, 'Comunidade de teste')",
+                "INSERT INTO comunidade (id, nome) " + "VALUES (?, 'Comunidade de teste')",
                 comunidade);
 
         if (sigo) {
@@ -107,9 +98,7 @@ class ComentarioControllerIT {
     }
 
     private UUID postDeLivro() {
-        UUID livroId = jdbc.queryForObject(
-                "SELECT id FROM livro ORDER BY id LIMIT 1",
-                UUID.class);
+        UUID livroId = jdbc.queryForObject("SELECT id FROM livro ORDER BY id LIMIT 1", UUID.class);
 
         UUID post = UUID.randomUUID();
 
@@ -126,23 +115,21 @@ class ComentarioControllerIT {
 
     private void removerVinculoDoClube() {
         jdbc.update(
-                "DELETE FROM membro_clube "
-                        + "WHERE clube_id = ? AND usuario_id = ?",
-                CLUBE,
-                EU);
+                "DELETE FROM membro_clube " + "WHERE clube_id = ? AND usuario_id = ?", CLUBE, EU);
 
         entityManager.clear();
     }
 
     private void garantirMembroDoClube() {
-        boolean membro = Boolean.TRUE.equals(
-                jdbc.queryForObject(
-                        "SELECT EXISTS ("
-                                + "SELECT 1 FROM membro_clube "
-                                + "WHERE clube_id = ? AND usuario_id = ?)",
-                        Boolean.class,
-                        CLUBE,
-                        EU));
+        boolean membro =
+                Boolean.TRUE.equals(
+                        jdbc.queryForObject(
+                                "SELECT EXISTS ("
+                                        + "SELECT 1 FROM membro_clube "
+                                        + "WHERE clube_id = ? AND usuario_id = ?)",
+                                Boolean.class,
+                                CLUBE,
+                                EU));
 
         if (!membro) {
             jdbc.update(
@@ -161,11 +148,7 @@ class ComentarioControllerIT {
         entityManager.clear();
     }
 
-    private UUID comentarioDireto(
-            UUID postId,
-            UUID autorId,
-            String texto,
-            String atras) {
+    private UUID comentarioDireto(UUID postId, UUID autorId, String texto, String atras) {
 
         UUID id = UUID.randomUUID();
 
@@ -196,16 +179,11 @@ class ComentarioControllerIT {
 
     private int totalComentarios(UUID postId) {
         return jdbc.queryForObject(
-                "SELECT count(*) FROM post WHERE post_pai_id = ?",
-                Integer.class,
-                postId);
+                "SELECT count(*) FROM post WHERE post_pai_id = ?", Integer.class, postId);
     }
 
     private UUID comunidadeDe(UUID post) {
-        return jdbc.queryForObject(
-                "SELECT comunidade_id FROM post WHERE id = ?",
-                UUID.class,
-                post);
+        return jdbc.queryForObject("SELECT comunidade_id FROM post WHERE id = ?", UUID.class, post);
     }
 
     // ---------------------------------------------------------
@@ -216,23 +194,18 @@ class ComentarioControllerIT {
     void lista_do_mais_antigo_para_o_mais_novo_com_autor() {
         UUID post = postDeComunidade(true);
 
-        UUID novo = comentarioDireto(
-                post, TERCEIRO, "Segundo", "1 hour");
+        UUID novo = comentarioDireto(post, TERCEIRO, "Segundo", "1 hour");
 
-        UUID antigo = comentarioDireto(
-                post, OUTRO, "Primeiro", "2 hours");
+        UUID antigo = comentarioDireto(post, OUTRO, "Primeiro", "2 hours");
 
-        MvcTestResult resposta =
-                mvc.get().uri(url(post)).exchange();
+        MvcTestResult resposta = mvc.get().uri(url(post)).exchange();
 
         assertThat(resposta).hasStatusOk();
 
         assertThat(resposta)
                 .bodyJson()
                 .extractingPath("$.comentarios[*].id")
-                .isEqualTo(List.of(
-                        antigo.toString(),
-                        novo.toString()));
+                .isEqualTo(List.of(antigo.toString(), novo.toString()));
 
         assertThat(resposta)
                 .bodyJson()
@@ -249,12 +222,9 @@ class ComentarioControllerIT {
     void nao_lista_comentario_excluido() {
         UUID post = postDeComunidade(true);
 
-        UUID excluido = comentarioDireto(
-                post, OUTRO, "Apagado", "1 hour");
+        UUID excluido = comentarioDireto(post, OUTRO, "Apagado", "1 hour");
 
-        jdbc.update(
-                "UPDATE post SET excluido_em = now() WHERE id = ?",
-                excluido);
+        jdbc.update("UPDATE post SET excluido_em = now() WHERE id = ?", excluido);
 
         assertThat(mvc.get().uri(url(post)))
                 .hasStatusOk()
@@ -269,57 +239,35 @@ class ComentarioControllerIT {
         for (boolean sigo : new boolean[] {true, false}) {
             UUID post = postDeComunidade(sigo);
 
-            comentarioDireto(
-                    post,
-                    OUTRO,
-                    "Visivel para todos",
-                    "1 hour");
+            comentarioDireto(post, OUTRO, "Visivel para todos", "1 hour");
 
-            MvcTestResult resposta =
-                    mvc.get().uri(url(post)).exchange();
+            MvcTestResult resposta = mvc.get().uri(url(post)).exchange();
 
             assertThat(resposta).hasStatusOk();
 
-            assertThat(resposta)
-                    .bodyJson()
-                    .extractingPath("$.podeComentar")
-                    .isEqualTo(sigo);
+            assertThat(resposta).bodyJson().extractingPath("$.podeComentar").isEqualTo(sigo);
 
-            assertThat(resposta)
-                    .bodyJson()
-                    .extractingPath("$.comentarios")
-                    .asArray()
-                    .hasSize(1);
+            assertThat(resposta).bodyJson().extractingPath("$.comentarios").asArray().hasSize(1);
         }
     }
 
     @Test
-    void comenta_como_post_com_pai_e_sem_escopo_proprio()
-            throws Exception {
+    void comenta_como_post_com_pai_e_sem_escopo_proprio() throws Exception {
 
         UUID post = postDeComunidade(true);
 
-        MvcTestResult resposta =
-                comentar(post, "{\"texto\":\"Meu comentario\"}");
+        MvcTestResult resposta = comentar(post, "{\"texto\":\"Meu comentario\"}");
 
         assertThat(resposta).hasStatus(HttpStatus.CREATED);
 
-        assertThat(resposta)
-                .bodyJson()
-                .extractingPath("$.texto")
-                .isEqualTo("Meu comentario");
+        assertThat(resposta).bodyJson().extractingPath("$.texto").isEqualTo("Meu comentario");
 
-        assertThat(resposta)
-                .bodyJson()
-                .extractingPath("$.autor.id")
-                .isEqualTo(EU.toString());
+        assertThat(resposta).bodyJson().extractingPath("$.autor.id").isEqualTo(EU.toString());
 
         entityManager.flush();
 
-        UUID id = UUID.fromString(
-                JsonPath.read(
-                        resposta.getResponse().getContentAsString(),
-                        "$.id"));
+        UUID id =
+                UUID.fromString(JsonPath.read(resposta.getResponse().getContentAsString(), "$.id"));
 
         Map<String, Object> linha =
                 jdbc.queryForMap(
@@ -345,8 +293,7 @@ class ComentarioControllerIT {
 
         UUID comunidade = comunidadeDe(post);
 
-        assertThat(comentar(post, "{\"texto\":\"Novo\"}"))
-                .hasStatus(HttpStatus.CREATED);
+        assertThat(comentar(post, "{\"texto\":\"Novo\"}")).hasStatus(HttpStatus.CREATED);
 
         entityManager.flush();
 
@@ -408,11 +355,7 @@ class ComentarioControllerIT {
             UUID post = postDeComunidade(true);
             String texto = "a".repeat(tamanho);
 
-            assertThat(
-                    comentar(
-                            post,
-                            mapper.writeValueAsString(
-                                    Map.of("texto", texto))))
+            assertThat(comentar(post, mapper.writeValueAsString(Map.of("texto", texto))))
                     .hasStatus(HttpStatus.CREATED)
                     .bodyJson()
                     .extractingPath("$.texto")
@@ -454,29 +397,17 @@ class ComentarioControllerIT {
             case "excluido" -> {
                 UUID post = postDeComunidade(true);
 
-                jdbc.update(
-                        "UPDATE post SET excluido_em = now() WHERE id = ?",
-                        post);
+                jdbc.update("UPDATE post SET excluido_em = now() WHERE id = ?", post);
 
                 yield post;
             }
 
             case "resposta abaixo de comentario excluido" -> {
-                UUID pai = comentarioDireto(
-                        postDeComunidade(true),
-                        OUTRO,
-                        "Pai",
-                        "2 hours");
+                UUID pai = comentarioDireto(postDeComunidade(true), OUTRO, "Pai", "2 hours");
 
-                UUID resposta = comentarioDireto(
-                        pai,
-                        TERCEIRO,
-                        "Resposta",
-                        "1 hour");
+                UUID resposta = comentarioDireto(pai, TERCEIRO, "Resposta", "1 hour");
 
-                jdbc.update(
-                        "UPDATE post SET excluido_em = now() WHERE id = ?",
-                        pai);
+                jdbc.update("UPDATE post SET excluido_em = now() WHERE id = ?", pai);
 
                 yield resposta;
             }
@@ -509,65 +440,50 @@ class ComentarioControllerIT {
     }
 
     @Test
-    void responde_a_um_comentario_e_lista_thread_em_arvore()
-            throws Exception {
+    void responde_a_um_comentario_e_lista_thread_em_arvore() throws Exception {
 
         UUID post = postDeComunidade(true);
 
-        UUID primeiro = comentarioDireto(
-                post, OUTRO, "Primeiro", "3 hours");
+        UUID primeiro = comentarioDireto(post, OUTRO, "Primeiro", "3 hours");
 
-        UUID segundo = comentarioDireto(
-                post, TERCEIRO, "Segundo", "2 hours");
+        UUID segundo = comentarioDireto(post, TERCEIRO, "Segundo", "2 hours");
 
-        UUID respostaAntiga = comentarioDireto(
-                primeiro, TERCEIRO, "Resposta antiga", "150 minutes");
+        UUID respostaAntiga =
+                comentarioDireto(primeiro, TERCEIRO, "Resposta antiga", "150 minutes");
 
-        MvcTestResult criada =
-                comentar(primeiro, "{\"texto\":\"Minha resposta\"}");
+        MvcTestResult criada = comentar(primeiro, "{\"texto\":\"Minha resposta\"}");
 
         assertThat(criada).hasStatus(HttpStatus.CREATED);
 
         entityManager.flush();
 
-        UUID minha = UUID.fromString(
-                JsonPath.read(
-                        criada.getResponse().getContentAsString(),
-                        "$.id"));
+        UUID minha =
+                UUID.fromString(JsonPath.read(criada.getResponse().getContentAsString(), "$.id"));
 
         assertThat(
-                jdbc.queryForObject(
-                        "SELECT post_pai_id FROM post WHERE id = ?",
-                        UUID.class,
-                        minha))
+                        jdbc.queryForObject(
+                                "SELECT post_pai_id FROM post WHERE id = ?", UUID.class, minha))
                 .isEqualTo(primeiro);
 
-        UUID netinha = comentarioDireto(
-                minha, OUTRO, "Resposta da resposta", "0 minutes");
+        UUID netinha = comentarioDireto(minha, OUTRO, "Resposta da resposta", "0 minutes");
 
-        MvcTestResult thread =
-                mvc.get().uri(url(post)).exchange();
+        MvcTestResult thread = mvc.get().uri(url(post)).exchange();
 
         assertThat(thread).hasStatusOk();
 
         assertThat(thread)
                 .bodyJson()
                 .extractingPath("$.comentarios[*].id")
-                .isEqualTo(List.of(
-                        primeiro.toString(),
-                        segundo.toString()));
+                .isEqualTo(List.of(primeiro.toString(), segundo.toString()));
 
         assertThat(thread)
                 .bodyJson()
                 .extractingPath("$.comentarios[0].respostas[*].id")
-                .isEqualTo(List.of(
-                        respostaAntiga.toString(),
-                        minha.toString()));
+                .isEqualTo(List.of(respostaAntiga.toString(), minha.toString()));
 
         assertThat(thread)
                 .bodyJson()
-                .extractingPath(
-                        "$.comentarios[0].respostas[1].respostas[*].id")
+                .extractingPath("$.comentarios[0].respostas[1].respostas[*].id")
                 .isEqualTo(List.of(netinha.toString()));
     }
 
@@ -575,15 +491,11 @@ class ComentarioControllerIT {
     void comentario_excluido_esconde_respostas() {
         UUID post = postDeComunidade(true);
 
-        UUID pai = comentarioDireto(
-                post, OUTRO, "Pai", "2 hours");
+        UUID pai = comentarioDireto(post, OUTRO, "Pai", "2 hours");
 
-        comentarioDireto(
-                pai, TERCEIRO, "Resposta", "1 hour");
+        comentarioDireto(pai, TERCEIRO, "Resposta", "1 hour");
 
-        jdbc.update(
-                "UPDATE post SET excluido_em = now() WHERE id = ?",
-                pai);
+        jdbc.update("UPDATE post SET excluido_em = now() WHERE id = ?", pai);
 
         assertThat(mvc.get().uri(url(post)))
                 .bodyJson()
@@ -596,12 +508,9 @@ class ComentarioControllerIT {
     void quem_nao_segue_nao_responde() {
         UUID post = postDeComunidade(false);
 
-        UUID comentario = comentarioDireto(
-                post, OUTRO, "Pai", "1 hour");
+        UUID comentario = comentarioDireto(post, OUTRO, "Pai", "1 hour");
 
-        assertThat(comentar(
-                comentario,
-                "{\"texto\":\"Resposta\"}"))
+        assertThat(comentar(comentario, "{\"texto\":\"Resposta\"}"))
                 .hasStatus(HttpStatus.FORBIDDEN)
                 .bodyJson()
                 .extractingPath("$.code")
@@ -616,19 +525,15 @@ class ComentarioControllerIT {
     void comentario_tem_curtidas() {
         UUID post = postDeComunidade(true);
 
-        UUID comentario = comentarioDireto(
-                post, OUTRO, "Curta", "1 hour");
+        UUID comentario = comentarioDireto(post, OUTRO, "Curta", "1 hour");
 
         jdbc.update(
-                "INSERT INTO curtida (id, post_id, usuario_id) "
-                        + "VALUES (?, ?, ?)",
+                "INSERT INTO curtida (id, post_id, usuario_id) " + "VALUES (?, ?, ?)",
                 UUID.randomUUID(),
                 comentario,
                 TERCEIRO);
 
-        assertThat(
-                mvc.post()
-                        .uri("/api/posts/" + comentario + "/curtida"))
+        assertThat(mvc.post().uri("/api/posts/" + comentario + "/curtida"))
                 .hasStatusOk()
                 .bodyJson()
                 .extractingPath("$.totalCurtidas")
@@ -638,8 +543,7 @@ class ComentarioControllerIT {
 
         assertThat(mvc.get().uri(url(post)))
                 .bodyJson()
-                .extractingPath(
-                        "$.comentarios[0].totalCurtidas")
+                .extractingPath("$.comentarios[0].totalCurtidas")
                 .isEqualTo(2);
     }
 
@@ -647,20 +551,15 @@ class ComentarioControllerIT {
     void contador_soma_respostas_de_todos_os_niveis() {
         UUID post = postDeComunidade(true);
 
-        UUID pai = comentarioDireto(
-                post, OUTRO, "Pai", "3 hours");
+        UUID pai = comentarioDireto(post, OUTRO, "Pai", "3 hours");
 
-        UUID filha = comentarioDireto(
-                pai, TERCEIRO, "Filha", "2 hours");
+        UUID filha = comentarioDireto(pai, TERCEIRO, "Filha", "2 hours");
 
-        comentarioDireto(
-                filha, OUTRO, "Neta", "1 hour");
+        comentarioDireto(filha, OUTRO, "Neta", "1 hour");
 
-        comentarioDireto(
-                post, TERCEIRO, "Outro", "1 hour");
+        comentarioDireto(post, TERCEIRO, "Outro", "1 hour");
 
-        assertThat(mvc.get().uri(
-                "/api/comunidades/" + comunidadeDe(post)))
+        assertThat(mvc.get().uri("/api/comunidades/" + comunidadeDe(post)))
                 .bodyJson()
                 .extractingPath("$.posts[0].totalComentarios")
                 .isEqualTo(4);
@@ -674,19 +573,13 @@ class ComentarioControllerIT {
     void permite_ler_comentarios_do_clube() {
         UUID post = postDeClube();
 
-        comentarioDireto(
-                post, OUTRO, "Comentario do forum", "1 hour");
+        comentarioDireto(post, OUTRO, "Comentario do forum", "1 hour");
 
-        MvcTestResult resposta =
-                mvc.get().uri(url(post)).exchange();
+        MvcTestResult resposta = mvc.get().uri(url(post)).exchange();
 
         assertThat(resposta).hasStatusOk();
 
-        assertThat(resposta)
-                .bodyJson()
-                .extractingPath("$.comentarios")
-                .asArray()
-                .hasSize(1);
+        assertThat(resposta).bodyJson().extractingPath("$.comentarios").asArray().hasSize(1);
     }
 
     @Test
@@ -695,19 +588,13 @@ class ComentarioControllerIT {
 
         UUID post = postDeClube();
 
-        MvcTestResult leitura =
-                mvc.get().uri(url(post)).exchange();
+        MvcTestResult leitura = mvc.get().uri(url(post)).exchange();
 
         assertThat(leitura).hasStatusOk();
 
-        assertThat(leitura)
-                .bodyJson()
-                .extractingPath("$.podeComentar")
-                .isEqualTo(false);
+        assertThat(leitura).bodyJson().extractingPath("$.podeComentar").isEqualTo(false);
 
-        assertThat(comentar(
-                post,
-                "{\"texto\":\"Tentativa de comentario\"}"))
+        assertThat(comentar(post, "{\"texto\":\"Tentativa de comentario\"}"))
                 .hasStatus(HttpStatus.FORBIDDEN)
                 .bodyJson()
                 .extractingPath("$.code")
@@ -730,17 +617,11 @@ class ComentarioControllerIT {
                 .extractingPath("$.podeComentar")
                 .isEqualTo(true);
 
-        MvcTestResult resposta =
-                comentar(
-                        post,
-                        "{\"texto\":\"Comentario do membro\"}");
+        MvcTestResult resposta = comentar(post, "{\"texto\":\"Comentario do membro\"}");
 
         assertThat(resposta).hasStatus(HttpStatus.CREATED);
 
-        assertThat(resposta)
-                .bodyJson()
-                .extractingPath("$.texto")
-                .isEqualTo("Comentario do membro");
+        assertThat(resposta).bodyJson().extractingPath("$.texto").isEqualTo("Comentario do membro");
 
         entityManager.flush();
 
@@ -753,13 +634,9 @@ class ComentarioControllerIT {
 
         UUID post = postDeClube();
 
-        UUID comentario = comentarioDireto(
-                post, OUTRO, "Comentario original", "1 hour");
+        UUID comentario = comentarioDireto(post, OUTRO, "Comentario original", "1 hour");
 
-        MvcTestResult resposta =
-                comentar(
-                        comentario,
-                        "{\"texto\":\"Resposta do membro\"}");
+        MvcTestResult resposta = comentar(comentario, "{\"texto\":\"Resposta do membro\"}");
 
         assertThat(resposta).hasStatus(HttpStatus.CREATED);
 
@@ -776,25 +653,18 @@ class ComentarioControllerIT {
     void permite_ler_comentarios_do_livro() {
         UUID post = postDeLivro();
 
-        MvcTestResult resposta =
-                mvc.get().uri(url(post)).exchange();
+        MvcTestResult resposta = mvc.get().uri(url(post)).exchange();
 
         assertThat(resposta).hasStatusOk();
 
-        assertThat(resposta)
-                .bodyJson()
-                .extractingPath("$.podeComentar")
-                .isEqualTo(true);
+        assertThat(resposta).bodyJson().extractingPath("$.podeComentar").isEqualTo(true);
     }
 
     @Test
     void permite_comentar_em_post_do_livro() {
         UUID post = postDeLivro();
 
-        MvcTestResult resposta =
-                comentar(
-                        post,
-                        "{\"texto\":\"Gostei muito deste livro\"}");
+        MvcTestResult resposta = comentar(post, "{\"texto\":\"Gostei muito deste livro\"}");
 
         assertThat(resposta).hasStatus(HttpStatus.CREATED);
 
@@ -812,13 +682,9 @@ class ComentarioControllerIT {
     void permite_responder_comentario_do_livro() {
         UUID post = postDeLivro();
 
-        UUID comentario = comentarioDireto(
-                post, OUTRO, "Comentario original", "1 hour");
+        UUID comentario = comentarioDireto(post, OUTRO, "Comentario original", "1 hour");
 
-        MvcTestResult resposta =
-                comentar(
-                        comentario,
-                        "{\"texto\":\"Minha resposta\"}");
+        MvcTestResult resposta = comentar(comentario, "{\"texto\":\"Minha resposta\"}");
 
         assertThat(resposta).hasStatus(HttpStatus.CREATED);
 

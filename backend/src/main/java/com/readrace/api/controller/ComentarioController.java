@@ -57,8 +57,7 @@ public class ComentarioController {
                             + "Retorna 403 quando o usuário não possui permissão "
                             + "e 404 quando o post não existe ou foi excluído.")
     public ComentariosResponse.Comentario comentar(
-            @PathVariable UUID postId,
-            @RequestBody CriarComentarioRequest request) {
+            @PathVariable UUID postId, @RequestBody CriarComentarioRequest request) {
 
         return comentarioService.comentar(postId, request.texto());
     }

@@ -64,9 +64,7 @@ public class ForumClubeService {
         UUID usuarioId = usuarioAtual.idDoUsuarioAtual().valor();
 
         return new ForumClubeResponse(
-                cabecalho(clube),
-                posts(clubeId, usuarioId),
-                podeEscrever(clubeId, usuarioId));
+                cabecalho(clube), posts(clubeId, usuarioId), podeEscrever(clubeId, usuarioId));
     }
 
     @Transactional(readOnly = false)
@@ -109,9 +107,7 @@ public class ForumClubeService {
                 clube.getId(),
                 clube.getNome(),
                 new ForumClubeResponse.LivroAtual(
-                        livro.getTitulo(),
-                        autor.isEmpty() ? null : autor,
-                        livro.getCapaUrl()));
+                        livro.getTitulo(), autor.isEmpty() ? null : autor, livro.getCapaUrl()));
     }
 
     private List<ForumClubeResponse.Post> posts(UUID clubeId, UUID usuarioId) {

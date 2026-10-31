@@ -1,4 +1,3 @@
-
 package com.readrace.api.dto.response;
 
 import java.time.OffsetDateTime;

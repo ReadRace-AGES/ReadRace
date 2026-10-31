@@ -1,4 +1,3 @@
-
 package com.readrace.api.service;
 
 import java.time.LocalDate;
@@ -147,12 +146,7 @@ public class LivroService {
                 .map(
                         post ->
                                 criarPostResponse(
-                                        post,
-                                        autores,
-                                        curtidas,
-                                        comentarios,
-                                        curtidosPorMim,
-                                        hoje))
+                                        post, autores, curtidas, comentarios, curtidosPorMim, hoje))
                 .toList();
     }
 
@@ -167,15 +161,12 @@ public class LivroService {
         Usuario autor = autores.get(post.getAutorId());
 
         if (autor == null) {
-            throw new IllegalStateException(
-                    "Autor do post não encontrado: " + post.getAutorId());
+            throw new IllegalStateException("Autor do post não encontrado: " + post.getAutorId());
         }
 
         LivroDetalheResponse.Autor autorResponse =
                 new LivroDetalheResponse.Autor(
-                        autor.getNome(),
-                        autor.getAvatarUrl(),
-                        autor.sequenciaExibida(hoje));
+                        autor.getNome(), autor.getAvatarUrl(), autor.sequenciaExibida(hoje));
 
         long curtidas = curtidasPorPost.getOrDefault(post.getId(), 0L);
         long totalComentarios = comentariosPorPost.getOrDefault(post.getId(), 0L);
