@@ -281,7 +281,7 @@ class ForumClubeControllerIT {
         "sem_vinculo, true, false"
     })
     @Transactional
-    void deve_informar_permissao_de_escrita_sem_restringir_leitura(
+    void deve_restringir_leitura_a_associados_e_preservar_permissao_de_escrita(
             String cargo, boolean forumVazio, boolean podeEscrever) {
         UUID clubeId = UUID.fromString(CLUBE);
         UUID usuarioId = UUID.fromString("00000000-0000-0000-0000-000000000001");
@@ -306,6 +306,16 @@ class ForumClubeControllerIT {
             jdbc.update("UPDATE post SET excluido_em = now() WHERE clube_id = ?", clubeId);
         }
 
+        if (!podeEscrever) {
+            assertThat(mvc.get().uri(URL))
+                    .hasStatus(HttpStatus.FORBIDDEN)
+                    .bodyJson()
+                    .extractingPath("$")
+                    .asMap()
+                    .containsEntry("code", "SO_MEMBRO_POSTA")
+                    .containsEntry("message", "Somente membros do clube podem ler o fórum.");
+            return;
+        }
         String resposta = corpo();
         assertThat(JsonPath.<Boolean>read(resposta, "$.podeEscrever")).isEqualTo(podeEscrever);
         assertThat(JsonPath.<String>read(resposta, "$.clube.id")).isEqualTo(CLUBE);
@@ -456,6 +466,12 @@ class ForumClubeControllerIT {
                 "INSERT INTO clube_do_livro (id, livro_id, nome) VALUES"
                         + " (?, '30000000-0000-0000-0000-000000000001', 'Clube sem posts')",
                 clubeVazio);
+        jdbc.update(
+                "INSERT INTO membro_clube (id, clube_id, usuario_id, cargo_clube)"
+                        + " VALUES (?, ?, ?, 'membro')",
+                UUID.randomUUID(),
+                clubeVazio,
+                USUARIO_ATUAL);
 
         assertThat(mvc.get().uri("/api/clubes/{id}/posts", clubeVazio))
                 .hasStatusOk()

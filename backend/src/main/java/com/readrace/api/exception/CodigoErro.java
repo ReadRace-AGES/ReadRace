@@ -31,6 +31,9 @@ public enum CodigoErro {
 
     // Chat do clube - Task #151
     CLUBE_NAO_ENCONTRADO(HttpStatus.NOT_FOUND, "Clube não encontrado."),
+    JA_E_MEMBRO(HttpStatus.CONFLICT, "Você já participa deste clube."),
+    SOLICITACAO_JA_RESPONDIDA(HttpStatus.CONFLICT, "Esta solicitação já foi respondida."),
+    SOLICITACAO_NAO_ENCONTRADA(HttpStatus.NOT_FOUND, "Solicitação não encontrada."),
     NAO_E_MEMBRO(HttpStatus.NOT_FOUND, "Você não é membro deste clube."),
     UNICO_LIDER(HttpStatus.CONFLICT, "Você é o único líder deste clube e não pode sair."),
     MENSAGEM_INVALIDA(HttpStatus.BAD_REQUEST, "Mensagem inválida."),
