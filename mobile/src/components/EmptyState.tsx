@@ -1,5 +1,11 @@
 import type { ComponentType, ReactNode } from 'react';
-import { StyleSheet, Text, View } from 'react-native';
+import {
+  StyleSheet,
+  Text,
+  View,
+  type StyleProp,
+  type TextStyle,
+} from 'react-native';
 
 import { colors, radius, sizes, spacing, textStyles } from '@/theme';
 
@@ -7,11 +13,17 @@ export type EmptyStateIconProps = { size: number; color: string };
 export type EmptyStateProps = {
   icon: ComponentType<EmptyStateIconProps>;
   message: string;
+  messageStyle?: StyleProp<TextStyle>;
   action?: ReactNode;
 };
 
 /** A tela fornece a área livre e decide quando a lista está vazia. */
-export function EmptyState({ icon: Icon, message, action }: EmptyStateProps) {
+export function EmptyState({
+  icon: Icon,
+  message,
+  messageStyle,
+  action,
+}: EmptyStateProps) {
   return (
     <View style={styles.container}>
       <View style={styles.content}>
@@ -23,7 +35,7 @@ export function EmptyState({ icon: Icon, message, action }: EmptyStateProps) {
         >
           <Icon size={sizes.icon} color={colors.primarySoft} />
         </View>
-        <Text style={styles.message}>{message}</Text>
+        <Text style={[styles.message, messageStyle]}>{message}</Text>
         {action != null && action !== false && (
           <View style={styles.action}>{action}</View>
         )}

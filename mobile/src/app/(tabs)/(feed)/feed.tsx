@@ -47,7 +47,7 @@ export default function FeedScreen() {
         recarregar={recarregar}
         atualizar={atualizar}
         onSocialPress={showToast}
-        onVerTodosPress={showToast}
+        onVerTodosPress={() => router.push('/clubes' as Href)}
         onCriarGrupoPress={() => setModalAberto(true)}
         onClubePress={(clube) => router.push(rotaDoClube(clube.id))}
         onComunidadePress={(comunidade) =>
