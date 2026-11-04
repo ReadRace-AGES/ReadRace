@@ -177,9 +177,15 @@ for (const origem of ['/buscar', '/meus-livros']) {
 test('cada entrada abre um caminho exclusivo dentro da própria aba', () => {
   const destinos = [];
   const dependencies = {
-    react: { useState: (inicial) => [inicial, () => {}], useEffect: () => {} },
+    react: {
+      useState: (inicial) => [inicial, () => {}],
+      useEffect: () => {},
+      useRef: (current) => ({ current }),
+      useCallback: (callback) => callback,
+    },
     'expo-router': {
       router: { push: (destino) => destinos.push(destino) },
+      useFocusEffect: () => {},
       useLocalSearchParams: () => ({ livroId: '1' }),
     },
     '@/components/toast-provider': { useToastContext: () => ({}) },

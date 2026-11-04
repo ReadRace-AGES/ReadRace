@@ -31,7 +31,7 @@ const COPY = {
   meusGrupos: 'Meus Grupos',
   verTodos: 'Ver todos',
   criarGrupo: 'Criar Grupo',
-  comunidadesSugeridas: 'Comunidades sugeridas',
+  comunidadesSugeridas: 'Minhas comunidades',
   tentarDeNovo: 'Tentar de novo',
   // Sem copy aprovada no Figma para as listas vazias (pendencia de design):
   // com o seed de #13 os vazios nao aparecem em uso normal, existem como defesa.
@@ -125,6 +125,7 @@ export function FeedComunidadesView({
   return (
     <View className="flex-1 bg-surface">
       <AppHeader
+        compact
         title={usuario ? `Olá, ${usuario.nome}!` : 'Olá!'}
         titleOverflow="wrap"
         titleNumberOfLines={0}
@@ -201,11 +202,13 @@ export function FeedComunidadesView({
             onPress={onCriarGrupoPress}
           />
 
+          <CabecalhoSecao titulo={COPY.comunidadesSugeridas} />
           {feed.dados.comunidades.length === 0 ? (
-            <EmptyState icon={BookIcon} message={COPY.semComunidades} />
+            <Text className="font-inter text-bodySmall text-text-secondary">
+              {COPY.semComunidades}
+            </Text>
           ) : (
             <>
-              <CabecalhoSecao titulo={COPY.comunidadesSugeridas} />
               {feed.dados.comunidades.map((comunidade) => (
                 <ListItem
                   key={comunidade.id}

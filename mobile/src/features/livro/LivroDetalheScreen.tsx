@@ -129,6 +129,7 @@ export function LivroDetalheScreen({
                   </View>
                 </View>
                 <Pressable
+                  cssInterop={false}
                   accessibilityRole="button"
                   style={({ pressed }) => [
                     styles.progress,
