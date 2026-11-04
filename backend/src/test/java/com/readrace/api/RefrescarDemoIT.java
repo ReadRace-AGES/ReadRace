@@ -1,6 +1,7 @@
 package com.readrace.api;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.within;
 
 import java.nio.file.Path;
 import java.time.LocalDate;
@@ -97,12 +98,12 @@ class RefrescarDemoIT {
         LocalDate ontem = LocalDate.now(ZoneId.of("America/Sao_Paulo")).minusDays(1);
         Map<String, Object> daniel =
                 jdbc.queryForMap(
-                        "SELECT dias_consecutivos, ultima_leitura_em FROM usuario WHERE id = ?::uuid",
+                        "SELECT dias_consecutivos, ultima_leitura_em::text AS ultima FROM usuario"
+                                + " WHERE id = ?::uuid",
                         DANIEL);
 
         assertThat(daniel.get("dias_consecutivos")).isEqualTo(12);
-        assertThat(((java.sql.Date) daniel.get("ultima_leitura_em")).toLocalDate())
-                .isEqualTo(ontem);
+        assertThat(daniel.get("ultima")).isEqualTo(ontem.toString());
     }
 
     @Test
@@ -222,10 +223,6 @@ class RefrescarDemoIT {
                                 Boolean.class,
                                 POST_DO_APP))
                 .isTrue();
-    }
-
-    private static org.assertj.core.data.Offset<Double> within(double valor) {
-        return org.assertj.core.data.Offset.offset(valor);
     }
 
     private static void refrescar() {
