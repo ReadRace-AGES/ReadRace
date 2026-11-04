@@ -50,6 +50,7 @@ const { ProgressoTimeoutError } = load('src/features/progresso/api.ts', {
 test('detalhe abre modal, valida, bloqueia toque duplo, preserva erro e aplica sucesso sem novo GET', async () => {
   let resolvePost, rejectPost;
   const navegacoes = [];
+  const avisos = [];
   let posts = 0,
     gets = 0;
   const progressoApi = {
@@ -77,6 +78,13 @@ test('detalhe abre modal, valida, bloqueia toque duplo, preserva erro e aplica s
             : null,
       },
       '@/components/PrimaryButton': { PrimaryButton: 'PrimaryButton' },
+      '@/components/toast-provider': {
+        useToastContext: () => ({
+          showSuccessToast: (linhas) => avisos.push(linhas),
+        }),
+      },
+      './recompensa': load('src/features/progresso/recompensa.ts'),
+      '@/features/desafios/DesafiarAmigoIcons': { CloseIcon: 'CloseIcon' },
     }
   );
   const model = load('src/features/livro/model.ts');
@@ -211,6 +219,8 @@ test('detalhe abre modal, valida, bloqueia toque duplo, preserva erro e aplica s
     });
     assert.equal(renderer.root.findAllByType('BottomSheet').length, 0);
     assert.equal(renderer.root.findByType('ProgressBar').props.progress, 73);
+    // A resposta sem XP nem nada novo não gera aviso de recompensa.
+    assert.deepEqual(avisos, [[]]);
     assert.equal(gets, 1);
     renderer.root.findByType('AppHeader').props.onBackPress();
     assert.deepEqual(navegacoes, ['back']);
@@ -235,6 +245,8 @@ test('detalhe abre modal, valida, bloqueia toque duplo, preserva erro e aplica s
       rejectPost(new ProgressoTimeoutError());
       await pending;
     });
+    // O erro fica no painel; nenhum aviso de recompensa é pedido.
+    assert.equal(avisos.length, 1);
     assert.equal(
       renderer.root.findByType('BottomSheet').props.dismissible,
       true

@@ -1,5 +1,11 @@
 import { apiRequest } from '@/api/client';
 
+export type ConquistaDesbloqueada = {
+  id: string;
+  nome: string;
+  xp: number;
+};
+
 export type ProgressoLeituraResponse = {
   paginaAtual: number;
   paginaMaximaAlcancada: number;
@@ -9,6 +15,14 @@ export type ProgressoLeituraResponse = {
   xpConclusao: number;
   xpTotal: number;
   concluido: boolean;
+  sequenciaDias: number;
+  nivel: number;
+  xpDoUsuario: number;
+  xpNoNivel: number;
+  xpDoNivel: number;
+  subiuDeNivel: boolean;
+  /** Vazia quando a leitura não desbloqueou nada. */
+  conquistasDesbloqueadas: ConquistaDesbloqueada[];
 };
 
 export class ProgressoTimeoutError extends Error {
