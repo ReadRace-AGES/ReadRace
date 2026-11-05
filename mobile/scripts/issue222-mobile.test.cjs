@@ -701,6 +701,7 @@ test('comunidade: Seguir e Em alta preservam callbacks e têm área de botão', 
       '@/features/comentarios/ComentariosSheet': {
         ComentariosSheet: 'ComentariosSheet',
       },
+      '@/components/useVoltar': { useVoltar: () => noop },
       './ComunidadeScreen.styles': load(
         'features/comunidade/ComunidadeScreen.styles.ts',
         base
@@ -723,7 +724,10 @@ test('comunidade: Seguir e Em alta preservam callbacks e têm área de botão', 
       },
     }
   );
-  const tree = await mount(ComunidadeScreen, { comunidadeId: 'id' });
+  const tree = await mount(ComunidadeScreen, {
+    comunidadeId: 'id',
+    origem: '/buscar',
+  });
   try {
     for (const label of ['Seguir', 'Em alta']) {
       const action = tree.root

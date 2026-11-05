@@ -18,7 +18,7 @@ function rotaDoClube(clubeId: string): Href {
 }
 
 function rotaDaComunidade(comunidadeId: string): Href {
-  return `/comunidade/${comunidadeId}` as Href;
+  return `/(tabs)/(feed)/comunidade/${comunidadeId}` as Href;
 }
 
 // O perfil e o livro abertos pela aba Social (#204) também são empilhados dentro da aba: o voltar

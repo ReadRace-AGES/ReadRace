@@ -16,6 +16,8 @@ import {
 } from './api';
 import { linhasDaRecompensa } from './recompensa';
 
+const AVISO_PAGINA_ANTERIOR = 'Você já passou desta página. Ela não soma XP.';
+
 export type RegistrarProgressoSheetProps = {
   visible: boolean;
   livroId: string;
@@ -63,6 +65,8 @@ export function RegistrarProgressoSheet({
   visible,
   livroId,
   totalPaginas,
+  paginaAtual,
+  paginaMaximaAlcancada = paginaAtual,
   onClose,
   onSuccess,
 }: RegistrarProgressoSheetProps) {
@@ -73,11 +77,12 @@ export function RegistrarProgressoSheet({
   const { showSuccessToast } = useToastContext();
 
   useEffect(() => {
+    // Abre já na página de agora, e a barra mostra o percentual atual.
     if (visible) {
-      setPage('');
+      setPage(paginaAtual > 0 ? String(paginaAtual) : '');
       setError(null);
     }
-  }, [livroId, visible]);
+  }, [livroId, visible, paginaAtual]);
 
   const parsedPage = useMemo(() => {
     if (!/^\d+$/.test(page)) return null;
@@ -86,6 +91,19 @@ export function RegistrarProgressoSheet({
       ? parsed
       : null;
   }, [page, totalPaginas]);
+
+  // O parsedPage vira null acima do total; aqui fica o número cru para avisar quanto o livro tem.
+  const paginaDigitada = /^\d+$/.test(page) ? Number(page) : null;
+  const passouDoTotal = paginaDigitada != null && paginaDigitada > totalPaginas;
+  // Página anterior é aceita, só avisa antes de confirmar. O XP conta a partir da maior página
+  // já alcançada, que pode estar à frente da atual.
+  const paginaAnterior =
+    parsedPage != null && parsedPage < paginaMaximaAlcancada;
+  const aviso = passouDoTotal
+    ? `O livro tem ${totalPaginas} páginas.`
+    : paginaAnterior
+      ? AVISO_PAGINA_ANTERIOR
+      : null;
 
   const previewPage =
     parsedPage == null || Number.isNaN(parsedPage)
@@ -175,6 +193,12 @@ export function RegistrarProgressoSheet({
           </View>
           <Text style={styles.percentLabel}>{progressPercent}%</Text>
         </View>
+
+        {aviso && (
+          <Text accessibilityLiveRegion="polite" style={styles.aviso}>
+            {aviso}
+          </Text>
+        )}
 
         {error && (
           <Text
@@ -271,6 +295,11 @@ const styles = StyleSheet.create({
   percentLabel: {
     ...textStyles.bodyStrong,
     color: colors.textSecondary,
+  },
+  aviso: {
+    ...textStyles.bodySmall,
+    color: colors.textSecondary,
+    textAlign: 'center',
   },
   error: {
     ...textStyles.bodySmall,
