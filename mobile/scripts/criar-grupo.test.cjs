@@ -129,7 +129,10 @@ test('Feed recarrega uma vez por criação e exibe os dados consultados sem alte
     '@/components/PrimaryButton': { PrimaryButton: 'PrimaryButton' },
     '@/components/SegmentedTabs': { SegmentedTabs: 'SegmentedTabs' },
   };
-  const { ClubeCard } = load('features/feed/ClubeCard.tsx', components);
+  const { ClubeCard } = load('features/feed/ClubeCard.tsx', {
+    ...components,
+    '@/components/Card': load('components/Card.tsx', components),
+  });
   const feedView = load('features/feed/FeedComunidadesView.tsx', {
     ...components,
     './ClubeCard': { ClubeCard },

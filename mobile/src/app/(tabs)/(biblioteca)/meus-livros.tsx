@@ -1,5 +1,5 @@
-import { useEffect } from 'react';
-import { router, useLocalSearchParams, type Href } from 'expo-router';
+import { useCallback, useRef } from 'react';
+import { router, useFocusEffect, type Href } from 'expo-router';
 
 import { MeusLivrosView } from '@/features/biblioteca/MeusLivrosView';
 import { useBiblioteca } from '@/features/biblioteca/useBiblioteca';
@@ -11,16 +11,17 @@ function rotaDoDetalhe(livroId: string): Href {
 
 export default function MeusLivrosScreen() {
   const biblioteca = useBiblioteca();
-  // "livroAdicionado" chega só quando /adicionar-livro volta por aqui (#155); não é foco de
-  // tela, então não refaz a chamada à toa (ver comentário em useBiblioteca sobre "Ver mais").
-  const { livroAdicionado } = useLocalSearchParams<{
-    livroAdicionado?: string;
-  }>();
-
-  useEffect(() => {
-    if (livroAdicionado) biblioteca.recarregar();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [livroAdicionado]);
+  const { atualizar } = biblioteca;
+  const primeiroFoco = useRef(true);
+  useFocusEffect(
+    useCallback(() => {
+      if (primeiroFoco.current) {
+        primeiroFoco.current = false;
+        return;
+      }
+      atualizar();
+    }, [atualizar])
+  );
 
   return (
     <MeusLivrosView
