@@ -27,7 +27,8 @@ import com.readrace.api.repository.UsuarioRepository;
 @Service
 public class RegistrarProgressoService {
 
-    private static final int XP_CONCLUSAO = 150;
+    // A aba Social (#204) mostra o mesmo bônus no card "Terminou o livro".
+    static final int XP_CONCLUSAO = 150;
     private static final int PONTOS_POR_PAGINA = 1;
 
     private final LivroRepository livroRepository;
