@@ -260,7 +260,7 @@ export function BuscaView({
         />
         <SegmentedTabs
           options={[...ABAS]}
-          initialOption={aba}
+          value={aba}
           onChange={(opcao) => onAbaChange(opcao as Aba)}
         />
       </View>

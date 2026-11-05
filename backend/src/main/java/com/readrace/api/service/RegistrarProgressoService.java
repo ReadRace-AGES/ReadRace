@@ -1,15 +1,19 @@
 package com.readrace.api.service;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.UUID;
 
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.readrace.api.dto.request.RegistrarProgressoRequest;
+import com.readrace.api.dto.response.ConquistaDesbloqueadaResponse;
 import com.readrace.api.dto.response.ProgressoLeituraResponse;
 import com.readrace.api.exception.LivroNaoEncontradoException;
 import com.readrace.api.exception.PaginaInvalidaException;
 import com.readrace.api.exception.UsuarioNaoEncontradoException;
+import com.readrace.api.model.Conquista;
 import com.readrace.api.model.CurvaDeNivel;
 import com.readrace.api.model.ItemBiblioteca;
 import com.readrace.api.model.Livro;
@@ -27,7 +31,8 @@ import com.readrace.api.repository.UsuarioRepository;
 @Service
 public class RegistrarProgressoService {
 
-    private static final int XP_CONCLUSAO = 150;
+    // A aba Social (#204) mostra o mesmo bônus no card "Terminou o livro".
+    static final int XP_CONCLUSAO = 150;
     private static final int PONTOS_POR_PAGINA = 1;
 
     private final LivroRepository livroRepository;
@@ -102,11 +107,16 @@ public class RegistrarProgressoService {
         // Desafio e conquista também pagam XP no mesmo usuário: o nível de antes é guardado aqui e
         // os campos de nível só são calculados depois de todas as recompensas.
         int nivelAnterior = usuario.getNivel();
-        desafioService.avancarDesafios(usuarioAtualId.valor(), livro, pagina, paginasNovas);
+        // O desafio que finaliza aqui já desbloqueia a conquista de desafios: ela entra na lista
+        // agora, porque a avaliação final não a encontra mais pendente.
+        List<Conquista> desbloqueadas =
+                new ArrayList<>(
+                        desafioService.avancarDesafios(
+                                usuarioAtualId.valor(), livro, pagina, paginasNovas));
 
         usuario.receberXp(xpGanho);
         // Depois da soma de XP, para a avaliação já enxergar o XP e o nível atualizados.
-        conquistaService.avaliar(usuarioAtualId.valor());
+        desbloqueadas.addAll(conquistaService.avaliar(usuarioAtualId.valor()));
 
         boolean subiuDeNivel = usuario.getNivel() != nivelAnterior;
         int xpNoNivel = CurvaDeNivel.xpNoNivel(usuario.getXpTotal(), usuario.getNivel());
@@ -126,7 +136,8 @@ public class RegistrarProgressoService {
                 usuario.getXpTotal(),
                 xpNoNivel,
                 xpDoNivel,
-                subiuDeNivel);
+                subiuDeNivel,
+                desbloqueadas.stream().map(ConquistaDesbloqueadaResponse::de).toList());
     }
 
     /**
