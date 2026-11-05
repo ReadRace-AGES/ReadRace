@@ -330,9 +330,13 @@ test('ranking completo e paginação mantêm as posições vindas da API', async
 test('Busca: placeholder segue a aba; vazio inicial é diferente de nenhum resultado', async () => {
   const { BuscaView } = load('features/busca/BuscaView.tsx', base);
   const { default: BuscarScreen } = load('app/(tabs)/(busca)/buscar.tsx', {
-    'expo-router': { router: { push: noop } },
+    'expo-router': {
+      router: { push: noop },
+      useLocalSearchParams: () => ({}),
+    },
     '@/features/busca/BuscaView': {
       BuscaView,
+      ABAS: ['Livros', 'Usuários', 'Comunidades'],
       ABA_INICIAL: 'Usuários',
       TIPO_POR_ABA: {
         Livros: 'livros',
@@ -426,7 +430,11 @@ test('Feed: saudação inteira com quebra de linha, selo preservado e Ver todos 
   let all = 0;
   const { FeedComunidadesView } = load(
     'features/feed/FeedComunidadesView.tsx',
-    { ...base, './ClubeCard': { ClubeCard: 'ClubeCard' } }
+    {
+      ...base,
+      './ClubeCard': { ClubeCard: 'ClubeCard' },
+      './FeedSocialView': { FeedSocialView: 'FeedSocialView' },
+    }
   );
   const tree = await mount(FeedComunidadesView, {
     feed: {
@@ -437,8 +445,11 @@ test('Feed: saudação inteira com quebra de linha, selo preservado e Ver todos 
         comunidades: [],
       },
     },
+    aba: 'Comunidades',
+    onAbaChange: noop,
+    social: { social: { situacao: 'carregando' }, recarregar: noop },
+    onBuscarLeitoresPress: noop,
     onVerTodosPress: () => all++,
-    onSocialPress: noop,
   });
   try {
     const greeting = tree.root

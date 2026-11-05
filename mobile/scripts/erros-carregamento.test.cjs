@@ -452,10 +452,17 @@ test('feed: erro mantém cabeçalho e botão refaz somente o carregamento do fee
     {
       ...screenDeps(() => {}),
       './ClubeCard': { ClubeCard: 'ClubeCard' },
+      './FeedSocialView': { FeedSocialView: 'FeedSocialView' },
     }
   );
   function App() {
-    return React.createElement(FeedComunidadesView, useFeedComunidades());
+    return React.createElement(FeedComunidadesView, {
+      ...useFeedComunidades(),
+      aba: 'Comunidades',
+      onAbaChange: () => {},
+      social: { social: { situacao: 'carregando' }, recarregar: () => {} },
+      onBuscarLeitoresPress: () => {},
+    });
   }
   let tree;
   try {
