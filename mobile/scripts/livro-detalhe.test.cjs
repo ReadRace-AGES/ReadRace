@@ -180,13 +180,13 @@ test('cada entrada abre um caminho exclusivo dentro da própria aba', () => {
     react: {
       useState: (inicial) => [inicial, () => {}],
       useEffect: () => {},
-      useRef: (inicial) => ({ current: inicial }),
-      useCallback: (fn) => fn,
+      useRef: (current) => ({ current }),
+      useCallback: (callback) => callback,
     },
     'expo-router': {
       router: { push: (destino) => destinos.push(destino) },
-      useLocalSearchParams: () => ({ livroId: '1' }),
       useFocusEffect: () => {},
+      useLocalSearchParams: () => ({ livroId: '1' }),
     },
     '@/components/toast-provider': { useToastContext: () => ({}) },
     '@/features/busca/BuscaView': {

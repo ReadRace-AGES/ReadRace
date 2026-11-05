@@ -33,10 +33,7 @@ export type BibliotecaState = {
   biblioteca: Carga<Biblioteca>;
   /** Refaz a chamada inicial; é a ação de "tentar de novo". */
   recarregar: () => void;
-  /**
-   * Busca de novo sem passar pelo "carregando": a lista atual fica na tela até a nova chegar, e
-   * um erro mantém a lista atual. Volta cada lista à primeira página.
-   */
+  /** Atualiza ao voltar à tela, preservando conteúdo e profundidade das listas. */
   atualizar: () => void;
   /** Anexa a página seguinte de uma lista. Ignora se não há mais ou se já está buscando. */
   carregarMais: (lista: ListaBiblioteca) => void;
@@ -65,39 +62,88 @@ export function useBiblioteca(): BibliotecaState {
   const [biblioteca, setBiblioteca] = useState<Carga<Biblioteca>>({
     situacao: 'carregando',
   });
-  const [versao, setVersao] = useState({ numero: 0, silenciosa: false });
+  const [tentativa, setTentativa] = useState({ numero: 0, silenciosa: false });
+  const estadoAtual = useRef(biblioteca);
+  estadoAtual.current = biblioteca;
+  const atualizando = useRef(false);
   // Cancela as páginas em voo quando a tela recarrega ou desmonta.
   const controllers = useRef(new Set<AbortController>());
 
-  // Carrega na montagem, no "tentar de novo" (recarregar) e a cada foco da tela (atualizar,
-  // chamado por Meus Livros): um livro concluído pelo registro de leitura precisa mudar de lista.
-  // A atualização é silenciosa, para a tela não piscar; o custo é voltar as listas à primeira
-  // página, descartando o que o "Ver mais" já trouxe.
   useEffect(() => {
     const controller = new AbortController();
-    if (!versao.silenciosa) setBiblioteca({ situacao: 'carregando' });
-    buscarBiblioteca(controller.signal)
+    const anterior = estadoAtual.current;
+    atualizando.current = true;
+    if (!tentativa.silenciosa || anterior.situacao !== 'sucesso') {
+      setBiblioteca({ situacao: 'carregando' });
+    } else {
+      // Uma paginação interrompida não deve deixar "Ver mais" travado.
+      setBiblioteca({
+        situacao: 'sucesso',
+        dados: Object.fromEntries(
+          LISTAS_BIBLIOTECA.map((lista) => [
+            lista,
+            { ...anterior.dados[lista], carregandoMais: false },
+          ])
+        ) as Biblioteca,
+      });
+    }
+    async function buscarAtualizada() {
+      const dados = primeiraPagina(await buscarBiblioteca(controller.signal));
+      if (tentativa.silenciosa && anterior.situacao === 'sucesso') {
+        // Os cursores antigos podem mudar após uma leitura. Recomeça do servidor,
+        // mas mantém a quantidade já explorada em "Ver mais".
+        await Promise.all(
+          LISTAS_BIBLIOTECA.map(async (lista) => {
+            const nova = dados[lista];
+            while (
+              !controller.signal.aborted &&
+              nova.proximoCursor &&
+              nova.itens.length < anterior.dados[lista].itens.length
+            ) {
+              const pagina = await buscarPaginaBiblioteca(
+                lista,
+                nova.proximoCursor,
+                controller.signal
+              );
+              nova.itens.push(...pagina.itens);
+              nova.proximoCursor = pagina.proximoCursor;
+            }
+          })
+        );
+      }
+      return dados;
+    }
+    buscarAtualizada()
       .then((dados) => {
         if (controller.signal.aborted) return;
-        setBiblioteca({ situacao: 'sucesso', dados: primeiraPagina(dados) });
+        setBiblioteca({ situacao: 'sucesso', dados });
       })
       .catch((erro: unknown) => {
-        if (controller.signal.aborted || versao.silenciosa) return;
-        setBiblioteca({ situacao: 'erro', mensagem: mensagemDe(erro) });
+        if (controller.signal.aborted) return;
+        setBiblioteca((atual) =>
+          tentativa.silenciosa && atual.situacao === 'sucesso'
+            ? atual
+            : { situacao: 'erro', mensagem: mensagemDe(erro) }
+        );
+      })
+      .finally(() => {
+        if (!controller.signal.aborted) atualizando.current = false;
       });
     return () => {
       controller.abort();
       controllers.current.forEach((c) => c.abort());
       controllers.current.clear();
     };
-  }, [versao]);
+  }, [tentativa]);
 
   const recarregar = useCallback(
-    () => setVersao((v) => ({ numero: v.numero + 1, silenciosa: false })),
+    () =>
+      setTentativa(({ numero }) => ({ numero: numero + 1, silenciosa: false })),
     []
   );
   const atualizar = useCallback(
-    () => setVersao((v) => ({ numero: v.numero + 1, silenciosa: true })),
+    () =>
+      setTentativa(({ numero }) => ({ numero: numero + 1, silenciosa: true })),
     []
   );
 
@@ -120,7 +166,7 @@ export function useBiblioteca(): BibliotecaState {
 
   const carregarMais = useCallback(
     (lista: ListaBiblioteca) => {
-      if (biblioteca.situacao !== 'sucesso') return;
+      if (atualizando.current || biblioteca.situacao !== 'sucesso') return;
       const atual = biblioteca.dados[lista];
       if (!atual.proximoCursor || atual.carregandoMais) return;
 

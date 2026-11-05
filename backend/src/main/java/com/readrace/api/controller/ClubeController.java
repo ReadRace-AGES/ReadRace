@@ -5,7 +5,6 @@ import java.util.UUID;
 import jakarta.validation.Valid;
 
 import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -27,6 +26,7 @@ import com.readrace.api.dto.response.QuizPublicadoResponse;
 import com.readrace.api.dto.response.QuizResponse;
 import com.readrace.api.dto.response.RankingClubeResponse;
 import com.readrace.api.dto.response.RespostaQuizResponse;
+import com.readrace.api.dto.response.SairDoClubeResponse;
 import com.readrace.api.service.ClubeService;
 import com.readrace.api.service.ForumClubeService;
 import com.readrace.api.service.PublicarQuizService;
@@ -102,11 +102,9 @@ public class ClubeController {
     @DeleteMapping("/{clubeId}/membros/eu")
     @Operation(
             summary = "Sair de um clube do livro",
-            description =
-                    "Remove o usuário autenticado do clube, respeitando a regra do único líder.")
-    public ResponseEntity<Void> sairDoClube(@PathVariable UUID clubeId) {
-        clubeService.sairDoClube(clubeId);
-        return ResponseEntity.noContent().build();
+            description = "Remove o usuário autenticado e transfere a liderança quando necessário.")
+    public SairDoClubeResponse sairDoClube(@PathVariable UUID clubeId) {
+        return clubeService.sairDoClube(clubeId);
     }
 
     @GetMapping("/{clubeId}/quiz")

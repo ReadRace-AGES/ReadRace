@@ -12,10 +12,6 @@ function rotaDoDetalhe(livroId: string): Href {
 export default function MeusLivrosScreen() {
   const biblioteca = useBiblioteca();
   const { atualizar } = biblioteca;
-
-  // A aba fica montada: sem buscar de novo ao voltar, um livro concluído pelo registro de
-  // leitura (no detalhe ou no clube) ou um livro novo de /adicionar-livro não apareceriam na
-  // lista certa. O primeiro foco já é coberto pela carga inicial do hook.
   const primeiroFoco = useRef(true);
   useFocusEffect(
     useCallback(() => {

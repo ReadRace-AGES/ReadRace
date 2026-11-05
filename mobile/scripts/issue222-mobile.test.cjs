@@ -7,6 +7,130 @@ const React = require('react');
 const { act, create } = require('react-test-renderer');
 globalThis.IS_REACT_ACT_ENVIRONMENT = true;
 
+test('biblioteca atualiza ao retornar de leitura ou inclusão sem remontar a tela', async () => {
+  const listas = ['favoritos', 'lendo', 'desejo', 'lidos'];
+  const resposta = (lista, ids, cursor = null) =>
+    Object.fromEntries(
+      listas.map((nome) => [
+        nome,
+        {
+          itens: nome === lista ? ids.map((livroId) => ({ livroId })) : [],
+          proximoCursor: nome === lista ? cursor : null,
+        },
+      ])
+    );
+  let resolver;
+  let chamadas = 0;
+  let foco;
+  let estado;
+  const { useBiblioteca } = load('features/biblioteca/useBiblioteca.ts', {
+    '@/api/client': { mensagemErroCarregamento: () => 'Erro' },
+    './api': {
+      LISTAS_BIBLIOTECA: listas,
+      buscarBiblioteca: () => {
+        chamadas++;
+        return chamadas === 1
+          ? Promise.resolve(resposta('lendo', ['livro']))
+          : new Promise((resolve) => {
+              resolver = resolve;
+            });
+      },
+    },
+  });
+  const { default: Screen } = load('app/(tabs)/(biblioteca)/meus-livros.tsx', {
+    'expo-router': {
+      router: {},
+      useFocusEffect: (callback) => {
+        foco = callback;
+        React.useEffect(callback, [callback]);
+      },
+    },
+    '@/features/biblioteca/useBiblioteca': { useBiblioteca },
+    '@/features/biblioteca/MeusLivrosView': {
+      MeusLivrosView: (props) => {
+        estado = props;
+        return null;
+      },
+    },
+  });
+  const tree = await mount(Screen);
+  try {
+    assert.equal(chamadas, 1, 'primeiro foco não duplica a carga');
+    await act(async () => foco());
+    assert.equal(estado.biblioteca.situacao, 'sucesso');
+    await act(async () => resolver(resposta('lidos', ['livro'])));
+    assert.equal(estado.biblioteca.dados.lendo.itens.length, 0);
+    assert.equal(estado.biblioteca.dados.lidos.itens[0].livroId, 'livro');
+    await act(async () => foco());
+    await act(async () => resolver(resposta('desejo', ['novo'])));
+    assert.equal(estado.biblioteca.dados.desejo.itens[0].livroId, 'novo');
+    assert.equal(chamadas, 3);
+  } finally {
+    await close(tree);
+  }
+});
+
+test('atualização preserva páginas exploradas, ignora respostas antigas e tolera falha de rede', async () => {
+  let estado;
+  let versao = 0;
+  let paginaAntiga;
+  let signalAntigo;
+  const { useBiblioteca } = load('features/biblioteca/useBiblioteca.ts', {
+    '@/api/client': { mensagemErroCarregamento: () => 'Erro' },
+    './api': {
+      LISTAS_BIBLIOTECA: ['lendo'],
+      buscarBiblioteca: async () => {
+        if (versao === 2) throw new Error('offline');
+        return {
+          lendo: {
+            itens: [{ livroId: `inicio-${versao}` }],
+            proximoCursor: `cursor-${versao}`,
+          },
+        };
+      },
+      buscarPaginaBiblioteca: async (lista, cursor, signal) => {
+        if (cursor === 'pendente') {
+          signalAntigo = signal;
+          return new Promise((resolve) => {
+            paginaAntiga = resolve;
+          });
+        }
+        return {
+          itens: [{ livroId: `fim-${versao}` }],
+          proximoCursor: versao === 0 ? 'pendente' : null,
+        };
+      },
+    },
+  });
+  function Probe() {
+    estado = useBiblioteca();
+    return null;
+  }
+  const tree = await mount(Probe);
+  try {
+    await act(async () => estado.carregarMais('lendo'));
+    await act(async () => estado.carregarMais('lendo'));
+    versao = 1;
+    await act(async () => estado.atualizar());
+    assert.equal(signalAntigo.aborted, true);
+    assert.deepEqual(
+      estado.biblioteca.dados.lendo.itens.map((i) => i.livroId),
+      ['inicio-1', 'fim-1']
+    );
+    await act(async () =>
+      paginaAntiga({ itens: [{ livroId: 'obsoleto' }], proximoCursor: null })
+    );
+    assert.equal(estado.biblioteca.dados.lendo.itens.length, 2);
+    versao = 2;
+    await act(async () => estado.atualizar());
+    assert.equal(estado.biblioteca.situacao, 'sucesso');
+    assert.equal(estado.biblioteca.dados.lendo.carregandoMais, false);
+    assert.equal(estado.biblioteca.dados.lendo.itens[0].livroId, 'inicio-1');
+  } finally {
+    await close(tree);
+  }
+});
+
 function load(file, dependencies = {}) {
   const { outputText } = ts.transpileModule(
     fs.readFileSync(path.join(__dirname, '../src', file), 'utf8'),
@@ -330,9 +454,13 @@ test('ranking completo e paginação mantêm as posições vindas da API', async
 test('Busca: placeholder segue a aba; vazio inicial é diferente de nenhum resultado', async () => {
   const { BuscaView } = load('features/busca/BuscaView.tsx', base);
   const { default: BuscarScreen } = load('app/(tabs)/(busca)/buscar.tsx', {
-    'expo-router': { router: { push: noop } },
+    'expo-router': {
+      router: { push: noop },
+      useLocalSearchParams: () => ({}),
+    },
     '@/features/busca/BuscaView': {
       BuscaView,
+      ABAS: ['Livros', 'Usuários', 'Comunidades'],
       ABA_INICIAL: 'Usuários',
       TIPO_POR_ABA: {
         Livros: 'livros',
@@ -426,7 +554,11 @@ test('Feed: saudação inteira com quebra de linha, selo preservado e Ver todos 
   let all = 0;
   const { FeedComunidadesView } = load(
     'features/feed/FeedComunidadesView.tsx',
-    { ...base, './ClubeCard': { ClubeCard: 'ClubeCard' } }
+    {
+      ...base,
+      './ClubeCard': { ClubeCard: 'ClubeCard' },
+      './FeedSocialView': { FeedSocialView: 'FeedSocialView' },
+    }
   );
   const tree = await mount(FeedComunidadesView, {
     feed: {
@@ -437,8 +569,11 @@ test('Feed: saudação inteira com quebra de linha, selo preservado e Ver todos 
         comunidades: [],
       },
     },
+    aba: 'Comunidades',
+    onAbaChange: noop,
+    social: { social: { situacao: 'carregando' }, recarregar: noop },
+    onBuscarLeitoresPress: noop,
     onVerTodosPress: () => all++,
-    onSocialPress: noop,
   });
   try {
     const greeting = tree.root

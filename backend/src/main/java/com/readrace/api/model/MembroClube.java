@@ -1,5 +1,6 @@
 package com.readrace.api.model;
 
+import java.time.OffsetDateTime;
 import java.util.UUID;
 
 import jakarta.persistence.Column;
@@ -42,6 +43,9 @@ public class MembroClube {
     @Column(nullable = false)
     private Integer pontos;
 
+    @Column(name = "entrou_em", nullable = false, insertable = false, updatable = false)
+    private OffsetDateTime entrouEm;
+
     @Enumerated(EnumType.STRING)
     @JdbcTypeCode(SqlTypes.NAMED_ENUM)
     @Column(name = "cargo_clube", nullable = false, columnDefinition = "cargo")
@@ -56,6 +60,10 @@ public class MembroClube {
 
     public void somarPontos(int pontosGanhos) {
         pontos += pontosGanhos;
+    }
+
+    public void promoverAAdministrador() {
+        cargoClube = Cargo.ADMINISTRADOR;
     }
 
     @Override

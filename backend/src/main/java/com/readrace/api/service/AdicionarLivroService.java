@@ -1,8 +1,10 @@
 package com.readrace.api.service;
 
+import java.text.Normalizer;
 import java.util.List;
 import java.util.Locale;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
 
@@ -153,27 +155,84 @@ public class AdicionarLivroService {
     }
 
     /**
-     * O ISBN identifica o livro entre usuários: se já existe, reaproveita (autores e gêneros já
-     * foram vinculados por quem criou primeiro). Só cria autores/gêneros quando a própria chamada
-     * cria a linha do livro, para não recriar vínculos de um livro já existente.
+     * Reutiliza um livro existente quando o ISBN coincide ou quando o título e o primeiro autor são
+     * equivalentes após normalização.
+     *
+     * <p>Se não encontrar correspondência, cria o livro normalmente.
      */
     private Livro buscarOuCriarLivro(String isbn, VolumeInfo info) {
-        return livroRepository
-                .findByIsbn(isbn)
-                .orElseGet(
-                        () -> {
-                            UUID novoId = UUID.randomUUID();
-                            livroRepository.criarSeAusente(
-                                    novoId, isbn, info.title(), info.pageCount(), capaDe(info));
-                            Livro livro = livroRepository.findByIsbn(isbn).orElseThrow();
+        Optional<Livro> livroPorIsbn = livroRepository.findByIsbn(isbn);
 
-                            if (livro.getId().equals(novoId)) {
-                                vincularAutores(livro, info.authors());
-                                vincularGeneros(livro, info.categories());
-                            }
+        if (livroPorIsbn.isPresent()) {
+            return livroPorIsbn.get();
+        }
 
-                            return livro;
-                        });
+        Optional<Livro> livroPorTituloEAutor = buscarPorTituloEAutor(info);
+
+        if (livroPorTituloEAutor.isPresent()) {
+            return livroPorTituloEAutor.get();
+        }
+
+        UUID novoId = UUID.randomUUID();
+        livroRepository.criarSeAusente(novoId, isbn, info.title(), info.pageCount(), capaDe(info));
+
+        Livro livro = livroRepository.findByIsbn(isbn).orElseThrow();
+
+        if (livro.getId().equals(novoId)) {
+            vincularAutores(livro, info.authors());
+            vincularGeneros(livro, info.categories());
+        }
+
+        return livro;
+    }
+
+    /**
+     * Procura um livro pelo título e pelo primeiro autor. A comparação ignora acentos, pontuação,
+     * espaços e maiúsculas.
+     */
+    private Optional<Livro> buscarPorTituloEAutor(VolumeInfo info) {
+        if (info.title() == null
+                || info.title().isBlank()
+                || info.authors() == null
+                || info.authors().isEmpty()) {
+            return Optional.empty();
+        }
+
+        String tituloNormalizado = normalizarTexto(info.title());
+        String primeiroAutorNormalizado = normalizarTexto(info.authors().get(0));
+
+        if (tituloNormalizado.isEmpty() || primeiroAutorNormalizado.isEmpty()) {
+            return Optional.empty();
+        }
+
+        return livroRepository.buscarLivrosComAutores().stream()
+                .filter(livro -> tituloNormalizado.equals(normalizarTexto(livro.getTitulo())))
+                .filter(livro -> !livro.getLivroAutores().isEmpty())
+                .filter(
+                        livro -> {
+                            LivroAutor primeiroVinculo = livro.getLivroAutores().get(0);
+                            Autor autor = primeiroVinculo.getAutor();
+
+                            return autor != null
+                                    && primeiroAutorNormalizado.equals(
+                                            normalizarTexto(autor.getNome()));
+                        })
+                .findFirst();
+    }
+
+    /**
+     * Normaliza textos removendo acentos, pontuação, espaços e diferenças entre letras maiúsculas e
+     * minúsculas.
+     */
+    private String normalizarTexto(String texto) {
+        if (texto == null) {
+            return "";
+        }
+
+        String textoSemAcentos =
+                Normalizer.normalize(texto, Normalizer.Form.NFD).replaceAll("\\p{M}+", "");
+
+        return textoSemAcentos.toLowerCase(Locale.ROOT).replaceAll("[^\\p{L}\\p{N}]", "");
     }
 
     private void vincularAutores(Livro livro, List<String> autores) {

@@ -266,7 +266,7 @@ export function PerfilScreen({
 }: {
   usuarioId?: string;
   rodape?: ReactNode;
-  origem?: 'perfil' | 'busca';
+  origem?: 'perfil' | 'busca' | 'feed';
 }) {
   const {
     estado,
@@ -284,12 +284,19 @@ export function PerfilScreen({
   const { showToast, showErrorToast } = useToastContext();
   const proprio = usuarioId === undefined || perfilProprio;
   // Sem histórico (ex.: app reaberto direto na rota), o voltar cai na aba de onde se veio.
-  const voltar = useVoltar(origem === 'perfil' ? '/perfil' : '/buscar');
+  const voltar = useVoltar(
+    origem === 'perfil' ? '/perfil' : origem === 'feed' ? '/feed' : '/buscar'
+  );
   // Com usuarioId, a tela foi empilhada (Busca, lista de leitores) e precisa de seta, mesmo no
   // próprio perfil. Sem ele, é a raiz da aba Perfil.
   const abertoPorRota = usuarioId !== undefined;
   // O detalhe do livro abre na pilha da aba de origem, para a aba marcada não mudar.
-  const rotaLivro = origem === 'perfil' ? '/perfil-livro' : '/buscar-livro';
+  const rotaLivro =
+    origem === 'perfil'
+      ? '/perfil-livro'
+      : origem === 'feed'
+        ? '/feed-livro'
+        : '/buscar-livro';
   const dados = estado.situacao === 'sucesso' ? estado.dados : undefined;
   // A aba fica montada: sem buscar de novo ao voltar, o XP e o nível de uma leitura registrada em
   // outra aba não apareceriam. O primeiro foco já é coberto pela carga inicial do hook.
