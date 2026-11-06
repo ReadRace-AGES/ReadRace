@@ -276,16 +276,18 @@ class ForumClubeControllerIT {
         "membro, false, true",
         "administrador, false, true",
         "sem_vinculo, false, false",
+        "pendente, false, false",
         "membro, true, true",
         "administrador, true, true",
-        "sem_vinculo, true, false"
+        "sem_vinculo, true, false",
+        "pendente, true, false"
     })
     @Transactional
-    void deve_restringir_leitura_a_associados_e_preservar_permissao_de_escrita(
+    void deve_permitir_leitura_e_preservar_permissao_de_escrita(
             String cargo, boolean forumVazio, boolean podeEscrever) {
         UUID clubeId = UUID.fromString(CLUBE);
         UUID usuarioId = UUID.fromString("00000000-0000-0000-0000-000000000001");
-        if (cargo.equals("sem_vinculo")) {
+        if (cargo.equals("sem_vinculo") || cargo.equals("pendente")) {
             assertThat(
                             jdbc.update(
                                     "DELETE FROM membro_clube WHERE clube_id = ? AND usuario_id = ?",
@@ -302,24 +304,32 @@ class ForumClubeControllerIT {
                                     usuarioId))
                     .isEqualTo(1);
         }
+        if (cargo.equals("pendente")) {
+            jdbc.update(
+                    "INSERT INTO solicitacao_entrada_clube"
+                            + " (id, clube_id, usuario_id, situacao, criada_em)"
+                            + " VALUES (?, ?, ?, 'pendente', now())",
+                    UUID.randomUUID(),
+                    clubeId,
+                    usuarioId);
+        }
         if (forumVazio) {
             jdbc.update("UPDATE post SET excluido_em = now() WHERE clube_id = ?", clubeId);
         }
 
-        if (!podeEscrever) {
-            assertThat(mvc.get().uri(URL))
-                    .hasStatus(HttpStatus.FORBIDDEN)
-                    .bodyJson()
-                    .extractingPath("$")
-                    .asMap()
-                    .containsEntry("code", "SO_MEMBRO_POSTA")
-                    .containsEntry("message", "Somente membros do clube podem ler o fórum.");
-            return;
-        }
         String resposta = corpo();
         assertThat(JsonPath.<Boolean>read(resposta, "$.podeEscrever")).isEqualTo(podeEscrever);
         assertThat(JsonPath.<String>read(resposta, "$.clube.id")).isEqualTo(CLUBE);
         assertThat(JsonPath.<List<?>>read(resposta, "$.posts")).hasSize(forumVazio ? 0 : 6);
+        if (!podeEscrever) {
+            int antes = totalPosts();
+            assertThat(enviar(URL, "{\"texto\":\"Leitura de hoje\"}"))
+                    .hasStatus(HttpStatus.FORBIDDEN)
+                    .bodyJson()
+                    .extractingPath("$.code")
+                    .isEqualTo("SO_MEMBRO_POSTA");
+            assertThat(totalPosts()).isEqualTo(antes);
+        }
     }
 
     @Test

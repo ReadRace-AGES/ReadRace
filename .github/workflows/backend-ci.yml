@@ -20,6 +20,7 @@ jobs:
           filters: |
             backend:
               - 'backend/**'
+              - 'infra/demo/**'
               - '.github/workflows/backend-ci.yml'
 
   build:

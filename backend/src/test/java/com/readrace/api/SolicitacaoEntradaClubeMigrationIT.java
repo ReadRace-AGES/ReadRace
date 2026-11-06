@@ -21,7 +21,8 @@ class SolicitacaoEntradaClubeMigrationIT {
         var ds =
                 new DriverManagerDataSource(
                         postgres.getJdbcUrl(), postgres.getUsername(), postgres.getPassword());
-        Flyway.configure().dataSource(ds).target("21").load().migrate();
+        // A dev já inclui a V23; isolamos a V28 para conferir que ela preserva o seed atual.
+        Flyway.configure().dataSource(ds).target("23").load().migrate();
         var jdbc = new JdbcTemplate(ds);
         var associacoes = jdbc.queryForList("SELECT * FROM membro_clube ORDER BY id");
         var usuarios = jdbc.queryForList("SELECT * FROM usuario ORDER BY id");

@@ -62,10 +62,8 @@ public class ForumClubeService {
                                 () -> new RecursoNaoEncontradoException("Clube não encontrado."));
 
         UUID usuarioId = usuarioAtual.idDoUsuarioAtual().valor();
-        if (!podeEscrever(clubeId, usuarioId)) {
-            throw new SoMembroPostaException("Somente membros do clube podem ler o fórum.");
-        }
-        return new ForumClubeResponse(cabecalho(clube), posts(clubeId, usuarioId), true);
+        return new ForumClubeResponse(
+                cabecalho(clube), posts(clubeId, usuarioId), podeEscrever(clubeId, usuarioId));
     }
 
     @Transactional(readOnly = false)

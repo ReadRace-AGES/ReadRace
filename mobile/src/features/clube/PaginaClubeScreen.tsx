@@ -390,9 +390,9 @@ export function PaginaClubeScreen({ clubeId }: { clubeId: string }) {
             <PrimaryButton
               label={COPY.forum}
               icon={IconeLista}
-              disabled={!membro}
+              disabled={!dados}
               onPress={() => {
-                if (membro) router.push(rotaDoForum(clubeId));
+                if (dados) router.push(rotaDoForum(clubeId));
               }}
             />
 

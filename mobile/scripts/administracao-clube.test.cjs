@@ -18,7 +18,13 @@ function load(file, deps = {}) {
   );
   const module = { exports: {} };
   new Function('require', 'module', 'exports', outputText)(
-    (name) => deps[name] ?? require(name),
+    (name) =>
+      deps[name] ??
+      (name === '@/components/useVoltar'
+        ? load('components/useVoltar.ts', {
+            'expo-router': deps['expo-router'],
+          })
+        : require(name)),
     module,
     module.exports
   );
@@ -1000,13 +1006,23 @@ test('perfil no Feed volta à pilha atual e usa /feed se não houver histórico,
   });
   act(() => tree.root.findByType('AppHeader').props.onBackPress());
   assert.deepEqual(router.navigations.at(-1), ['replace', '/feed']);
+  // A trava da dev ignora toques repetidos enquanto a tela sai da pilha.
+  act(() => tree.root.findByType('AppHeader').props.onBackPress());
+  assert.equal(router.navigations.length, 1);
+  act(() => tree.unmount());
   navigation.canGoBack = () => true;
+  act(() => {
+    tree = create(
+      React.createElement(PerfilScreen, { usuarioId: 'u-p1', origem: 'feed' })
+    );
+  });
   act(() => tree.root.findByType('AppHeader').props.onBackPress());
   assert.deepEqual(router.navigations.at(-1), ['back']);
   navigation.canGoBack = () => false;
-  act(() =>
-    tree.update(React.createElement(PerfilScreen, { usuarioId: 'u-p1' }))
-  );
+  act(() => tree.unmount());
+  act(() => {
+    tree = create(React.createElement(PerfilScreen, { usuarioId: 'u-p1' }));
+  });
   act(() => tree.root.findByType('AppHeader').props.onBackPress());
   assert.deepEqual(router.navigations.at(-1), ['replace', '/buscar']);
   act(() => tree.unmount());

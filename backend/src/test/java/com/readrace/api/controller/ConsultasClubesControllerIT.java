@@ -108,7 +108,7 @@ class ConsultasClubesControllerIT {
     }
 
     @Test
-    void visitante_abre_detalhe_mas_nao_ranking_forum_ou_solicitacoes() throws Exception {
+    void visitante_abre_detalhe_e_forum_mas_nao_ranking_ou_solicitacoes() throws Exception {
         como(1);
         String url = "/api/clubes/" + clube(4);
         assertThat(linha(clube(4))).containsEntry("situacao", "nenhuma");
@@ -117,7 +117,7 @@ class ConsultasClubesControllerIT {
                 .containsEntry("meuCargo", null)
                 .doesNotContainKey("solicitacoesPendentes");
         erro(url + "/ranking", HttpStatus.FORBIDDEN, "SO_MEMBRO_VE_RANKING");
-        erro(url + "/posts", HttpStatus.FORBIDDEN, "SO_MEMBRO_POSTA");
+        assertThat(json(url + "/posts")).containsEntry("podeEscrever", false);
         erro(url + "/solicitacoes", HttpStatus.FORBIDDEN, "SO_LIDER_CRIA_QUIZ");
     }
 

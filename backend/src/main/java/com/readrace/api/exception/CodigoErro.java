@@ -14,6 +14,11 @@ public enum CodigoErro {
     DESAFIO_NAO_ENCONTRADO(HttpStatus.NOT_FOUND, "Desafio não encontrado."),
     OPONENTE_NAO_ENCONTRADO(HttpStatus.NOT_FOUND, "Oponente não encontrado."),
     LIVRO_NAO_ENCONTRADO(HttpStatus.NOT_FOUND, "Livro não encontrado."),
+    LIVRO_COM_LEITURA(
+            HttpStatus.CONFLICT, "Não é possível remover um livro que já tem leitura registrada."),
+    LIVRO_EM_PROGRESSO(
+            HttpStatus.CONFLICT,
+            "Um livro com leitura registrada não pode entrar na lista de desejos."),
     COMUNIDADE_NAO_ENCONTRADA(HttpStatus.NOT_FOUND, "Comunidade não encontrada."),
     POST_NAO_ENCONTRADO(HttpStatus.NOT_FOUND, "Post não encontrado."),
     LISTA_INVALIDA(HttpStatus.BAD_REQUEST, "Lista inválida. Use lido, desejo ou favorito."),
@@ -60,6 +65,10 @@ public enum CodigoErro {
     SO_LIDER_CRIA_QUIZ(HttpStatus.FORBIDDEN, "Só o administrador do clube cria o quiz."),
     MASCOTE_NAO_ENCONTRADO(HttpStatus.NOT_FOUND, "Mascote não encontrado."),
     MASCOTE_BLOQUEADO(HttpStatus.CONFLICT, "Este mascote ainda está bloqueado para o seu nível."),
+    CONFLITO_DE_DADOS(
+            HttpStatus.CONFLICT,
+            "Não foi possível concluir a operação: os dados entram em conflito com os já"
+                    + " existentes."),
     METHOD_NOT_ALLOWED(HttpStatus.METHOD_NOT_ALLOWED, "Método não permitido para esta rota."),
     UNSUPPORTED_MEDIA_TYPE(HttpStatus.UNSUPPORTED_MEDIA_TYPE, "Formato de conteúdo não suportado."),
     EXTERNAL_SERVICE_UNAVAILABLE(

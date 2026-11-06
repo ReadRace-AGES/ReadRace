@@ -401,7 +401,8 @@ test('card existente mantém imagem/fallback, livro e plural correto', () => {
     ...ui(focusRouter()),
     '@/components/avatar': { Avatar: 'Avatar' },
     '@/components/Card': {
-      Card: ({ children }) => React.createElement('Card', {}, children),
+      Card: ({ children, ...props }) =>
+        React.createElement('Card', props, children),
     },
   });
   let tree;
@@ -420,18 +421,18 @@ test('card existente mantém imagem/fallback, livro e plural correto', () => {
     tree = create(render(1));
   });
   assert.equal(
-    tree.root.findByType('Pressable').props.accessibilityLabel,
+    tree.root.findByType('Card').props.accessibilityLabel,
     'Clube, Livro - Autora, 1 membro'
   );
   assert.equal(tree.root.findByType('Avatar').props.photoUrl, null);
   act(() => tree.update(render(0)));
   assert.match(
-    tree.root.findByType('Pressable').props.accessibilityLabel,
+    tree.root.findByType('Card').props.accessibilityLabel,
     /0 membros/
   );
   act(() => tree.update(render(2)));
   assert.match(
-    tree.root.findByType('Pressable').props.accessibilityLabel,
+    tree.root.findByType('Card').props.accessibilityLabel,
     /2 membros/
   );
   act(() => tree.unmount());
@@ -623,13 +624,9 @@ for (const [situacao, cargo] of [
     };
     await act(async () => requests[0].resolve(dados));
     const membro = situacao === 'membro';
-    for (const label of [
-      'Registrar leitura',
-      'Acessar Quiz',
-      'Fórum de leitura',
-      'Chat do clube',
-    ])
+    for (const label of ['Registrar leitura', 'Acessar Quiz', 'Chat do clube'])
       assert.equal(button(tree, label).props.disabled, !membro);
+    assert.equal(button(tree, 'Fórum de leitura').props.disabled, false);
     await act(async () => {
       await button(tree, 'Registrar leitura').props.onPress();
       await button(tree, 'Acessar Quiz').props.onPress();
@@ -639,7 +636,7 @@ for (const [situacao, cargo] of [
     assert.equal(livros.length, membro ? 1 : 0);
     assert.equal(quizzes.length, cargo === 'membro' ? 1 : 0);
     if (!membro) {
-      assert.deepEqual(router.navigations, []);
+      assert.deepEqual(router.navigations, ['/clube/a/forum']);
       assert.equal(button(tree, 'Sair do clube'), undefined);
       assert.equal(
         tree.root.findByType('EntradaClubeButton').props.situacao,
@@ -825,7 +822,6 @@ test('rotas existentes usam proteção de clube com o cargo correspondente; Ver 
   });
   const routes = [
     ['chat.tsx', '@/features/chat/ChatClubeScreen', 'ChatClubeScreen'],
-    ['forum.tsx', '@/features/forum/ForumClubeScreen', 'ForumClubeScreen'],
     [
       'ranking.tsx',
       '@/features/clube/RankingClubeScreen',
@@ -875,6 +871,9 @@ test('rotas existentes usam proteção de clube com o cargo correspondente; Ver 
     },
     '@/features/feed/FeedComunidadesView': {
       FeedComunidadesView: 'FeedComunidadesView',
+    },
+    '@/features/feed/useFeedSocial': {
+      useFeedSocial: () => ({ atualizar: () => {} }),
     },
     '@/features/feed/CriarGrupoSheet': { CriarGrupoSheet: 'CriarGrupoSheet' },
   });
