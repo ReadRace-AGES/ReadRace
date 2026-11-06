@@ -307,7 +307,9 @@ public class DesafioService {
             return;
         }
 
-        if (pagina >= livro.getTotalPaginas()) {
+        // Só vence quem chega à última página lendo: com o livro já lido até o fim, registrar a
+        // última página de novo não traz página nova e não finaliza o desafio.
+        if (pagina >= livro.getTotalPaginas() && paginasNovas > 0) {
             progresso.concluirLivro(livro.getTotalPaginas());
             desafio.finalizar();
         } else {

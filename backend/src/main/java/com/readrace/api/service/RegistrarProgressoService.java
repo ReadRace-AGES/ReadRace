@@ -97,9 +97,14 @@ public class RegistrarProgressoService {
                 usuarioRepository
                         .buscarAtivoComLock(usuarioAtualId.valor())
                         .orElseThrow(UsuarioNaoEncontradoException::new);
-        usuario.registrarLeitura(SequenciaDeLeitura.hoje());
+        // Repetir ou voltar de página não é leitura: a sequência só anda com página nova.
+        if (paginasNovas > 0) {
+            usuario.registrarLeitura(SequenciaDeLeitura.hoje());
+        }
 
-        boolean concluiuAgora = !concluidoAntes && item.estaConcluido();
+        // O bônus sai uma vez, quando a página máxima chega ao total. O status "lido" do catálogo
+        // não conta: com ele, todo registro pagaria a conclusão de novo.
+        boolean concluiuAgora = !concluidoAntes && item.leuAteOFim();
         int xpConclusao = concluiuAgora ? XP_CONCLUSAO : 0;
         int xpGanho = xpPaginas + xpConclusao;
         int percentual = Math.round((pagina * 100f) / livro.getTotalPaginas());
@@ -130,7 +135,7 @@ public class RegistrarProgressoService {
                 xpPaginas,
                 xpConclusao,
                 xpGanho,
-                item.estaConcluido(),
+                item.leuAteOFim(),
                 usuario.getDiasConsecutivos(),
                 usuario.getNivel(),
                 usuario.getXpTotal(),
