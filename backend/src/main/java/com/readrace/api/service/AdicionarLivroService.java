@@ -40,6 +40,7 @@ import com.readrace.api.repository.LivroRepository;
 public class AdicionarLivroService {
 
     private static final Set<String> LISTAS_VALIDAS = Set.of("lido", "desejo", "favorito");
+    private static final int TITULO_MAXIMO = 255;
 
     private final BookSearchPort bookSearchPort;
     private final LivroRepository livroRepository;
@@ -81,11 +82,12 @@ public class AdicionarLivroService {
         VolumeInfo info = volume.volumeInfo();
 
         String isbn = isbnDe(info);
-        if (isbn == null || info.pageCount() == null || info.pageCount() <= 0) {
+        String titulo = tituloDe(info);
+        if (isbn == null || titulo == null || info.pageCount() == null || info.pageCount() <= 0) {
             throw new LivroSemIsbnOuPaginasException();
         }
 
-        Livro livro = buscarOuCriarLivro(isbn, info);
+        Livro livro = buscarOuCriarLivro(isbn, titulo, info);
         UUID usuarioId = usuarioAtual.idDoUsuarioAtual().valor();
 
         switch (lista) {
@@ -120,6 +122,21 @@ public class AdicionarLivroService {
             throw new ListaInvalidaException();
         }
         return lista.trim().toLowerCase(Locale.ROOT);
+    }
+
+    /**
+     * Título do catálogo, sem espaços nas pontas e cortado em 255 caracteres (a coluna). Conta em
+     * pontos de código, para não partir um par substituto ao cortar. Sem título, devolve null.
+     */
+    private static String tituloDe(VolumeInfo info) {
+        if (info == null || info.title() == null || info.title().isBlank()) {
+            return null;
+        }
+        String titulo = info.title().trim();
+        if (titulo.codePointCount(0, titulo.length()) <= TITULO_MAXIMO) {
+            return titulo;
+        }
+        return titulo.substring(0, titulo.offsetByCodePoints(0, TITULO_MAXIMO));
     }
 
     /** Prefere o ISBN de 13 dígitos; sem ele, usa o de 10. */
@@ -160,21 +177,21 @@ public class AdicionarLivroService {
      *
      * <p>Se não encontrar correspondência, cria o livro normalmente.
      */
-    private Livro buscarOuCriarLivro(String isbn, VolumeInfo info) {
+    private Livro buscarOuCriarLivro(String isbn, String titulo, VolumeInfo info) {
         Optional<Livro> livroPorIsbn = livroRepository.findByIsbn(isbn);
 
         if (livroPorIsbn.isPresent()) {
             return livroPorIsbn.get();
         }
 
-        Optional<Livro> livroPorTituloEAutor = buscarPorTituloEAutor(info);
+        Optional<Livro> livroPorTituloEAutor = buscarPorTituloEAutor(titulo, info);
 
         if (livroPorTituloEAutor.isPresent()) {
             return livroPorTituloEAutor.get();
         }
 
         UUID novoId = UUID.randomUUID();
-        livroRepository.criarSeAusente(novoId, isbn, info.title(), info.pageCount(), capaDe(info));
+        livroRepository.criarSeAusente(novoId, isbn, titulo, info.pageCount(), capaDe(info));
 
         Livro livro = livroRepository.findByIsbn(isbn).orElseThrow();
 
@@ -190,15 +207,12 @@ public class AdicionarLivroService {
      * Procura um livro pelo título e pelo primeiro autor. A comparação ignora acentos, pontuação,
      * espaços e maiúsculas.
      */
-    private Optional<Livro> buscarPorTituloEAutor(VolumeInfo info) {
-        if (info.title() == null
-                || info.title().isBlank()
-                || info.authors() == null
-                || info.authors().isEmpty()) {
+    private Optional<Livro> buscarPorTituloEAutor(String titulo, VolumeInfo info) {
+        if (info.authors() == null || info.authors().isEmpty()) {
             return Optional.empty();
         }
 
-        String tituloNormalizado = normalizarTexto(info.title());
+        String tituloNormalizado = normalizarTexto(titulo);
         String primeiroAutorNormalizado = normalizarTexto(info.authors().get(0));
 
         if (tituloNormalizado.isEmpty() || primeiroAutorNormalizado.isEmpty()) {

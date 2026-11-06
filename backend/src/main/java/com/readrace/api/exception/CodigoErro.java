@@ -57,6 +57,10 @@ public enum CodigoErro {
     SO_LIDER_CRIA_QUIZ(HttpStatus.FORBIDDEN, "Só o administrador do clube cria o quiz."),
     MASCOTE_NAO_ENCONTRADO(HttpStatus.NOT_FOUND, "Mascote não encontrado."),
     MASCOTE_BLOQUEADO(HttpStatus.CONFLICT, "Este mascote ainda está bloqueado para o seu nível."),
+    CONFLITO_DE_DADOS(
+            HttpStatus.CONFLICT,
+            "Não foi possível concluir a operação: os dados entram em conflito com os já"
+                    + " existentes."),
     METHOD_NOT_ALLOWED(HttpStatus.METHOD_NOT_ALLOWED, "Método não permitido para esta rota."),
     UNSUPPORTED_MEDIA_TYPE(HttpStatus.UNSUPPORTED_MEDIA_TYPE, "Formato de conteúdo não suportado."),
     EXTERNAL_SERVICE_UNAVAILABLE(
