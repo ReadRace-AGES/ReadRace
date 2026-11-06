@@ -389,7 +389,7 @@ class ForumClubeControllerIT {
 
     @Test
     @DisplayName(
-            "curtidas são contagem de exibição — ((1 + p) % 7) + 1 no seed, sem a do autor (V25)")
+            "curtidas são contagem de exibição — ((1 + p) % 7) + 1 no seed, sem a do autor (V29)")
     void deve_contar_as_curtidas_de_cada_post() {
         assertThat(mvc.get().uri(URL))
                 .hasStatusOk()
@@ -401,7 +401,7 @@ class ForumClubeControllerIT {
 
     @Test
     @DisplayName(
-            "curtidoPorMim reflete a curtida do usuário atual: todos menos o post dele (#101, V25)")
+            "curtidoPorMim reflete a curtida do usuário atual: todos menos o post dele (#101, V29)")
     void deve_marcar_curtidoPorMim_para_o_usuario_atual() {
         assertThat(mvc.get().uri(URL))
                 .hasStatusOk()

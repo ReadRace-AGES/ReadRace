@@ -1,8 +1,9 @@
--- V25 - Seed coerente para a demo (#220)
+-- V29 - Seed coerente para a demo (#220)
 --
--- Reservada para a #220. A banca navega pelos perfis do ranking e pelos fóruns dos clubes, e o
--- seed tinha incoerências visíveis. Esta migration só mexe em dados do seed; não muda schema,
--- xp_total, nivel, pontos do ranking nem registros de leitura.
+-- Reservada para a #220 como V25 e renomeada para V29: a V28 (#253) entrou antes na dev, e uma
+-- versão menor que a última aplicada impede a API de subir. A banca navega pelos perfis do ranking
+-- e pelos fóruns dos clubes, e o seed tinha incoerências visíveis. Esta migration só mexe em dados
+-- do seed; não muda schema, xp_total, nivel, pontos do ranking nem registros de leitura.
 --
 -- 1. Bibliotecas dos outros 9 usuários coerentes com o XP deles
 -- 2. Posts do usuário de demonstração nos clubes 4 e 5, onde ele não é membro
@@ -139,7 +140,7 @@ BEGIN
         END LOOP;
 
         IF v_resto IS NULL THEN
-            RAISE NOTICE 'V25: o XP de % (%) não fecha com a biblioteca; usuário pulado.',
+            RAISE NOTICE 'V29: o XP de % (%) não fecha com a biblioteca; usuário pulado.',
                 v_usuario, v_xp;
             CONTINUE;
         END IF;
@@ -167,7 +168,7 @@ BEGIN
             LIMIT 1;
 
             IF v_livro_em_andamento IS NULL THEN
-                RAISE NOTICE 'V25: nenhum livro com mais de % páginas para %; usuário pulado.',
+                RAISE NOTICE 'V29: nenhum livro com mais de % páginas para %; usuário pulado.',
                     v_resto, v_usuario;
                 CONTINUE;
             END IF;

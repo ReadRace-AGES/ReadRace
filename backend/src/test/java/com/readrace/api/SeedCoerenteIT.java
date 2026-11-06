@@ -16,12 +16,15 @@ import org.testcontainers.junit.jupiter.Testcontainers;
 import org.testcontainers.postgresql.PostgreSQLContainer;
 
 /**
- * Seed coerente da V25 (#220). Sobe o banco até a migration anterior à V25, guarda o estado e
- * aplica a V25, para comparar o antes e o depois.
+ * Seed coerente da V29 (#220). Sobe o banco até a migration anterior à V29, guarda o estado e
+ * aplica a V29, para comparar o antes e o depois.
  */
 @Testcontainers
-@DisplayName("Seed coerente (V25)")
+@DisplayName("Seed coerente (V29)")
 class SeedCoerenteIT {
+
+    /** Número da migration do seed coerente. Se ela for renomeada, só muda aqui. */
+    static final int VERSAO = 29;
 
     private static final String DANIEL = "00000000-0000-0000-0000-000000000001";
     private static final String MARIANA = "00000000-0000-0000-0000-000000000004";
@@ -53,11 +56,11 @@ class SeedCoerenteIT {
                         postgres.getJdbcUrl(), postgres.getUsername(), postgres.getPassword());
         jdbc = new JdbcTemplate(dataSource);
 
-        Flyway.configure().dataSource(dataSource).target(versaoAnteriorAV25()).load().migrate();
+        Flyway.configure().dataSource(dataSource).target(versaoAnterior()).load().migrate();
         xpENivelAntes = xpENivel();
         registrosAntes = jdbc.queryForObject("SELECT count(*) FROM registro_leitura", Long.class);
 
-        Flyway.configure().dataSource(dataSource).target("25").load().migrate();
+        Flyway.configure().dataSource(dataSource).target(String.valueOf(VERSAO)).load().migrate();
     }
 
     @Test
@@ -232,14 +235,14 @@ class SeedCoerenteIT {
                 .isEmpty();
     }
 
-    /** A maior migration antes da V25: o estado "antes" acompanha as que entrarem na dev. */
-    static String versaoAnteriorAV25() {
+    /** A maior migration antes da V29: o estado "antes" acompanha as que entrarem na dev. */
+    static String versaoAnterior() {
         try (var arquivos =
                 java.nio.file.Files.list(
                         java.nio.file.Path.of("src/main/resources/db/migration"))) {
             return arquivos.map(arquivo -> arquivo.getFileName().toString())
                     .map(nome -> Integer.parseInt(nome.substring(1, nome.indexOf("__"))))
-                    .filter(versao -> versao < 25)
+                    .filter(versao -> versao < VERSAO)
                     .max(Integer::compare)
                     .orElseThrow()
                     .toString();

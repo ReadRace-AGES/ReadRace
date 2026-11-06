@@ -68,7 +68,7 @@ class PerfilControllerIT {
 
     @Test
     void retornaOutroUsuarioDoSeedComBibliotecaCoerenteComOXp() {
-        // V25 (#220): 3 livros lidos e O Hobbit em andamento somam 1075 páginas; com Primeiros
+        // V29 (#220): 3 livros lidos e O Hobbit em andamento somam 1075 páginas; com Primeiros
         // Passos, Mil Páginas e Em Boa Companhia, fecham os 1850 de XP.
         var perfil = service.buscar(UUID.fromString("00000000-0000-0000-0000-000000000002"));
         assertThat(perfil.nome()).isEqualTo("Ana Silva");

@@ -13,11 +13,11 @@ import org.testcontainers.postgresql.PostgreSQLContainer;
 
 /**
  * Na produção o estado dos usuários pode ser outro que o de um banco novo. Quando a conta de XP de
- * alguém não fecha, a V25 pula essa pessoa em vez de falhar: uma migration com erro impede a API de
+ * alguém não fecha, a V29 pula essa pessoa em vez de falhar: uma migration com erro impede a API de
  * subir no deploy (#220).
  */
 @Testcontainers
-@DisplayName("Seed coerente (V25) com XP que não fecha")
+@DisplayName("Seed coerente (V29) com XP que não fecha")
 class SeedCoerentePularIT {
 
     private static final String JULIA = "00000000-0000-0000-0000-000000000010";
@@ -32,13 +32,18 @@ class SeedCoerentePularIT {
         var jdbc = new JdbcTemplate(dataSource);
         Flyway.configure()
                 .dataSource(dataSource)
-                .target(SeedCoerenteIT.versaoAnteriorAV25())
+                .target(SeedCoerenteIT.versaoAnterior())
                 .load()
                 .migrate();
         // Menos que os 75 de "Em Boa Companhia", que ela alcança por estar em clubes.
         jdbc.update("UPDATE usuario SET xp_total = 10 WHERE id = ?::uuid", JULIA);
 
-        var resultado = Flyway.configure().dataSource(dataSource).target("25").load().migrate();
+        var resultado =
+                Flyway.configure()
+                        .dataSource(dataSource)
+                        .target(String.valueOf(SeedCoerenteIT.VERSAO))
+                        .load()
+                        .migrate();
 
         assertThat(resultado.success).isTrue();
         assertThat(
