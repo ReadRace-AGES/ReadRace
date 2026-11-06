@@ -359,6 +359,7 @@ test('próprio perfil mostra anel, Mascotes, engrenagem e slot de favorito', () 
 test('voltar sem histórico vai para a aba de origem; próprio perfil empilhado tem seta', () => {
   for (const [origem, destino] of [
     ['busca', '/buscar'],
+    ['feed', '/feed'],
     ['perfil', '/perfil'],
   ]) {
     const navegacoes = [];

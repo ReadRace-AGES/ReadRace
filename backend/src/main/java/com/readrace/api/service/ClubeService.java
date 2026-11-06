@@ -3,6 +3,7 @@ package com.readrace.api.service;
 import java.time.Clock;
 import java.time.OffsetDateTime;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
 import java.util.UUID;
@@ -16,25 +17,30 @@ import org.springframework.transaction.annotation.Transactional;
 import com.readrace.api.dto.request.CriarClubeRequest;
 import com.readrace.api.dto.response.ClubeCriadoResponse;
 import com.readrace.api.dto.response.ClubeResponse;
+import com.readrace.api.dto.response.ClubesResponse;
 import com.readrace.api.dto.response.RankingClubeResponse;
 import com.readrace.api.dto.response.SairDoClubeResponse;
+import com.readrace.api.dto.response.SolicitacoesClubeResponse;
 import com.readrace.api.exception.ClubeInvalidoException;
 import com.readrace.api.exception.ClubeNaoEncontradoException;
 import com.readrace.api.exception.LivroNaoEncontradoException;
 import com.readrace.api.exception.NaoEMembroException;
 import com.readrace.api.exception.ParametroInvalidoException;
 import com.readrace.api.exception.RecursoNaoEncontradoException;
+import com.readrace.api.exception.SoLiderCriaQuizException;
 import com.readrace.api.exception.SoMembroVeRankingException;
 import com.readrace.api.exception.UsuarioNaoEncontradoException;
 import com.readrace.api.model.Cargo;
 import com.readrace.api.model.ClubeDoLivro;
 import com.readrace.api.model.Livro;
 import com.readrace.api.model.MembroClube;
+import com.readrace.api.model.Usuario;
 import com.readrace.api.repository.ClubeDoLivroRepository;
 import com.readrace.api.repository.LinhaRankingClube;
 import com.readrace.api.repository.LivroRepository;
 import com.readrace.api.repository.MembroClubeRepository;
 import com.readrace.api.repository.QuizRepository;
+import com.readrace.api.repository.SolicitacaoEntradaClubeRepository;
 import com.readrace.api.repository.UsuarioRepository;
 
 @Service
@@ -55,6 +61,7 @@ public class ClubeService {
     private final UsuarioRepository usuarioRepository;
     private final ConquistaService conquistaService;
     private final Clock clock;
+    private final SolicitacaoEntradaClubeRepository solicitacoes;
 
     public ClubeService(
             ClubeDoLivroRepository clubeRepository,
@@ -64,7 +71,8 @@ public class ClubeService {
             UsuarioRepository usuarioRepository,
             UsuarioAtual usuarioAtual,
             ConquistaService conquistaService,
-            Clock clock) {
+            Clock clock,
+            SolicitacaoEntradaClubeRepository solicitacoes) {
         this.clubeRepository = clubeRepository;
         this.membroClubeRepository = membroClubeRepository;
         this.quizRepository = quizRepository;
@@ -73,6 +81,47 @@ public class ClubeService {
         this.usuarioAtual = usuarioAtual;
         this.conquistaService = conquistaService;
         this.clock = clock;
+        this.solicitacoes = solicitacoes;
+    }
+
+    public ClubesResponse listar() {
+        UUID usuarioId = usuarioAtual.idDoUsuarioAtual().valor();
+        return new ClubesResponse(
+                clubeRepository.listarAtivos(usuarioId).stream()
+                        .map(ClubesResponse.Clube::de)
+                        .toList());
+    }
+
+    public SolicitacoesClubeResponse listarSolicitacoes(UUID clubeId) {
+        clubeRepository
+                .findByIdAndExcluidoEmIsNull(clubeId)
+                .orElseThrow(ClubeNaoEncontradoException::new);
+        if (!Cargo.ADMINISTRADOR.getValor().equals(meuCargo(clubeId))) {
+            throw new SoLiderCriaQuizException(
+                    "Só o administrador do clube pode ver as solicitações.");
+        }
+        var pendentes = solicitacoes.listarPendentes(clubeId);
+        Map<UUID, Usuario> usuarios =
+                usuarioRepository
+                        .findAllById(
+                                pendentes.stream().map(s -> s.getUsuarioId()).distinct().toList())
+                        .stream()
+                        .collect(Collectors.toMap(Usuario::getId, u -> u));
+        return new SolicitacoesClubeResponse(
+                pendentes.stream()
+                        .map(
+                                s -> {
+                                    Usuario usuario = usuarios.get(s.getUsuarioId());
+                                    return new SolicitacoesClubeResponse.Solicitacao(
+                                            s.getId(),
+                                            new SolicitacoesClubeResponse.Usuario(
+                                                    usuario.getId(),
+                                                    usuario.getNome(),
+                                                    usuario.getNomeUsuario(),
+                                                    usuario.getAvatarUrl()),
+                                            s.getCriadaEm());
+                                })
+                        .toList());
     }
 
     @Transactional
@@ -146,7 +195,20 @@ public class ClubeService {
                 ranking(linhas),
                 meuCargo,
                 quizRepository.existsByClubeIdAndAtivoTrue(clubeId),
-                proximoLider);
+                proximoLider,
+                situacao(clubeId, meuCargo),
+                Cargo.ADMINISTRADOR.getValor().equals(meuCargo)
+                        ? solicitacoes.contarPendentes(clubeId)
+                        : null);
+    }
+
+    private String situacao(UUID clubeId, String cargo) {
+        if (cargo != null) return "membro";
+        return solicitacoes
+                        .buscarPendente(clubeId, usuarioAtual.idDoUsuarioAtual().valor())
+                        .isPresent()
+                ? "pendente"
+                : "nenhuma";
     }
 
     public RankingClubeResponse buscarRanking(UUID clubeId, String cursor) {

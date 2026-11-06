@@ -2,7 +2,6 @@ import { router, useFocusEffect, type Href } from 'expo-router';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { Keyboard } from 'react-native';
 
-import { useToastContext } from '@/components/toast-provider';
 import {
   ABA_INICIAL_FEED,
   FeedComunidadesView,
@@ -57,7 +56,6 @@ export default function FeedScreen() {
   useEffect(() => {
     abaAtual.current = aba;
   }, [aba]);
-  const { showToast } = useToastContext();
   const [modalAberto, setModalAberto] = useState(false);
   const fecharModal = useCallback(() => {
     Keyboard.dismiss();
@@ -92,7 +90,7 @@ export default function FeedScreen() {
         onBuscarLeitoresPress={() => router.navigate(rotaDaBuscaDeLeitores())}
         onUsuarioPress={(usuarioId) => router.push(rotaDoPerfil(usuarioId))}
         onLivroPress={(livroId) => router.push(rotaDoLivro(livroId))}
-        onVerTodosPress={showToast}
+        onVerTodosPress={() => router.push('/clubes' as Href)}
         onCriarGrupoPress={() => setModalAberto(true)}
         onClubePress={(clube) => router.push(rotaDoClube(clube.id))}
         onComunidadePress={(comunidade) =>

@@ -56,6 +56,120 @@ class AutenticacaoCognitoIT {
     @Autowired private SeguirRepository seguir;
 
     @Test
+    void mutacoesDeSolicitacoesUsamSolicitanteEAdministradorDoToken() {
+        String base = "/api/clubes/50000000-0000-0000-0000-000000000001/solicitacoes";
+        String pedido = "78000000-0000-0000-0000-000000000001";
+        for (String rota :
+                new String[] {
+                    base, base + "/" + pedido + "/aceitar", base + "/" + pedido + "/recusar"
+                }) {
+            assertThat(mvc.post().uri(rota)).hasStatus(HttpStatus.UNAUTHORIZED);
+        }
+        UUID pedro = UUID.fromString("00000000-0000-0000-0000-000000000009");
+        UUID ana = UUID.fromString("00000000-0000-0000-0000-000000000002");
+        jdbc.update("UPDATE usuario SET cognito_sub = 'sub-pedro-mutacao-234' WHERE id = ?", pedro);
+        jdbc.update("UPDATE usuario SET cognito_sub = 'sub-ana-mutacao-234' WHERE id = ?", ana);
+        jdbc.update(
+                "UPDATE membro_clube SET cargo_clube = 'administrador' WHERE usuario_id = ? AND clube_id = '50000000-0000-0000-0000-000000000001'",
+                ana);
+        assertThat(mvc.post().uri(base).with(token("sub-pedro-mutacao-234", "token-pedro-234")))
+                .hasStatus(HttpStatus.CREATED)
+                .bodyJson()
+                .extractingPath("$.id")
+                .isEqualTo(pedido);
+        assertThat(
+                        mvc.post()
+                                .uri(base + "/" + pedido + "/aceitar")
+                                .with(token("sub-pedro-mutacao-234", "token-pedro-234")))
+                .hasStatus(HttpStatus.FORBIDDEN);
+        assertThat(
+                        mvc.post()
+                                .uri(base + "/" + pedido + "/aceitar")
+                                .with(token("sub-ana-mutacao-234", "token-ana-234")))
+                .hasStatusOk()
+                .bodyJson()
+                .extractingPath("$.situacao")
+                .isEqualTo("aceita");
+        assertThat(
+                        jdbc.queryForObject(
+                                "SELECT administrador_id FROM solicitacao_entrada_clube WHERE id = ?",
+                                UUID.class,
+                                UUID.fromString(pedido)))
+                .isEqualTo(ana);
+    }
+
+    @Test
+    void consultasDeClubesExigemLoginEUsamSituacaoDoUsuarioDoToken() {
+        String clube = "50000000-0000-0000-0000-000000000001";
+        for (String rota :
+                new String[] {
+                    "/api/clubes",
+                    "/api/clubes/" + clube,
+                    "/api/clubes/" + clube + "/solicitacoes",
+                    "/api/clubes/" + clube + "/posts"
+                }) {
+            assertThat(mvc.get().uri(rota)).hasStatus(HttpStatus.UNAUTHORIZED);
+        }
+        jdbc.update(
+                "UPDATE usuario SET cognito_sub = 'sub-pedro-234' WHERE id = ?",
+                UUID.fromString("00000000-0000-0000-0000-000000000009"));
+        assertThat(mvc.get().uri("/api/clubes").with(token("sub-pedro-234", "token-pedro-234")))
+                .hasStatusOk()
+                .bodyJson()
+                .extractingPath("$.clubes[?(@.id == '" + clube + "')].situacao")
+                .asList()
+                .containsExactly("pendente");
+        assertThat(
+                        mvc.get()
+                                .uri("/api/clubes/" + clube)
+                                .with(token("sub-pedro-234", "token-pedro-234")))
+                .hasStatusOk()
+                .bodyJson()
+                .extractingPath("$.situacao")
+                .isEqualTo("pendente");
+        assertThat(
+                        mvc.get()
+                                .uri("/api/clubes/" + clube + "/solicitacoes")
+                                .with(token("sub-pedro-234", "token-pedro-234")))
+                .hasStatus(HttpStatus.FORBIDDEN)
+                .bodyJson()
+                .extractingPath("$.code")
+                .isEqualTo("SO_LIDER_CRIA_QUIZ");
+        assertThat(
+                        mvc.get()
+                                .uri("/api/clubes/" + clube + "/posts")
+                                .with(token("sub-pedro-234", "token-pedro-234")))
+                .hasStatusOk()
+                .bodyJson()
+                .extractingPath("$.podeEscrever")
+                .isEqualTo(false);
+    }
+
+    @Test
+    void administradorDoTokenPodeListarSolicitacoesSemDependerDoSeed() {
+        UUID ana = UUID.fromString("00000000-0000-0000-0000-000000000002");
+        UUID clube = UUID.fromString("50000000-0000-0000-0000-000000000003");
+        jdbc.update("UPDATE usuario SET cognito_sub = 'sub-ana-234' WHERE id = ?", ana);
+        assertThat(
+                        mvc.get()
+                                .uri("/api/clubes/" + clube + "/solicitacoes")
+                                .with(token("sub-ana-234", "token-ana-234")))
+                .hasStatusOk()
+                .bodyJson()
+                .extractingPath("$.solicitacoes")
+                .asList()
+                .isEmpty();
+        assertThat(
+                        mvc.get()
+                                .uri("/api/clubes/" + clube)
+                                .with(token("sub-ana-234", "token-ana-234")))
+                .hasStatusOk()
+                .bodyJson()
+                .extractingPath("$.solicitacoesPendentes")
+                .isEqualTo(0);
+    }
+
+    @Test
     void buscaExcluiOUsuarioDoTokenEmVezDoUsuarioDeDemonstracao() {
         String idAna = "00000000-0000-0000-0000-000000000002";
         String sub = "sub-busca-222";
