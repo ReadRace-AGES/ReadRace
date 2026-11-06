@@ -183,11 +183,12 @@ test('cada entrada abre um caminho exclusivo dentro da própria aba', () => {
     react: {
       useState: (inicial) => [inicial, () => {}],
       useEffect: () => {},
-      useRef: (valor) => ({ current: valor }),
-      useCallback: (fn) => fn,
+      useRef: (current) => ({ current }),
+      useCallback: (callback) => callback,
     },
     'expo-router': {
       router: { push: (destino) => destinos.push(destino) },
+      useFocusEffect: () => {},
       useLocalSearchParams: () => ({ livroId: '1' }),
       useFocusEffect: () => {},
     },

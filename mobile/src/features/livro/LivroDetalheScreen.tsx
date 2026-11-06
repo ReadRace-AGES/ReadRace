@@ -28,7 +28,7 @@ export function LivroDetalheScreen({
   origem,
 }: {
   livroId: string;
-  origem: '/buscar' | '/meus-livros' | '/perfil';
+  origem: '/buscar' | '/meus-livros' | '/perfil' | '/feed';
 }) {
   const router = useRouter();
   const { estado, recarregar, atualizarProgresso, alternarCurtida } =
@@ -131,6 +131,7 @@ export function LivroDetalheScreen({
                   </View>
                 </View>
                 <Pressable
+                  cssInterop={false}
                   accessibilityRole="button"
                   style={({ pressed }) => [
                     styles.progress,

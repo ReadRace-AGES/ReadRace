@@ -29,6 +29,21 @@ public interface MembroClubeRepository extends JpaRepository<MembroClube, UUID> 
 
     Optional<MembroClube> findByClube_IdAndUsuarioId(UUID clubeId, UUID usuarioId);
 
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
+    @Query(
+            "SELECT membro FROM MembroClube membro WHERE membro.clube.id = :clubeId"
+                    + " ORDER BY membro.id")
+    List<MembroClube> buscarDoClubeComLock(@Param("clubeId") UUID clubeId);
+
+    @Query(
+            "SELECT membro FROM MembroClube membro JOIN Usuario usuario"
+                    + " ON usuario.id = membro.usuarioId AND usuario.excluidoEm IS NULL"
+                    + " WHERE membro.clube.id = :clubeId"
+                    + " AND membro.usuarioId <> :liderId"
+                    + " ORDER BY membro.pontos DESC, membro.entrouEm ASC, membro.usuarioId ASC")
+    List<MembroClube> candidatosALideranca(
+            @Param("clubeId") UUID clubeId, @Param("liderId") UUID liderId, Pageable limite);
+
     // Responder o quiz soma pontos nesta linha. O lock serializa respostas simultâneas do mesmo
     // membro, para a checagem de "já respondida" e a soma de pontos não correrem em paralelo.
     @Lock(LockModeType.PESSIMISTIC_WRITE)
