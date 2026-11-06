@@ -388,25 +388,27 @@ class ForumClubeControllerIT {
     }
 
     @Test
-    @DisplayName("curtidas são contagem de exibição — ((1 + p) % 7) + 1 no seed")
+    @DisplayName(
+            "curtidas são contagem de exibição — ((1 + p) % 7) + 1 no seed, sem a do autor (V29)")
     void deve_contar_as_curtidas_de_cada_post() {
         assertThat(mvc.get().uri(URL))
                 .hasStatusOk()
                 .bodyJson()
                 .extractingPath("$.posts[*].totalCurtidas")
                 .asList()
-                .containsExactly(3, 4, 5, 6, 7, 1);
+                .containsExactly(2, 3, 4, 5, 6, 1);
     }
 
     @Test
-    @DisplayName("curtidoPorMim reflete a curtida do usuário atual (curtiu tudo no seed) (#101)")
+    @DisplayName(
+            "curtidoPorMim reflete a curtida do usuário atual: todos menos o post dele (#101, V29)")
     void deve_marcar_curtidoPorMim_para_o_usuario_atual() {
         assertThat(mvc.get().uri(URL))
                 .hasStatusOk()
                 .bodyJson()
                 .extractingPath("$.posts[*].curtidoPorMim")
                 .asList()
-                .containsOnly(true);
+                .containsExactly(false, true, true, true, true, true);
     }
 
     @Test
