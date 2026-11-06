@@ -9,6 +9,7 @@ import java.util.UUID;
 
 import jakarta.persistence.EntityManager;
 
+import org.assertj.core.api.InstanceOfAssertFactories;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -18,6 +19,7 @@ import org.springframework.context.annotation.Import;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.test.json.AbstractJsonContentAssert;
 import org.springframework.test.web.servlet.assertj.MockMvcTester;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -196,6 +198,43 @@ class ConquistaAutomaticaIT {
     }
 
     @Test
+    void deve_devolver_na_resposta_a_conquista_desbloqueada_pela_leitura() {
+        apagarConquista(DANIEL_ID, MIL_PAGINAS);
+        manterSoLivros(ORGULHO_E_PRECONCEITO_ID, ENSAIO_SOBRE_A_CEGUEIRA_ID, LIVRO_1984_ID);
+
+        registrarComResposta(LIVRO_1984_ID, 260)
+                .extractingPath("$.conquistasDesbloqueadas")
+                .asArray()
+                .singleElement()
+                .asInstanceOf(InstanceOfAssertFactories.MAP)
+                .containsEntry("nome", MIL_PAGINAS)
+                .containsEntry("xp", 200)
+                .containsKey("id");
+    }
+
+    @Test
+    void deve_devolver_lista_vazia_quando_nada_e_desbloqueado() {
+        registrarComResposta(DOM_CASMURRO_ID, 150)
+                .extractingPath("$.conquistasDesbloqueadas")
+                .asArray()
+                .isEmpty();
+    }
+
+    @Test
+    void deve_devolver_a_conquista_de_desafios_desbloqueada_ao_finalizar_o_desafio() {
+        // O desafio finaliza durante o avanço de desafios, que já grava o Competidor: a avaliação
+        // final não o vê mais pendente, e mesmo assim ele precisa vir na resposta.
+        apagarConquista(DANIEL_ID, COMPETIDOR);
+        encerrarPrazo(DESAFIO_ATIVO_ID);
+
+        registrarComResposta(DOM_CASMURRO_ID, 150)
+                .extractingPath("$.conquistasDesbloqueadas[*].nome")
+                .asArray()
+                .containsExactly(COMPETIDOR);
+        assertThat(conquistas(DANIEL_ID)).contains(COMPETIDOR);
+    }
+
+    @Test
     void deve_avaliar_o_criterio_de_clubes() {
         apagarConquista(DANIEL_ID, EM_BOA_COMPANHIA);
 
@@ -211,6 +250,16 @@ class ConquistaAutomaticaIT {
                                 .contentType(MediaType.APPLICATION_JSON)
                                 .content("{\"pagina\":" + pagina + "}"))
                 .hasStatusOk();
+    }
+
+    private AbstractJsonContentAssert<?> registrarComResposta(UUID livroId, int pagina) {
+        return assertThat(
+                        mvc.post()
+                                .uri("/api/livros/{livroId}/progresso", livroId)
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content("{\"pagina\":" + pagina + "}"))
+                .hasStatusOk()
+                .bodyJson();
     }
 
     // O SQL direto passa por fora do Hibernate: o flush grava o que ele tem pendente antes, e o

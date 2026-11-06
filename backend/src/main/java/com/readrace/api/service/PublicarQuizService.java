@@ -34,6 +34,8 @@ import com.readrace.api.repository.QuizRepository;
 public class PublicarQuizService {
 
     static final int TITULO_MAXIMO = 120;
+    static final int ENUNCIADO_MAXIMO = 500;
+    static final int ALTERNATIVA_MAXIMA = 200;
     static final int RECOMPENSA_MINIMA = 10;
     static final int RECOMPENSA_MAXIMA = 500;
     static final List<String> LETRAS = List.of("A", "B", "C", "D");
@@ -142,6 +144,10 @@ public class PublicarQuizService {
         if (pergunta == null || vazio(pergunta.enunciado())) {
             throw new QuizInvalidoException("Toda pergunta precisa de um enunciado.");
         }
+        if (pergunta.enunciado().trim().length() > ENUNCIADO_MAXIMO) {
+            throw new QuizInvalidoException(
+                    "O enunciado tem no máximo %d caracteres.".formatted(ENUNCIADO_MAXIMO));
+        }
         List<String> alternativas = pergunta.alternativas();
         if (alternativas == null || alternativas.size() != LETRAS.size()) {
             throw new QuizInvalidoException(
@@ -149,6 +155,10 @@ public class PublicarQuizService {
         }
         if (alternativas.stream().anyMatch(PublicarQuizService::vazio)) {
             throw new QuizInvalidoException("Nenhuma alternativa pode ficar vazia.");
+        }
+        if (alternativas.stream().anyMatch(a -> a.trim().length() > ALTERNATIVA_MAXIMA)) {
+            throw new QuizInvalidoException(
+                    "Cada alternativa tem no máximo %d caracteres.".formatted(ALTERNATIVA_MAXIMA));
         }
         Integer correta = pergunta.correta();
         if (correta == null || correta < 0 || correta >= LETRAS.size()) {

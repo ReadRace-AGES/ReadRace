@@ -21,16 +21,20 @@ import com.readrace.api.dto.request.PublicarQuizRequest;
 import com.readrace.api.dto.request.ResponderPerguntaRequest;
 import com.readrace.api.dto.response.ClubeCriadoResponse;
 import com.readrace.api.dto.response.ClubeResponse;
+import com.readrace.api.dto.response.ClubesResponse;
 import com.readrace.api.dto.response.ForumClubeResponse;
 import com.readrace.api.dto.response.QuizPublicadoResponse;
 import com.readrace.api.dto.response.QuizResponse;
 import com.readrace.api.dto.response.RankingClubeResponse;
 import com.readrace.api.dto.response.RespostaQuizResponse;
 import com.readrace.api.dto.response.SairDoClubeResponse;
+import com.readrace.api.dto.response.SolicitacaoClubeResponse;
+import com.readrace.api.dto.response.SolicitacoesClubeResponse;
 import com.readrace.api.service.ClubeService;
 import com.readrace.api.service.ForumClubeService;
 import com.readrace.api.service.PublicarQuizService;
 import com.readrace.api.service.QuizService;
+import com.readrace.api.service.SolicitacaoClubeService;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -44,16 +48,19 @@ public class ClubeController {
     private final ForumClubeService forumClubeService;
     private final QuizService quizService;
     private final PublicarQuizService publicarQuizService;
+    private final SolicitacaoClubeService solicitacaoService;
 
     public ClubeController(
             ClubeService clubeService,
             ForumClubeService forumClubeService,
             QuizService quizService,
-            PublicarQuizService publicarQuizService) {
+            PublicarQuizService publicarQuizService,
+            SolicitacaoClubeService solicitacaoService) {
         this.clubeService = clubeService;
         this.forumClubeService = forumClubeService;
         this.quizService = quizService;
         this.publicarQuizService = publicarQuizService;
+        this.solicitacaoService = solicitacaoService;
     }
 
     @PostMapping
@@ -73,6 +80,37 @@ public class ClubeController {
         return clubeService.buscar(clubeId);
     }
 
+    @GetMapping
+    @Operation(summary = "Todos os clubes ativos e a situação do usuário atual")
+    public ClubesResponse listar() {
+        return clubeService.listar();
+    }
+
+    @GetMapping("/{clubeId}/solicitacoes")
+    @Operation(summary = "Solicitações pendentes, somente para administradores atuais")
+    public SolicitacoesClubeResponse listarSolicitacoes(@PathVariable UUID clubeId) {
+        return clubeService.listarSolicitacoes(clubeId);
+    }
+
+    @PostMapping("/{clubeId}/solicitacoes")
+    @ResponseStatus(HttpStatus.CREATED)
+    @Operation(summary = "Pede entrada no clube ou devolve o pedido já pendente")
+    public SolicitacaoClubeResponse solicitar(@PathVariable UUID clubeId) {
+        return solicitacaoService.solicitar(clubeId);
+    }
+
+    @PostMapping("/{clubeId}/solicitacoes/{id}/aceitar")
+    @Operation(summary = "Aceita uma solicitação como administrador atual")
+    public SolicitacaoClubeResponse aceitar(@PathVariable UUID clubeId, @PathVariable UUID id) {
+        return solicitacaoService.aceitar(clubeId, id);
+    }
+
+    @PostMapping("/{clubeId}/solicitacoes/{id}/recusar")
+    @Operation(summary = "Recusa uma solicitação como administrador atual")
+    public SolicitacaoClubeResponse recusar(@PathVariable UUID clubeId, @PathVariable UUID id) {
+        return solicitacaoService.recusar(clubeId, id);
+    }
+
     @GetMapping("/{clubeId}/ranking")
     @Operation(summary = "Ranking completo de membros do clube por Pontos")
     public RankingClubeResponse buscarRanking(
@@ -85,7 +123,7 @@ public class ClubeController {
     @Operation(
             summary = "Posts do clube sobre a leitura atual, do mais recente para o mais antigo",
             description =
-                    "Somente leitura. Só posts raiz deste clube: comentário e post de comunidade"
+                    "Somente membros podem ler. Só posts raiz deste clube: comentário e post de comunidade"
                             + " não entram.")
     public ForumClubeResponse buscarPosts(@PathVariable UUID clubeId) {
         return forumClubeService.buscar(clubeId);
