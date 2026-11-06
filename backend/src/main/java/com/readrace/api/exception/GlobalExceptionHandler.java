@@ -17,6 +17,7 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 import org.springframework.web.server.ResponseStatusException;
 import org.springframework.web.servlet.resource.NoResourceFoundException;
+import org.springframework.web.util.DisconnectedClientHelper;
 
 import com.readrace.api.dto.response.ErroResponse;
 
@@ -94,8 +95,20 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(status).body(ErroResponse.de(codigo, mensagem));
     }
 
+    /**
+     * Última rede para o que nenhum handler acima tratou.
+     *
+     * <p>O cliente fechar a conexão antes da resposta (ex.: o app cancela a busca de livros quando
+     * o termo muda) também chega aqui, embrulhado em {@code HttpMessageNotWritableException}. Não é
+     * falha do servidor e não há para quem responder, então sai em DEBUG e sem corpo: cada linha
+     * ERROR conta para o alarme {@code readrace-erros-na-api} (#255).
+     */
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ErroResponse> tratarInesperado(Exception ex) {
+        if (DisconnectedClientHelper.isClientDisconnectedException(ex)) {
+            log.debug("Cliente desconectou antes da resposta: {}", ex.getMessage());
+            return null;
+        }
         log.error("Exceção não tratada chegou ao handler global", ex);
 
         return resposta(CodigoErro.INTERNAL_ERROR, CodigoErro.INTERNAL_ERROR.mensagemPadrao());
