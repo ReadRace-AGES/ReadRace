@@ -101,6 +101,9 @@ function renderDetalhe(dados, options = {}) {
     '@/features/progresso/RegistrarProgressoSheet': {
       RegistrarProgressoSheet: 'RegistrarProgressoSheet',
     },
+    '@/features/biblioteca/MinhasListasSheet': {
+      MinhasListasSheet: 'MinhasListasSheet',
+    },
     './model': { tempoRelativo },
     './useLivroDetalhe': {
       useLivroDetalhe: () => ({
@@ -187,6 +190,7 @@ test('cada entrada abre um caminho exclusivo dentro da própria aba', () => {
       router: { push: (destino) => destinos.push(destino) },
       useFocusEffect: () => {},
       useLocalSearchParams: () => ({ livroId: '1' }),
+      useFocusEffect: () => {},
     },
     '@/components/toast-provider': { useToastContext: () => ({}) },
     '@/features/busca/BuscaView': {

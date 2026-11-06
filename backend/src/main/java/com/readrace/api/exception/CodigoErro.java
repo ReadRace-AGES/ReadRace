@@ -14,6 +14,11 @@ public enum CodigoErro {
     DESAFIO_NAO_ENCONTRADO(HttpStatus.NOT_FOUND, "Desafio não encontrado."),
     OPONENTE_NAO_ENCONTRADO(HttpStatus.NOT_FOUND, "Oponente não encontrado."),
     LIVRO_NAO_ENCONTRADO(HttpStatus.NOT_FOUND, "Livro não encontrado."),
+    LIVRO_COM_LEITURA(
+            HttpStatus.CONFLICT, "Não é possível remover um livro que já tem leitura registrada."),
+    LIVRO_EM_PROGRESSO(
+            HttpStatus.CONFLICT,
+            "Um livro com leitura registrada não pode entrar na lista de desejos."),
     COMUNIDADE_NAO_ENCONTRADA(HttpStatus.NOT_FOUND, "Comunidade não encontrada."),
     POST_NAO_ENCONTRADO(HttpStatus.NOT_FOUND, "Post não encontrado."),
     LISTA_INVALIDA(HttpStatus.BAD_REQUEST, "Lista inválida. Use lido, desejo ou favorito."),

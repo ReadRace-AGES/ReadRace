@@ -1,9 +1,14 @@
 package com.readrace.api.controller;
 
+import java.util.UUID;
+
 import org.springframework.http.HttpStatus;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -11,7 +16,9 @@ import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.readrace.api.dto.request.AdicionarLivroRequest;
+import com.readrace.api.dto.request.AtualizarBibliotecaRequest;
 import com.readrace.api.dto.response.AdicionarLivroResponse;
+import com.readrace.api.dto.response.BibliotecaItemResponse;
 import com.readrace.api.dto.response.BibliotecaResponse;
 import com.readrace.api.dto.response.PaginaBibliotecaResponse;
 import com.readrace.api.service.AdicionarLivroService;
@@ -53,6 +60,28 @@ public class BibliotecaController {
                             + " biblioteca, sem duplicar.")
     public AdicionarLivroResponse adicionar(@RequestBody AdicionarLivroRequest request) {
         return adicionarLivroService.adicionar(request);
+    }
+
+    @PatchMapping("/{livroId}")
+    public BibliotecaItemResponse atualizarStatus(
+            @PathVariable UUID livroId, @RequestBody AtualizarBibliotecaRequest request) {
+        return bibliotecaService.atualizarStatus(livroId, request == null ? null : request.lista());
+    }
+
+    @PutMapping("/{livroId}/favorito")
+    public BibliotecaItemResponse marcarFavorito(@PathVariable UUID livroId) {
+        return bibliotecaService.marcarFavorito(livroId);
+    }
+
+    @DeleteMapping("/{livroId}/favorito")
+    public BibliotecaItemResponse desmarcarFavorito(@PathVariable UUID livroId) {
+        return bibliotecaService.desmarcarFavorito(livroId);
+    }
+
+    @DeleteMapping("/{livroId}")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void remover(@PathVariable UUID livroId) {
+        bibliotecaService.remover(livroId);
     }
 
     @GetMapping("/{lista}")
