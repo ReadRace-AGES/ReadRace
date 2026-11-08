@@ -13,6 +13,7 @@ import org.springframework.transaction.annotation.Transactional;
 import com.readrace.api.dto.response.ComunidadeResponse;
 import com.readrace.api.dto.response.MembroComunidadeResponse;
 import com.readrace.api.exception.ComunidadeNaoEncontradaException;
+import com.readrace.api.exception.SoMembroPostaException;
 import com.readrace.api.exception.UnicoAdministradorException;
 import com.readrace.api.model.Cargo;
 import com.readrace.api.model.Comunidade;
@@ -95,23 +96,43 @@ public class ComunidadeService {
                         .isPresent(),
                 posts.stream()
                         .map(
-                                post -> {
-                                    Usuario autor = autores.get(post.getAutorId());
-                                    return new ComunidadeResponse.Post(
-                                            post.getId(),
-                                            new ComunidadeResponse.Autor(
-                                                    post.getAutorId(),
-                                                    autor == null || autor.getNome() == null
-                                                            ? ""
-                                                            : autor.getNome(),
-                                                    autor == null ? null : autor.getAvatarUrl()),
-                                            post.getCriadoEm(),
-                                            post.getConteudo(),
-                                            curtidas.getOrDefault(post.getId(), 0L),
-                                            curtidosPorMim.contains(post.getId()),
-                                            comentarios.getOrDefault(post.getId(), 0L));
-                                })
+                                post ->
+                                        paraPost(
+                                                post,
+                                                autores.get(post.getAutorId()),
+                                                curtidas.getOrDefault(post.getId(), 0L),
+                                                curtidosPorMim.contains(post.getId()),
+                                                comentarios.getOrDefault(post.getId(), 0L)))
                         .toList());
+    }
+
+    @Transactional
+    public ComunidadeResponse.Post publicar(UUID comunidadeId, String conteudo) {
+        comunidade(comunidadeId);
+        UUID autorId = usuarioAtual.idDoUsuarioAtual().valor();
+        if (membroRepository.findByComunidade_IdAndUsuarioId(comunidadeId, autorId).isEmpty()) {
+            throw new SoMembroPostaException("Somente participantes da comunidade podem publicar.");
+        }
+
+        Post post =
+                postRepository.save(Post.criarRaizDeComunidade(autorId, comunidadeId, conteudo));
+        Usuario autor = usuarioRepository.findById(autorId).orElse(null);
+        return paraPost(post, autor, 0L, false, 0L);
+    }
+
+    private static ComunidadeResponse.Post paraPost(
+            Post post, Usuario autor, long curtidas, boolean curtidoPorMim, long comentarios) {
+        return new ComunidadeResponse.Post(
+                post.getId(),
+                new ComunidadeResponse.Autor(
+                        post.getAutorId(),
+                        autor == null || autor.getNome() == null ? "" : autor.getNome(),
+                        autor == null ? null : autor.getAvatarUrl()),
+                post.getCriadoEm(),
+                post.getConteudo(),
+                curtidas,
+                curtidoPorMim,
+                comentarios);
     }
 
     @Transactional
