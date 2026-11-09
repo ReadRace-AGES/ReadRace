@@ -174,11 +174,32 @@ export function useComunidade(comunidadeId: string) {
     );
   }, []);
 
+  const adicionarPost = useCallback(
+    (post: PostComunidade) => {
+      setComunidade((atual) =>
+        atual.situacao === 'sucesso' && atual.dados.id === comunidadeId
+          ? {
+              ...atual,
+              dados: {
+                ...atual.dados,
+                posts: [
+                  post,
+                  ...atual.dados.posts.filter((item) => item.id !== post.id),
+                ],
+              },
+            }
+          : atual
+      );
+    },
+    [comunidadeId]
+  );
+
   return {
     comunidade,
     recarregar,
     alternarSeguimento,
     alternarCurtida,
     somarComentario,
+    adicionarPost,
   };
 }

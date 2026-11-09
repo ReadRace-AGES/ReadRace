@@ -126,6 +126,7 @@ async function mount(dados = forum(), erroInicial = null) {
     },
     '@/features/livro/model': { tempoRelativo: () => '' },
     './NovoPostSheet': { NovoPostSheet },
+    './api': api,
     './useForumClube': {
       useForumClube: (id) => {
         h.state = useForumClube(id);

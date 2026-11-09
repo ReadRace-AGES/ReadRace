@@ -28,6 +28,13 @@ export type ComunidadeFeed = {
   totalMembros: number;
 };
 
+export type ComunidadeSugeridaFeed = {
+  id: string;
+  nome: string;
+  imagemUrl: string | null;
+  membros: number;
+};
+
 export type FeedComunidades = {
   usuario: {
     nome: string;
@@ -39,9 +46,10 @@ export type FeedComunidades = {
   };
   clubes: ClubeFeed[];
   comunidades: ComunidadeFeed[];
+  comunidadesSugeridas: ComunidadeSugeridaFeed[];
 };
 
-/** `GET /api/feed/comunidades` — clubes e comunidades do usuário atual, em duas listas. */
+/** `GET /api/feed/comunidades` — clubes, comunidades participantes e sugestões. */
 export function buscarFeedComunidades(signal?: AbortSignal) {
   return apiGet<FeedComunidades>('/api/feed/comunidades', { signal });
 }
