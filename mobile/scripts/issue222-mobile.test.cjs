@@ -688,8 +688,8 @@ test('Desafiar amigo: Livro Específico permite quebra e lupa não encolhe com o
 });
 
 test('comunidade: Seguir e Em alta preservam callbacks e têm área de botão', async () => {
-  let follow = 0,
-    toast = 0;
+  let follow = 0;
+  const ordens = [];
   const { ComunidadeScreen } = load(
     'features/comunidade/ComunidadeScreen.tsx',
     {
@@ -707,7 +707,9 @@ test('comunidade: Seguir e Em alta preservam callbacks e têm área de botão', 
         base
       ),
       './useComunidade': {
-        useComunidade: () => ({
+        useComunidade: (_comunidadeId, ordem) => {
+          ordens.push(ordem);
+          return {
           comunidade: {
             situacao: 'sucesso',
             dados: {
@@ -720,7 +722,8 @@ test('comunidade: Seguir e Em alta preservam callbacks e têm área de botão', 
           alternarSeguimento: async () => {
             follow++;
           },
-        }),
+          };
+        },
       },
     }
   );
@@ -738,7 +741,7 @@ test('comunidade: Seguir e Em alta preservam callbacks e têm área de botão', 
       await act(async () => action.props.onPress());
     }
     assert.equal(follow, 1);
-    assert.equal(toast, 1);
+    assert.equal(ordens.at(-1), 'em_alta');
   } finally {
     await close(tree);
   }

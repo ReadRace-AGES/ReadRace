@@ -8,6 +8,7 @@ import {
   deixarDeSeguirComunidade,
   seguirComunidade,
   type Comunidade,
+  type OrdemComunidade,
   type PostComunidade,
 } from './api';
 
@@ -33,10 +34,15 @@ function comPost(
   };
 }
 
-export function useComunidade(comunidadeId: string) {
+export function useComunidade(
+  comunidadeId: string,
+  ordem: OrdemComunidade = 'recentes'
+) {
   const [comunidade, setComunidade] = useState<ComunidadeCarga>({
     situacao: 'carregando',
   });
+  const [carregandoPosts, setCarregandoPosts] = useState(true);
+  const [erroPosts, setErroPosts] = useState<string | null>(null);
   const [versao, setVersao] = useState(0);
   const comunidadeRef = useRef(comunidade);
   useEffect(() => {
@@ -45,21 +51,33 @@ export function useComunidade(comunidadeId: string) {
 
   useEffect(() => {
     const controller = new AbortController();
-    buscarComunidade(comunidadeId, controller.signal)
+    const haviaDados = comunidadeRef.current.situacao === 'sucesso';
+    setCarregandoPosts(true);
+    setErroPosts(null);
+    buscarComunidade(comunidadeId, ordem, controller.signal)
       .then((dados) => {
-        if (!controller.signal.aborted)
+        if (!controller.signal.aborted) {
           setComunidade({ situacao: 'sucesso', dados });
+          setCarregandoPosts(false);
+        }
       })
       .catch((erro: unknown) => {
         if (!controller.signal.aborted) {
-          setComunidade({ situacao: 'erro', mensagem: mensagemDe(erro) });
+          setCarregandoPosts(false);
+          if (haviaDados) {
+            setErroPosts(mensagemDe(erro));
+          } else {
+            setComunidade({ situacao: 'erro', mensagem: mensagemDe(erro) });
+          }
         }
       });
     return () => controller.abort();
-  }, [comunidadeId, versao]);
+  }, [comunidadeId, ordem, versao]);
 
   const recarregar = useCallback(() => {
-    setComunidade({ situacao: 'carregando' });
+    if (comunidadeRef.current.situacao !== 'sucesso') {
+      setComunidade({ situacao: 'carregando' });
+    }
     setVersao((valor) => valor + 1);
   }, []);
 
@@ -176,6 +194,8 @@ export function useComunidade(comunidadeId: string) {
 
   return {
     comunidade,
+    carregandoPosts,
+    erroPosts,
     recarregar,
     alternarSeguimento,
     alternarCurtida,

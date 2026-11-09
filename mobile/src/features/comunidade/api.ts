@@ -24,9 +24,15 @@ export type EstadoMembroComunidade = {
   sigo: boolean;
 };
 
-export function buscarComunidade(comunidadeId: string, signal?: AbortSignal) {
+export type OrdemComunidade = 'recentes' | 'em_alta';
+
+export function buscarComunidade(
+  comunidadeId: string,
+  ordem: OrdemComunidade = 'recentes',
+  signal?: AbortSignal
+) {
   return apiGet<Comunidade>(
-    `/api/comunidades/${encodeURIComponent(comunidadeId)}`,
+    `/api/comunidades/${encodeURIComponent(comunidadeId)}?ordem=${ordem}`,
     { signal }
   );
 }
