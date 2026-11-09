@@ -2,6 +2,7 @@ package com.readrace.api.controller;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import java.util.List;
 import java.util.UUID;
 
 import org.junit.jupiter.api.Test;
@@ -120,5 +121,68 @@ class ComunidadeControllerIT {
                 .isEqualTo(1);
         assertThat(jdbc.queryForMap("SELECT * FROM usuario WHERE id = ?", EU))
                 .isEqualTo(usuarioAntes);
+    }
+
+    @Test
+    void emAltaOrdenaPorCurtidasEDesempataPelaDataMaisRecente() {
+        UUID comunidade = criarComunidade();
+        UUID dez = UUID.randomUUID();
+        UUID tres = UUID.randomUUID();
+        UUID sete = UUID.randomUUID();
+        jdbc.update(
+                "INSERT INTO post (id, autor_id, comunidade_id, conteudo, criado_em) VALUES (?, ?, ?, 'dez', now() - interval '3 minutes'), (?, ?, ?, 'tres', now() - interval '1 minute'), (?, ?, ?, 'sete', now() - interval '2 minutes')",
+                dez,
+                EU,
+                comunidade,
+                tres,
+                EU,
+                comunidade,
+                sete,
+                EU,
+                comunidade);
+        List<UUID> usuarios =
+                jdbc.query(
+                        "SELECT id FROM usuario ORDER BY id LIMIT 10",
+                        (rs, rowNum) -> rs.getObject("id", UUID.class));
+        for (int i = 0; i < 10; i++) {
+            jdbc.update(
+                    "INSERT INTO curtida (id, post_id, usuario_id) VALUES (?, ?, ?)",
+                    UUID.randomUUID(),
+                    dez,
+                    usuarios.get(i));
+        }
+        for (int i = 0; i < 3; i++) {
+            jdbc.update(
+                    "INSERT INTO curtida (id, post_id, usuario_id) VALUES (?, ?, ?)",
+                    UUID.randomUUID(),
+                    tres,
+                    usuarios.get(i));
+        }
+        for (int i = 0; i < 7; i++) {
+            jdbc.update(
+                    "INSERT INTO curtida (id, post_id, usuario_id) VALUES (?, ?, ?)",
+                    UUID.randomUUID(),
+                    sete,
+                    usuarios.get(i));
+        }
+
+        assertThat(mvc.get().uri("/api/comunidades/" + comunidade + "?ordem=em_alta"))
+                .hasStatusOk()
+                .bodyJson()
+                .extractingPath("$.posts[0].id")
+                .isEqualTo(dez.toString());
+        assertThat(mvc.get().uri("/api/comunidades/" + comunidade + "?ordem=recentes"))
+                .hasStatusOk()
+                .bodyJson()
+                .extractingPath("$.posts[0].id")
+                .isEqualTo(tres.toString());
+    }
+
+    @Test
+    void ordemInvalidaRetorna400() {
+        UUID comunidade = criarComunidade();
+
+        assertThat(mvc.get().uri("/api/comunidades/" + comunidade + "?ordem=antigos"))
+                .hasStatus(HttpStatus.BAD_REQUEST);
     }
 }
