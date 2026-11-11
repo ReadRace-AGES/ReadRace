@@ -65,7 +65,7 @@ export function ConfiguracoesPerfilScreen() {
       {estado.situacao === 'erro' && (
         <View style={styles.content}>
           <Text style={styles.erro}>{estado.mensagem}</Text>
-          <PrimaryButton label="Tentar novamente" onPress={recarregar} />
+          <PrimaryButton label="Tentar de novo" onPress={recarregar} />
         </View>
       )}
       {estado.situacao === 'sucesso' && (
@@ -251,7 +251,11 @@ function Opcao({
   previa?: ReactNode;
 }) {
   return (
-    <Pressable accessibilityRole="button" onPress={onPress} style={styles.opcao}>
+    <Pressable
+      accessibilityRole="button"
+      onPress={onPress}
+      style={styles.opcao}
+    >
       <Text style={styles.opcaoTexto}>{label}</Text>
       {previa}
       <Text style={styles.opcaoSeta}>›</Text>

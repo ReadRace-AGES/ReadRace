@@ -47,7 +47,12 @@ type RouteOf<Props> = Props extends { state: { routes: readonly (infer R)[] } }
   : never;
 type TabWithRoute = TabDefinition & { route: RouteOf<BottomTabBarProps> };
 
-export function BottomTabBar({ state, navigation, insets }: BottomTabBarProps) {
+export function BottomTabBar({
+  state,
+  navigation,
+  insets,
+  onHeightChange,
+}: BottomTabBarProps & { onHeightChange: (height: number) => void }) {
   const focusedRouteName = state.routes[state.index]?.name;
 
   const visibleTabs: TabWithRoute[] = TAB_ORDER.map((tab) => ({
@@ -58,6 +63,7 @@ export function BottomTabBar({ state, navigation, insets }: BottomTabBarProps) {
   return (
     <View
       className="items-center px-5"
+      onLayout={(event) => onHeightChange(event.nativeEvent.layout.height)}
       style={{
         paddingTop: spacing[3],
         paddingBottom: insets.bottom || spacing[6],

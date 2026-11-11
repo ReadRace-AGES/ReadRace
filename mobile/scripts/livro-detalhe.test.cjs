@@ -101,6 +101,9 @@ function renderDetalhe(dados, options = {}) {
     '@/features/progresso/RegistrarProgressoSheet': {
       RegistrarProgressoSheet: 'RegistrarProgressoSheet',
     },
+    '@/features/biblioteca/MinhasListasSheet': {
+      MinhasListasSheet: 'MinhasListasSheet',
+    },
     './model': { tempoRelativo },
     './useLivroDetalhe': {
       useLivroDetalhe: () => ({
@@ -177,10 +180,17 @@ for (const origem of ['/buscar', '/meus-livros']) {
 test('cada entrada abre um caminho exclusivo dentro da própria aba', () => {
   const destinos = [];
   const dependencies = {
-    react: { useState: (inicial) => [inicial, () => {}], useEffect: () => {} },
+    react: {
+      useState: (inicial) => [inicial, () => {}],
+      useEffect: () => {},
+      useRef: (current) => ({ current }),
+      useCallback: (callback) => callback,
+    },
     'expo-router': {
       router: { push: (destino) => destinos.push(destino) },
+      useFocusEffect: () => {},
       useLocalSearchParams: () => ({ livroId: '1' }),
+      useFocusEffect: () => {},
     },
     '@/components/toast-provider': { useToastContext: () => ({}) },
     '@/features/busca/BuscaView': {
@@ -331,3 +341,25 @@ test('consulta detalhe encaminha cancelamento e não envia userId', async () => 
   });
   assert.equal(await buscarDetalhe('id/com espaço', signal), esperado);
 });
+
+for (const dias of [null, 0, 1, 2]) {
+  test(`sequência do autor no detalhe: ${dias}`, () => {
+    const elements = renderDetalhe({
+      livro: { id: 'livro', titulo: 'Livro', totalPaginas: 100 },
+      progresso: null,
+      posts: [
+        {
+          id: 'post',
+          autor: { nome: 'Leitor', sequenciaDias: dias },
+          texto: 'Post',
+          curtidas: 0,
+          criadoEm: new Date().toISOString(),
+        },
+      ],
+    });
+    assert.equal(
+      elements.find((e) => e.type === 'PostCard').props.authorStreak,
+      dias === null ? null : `${dias} ${dias === 1 ? 'dia' : 'dias'}`
+    );
+  });
+}

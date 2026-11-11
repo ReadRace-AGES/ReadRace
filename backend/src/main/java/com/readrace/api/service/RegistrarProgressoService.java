@@ -3,6 +3,8 @@ package com.readrace.api.service;
 import java.time.Clock;
 import java.time.Instant;
 import java.time.OffsetDateTime;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.UUID;
 
 import jakarta.persistence.EntityManager;
@@ -11,10 +13,12 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.readrace.api.dto.request.RegistrarProgressoRequest;
+import com.readrace.api.dto.response.ConquistaDesbloqueadaResponse;
 import com.readrace.api.dto.response.ProgressoLeituraResponse;
 import com.readrace.api.exception.LivroNaoEncontradoException;
 import com.readrace.api.exception.PaginaInvalidaException;
 import com.readrace.api.exception.UsuarioNaoEncontradoException;
+import com.readrace.api.model.Conquista;
 import com.readrace.api.model.CurvaDeNivel;
 import com.readrace.api.model.DesafioSistema;
 import com.readrace.api.model.ItemBiblioteca;
@@ -33,7 +37,8 @@ import com.readrace.api.repository.UsuarioRepository;
 @Service
 public class RegistrarProgressoService {
 
-    private static final int XP_CONCLUSAO = 150;
+    // A aba Social (#204) mostra o mesmo bônus no card "Terminou o livro".
+    static final int XP_CONCLUSAO = 150;
     private static final int PONTOS_POR_PAGINA = 1;
 
     private final LivroRepository livroRepository;
@@ -127,19 +132,29 @@ public class RegistrarProgressoService {
         pagamentoDesafioSistemaService.pagarCruzamentos(
                 usuario, dataDoPeriodo, registradoEm, anterior, posterior);
 
-        usuario.registrarLeitura(SequenciaDeLeitura.hoje());
+        // Repetir ou voltar de página não é leitura: a sequência só anda com página nova.
+        if (paginasNovas > 0) {
+            usuario.registrarLeitura(SequenciaDeLeitura.hoje());
+        }
 
-        boolean concluiuAgora = !concluidoAntes && item.estaConcluido();
+        // O bônus sai uma vez, quando a página máxima chega ao total. O status "lido" do catálogo
+        // não conta: com ele, todo registro pagaria a conclusão de novo.
+        boolean concluiuAgora = !concluidoAntes && item.leuAteOFim();
         int xpConclusao = concluiuAgora ? XP_CONCLUSAO : 0;
         int xpGanho = xpPaginas + xpConclusao;
         int percentual = Math.round((pagina * 100f) / livro.getTotalPaginas());
 
         // Os campos de nível só são calculados depois de todas as recompensas.
-        desafioService.avancarDesafios(usuarioAtualId.valor(), livro, pagina, paginasNovas);
+        // O desafio que finaliza aqui já desbloqueia a conquista de desafios: ela entra na lista
+        // agora, porque a avaliação final não a encontra mais pendente.
+        List<Conquista> desbloqueadas =
+                new ArrayList<>(
+                        desafioService.avancarDesafios(
+                                usuarioAtualId.valor(), livro, pagina, paginasNovas));
 
         usuario.receberXp(xpGanho);
         // Depois da soma de XP, para a avaliação já enxergar o XP e o nível atualizados.
-        conquistaService.avaliar(usuarioAtualId.valor());
+        desbloqueadas.addAll(conquistaService.avaliar(usuarioAtualId.valor()));
 
         boolean subiuDeNivel = usuario.getNivel() != nivelAnterior;
         int xpNoNivel = CurvaDeNivel.xpNoNivel(usuario.getXpTotal(), usuario.getNivel());
@@ -153,13 +168,14 @@ public class RegistrarProgressoService {
                 xpPaginas,
                 xpConclusao,
                 xpGanho,
-                item.estaConcluido(),
+                item.leuAteOFim(),
                 usuario.getDiasConsecutivos(),
                 usuario.getNivel(),
                 usuario.getXpTotal(),
                 xpNoNivel,
                 xpDoNivel,
-                subiuDeNivel);
+                subiuDeNivel,
+                desbloqueadas.stream().map(ConquistaDesbloqueadaResponse::de).toList());
     }
 
     /**

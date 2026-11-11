@@ -5,14 +5,16 @@ import { colors, sizes, radius, spacing, typography, shadows } from '@/theme';
 
 type SearchVariant = 'rounded' | 'outlined' | 'tinted';
 
-export interface SearchInputProps
-  extends Omit<TextInputProps, 'onChangeText' | 'value' | 'editable' | 'multiline' | 'numberOfLines'> {
+export interface SearchInputProps extends Omit<
+  TextInputProps,
+  'onChangeText' | 'value' | 'editable' | 'multiline' | 'numberOfLines'
+> {
   placeholder: string;
   value?: string;
   onChangeText?: (text: string) => void;
   disabled?: boolean;
   variant?: SearchVariant;
-  className?: string; 
+  className?: string;
 }
 
 export function SearchInput({
@@ -79,13 +81,15 @@ export function SearchInput({
         ...shadows.input,
       }}
     >
-
-      <SearchIcon size={sizes.iconSmall} color={iconColor} />
+      <View style={{ flexShrink: 0 }}>
+        <SearchIcon size={sizes.iconSmall} color={iconColor} />
+      </View>
 
       <TextInput
         {...rest}
         className={`flex-1 h-full ${Platform.OS === 'android' ? 'py-0' : ''}`}
         style={{
+          minWidth: 0,
           color: disabled ? colors.textMuted : colors.text,
           fontFamily: typography.fontFamily.regular,
           fontSize: typography.fontSize.body,

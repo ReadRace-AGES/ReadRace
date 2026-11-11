@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { ApiError } from '@/api/client';
+import { ApiError, mensagemErroCarregamento } from '@/api/client';
 import {
   alterarSeguir,
   buscarPerfil,
@@ -74,10 +74,7 @@ export function usePerfil(usuarioId?: string, habilitado = true) {
         aplicar(
           {
             situacao: 'erro',
-            mensagem:
-              erro instanceof ApiError
-                ? erro.message
-                : 'Não foi possível carregar o perfil. Tente novamente.',
+            mensagem: mensagemErroCarregamento(erro),
           },
           tentativa.silenciosa
         )

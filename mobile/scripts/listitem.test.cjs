@@ -14,6 +14,7 @@ const theme = {
 const dependencies = {
   'react-native': {
     View: 'View',
+    ActivityIndicator: 'ActivityIndicator',
     Text: 'Text',
     // Como o Pressable real, aceita children como função do estado.
     Pressable: ({ children, ...props }) =>
@@ -109,7 +110,9 @@ test('ação e linha são controles irmãos com callbacks independentes', () => 
   });
   // O mock adiciona um nó host dentro de cada Pressable. A relação de
   // irmãos deve ser verificada nos componentes, como montados pelo ListItem.
-  const controls = tree.root.findAllByType(dependencies['react-native'].Pressable);
+  const controls = tree.root.findAllByType(
+    dependencies['react-native'].Pressable
+  );
   assert.equal(controls.length, 2);
   const [row, action] = controls;
   assert.ok(row.parent === action.parent, 'linha e ação devem ter o mesmo pai');
@@ -172,3 +175,64 @@ test('imagem de comunidade com erro recupera a inicial', () => {
   );
   act(() => tree.unmount());
 });
+
+for (const count of [0, 1, 2]) {
+  test(`comunidade: ${count} membro(s) no texto e na acessibilidade`, () => {
+    let tree;
+    act(() => {
+      tree = create(
+        render({
+          variant: 'community',
+          title: 'Comunidade',
+          memberCount: count,
+          onPress() {},
+        })
+      );
+    });
+    try {
+      const esperado = `${count} ${count === 1 ? 'membro' : 'membros'}`;
+      assert.ok(
+        tree.root
+          .findAllByType('Text')
+          .some((n) => n.props.children === esperado)
+      );
+      assert.ok(
+        tree.root
+          .findByType(dependencies['react-native'].Pressable)
+          .props.accessibilityLabel.endsWith(esperado)
+      );
+    } finally {
+      act(() => tree.unmount());
+    }
+  });
+}
+
+for (const state of [{ loading: true }, { disabled: true }]) {
+  test(`ação indisponível preserva acessibilidade e bloqueia callback: ${JSON.stringify(state)}`, () => {
+    let calls = 0,
+      tree;
+    act(() => {
+      tree = create(
+        render({
+          variant: 'community',
+          title: 'Leitores',
+          action: { label: 'Participar', onPress: () => calls++, ...state },
+        })
+      );
+    });
+    const action = tree.root.findByType('Pressable');
+    assert.equal(action.props.disabled, true);
+    assert.deepEqual(action.props.accessibilityState, {
+      disabled: true,
+      busy: !!state.loading,
+    });
+    assert.equal(action.props.accessibilityLabel, 'Participar: Leitores');
+    assert.equal(
+      tree.root.findAllByType('ActivityIndicator').length,
+      state.loading ? 1 : 0
+    );
+    act(() => action.props.onPress());
+    assert.equal(calls, 0);
+    act(() => tree.unmount());
+  });
+}

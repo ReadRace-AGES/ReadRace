@@ -325,7 +325,7 @@ class DesafioControllerIT {
         assertThat(resultado)
                 .bodyJson()
                 .extractingPath("$.livro.capaUrl")
-                .isEqualTo("https://covers.openlibrary.org/b/isbn/9780805209990-L.jpg");
+                .isEqualTo("https://covers.openlibrary.org/b/isbn/9788571646858-L.jpg");
         assertThat(resultado).bodyJson().extractingPath("$.status").isEqualTo("em_andamento");
         assertThat(resultado).bodyJson().extractingPath("$.progresso.voce").isEqualTo(0);
         assertThat(resultado).bodyJson().extractingPath("$.progresso.oponente").isEqualTo(0);

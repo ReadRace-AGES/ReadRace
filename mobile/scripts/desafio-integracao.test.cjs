@@ -68,9 +68,7 @@ test('aba navega, recarrega ao foco e ignora respostas antigas', async () => {
       View: 'View',
     },
 
-    '@/api/client': {
-      ApiError: class ApiError extends Error {},
-    },
+    '@/api/client': load('api/client.ts', {}),
 
     '@/components/AppHeader': {
       AppHeader: 'AppHeader',
@@ -234,7 +232,8 @@ test('aba navega, recarrega ao foco e ignora respostas antigas', async () => {
   await act(async () => requests[4].reject(new Error('offline')));
 
   assert.ok(button('Tentar de novo'));
-  assert.equal(tree.root.findAllByType('Card').length, 1);
+  // O aviso usa o mesmo Card dos erros do sistema, preservando o duelo já carregado.
+  assert.equal(tree.root.findAllByType('Card').length, 2);
   assert.equal(tree.root.findAllByType('ActivityIndicator').length, 0);
 
   act(() => {

@@ -376,11 +376,14 @@ class PagamentoDesafioSistemaIT {
                         "xpDoUsuario",
                         "xpNoNivel",
                         "xpDoNivel",
-                        "subiuDeNivel");
+                        "subiuDeNivel",
+                        "conquistasDesbloqueadas");
         assertThat(json.size()).isEqualTo(campos.size());
         for (String campo : campos) {
             assertThat(json.has(campo)).as(campo).isTrue();
         }
+        assertThat(json.path("conquistasDesbloqueadas").isArray()).isTrue();
+        assertThat(json.path("conquistasDesbloqueadas").size()).isZero();
         assertThat(json.path("xpTotal").intValue()).isEqualTo(15);
         assertThat(json.path("xpDoUsuario").intValue()).isEqualTo(115);
         assertThat(json.path("nivel").intValue()).isEqualTo(2);

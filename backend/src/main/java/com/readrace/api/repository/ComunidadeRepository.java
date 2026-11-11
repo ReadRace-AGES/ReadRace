@@ -20,4 +20,17 @@ public interface ComunidadeRepository extends JpaRepository<Comunidade, UUID> {
     Optional<Comunidade> buscarComLock(@Param("id") UUID id);
 
     List<Comunidade> findByNomeContainingIgnoreCaseAndExcluidoEmIsNull(String nome);
+
+    @Query(
+            value =
+                    """
+                    SELECT c.* FROM comunidade c
+                    WHERE c.excluido_em IS NULL
+                      AND NOT EXISTS (SELECT 1 FROM membro_comunidade mc
+                                      WHERE mc.comunidade_id = c.id AND mc.usuario_id = :usuarioId)
+                    ORDER BY c.nome, c.id
+                    LIMIT 5
+                    """,
+            nativeQuery = true)
+    List<Comunidade> sugeridasParaUsuario(@Param("usuarioId") UUID usuarioId);
 }

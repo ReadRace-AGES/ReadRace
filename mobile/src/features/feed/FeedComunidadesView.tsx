@@ -1,5 +1,10 @@
-import { useState } from 'react';
-import { ActivityIndicator, ScrollView, Text, View } from 'react-native';
+import {
+  ActivityIndicator,
+  Pressable,
+  ScrollView,
+  Text,
+  View,
+} from 'react-native';
 import Svg, { Path } from 'react-native-svg';
 
 import { AppHeader } from '@/components/AppHeader';
@@ -11,25 +16,28 @@ import {
   type PrimaryButtonIconProps,
 } from '@/components/PrimaryButton';
 import { SegmentedTabs } from '@/components/SegmentedTabs';
-import { colors, spacing } from '@/theme';
+import { colors, sizes, spacing } from '@/theme';
 
 import { ClubeCard } from './ClubeCard';
-import type { ClubeFeed, ComunidadeFeed } from './api';
+import type { ClubeFeed, ComunidadeFeed, ComunidadeSugeridaFeed } from './api';
+import { FeedSocialView } from './FeedSocialView';
 import type { FeedComunidadesState } from './useFeedComunidades';
+import type { FeedSocialState } from './useFeedSocial';
 
-const ABAS = ['Social', 'Comunidades'] as const;
-const ABA_INICIAL = 'Comunidades';
+export const ABAS_FEED = ['Social', 'Comunidades'] as const;
+export type AbaFeed = (typeof ABAS_FEED)[number];
+export const ABA_INICIAL_FEED: AbaFeed = 'Comunidades';
 
 const COPY = {
   subtitulo: 'Continue sua jornada literária',
   meusGrupos: 'Meus Grupos',
   verTodos: 'Ver todos',
   criarGrupo: 'Criar Grupo',
+  minhasComunidades: 'Minhas comunidades',
   comunidadesSugeridas: 'Comunidades sugeridas',
   tentarDeNovo: 'Tentar de novo',
-  // Sem copy aprovada no Figma para o erro e para as listas vazias (pendencia de design):
+  // Sem copy aprovada no Figma para as listas vazias (pendencia de design):
   // com o seed de #13 os vazios nao aparecem em uso normal, existem como defesa.
-  erro: 'Não foi possível carregar o feed de comunidades.',
   semClubes: 'Você ainda não participa de nenhum clube do livro.',
   semComunidades: 'Você ainda não participa de nenhuma comunidade.',
 } as const;
@@ -63,54 +71,72 @@ function CabecalhoSecao({
 }) {
   return (
     <View className="flex-row items-center justify-between">
-      <Text className="font-inter-bold text-h2 text-text">{titulo}</Text>
+      <Text className="min-w-0 flex-1 font-inter-bold text-h2 text-text">
+        {titulo}
+      </Text>
       {acao && (
-        <Text
+        <Pressable
           accessibilityRole="button"
+          accessibilityLabel={acao.label}
           onPress={acao.onPress}
-          className="font-inter-semibold text-bodySmall text-accent"
+          style={{
+            minHeight: sizes.searchInputHeight,
+            minWidth: sizes.searchInputHeight,
+            justifyContent: 'center',
+            paddingHorizontal: spacing[2],
+          }}
         >
-          {acao.label}
-        </Text>
+          <Text className="font-inter-semibold text-bodySmall text-accent">
+            {acao.label}
+          </Text>
+        </Pressable>
       )}
     </View>
   );
 }
 
-export type FeedComunidadesViewProps = FeedComunidadesState & {
-  onSocialPress: () => void;
+export type FeedComunidadesViewProps = Pick<
+  FeedComunidadesState,
+  'feed' | 'recarregar' | 'atualizar' | 'participacoesPendentes'
+> & {
+  aba: AbaFeed;
+  onAbaChange: (aba: AbaFeed) => void;
+  social: Pick<FeedSocialState, 'social' | 'recarregar'>;
+  onBuscarLeitoresPress: () => void;
+  onUsuarioPress: (usuarioId: string) => void;
+  onLivroPress: (livroId: string) => void;
   onVerTodosPress: () => void;
   onCriarGrupoPress: () => void;
   onClubePress: (clube: ClubeFeed) => void;
-  onComunidadePress: (comunidade: ComunidadeFeed) => void;
+  onComunidadePress: (comunidade: Pick<ComunidadeFeed, 'id'>) => void;
+  onParticiparPress: (comunidade: ComunidadeSugeridaFeed) => void;
 };
 
 export function FeedComunidadesView({
   feed,
   recarregar,
-  onSocialPress,
+  aba,
+  onAbaChange,
+  social,
+  onBuscarLeitoresPress,
+  onUsuarioPress,
+  onLivroPress,
   onVerTodosPress,
   onCriarGrupoPress,
   onClubePress,
   onComunidadePress,
+  onParticiparPress,
+  participacoesPendentes = new Set<string>(),
 }: FeedComunidadesViewProps) {
   const usuario = feed.situacao === 'sucesso' ? feed.dados.usuario : null;
-  // "Social" e uma acao, nao uma selecao (feed social fora da sprint): remontar o SegmentedTabs
-  // pela key devolve a pilula para "Comunidades" sem que o estado "Social" chegue a pintar, e
-  // mantem o toque em "Social" disparando o toast toda vez.
-  const [seletorKey, setSeletorKey] = useState(0);
-
-  function aoTrocarAba(aba: string) {
-    if (aba === 'Social') {
-      onSocialPress();
-      setSeletorKey((k) => k + 1);
-    }
-  }
 
   return (
     <View className="flex-1 bg-surface">
       <AppHeader
+        compact
         title={usuario ? `Olá, ${usuario.nome}!` : 'Olá!'}
+        titleOverflow="wrap"
+        titleNumberOfLines={0}
         subtitle={COPY.subtitulo}
         streakDays={usuario?.sequenciaDias}
         streakActive={usuario?.leuHoje}
@@ -119,14 +145,23 @@ export function FeedComunidadesView({
 
       <View className="px-6 pb-2 pt-6">
         <SegmentedTabs
-          key={seletorKey}
-          options={[...ABAS]}
-          initialOption={ABA_INICIAL}
-          onChange={aoTrocarAba}
+          options={[...ABAS_FEED]}
+          value={aba}
+          onChange={(opcao) => onAbaChange(opcao as AbaFeed)}
         />
       </View>
 
-      {feed.situacao === 'carregando' && (
+      {aba === 'Social' && (
+        <FeedSocialView
+          social={social.social}
+          recarregar={social.recarregar}
+          onBuscarLeitoresPress={onBuscarLeitoresPress}
+          onUsuarioPress={onUsuarioPress}
+          onLivroPress={onLivroPress}
+        />
+      )}
+
+      {aba === 'Comunidades' && feed.situacao === 'carregando' && (
         <View
           className="flex-1 items-center justify-center p-4"
           accessibilityLabel="Carregando"
@@ -135,7 +170,7 @@ export function FeedComunidadesView({
         </View>
       )}
 
-      {feed.situacao === 'erro' && (
+      {aba === 'Comunidades' && feed.situacao === 'erro' && (
         <View className="flex-1">
           <EmptyState
             icon={BookIcon}
@@ -151,7 +186,7 @@ export function FeedComunidadesView({
         </View>
       )}
 
-      {feed.situacao === 'sucesso' && (
+      {aba === 'Comunidades' && feed.situacao === 'sucesso' && (
         <ScrollView
           className="flex-1"
           contentContainerStyle={{
@@ -184,11 +219,13 @@ export function FeedComunidadesView({
             onPress={onCriarGrupoPress}
           />
 
+          <CabecalhoSecao titulo={COPY.minhasComunidades} />
           {feed.dados.comunidades.length === 0 ? (
-            <EmptyState icon={BookIcon} message={COPY.semComunidades} />
+            <Text className="font-inter text-bodySmall text-text-secondary">
+              {COPY.semComunidades}
+            </Text>
           ) : (
             <>
-              <CabecalhoSecao titulo={COPY.comunidadesSugeridas} />
               {feed.dados.comunidades.map((comunidade) => (
                 <ListItem
                   key={comunidade.id}
@@ -197,6 +234,26 @@ export function FeedComunidadesView({
                   imageUrl={comunidade.capaUrl}
                   memberCount={comunidade.totalMembros}
                   onPress={() => onComunidadePress(comunidade)}
+                />
+              ))}
+            </>
+          )}
+          {!!feed.dados.comunidadesSugeridas?.length && (
+            <>
+              <CabecalhoSecao titulo={COPY.comunidadesSugeridas} />
+              {feed.dados.comunidadesSugeridas.map((comunidade) => (
+                <ListItem
+                  key={comunidade.id}
+                  variant="community"
+                  title={comunidade.nome}
+                  imageUrl={comunidade.imagemUrl}
+                  memberCount={comunidade.membros}
+                  onPress={() => onComunidadePress(comunidade)}
+                  action={{
+                    label: 'Participar',
+                    loading: participacoesPendentes.has(comunidade.id),
+                    onPress: () => onParticiparPress(comunidade),
+                  }}
                 />
               ))}
             </>

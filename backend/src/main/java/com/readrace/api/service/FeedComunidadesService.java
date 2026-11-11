@@ -16,6 +16,7 @@ import com.readrace.api.model.Comunidade;
 import com.readrace.api.model.Livro;
 import com.readrace.api.model.SequenciaDeLeitura;
 import com.readrace.api.model.Usuario;
+import com.readrace.api.repository.ComunidadeRepository;
 import com.readrace.api.repository.ContagemMembros;
 import com.readrace.api.repository.MembroClubeRepository;
 import com.readrace.api.repository.MembroComunidadeRepository;
@@ -29,16 +30,19 @@ public class FeedComunidadesService {
     private final MembroComunidadeRepository membroComunidadeRepository;
     private final UsuarioRepository usuarioRepository;
     private final UsuarioAtual usuarioAtual;
+    private final ComunidadeRepository comunidadeRepository;
 
     public FeedComunidadesService(
             MembroClubeRepository membroClubeRepository,
             MembroComunidadeRepository membroComunidadeRepository,
             UsuarioRepository usuarioRepository,
-            UsuarioAtual usuarioAtual) {
+            UsuarioAtual usuarioAtual,
+            ComunidadeRepository comunidadeRepository) {
         this.membroClubeRepository = membroClubeRepository;
         this.membroComunidadeRepository = membroComunidadeRepository;
         this.usuarioRepository = usuarioRepository;
         this.usuarioAtual = usuarioAtual;
+        this.comunidadeRepository = comunidadeRepository;
     }
 
     public FeedComunidadesResponse buscar() {
@@ -67,6 +71,18 @@ public class FeedComunidadesService {
                         .map(comunidade -> paraComunidade(comunidade, membrosPorComunidade))
                         .toList();
 
+        List<FeedComunidadesResponse.ComunidadeSugerida> sugeridas =
+                comunidadeRepository.sugeridasParaUsuario(usuarioId).stream()
+                        .map(
+                                comunidade ->
+                                        new FeedComunidadesResponse.ComunidadeSugerida(
+                                                comunidade.getId(),
+                                                comunidade.getNome(),
+                                                comunidade.getImagemUrl(),
+                                                membrosPorComunidade.getOrDefault(
+                                                        comunidade.getId(), 0L)))
+                        .toList();
+
         LocalDate hoje = SequenciaDeLeitura.hoje();
         LocalDate ultimaLeitura = usuario.getUltimaLeituraEm();
 
@@ -77,7 +93,8 @@ public class FeedComunidadesService {
                         SequenciaDeLeitura.leuHoje(ultimaLeitura, hoje),
                         SequenciaDeLeitura.diasAtePerder(ultimaLeitura, hoje)),
                 clubes,
-                comunidades);
+                comunidades,
+                sugeridas);
     }
 
     private static Map<UUID, Long> contagemPorId(List<ContagemMembros> contagens) {

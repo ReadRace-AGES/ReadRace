@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { ApiError } from '@/api/client';
+import { ApiError, mensagemErroCarregamento } from '@/api/client';
 import type { ProgressoLeituraResponse } from '@/features/progresso/api';
 import { curtir, descurtir } from '@/features/posts/api';
 import { buscarDetalhe, type LivroDetalhe, type PostLivro } from './api';
@@ -49,10 +49,7 @@ export function useLivroDetalhe(livroId: string) {
         if (ativo)
           setEstado({
             situacao: 'erro',
-            mensagem:
-              erro instanceof ApiError
-                ? erro.message
-                : 'Não foi possível carregar o livro. Tente novamente.',
+            mensagem: mensagemErroCarregamento(erro),
           });
       })
       .finally(() => clearTimeout(timeout));

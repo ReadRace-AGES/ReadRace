@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 
-import { ApiError } from '@/api/client';
+import { mensagemErroCarregamento } from '@/api/client';
 import { curtir, descurtir } from '@/features/posts/api';
 
 import {
@@ -17,9 +17,7 @@ export type ComunidadeCarga =
   | { situacao: 'sucesso'; dados: Comunidade };
 
 function mensagemDe(erro: unknown) {
-  return erro instanceof ApiError
-    ? erro.message
-    : 'Não foi possível carregar a comunidade.';
+  return mensagemErroCarregamento(erro);
 }
 
 function comPost(
@@ -176,11 +174,32 @@ export function useComunidade(comunidadeId: string) {
     );
   }, []);
 
+  const adicionarPost = useCallback(
+    (post: PostComunidade) => {
+      setComunidade((atual) =>
+        atual.situacao === 'sucesso' && atual.dados.id === comunidadeId
+          ? {
+              ...atual,
+              dados: {
+                ...atual.dados,
+                posts: [
+                  post,
+                  ...atual.dados.posts.filter((item) => item.id !== post.id),
+                ],
+              },
+            }
+          : atual
+      );
+    },
+    [comunidadeId]
+  );
+
   return {
     comunidade,
     recarregar,
     alternarSeguimento,
     alternarCurtida,
     somarComentario,
+    adicionarPost,
   };
 }

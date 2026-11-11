@@ -4,6 +4,7 @@ import java.util.stream.Collectors;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
@@ -17,6 +18,7 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 import org.springframework.web.server.ResponseStatusException;
 import org.springframework.web.servlet.resource.NoResourceFoundException;
+import org.springframework.web.util.DisconnectedClientHelper;
 
 import com.readrace.api.dto.response.ErroResponse;
 
@@ -27,6 +29,18 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(ExcecaoDeNegocio.class)
     public ResponseEntity<ErroResponse> tratarNegocio(ExcecaoDeNegocio ex) {
         return resposta(ex.getCodigo(), ex.getMessage());
+    }
+
+    /**
+     * Violação de restrição do banco que nenhum service tratou (#224). A mensagem do driver traz o
+     * SQL e o nome das constraints, então vai só para o log: o corpo é sempre o texto genérico.
+     */
+    @ExceptionHandler(DataIntegrityViolationException.class)
+    public ResponseEntity<ErroResponse> tratarIntegridade(DataIntegrityViolationException ex) {
+        log.warn("Violação de integridade não tratada pelo service", ex);
+
+        return resposta(
+                CodigoErro.CONFLITO_DE_DADOS, CodigoErro.CONFLITO_DE_DADOS.mensagemPadrao());
     }
 
     @ExceptionHandler(MethodArgumentNotValidException.class)
@@ -94,8 +108,20 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(status).body(ErroResponse.de(codigo, mensagem));
     }
 
+    /**
+     * Última rede para o que nenhum handler acima tratou.
+     *
+     * <p>O cliente fechar a conexão antes da resposta (ex.: o app cancela a busca de livros quando
+     * o termo muda) também chega aqui, embrulhado em {@code HttpMessageNotWritableException}. Não é
+     * falha do servidor e não há para quem responder, então sai em DEBUG e sem corpo: cada linha
+     * ERROR conta para o alarme {@code readrace-erros-na-api} (#255).
+     */
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ErroResponse> tratarInesperado(Exception ex) {
+        if (DisconnectedClientHelper.isClientDisconnectedException(ex)) {
+            log.debug("Cliente desconectou antes da resposta: {}", ex.getMessage());
+            return null;
+        }
         log.error("Exceção não tratada chegou ao handler global", ex);
 
         return resposta(CodigoErro.INTERNAL_ERROR, CodigoErro.INTERNAL_ERROR.mensagemPadrao());

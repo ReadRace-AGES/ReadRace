@@ -146,7 +146,7 @@ export function PostCard({
           <Pressable
             accessibilityRole="button"
             accessibilityState={{ disabled: likeDisabled, selected: likedByMe }}
-            accessibilityLabel={`${likes} curtidas${likedByMe ? ', curtido por você' : ''}`}
+            accessibilityLabel={`${likes} ${likes === 1 ? 'curtida' : 'curtidas'}${likedByMe ? ', curtido por você' : ''}`}
             disabled={likeDisabled}
             onPress={onLikePress}
             hitSlop={8}
@@ -160,7 +160,7 @@ export function PostCard({
         ) : (
           <View
             accessible
-            accessibilityLabel={`${likes} curtidas${likedByMe ? ', curtido por você' : ''}`}
+            accessibilityLabel={`${likes} ${likes === 1 ? 'curtida' : 'curtidas'}${likedByMe ? ', curtido por você' : ''}`}
             className="flex-row items-center gap-1"
           >
             <HeartIcon filled={likedByMe} />
@@ -173,7 +173,7 @@ export function PostCard({
           (onCommentsPress ? (
             <Pressable
               accessibilityRole="button"
-              accessibilityLabel={`${comments} comentários`}
+              accessibilityLabel={`${comments} ${comments === 1 ? 'comentário' : 'comentários'}`}
               accessibilityHint="Abre os comentários"
               onPress={onCommentsPress}
               hitSlop={8}
@@ -187,7 +187,7 @@ export function PostCard({
           ) : (
             <View
               accessible
-              accessibilityLabel={`${comments} comentários`}
+              accessibilityLabel={`${comments} ${comments === 1 ? 'comentário' : 'comentários'}`}
               className="flex-row items-center gap-1"
             >
               <CommentsIcon size={sizes.iconSmall} />

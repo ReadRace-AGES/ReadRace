@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 
-import { ApiError } from '@/api/client';
+import { ApiError, mensagemErroCarregamento } from '@/api/client';
 import { curtir, descurtir } from '@/features/posts/api';
 
 import { buscarForumDoClube, type ForumClube, type PostForum } from './api';
@@ -26,9 +26,7 @@ type SessaoForum = {
 };
 
 function mensagemDe(erro: unknown) {
-  return erro instanceof ApiError
-    ? erro.message
-    : 'Não foi possível carregar o fórum do clube.';
+  return mensagemErroCarregamento(erro);
 }
 
 function mensagemDeCurtida(erro: unknown) {

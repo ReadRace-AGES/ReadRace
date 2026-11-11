@@ -18,6 +18,7 @@ import { PrimaryButton } from '@/components/PrimaryButton';
 import { ProgressBar } from '@/components/ProgressBar';
 import { useToastContext } from '@/components/toast-provider';
 import { RegistrarProgressoSheet } from '@/features/progresso/RegistrarProgressoSheet';
+import { MinhasListasSheet } from '@/features/biblioteca/MinhasListasSheet';
 import { bookCover, colors, radius, sizes, spacing, textStyles } from '@/theme';
 import { tempoRelativo } from './model';
 import { useLivroDetalhe } from './useLivroDetalhe';
@@ -27,7 +28,7 @@ export function LivroDetalheScreen({
   origem,
 }: {
   livroId: string;
-  origem: '/buscar' | '/meus-livros' | '/perfil';
+  origem: '/buscar' | '/meus-livros' | '/perfil' | '/feed';
 }) {
   const router = useRouter();
   const { estado, recarregar, atualizarProgresso, alternarCurtida } =
@@ -37,6 +38,7 @@ export function LivroDetalheScreen({
     new Set()
   );
   const [modalAberto, setModalAberto] = useState(false);
+  const [listasAbertas, setListasAbertas] = useState(false);
   useFocusEffect(
     useCallback(
       () => () => {
@@ -129,6 +131,7 @@ export function LivroDetalheScreen({
                   </View>
                 </View>
                 <Pressable
+                  cssInterop={false}
                   accessibilityRole="button"
                   style={({ pressed }) => [
                     styles.progress,
@@ -146,6 +149,11 @@ export function LivroDetalheScreen({
                     {detalhe.livro.totalPaginas} páginas
                   </Text>
                 </Pressable>
+                <PrimaryButton
+                  label="Minhas listas"
+                  variant="outline"
+                  onPress={() => setListasAbertas(true)}
+                />
               </View>
             </View>
             <Text style={styles.heading}>Posts sobre este livro</Text>
@@ -163,7 +171,7 @@ export function LivroDetalheScreen({
                   authorStreak={
                     post.autor.sequenciaDias == null
                       ? null
-                      : `${post.autor.sequenciaDias} dias`
+                      : `${post.autor.sequenciaDias} ${post.autor.sequenciaDias === 1 ? 'dia' : 'dias'}`
                   }
                   timeAgo={tempoRelativo(post.criadoEm)}
                   text={post.texto}
@@ -178,15 +186,34 @@ export function LivroDetalheScreen({
         )}
       </ScrollView>
       {detalhe && (
-        <RegistrarProgressoSheet
-          visible={modalAberto}
-          livroId={detalhe.livro.id}
-          totalPaginas={detalhe.livro.totalPaginas}
-          paginaAtual={progresso?.paginaAtual ?? 0}
-          paginaMaximaAlcancada={progresso?.paginaMaximaAlcancada ?? 0}
-          onClose={() => setModalAberto(false)}
-          onSuccess={atualizarProgresso}
-        />
+        <>
+          <RegistrarProgressoSheet
+            visible={modalAberto}
+            livroId={detalhe.livro.id}
+            totalPaginas={detalhe.livro.totalPaginas}
+            paginaAtual={progresso?.paginaAtual ?? 0}
+            paginaMaximaAlcancada={progresso?.paginaMaximaAlcancada ?? 0}
+            onClose={() => setModalAberto(false)}
+            onSuccess={atualizarProgresso}
+          />
+          <MinhasListasSheet
+            visible={listasAbertas}
+            livroId={detalhe.livro.id}
+            titulo={detalhe.livro.titulo}
+            statusLeitura={progresso?.statusLeitura ?? null}
+            favorito={progresso?.favorito ?? false}
+            paginaMaxima={progresso?.paginaMaximaAlcancada ?? 0}
+            onClose={() => setListasAbertas(false)}
+            onSuccess={(resultado) => {
+              recarregar();
+              showErrorToast(
+                resultado
+                  ? 'Listas atualizadas'
+                  : 'Livro removido da biblioteca'
+              );
+            }}
+          />
+        </>
       )}
     </View>
   );

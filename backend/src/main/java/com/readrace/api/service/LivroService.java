@@ -101,7 +101,12 @@ public class LivroService {
         boolean concluido = item.estaConcluido();
 
         return new LivroDetalheResponse.Progresso(
-                item.getPaginaAtual(), item.getPaginaMaxima(), percentual, concluido);
+                item.getPaginaAtual(),
+                item.getPaginaMaxima(),
+                percentual,
+                concluido,
+                item.getStatusLeitura() == null ? null : item.getStatusLeitura().name(),
+                item.isFavorito());
     }
 
     private List<LivroDetalheResponse.Post> buscarPosts(UUID livroId, UUID usuarioId) {

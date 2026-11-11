@@ -14,6 +14,11 @@ public enum CodigoErro {
     DESAFIO_NAO_ENCONTRADO(HttpStatus.NOT_FOUND, "Desafio não encontrado."),
     OPONENTE_NAO_ENCONTRADO(HttpStatus.NOT_FOUND, "Oponente não encontrado."),
     LIVRO_NAO_ENCONTRADO(HttpStatus.NOT_FOUND, "Livro não encontrado."),
+    LIVRO_COM_LEITURA(
+            HttpStatus.CONFLICT, "Não é possível remover um livro que já tem leitura registrada."),
+    LIVRO_EM_PROGRESSO(
+            HttpStatus.CONFLICT,
+            "Um livro com leitura registrada não pode entrar na lista de desejos."),
     COMUNIDADE_NAO_ENCONTRADA(HttpStatus.NOT_FOUND, "Comunidade não encontrada."),
     POST_NAO_ENCONTRADO(HttpStatus.NOT_FOUND, "Post não encontrado."),
     LISTA_INVALIDA(HttpStatus.BAD_REQUEST, "Lista inválida. Use lido, desejo ou favorito."),
@@ -31,6 +36,9 @@ public enum CodigoErro {
 
     // Chat do clube - Task #151
     CLUBE_NAO_ENCONTRADO(HttpStatus.NOT_FOUND, "Clube não encontrado."),
+    JA_E_MEMBRO(HttpStatus.CONFLICT, "Você já participa deste clube."),
+    SOLICITACAO_JA_RESPONDIDA(HttpStatus.CONFLICT, "Esta solicitação já foi respondida."),
+    SOLICITACAO_NAO_ENCONTRADA(HttpStatus.NOT_FOUND, "Solicitação não encontrada."),
     NAO_E_MEMBRO(HttpStatus.NOT_FOUND, "Você não é membro deste clube."),
     UNICO_LIDER(HttpStatus.CONFLICT, "Você é o único líder deste clube e não pode sair."),
     MENSAGEM_INVALIDA(HttpStatus.BAD_REQUEST, "Mensagem inválida."),
@@ -57,6 +65,10 @@ public enum CodigoErro {
     SO_LIDER_CRIA_QUIZ(HttpStatus.FORBIDDEN, "Só o administrador do clube cria o quiz."),
     MASCOTE_NAO_ENCONTRADO(HttpStatus.NOT_FOUND, "Mascote não encontrado."),
     MASCOTE_BLOQUEADO(HttpStatus.CONFLICT, "Este mascote ainda está bloqueado para o seu nível."),
+    CONFLITO_DE_DADOS(
+            HttpStatus.CONFLICT,
+            "Não foi possível concluir a operação: os dados entram em conflito com os já"
+                    + " existentes."),
     METHOD_NOT_ALLOWED(HttpStatus.METHOD_NOT_ALLOWED, "Método não permitido para esta rota."),
     UNSUPPORTED_MEDIA_TYPE(HttpStatus.UNSUPPORTED_MEDIA_TYPE, "Formato de conteúdo não suportado."),
     EXTERNAL_SERVICE_UNAVAILABLE(
