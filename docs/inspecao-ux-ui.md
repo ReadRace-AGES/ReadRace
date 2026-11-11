@@ -1,6 +1,6 @@
 # Inspeção de UX/UI — ReadRace
 
-Data: 11/11/2026. Inspeção visual e de código, sem mudanças na interface.
+Data: 11/11/2026. Inspeção visual e de código. O diagnóstico abaixo registra a interface anterior; as correções implementadas estão documentadas ao final.
 
 A biblioteca tem conteúdo, mas oferece pouca informação útil por livro. A sensação de vazio vem principalmente do cabeçalho alto, das capas sem identificação e da ausência de uma ação clara de continuar a leitura. A recomendação é reorganizar a hierarquia antes de acrescentar decoração ou novas seções.
 
@@ -64,4 +64,36 @@ Arquivos principais: `mobile/src/features/biblioteca/MeusLivrosView.tsx`, `mobil
 - Validar conteúdo final da rolagem sem obstrução pela navegação inferior e acesso por teclado; conferir teclado virtual e fontes ampliadas em aparelho nativo.
 - Ao adicionar registro direto, verificar persistência, regras de XP e atualização da biblioteca após retornar do detalhe.
 
-Esta inspeção não altera as telas. As capturas e o relatório formam a base para uma implementação posterior e para regressão visual dos estados efetivamente aprovados.
+## Correções implementadas
+
+As branches locais `feat/playwright-e2e` e `fix/ux-ui` partem de `dev` de forma independente. A primeira contém infraestrutura e testes Playwright; a segunda contém aplicação, API, testes existentes e documentação de UX. A branch `chore/expo-sdk-58` preserva o ambiente integrado com as duas entregas, a atualização do Expo e os testes adicionais de interface.
+
+- Biblioteca com cabeçalho compacto, ação de adicionar visível no topo, leitura recente em destaque e registro de páginas diretamente na tela.
+- Título e autor visíveis, progresso vindo da resposta paginada da API e filtros Lendo, Quero ler, Lidos e Favoritos. Todas as listas mantêm paginação e atualização ao voltar para a tela. A paginação agora usa “Ver mais” em cada filtro.
+- Estado totalmente vazio com um único convite para adicionar o primeiro livro; filtros vazios têm explicações específicas.
+- Capas com título e ícone enquanto a imagem não está disponível, indicador durante o carregamento e recuperação quando a fonte muda.
+- Busca com cabeçalho compacto, placeholder e orientação específicos por categoria; inclusão de livro com instrução e exemplo.
+- Clube com registrar leitura como ação principal, quiz/fórum/chat secundários e informação sobre disponibilidade do quiz.
+- Perfil com composição ilustrada reduzida para 224 px; navegação inferior com rótulos e áreas distribuídas pela largura disponível.
+- Terminologia de clubes padronizada no feed, na criação e na listagem.
+
+Evidências após as alterações:
+
+| Tela | Captura |
+|---|---|
+| Biblioteca, 390 px, API real | [Leitura em destaque e filtros](ux-ui/depois-biblioteca-390.png) |
+| Biblioteca, 320 px, títulos longos e capas ausentes simulados | [Identificação e layout compacto](ux-ui/depois-biblioteca-320.png) |
+| Biblioteca vazia simulada, 320 px | [Convite único para começar](ux-ui/depois-vazia-320.png) |
+| Feed, 320 px | [Clubes e navegação com rótulos](ux-ui/depois-feed-320.png) |
+| Busca, 320 px | [Orientação da categoria](ux-ui/depois-busca-320.png) |
+| Adicionar livro, 320 px | [Instrução inicial](ux-ui/depois-adicionar-320.png) |
+| Clube, 320 px | [Hierarquia das ações](ux-ui/depois-clube-320.png) |
+| Perfil, 320 px | [Estatísticas mais cedo na tela](ux-ui/depois-perfil-320.png) |
+
+As capturas são feitas assim que o conteúdo da API aparece: imagens externas podem ainda estar carregando. As evidências da biblioteca sem capas e vazia são explicitamente simuladas; o registro direto usa banco e API reais.
+
+Validação integrada anterior à separação: **30 testes Playwright passaram sem retries em 1,6 minuto**, fora do build/startup. Oito verificações de UX cobrem as telas revisadas, registro direto persistido, estados vazios em 320/390 px, 1/4/25 livros, títulos longos, capas ausentes, filtros, paginação e recuperação de falha. Essas verificações adicionais permanecem na branch integrada `chore/expo-sdk-58`, pois dependem das duas entregas. Também passaram a suíte `npm test`, as verificações direcionadas após os ajustes finais, TypeScript, Prettier e os 12 testes de `BibliotecaServiceTest`. O teste de capa cobre falha e recuperação ao trocar a fonte.
+
+Após a separação, `npm ci`, `npm test` e `tsc --noEmit` passaram na branch independente `fix/ux-ui`, sem instalar Playwright.
+
+Permanece necessária a validação em Android/iOS para teclado virtual, fontes ampliadas e comportamento nativo. Docker/CI e apresentação com Cognito não foram executados nesta máquina; os testes integrados usaram PostgreSQL 17 temporário e JDK 21.
