@@ -179,8 +179,9 @@ export function ComunidadeScreen({
               </Text>
               <View style={styles.abas}>
                 <Pressable
-                  accessibilityRole="button"
+                  accessibilityRole="tab"
                   accessibilityLabel={COPY.maisRecentes}
+                  accessibilityState={{ selected: ordem === 'recentes' }}
                   onPress={() => setOrdem('recentes')}
                   style={styles.acao}
                 >
@@ -191,8 +192,9 @@ export function ComunidadeScreen({
                   </Text>
                 </Pressable>
                 <Pressable
-                  accessibilityRole="button"
+                  accessibilityRole="tab"
                   accessibilityLabel={COPY.emAlta}
+                  accessibilityState={{ selected: ordem === 'em_alta' }}
                   onPress={() => setOrdem('em_alta')}
                   style={styles.acao}
                 >

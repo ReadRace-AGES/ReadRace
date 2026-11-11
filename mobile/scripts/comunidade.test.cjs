@@ -16,7 +16,24 @@ function pendente() {
   return { promise, resolve, reject };
 }
 
-async function montar({ sigo = false, seguir, sair, curtir, descurtir } = {}) {
+async function montar({
+  sigo = false,
+  seguir,
+  sair,
+  curtir,
+  descurtir,
+  ordemInicial = 'recentes',
+  buscar = async () => ({
+    id: 'comunidade',
+    sigo,
+    seguidores: 2,
+    posts: ['a', 'b'].map((id) => ({
+      id,
+      curtidoPorMim: false,
+      totalCurtidas: 0,
+    })),
+  }),
+} = {}) {
   const source = fs.readFileSync(
     path.join(__dirname, '../src/features/comunidade/useComunidade.ts'),
     'utf8'
@@ -29,7 +46,10 @@ async function montar({ sigo = false, seguir, sair, curtir, descurtir } = {}) {
   });
   const deps = {
     react: React,
-    '@/api/client': { ApiError: Error },
+    '@/api/client': {
+      ApiError: Error,
+      mensagemErroCarregamento: () => 'Erro',
+    },
     '@/features/posts/api': {
       curtir:
         curtir ?? (async () => ({ curtidoPorMim: true, totalCurtidas: 7 })),
@@ -37,16 +57,7 @@ async function montar({ sigo = false, seguir, sair, curtir, descurtir } = {}) {
         descurtir ?? (async () => ({ curtidoPorMim: false, totalCurtidas: 9 })),
     },
     './api': {
-      buscarComunidade: async () => ({
-        id: 'comunidade',
-        sigo,
-        seguidores: 2,
-        posts: ['a', 'b'].map((id) => ({
-          id,
-          curtidoPorMim: false,
-          totalCurtidas: 0,
-        })),
-      }),
+      buscarComunidade: buscar,
       seguirComunidade: seguir ?? (async () => ({ sigo: true, seguidores: 3 })),
       deixarDeSeguirComunidade:
         sair ?? (async () => ({ sigo: false, seguidores: 1 })),
@@ -59,10 +70,14 @@ async function montar({ sigo = false, seguir, sair, curtir, descurtir } = {}) {
     module.exports
   );
   let hook;
+  let mudarOrdem;
   function Probe() {
-    hook = module.exports.useComunidade('comunidade');
+    const [ordem, setOrdem] = React.useState(ordemInicial);
+    mudarOrdem = setOrdem;
+    hook = module.exports.useComunidade('comunidade', ordem);
     return null;
   }
+
   let renderer;
   await act(async () => {
     renderer = create(React.createElement(Probe));
@@ -71,9 +86,105 @@ async function montar({ sigo = false, seguir, sair, curtir, descurtir } = {}) {
     get hook() {
       return hook;
     },
+    mudarOrdem,
     fechar: () => act(async () => renderer.unmount()),
   };
 }
+
+test('resposta atrasada preserva curtida e seguimento confirmados depois da consulta', async () => {
+  const consulta = pendente();
+  const seguir = pendente();
+  const curtir = pendente();
+  let chamadas = 0;
+  const tela = await montar({
+    buscar: () => {
+      chamadas++;
+      return chamadas === 1
+        ? Promise.resolve({
+            id: 'comunidade',
+            sigo: false,
+            seguidores: 2,
+            posts: [
+              { id: 'a', curtidoPorMim: false, totalCurtidas: 0 },
+              { id: 'b', curtidoPorMim: false, totalCurtidas: 0 },
+            ],
+          })
+        : consulta.promise;
+    },
+    seguir: () => seguir.promise,
+    curtir: () => curtir.promise,
+  });
+
+  try {
+    await act(async () => tela.hook.recarregar());
+    let participacao, curtida;
+    await act(async () => {
+      participacao = tela.hook.alternarSeguimento();
+      curtida = tela.hook.alternarCurtida('a');
+      seguir.resolve({ sigo: true, seguidores: 3 });
+      curtir.resolve({ curtidoPorMim: true, totalCurtidas: 1 });
+      await Promise.all([participacao, curtida]);
+    });
+    await act(async () => {
+      consulta.resolve({
+        id: 'comunidade',
+        sigo: false,
+        seguidores: 2,
+        posts: [
+          { id: 'a', curtidoPorMim: false, totalCurtidas: 0 },
+          { id: 'b', curtidoPorMim: false, totalCurtidas: 0 },
+        ],
+      });
+    });
+    assert.equal(tela.hook.comunidade.dados.sigo, true);
+    assert.equal(tela.hook.comunidade.dados.seguidores, 3);
+    assert.equal(tela.hook.comunidade.dados.posts[0].curtidoPorMim, true);
+    assert.equal(tela.hook.comunidade.dados.posts[0].totalCurtidas, 1);
+  } finally {
+    await tela.fechar();
+  }
+});
+
+test('resposta de uma aba antiga nao substitui a ordem atualmente selecionada', async () => {
+  const alta = pendente();
+  let chamadas = 0;
+  const tela = await montar({
+    buscar: () => {
+      chamadas++;
+      if (chamadas === 2) return alta.promise;
+      return Promise.resolve({
+        id: 'comunidade',
+        sigo: false,
+        seguidores: 2,
+        posts: [
+          {
+            id: chamadas === 1 ? 'recente' : 'atual',
+            curtidoPorMim: false,
+            totalCurtidas: 0,
+          },
+        ],
+      });
+    },
+  });
+  try {
+    await act(async () => tela.mudarOrdem('em_alta'));
+    await act(async () => tela.mudarOrdem('recentes'));
+    assert.equal(tela.hook.comunidade.dados.posts[0].id, 'atual');
+    await act(async () =>
+      alta.resolve({
+        id: 'comunidade',
+        sigo: false,
+        seguidores: 2,
+        posts: [
+          { id: 'antigo-em-alta', curtidoPorMim: false, totalCurtidas: 10 },
+        ],
+      })
+    );
+    assert.equal(tela.hook.comunidade.dados.posts[0].id, 'atual');
+  } finally {
+    await tela.fechar();
+  }
+});
 
 for (const sigo of [false, true]) {
   test(`falha ao ${sigo ? 'sair' : 'seguir'} preserva curtida concluída`, async () => {
@@ -119,6 +230,30 @@ test('curtir e descurtir aplicam estado e contagem retornados pela API', async (
     });
     assert.equal(tela.hook.comunidade.dados.posts[0].totalCurtidas, 9);
     assert.equal(tela.hook.comunidade.dados.posts[0].curtidoPorMim, false);
+  } finally {
+    await tela.fechar();
+  }
+});
+
+test('curtir atualiza a contagem sem reordenar a lista imediatamente', async () => {
+  const tela = await montar({
+    buscar: async () => ({
+      id: 'comunidade',
+      sigo: false,
+      seguidores: 2,
+      posts: [
+        { id: 'a', curtidoPorMim: false, totalCurtidas: 0 },
+        { id: 'b', curtidoPorMim: false, totalCurtidas: 8 },
+      ],
+    }),
+  });
+  try {
+    await act(async () => tela.hook.alternarCurtida('a'));
+    assert.deepEqual(
+      tela.hook.comunidade.dados.posts.map((post) => post.id),
+      ['a', 'b']
+    );
+    assert.equal(tela.hook.comunidade.dados.posts[0].totalCurtidas, 7);
   } finally {
     await tela.fechar();
   }

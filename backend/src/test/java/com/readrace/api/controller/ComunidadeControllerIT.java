@@ -129,8 +129,9 @@ class ComunidadeControllerIT {
         UUID dez = UUID.randomUUID();
         UUID tres = UUID.randomUUID();
         UUID sete = UUID.randomUUID();
+        UUID seteMaisAntigo = UUID.randomUUID();
         jdbc.update(
-                "INSERT INTO post (id, autor_id, comunidade_id, conteudo, criado_em) VALUES (?, ?, ?, 'dez', now() - interval '3 minutes'), (?, ?, ?, 'tres', now() - interval '1 minute'), (?, ?, ?, 'sete', now() - interval '2 minutes')",
+                "INSERT INTO post (id, autor_id, comunidade_id, conteudo, criado_em) VALUES (?, ?, ?, 'dez', now() - interval '4 minutes'), (?, ?, ?, 'tres', now() - interval '1 minute'), (?, ?, ?, 'sete', now() - interval '2 minutes'), (?, ?, ?, 'sete antigo', now() - interval '3 minutes')",
                 dez,
                 EU,
                 comunidade,
@@ -138,6 +139,9 @@ class ComunidadeControllerIT {
                 EU,
                 comunidade,
                 sete,
+                EU,
+                comunidade,
+                seteMaisAntigo,
                 EU,
                 comunidade);
         List<UUID> usuarios =
@@ -165,17 +169,41 @@ class ComunidadeControllerIT {
                     sete,
                     usuarios.get(i));
         }
+        for (int i = 0; i < 7; i++) {
+            jdbc.update(
+                    "INSERT INTO curtida (id, post_id, usuario_id) VALUES (?, ?, ?)",
+                    UUID.randomUUID(),
+                    seteMaisAntigo,
+                    usuarios.get(i));
+        }
 
         assertThat(mvc.get().uri("/api/comunidades/" + comunidade + "?ordem=em_alta"))
                 .hasStatusOk()
                 .bodyJson()
-                .extractingPath("$.posts[0].id")
-                .isEqualTo(dez.toString());
+                .extractingPath("$.posts[*].id")
+                .asList()
+                .containsExactly(
+                        dez.toString(), sete.toString(), seteMaisAntigo.toString(), tres.toString());
         assertThat(mvc.get().uri("/api/comunidades/" + comunidade + "?ordem=recentes"))
                 .hasStatusOk()
                 .bodyJson()
-                .extractingPath("$.posts[0].id")
-                .isEqualTo(tres.toString());
+                .extractingPath("$.posts[*].id")
+                .asList()
+                .containsExactly(
+                        tres.toString(),
+                        sete.toString(),
+                        seteMaisAntigo.toString(),
+                        dez.toString());
+        assertThat(mvc.get().uri("/api/comunidades/" + comunidade))
+                .hasStatusOk()
+                .bodyJson()
+                .extractingPath("$.posts[*].id")
+                .asList()
+                .containsExactly(
+                        tres.toString(),
+                        sete.toString(),
+                        seteMaisAntigo.toString(),
+                        dez.toString());
     }
 
     @Test
@@ -183,6 +211,8 @@ class ComunidadeControllerIT {
         UUID comunidade = criarComunidade();
 
         assertThat(mvc.get().uri("/api/comunidades/" + comunidade + "?ordem=antigos"))
+                .hasStatus(HttpStatus.BAD_REQUEST);
+        assertThat(mvc.get().uri("/api/comunidades/" + comunidade + "?ordem="))
                 .hasStatus(HttpStatus.BAD_REQUEST);
     }
 }

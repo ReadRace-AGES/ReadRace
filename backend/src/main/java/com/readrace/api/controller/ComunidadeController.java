@@ -32,8 +32,8 @@ public class ComunidadeController {
     @Operation(summary = "Perfil da comunidade e seus posts")
     public ComunidadeResponse buscar(
             @PathVariable UUID comunidadeId,
-            @RequestParam(name = "ordem", defaultValue = "recentes") String ordem) {
-        return comunidadeService.buscar(comunidadeId, ordem);
+            @RequestParam(name = "ordem", required = false) String ordem) {
+        return comunidadeService.buscar(comunidadeId, ordem == null ? "recentes" : ordem);
     }
 
     @PostMapping("/{comunidadeId}/membros/eu")
