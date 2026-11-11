@@ -36,7 +36,7 @@ const COPY = {
   sairDoClube: 'Sair do clube',
   tituloConfirmacao: 'Sair do clube?',
   descricaoConfirmacao:
-    'Você deixa de ver o clube nos seus grupos e perde seus pontos nele.',
+    'Você deixa de ver o clube nos seus clubes e perde seus pontos nele.',
   confirmacaoSucessao: (nome: string) =>
     `Você é o único líder. Ao sair, ${nome} passa a liderar o clube.`,
   confirmarSaida: 'Sair',
@@ -381,14 +381,25 @@ export function PaginaClubeScreen({ clubeId }: { clubeId: string }) {
 
             <PrimaryButton
               label={COPY.acessarQuiz}
+              variant="outline"
               icon={IconeCheck}
               disabled={!membro}
               loading={abrindoQuiz}
               onPress={acessarQuiz}
             />
+            {dados && (
+              <Text className="text-center font-inter text-caption text-text-secondary">
+                {dados.temQuizAtivo
+                  ? 'Quiz do livro disponível'
+                  : administrador
+                    ? 'Crie um quiz para este livro'
+                    : 'Ainda não há quiz para este livro'}
+              </Text>
+            )}
 
             <PrimaryButton
               label={COPY.forum}
+              variant="outline"
               icon={IconeLista}
               disabled={!dados}
               onPress={() => {
@@ -398,6 +409,7 @@ export function PaginaClubeScreen({ clubeId }: { clubeId: string }) {
 
             <PrimaryButton
               label={COPY.chat}
+              variant="outline"
               icon={IconeChat}
               disabled={!membro}
               onPress={() => {

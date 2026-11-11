@@ -12,6 +12,7 @@ const theme = {
   textStyles: {},
 };
 const dependencies = {
+  './icons/BookIcon': { BookIcon: 'BookIcon' },
   'react-native': {
     View: 'View',
     ActivityIndicator: 'ActivityIndicator',
@@ -174,6 +175,30 @@ test('imagem de comunidade com erro recupera a inicial', () => {
     tree.root.findAllByType('Text').some((node) => node.props.children === 'L')
   );
   act(() => tree.unmount());
+});
+
+test('capa mantém identificação sem imagem, após falha e recupera quando a fonte muda', () => {
+  const { BookCover } = dependencies['@/components/BookCover'];
+  let tree;
+  const cover = (source) => React.createElement(BookCover, { source, accessibilityLabel: 'Duna' });
+  const tituloVisivel = () => tree.root.findAllByType('Text').some(node => node.props.children === 'Duna');
+  act(() => { tree = create(cover(null)); });
+  try {
+    assert.equal(tituloVisivel(), true);
+    act(() => tree.update(cover('https://example.invalid/falha')));
+    assert.equal(tree.root.findAllByType('ActivityIndicator').length, 1);
+    act(() => tree.root.findByType('Image').props.onError());
+    assert.equal(tree.root.findAllByType('Image').length, 0);
+    assert.equal(tree.root.findAllByType('ActivityIndicator').length, 0);
+    assert.equal(tituloVisivel(), true);
+    act(() => tree.update(cover('https://example.invalid/outra-capa')));
+    act(() => tree.root.findByType('Image').props.onLoad());
+    assert.equal(tree.root.findAllByType('Image').length, 1);
+    assert.equal(tree.root.findAllByType('ActivityIndicator').length, 0);
+    assert.equal(tituloVisivel(), false);
+  } finally {
+    act(() => tree.unmount());
+  }
 });
 
 for (const count of [0, 1, 2]) {
