@@ -1,0 +1,1264 @@
+{
+  "note": "References are partial coverage, not evidence that all acceptance criteria pass. See JUnit for execution results.",
+  "issues": [
+    {
+      "issue": 9,
+      "url": "https://github.com/ReadRace-AGES/ReadRace/issues/9",
+      "requirement": "Criar o projeto mobile com navegação de abas e stack",
+      "layer": "Navegação / componentes / erros",
+      "coverage": [],
+      "status": "planned-or-other-layer"
+    },
+    {
+      "issue": 10,
+      "url": "https://github.com/ReadRace-AGES/ReadRace/issues/10",
+      "requirement": "Criar o projeto backend com `CurrentUser` e o formato padrão de resposta e erro",
+      "layer": "Ambiente / API / migrações / CI",
+      "coverage": [],
+      "status": "planned-or-other-layer"
+    },
+    {
+      "issue": 11,
+      "url": "https://github.com/ReadRace-AGES/ReadRace/issues/11",
+      "requirement": "Extrair do Figma e registrar o tema do app",
+      "layer": "Navegação / componentes / erros",
+      "coverage": [],
+      "status": "planned-or-other-layer"
+    },
+    {
+      "issue": 12,
+      "url": "https://github.com/ReadRace-AGES/ReadRace/issues/12",
+      "requirement": "Modelar o schema do banco com todas as entidades do produto",
+      "layer": "Ambiente / API / migrações / CI",
+      "coverage": [],
+      "status": "planned-or-other-layer"
+    },
+    {
+      "issue": 13,
+      "url": "https://github.com/ReadRace-AGES/ReadRace/issues/13",
+      "requirement": "Popular o banco com o seed de todas as tabelas",
+      "layer": "Ambiente / API / migrações / CI",
+      "coverage": [],
+      "status": "planned-or-other-layer"
+    },
+    {
+      "issue": 14,
+      "url": "https://github.com/ReadRace-AGES/ReadRace/issues/14",
+      "requirement": "Criar o componente `BottomNav` com as 5 abas e estado ativo",
+      "layer": "Navegação / componentes / erros",
+      "coverage": [],
+      "status": "planned-or-other-layer"
+    },
+    {
+      "issue": 15,
+      "url": "https://github.com/ReadRace-AGES/ReadRace/issues/15",
+      "requirement": "Criar o componente `AppHeader` com as variantes de título, voltar e sequência",
+      "layer": "Navegação / componentes / erros",
+      "coverage": [],
+      "status": "planned-or-other-layer"
+    },
+    {
+      "issue": 16,
+      "url": "https://github.com/ReadRace-AGES/ReadRace/issues/16",
+      "requirement": "Criar o componente `PrimaryButton` com as variantes preenchida, contorno, com ícone, desabilitada e carregando",
+      "layer": "Navegação / componentes / erros",
+      "coverage": [],
+      "status": "planned-or-other-layer"
+    },
+    {
+      "issue": 17,
+      "url": "https://github.com/ReadRace-AGES/ReadRace/issues/17",
+      "requirement": "Criar o componente `Card` como container base das listas e blocos do app",
+      "layer": "Navegação / componentes / erros",
+      "coverage": [],
+      "status": "planned-or-other-layer"
+    },
+    {
+      "issue": 18,
+      "url": "https://github.com/ReadRace-AGES/ReadRace/issues/18",
+      "requirement": "Criar o componente `SegmentedTabs` de 2 e 3 opções",
+      "layer": "Navegação / componentes / erros",
+      "coverage": [],
+      "status": "planned-or-other-layer"
+    },
+    {
+      "issue": 19,
+      "url": "https://github.com/ReadRace-AGES/ReadRace/issues/19",
+      "requirement": "Criar o componente `BookCover` com tamanhos de grade e destaque",
+      "layer": "Navegação / componentes / erros",
+      "coverage": [],
+      "status": "planned-or-other-layer"
+    },
+    {
+      "issue": 20,
+      "url": "https://github.com/ReadRace-AGES/ReadRace/issues/20",
+      "requirement": "Criar o componente `Avatar` com placeholder de inicial e badge de sequência",
+      "layer": "Navegação / componentes / erros",
+      "coverage": [],
+      "status": "planned-or-other-layer"
+    },
+    {
+      "issue": 21,
+      "url": "https://github.com/ReadRace-AGES/ReadRace/issues/21",
+      "requirement": "Criar o componente `ProgressBar` com rótulo e percentual",
+      "layer": "Navegação / componentes / erros",
+      "coverage": [],
+      "status": "planned-or-other-layer"
+    },
+    {
+      "issue": 22,
+      "url": "https://github.com/ReadRace-AGES/ReadRace/issues/22",
+      "requirement": "Criar o componente `PostCard` com \"Ler mais\" e curtidas só de exibição",
+      "layer": "Navegação / componentes / erros",
+      "coverage": [],
+      "status": "planned-or-other-layer"
+    },
+    {
+      "issue": 23,
+      "url": "https://github.com/ReadRace-AGES/ReadRace/issues/23",
+      "requirement": "Criar o componente `ListItem` com capa, título, subtítulo, metadado e ação",
+      "layer": "Navegação / componentes / erros",
+      "coverage": [],
+      "status": "planned-or-other-layer"
+    },
+    {
+      "issue": 24,
+      "url": "https://github.com/ReadRace-AGES/ReadRace/issues/24",
+      "requirement": "Criar o componente `SearchInput`, campo de busca com ícone e placeholder parametrizável",
+      "layer": "Navegação / componentes / erros",
+      "coverage": [],
+      "status": "planned-or-other-layer"
+    },
+    {
+      "issue": 25,
+      "url": "https://github.com/ReadRace-AGES/ReadRace/issues/25",
+      "requirement": "Criar o componente `EmptyState`, padrão único de lista vazia para toda a sprint",
+      "layer": "Navegação / componentes / erros",
+      "coverage": [],
+      "status": "planned-or-other-layer"
+    },
+    {
+      "issue": 26,
+      "url": "https://github.com/ReadRace-AGES/ReadRace/issues/26",
+      "requirement": "Criar o componente `BottomSheet`, painel que sobe por baixo com fundo escurecido",
+      "layer": "Navegação / componentes / erros",
+      "coverage": [],
+      "status": "planned-or-other-layer"
+    },
+    {
+      "issue": 27,
+      "url": "https://github.com/ReadRace-AGES/ReadRace/issues/27",
+      "requirement": "Criar o componente `RankingRow`, linha do ranking de Pontos do Clube do Livro",
+      "layer": "Navegação / componentes / erros",
+      "coverage": [],
+      "status": "planned-or-other-layer"
+    },
+    {
+      "issue": 28,
+      "url": "https://github.com/ReadRace-AGES/ReadRace/issues/28",
+      "requirement": "Criar o componente `Slider`, seleção de valor numérico entre um mínimo e um máximo",
+      "layer": "Navegação / componentes / erros",
+      "coverage": [],
+      "status": "planned-or-other-layer"
+    },
+    {
+      "issue": 29,
+      "url": "https://github.com/ReadRace-AGES/ReadRace/issues/29",
+      "requirement": "Criar o componente `Toast` com o aviso \"Funcionalidade em desenvolvimento\"",
+      "layer": "Navegação / componentes / erros",
+      "coverage": [],
+      "status": "planned-or-other-layer"
+    },
+    {
+      "issue": 30,
+      "url": "https://github.com/ReadRace-AGES/ReadRace/issues/30",
+      "requirement": "Entregar a aba Meus Livros com favoritos, últimos livros e os 4 estados da biblioteca",
+      "layer": "Biblioteca / busca / catálogo",
+      "coverage": [
+        {
+          "file": "smoke/flows.spec.ts",
+          "title": "Biblioteca: adicionar e registrar leitura #30 #33 #155"
+        }
+      ],
+      "status": "partial"
+    },
+    {
+      "issue": 31,
+      "url": "https://github.com/ReadRace-AGES/ReadRace/issues/31",
+      "requirement": "Expor a API de detalhe do livro com progresso do usuário e posts sobre o livro",
+      "layer": "Biblioteca / busca / catálogo",
+      "coverage": [],
+      "status": "planned-or-other-layer"
+    },
+    {
+      "issue": 32,
+      "url": "https://github.com/ReadRace-AGES/ReadRace/issues/32",
+      "requirement": "Construir a tela Detalhe do livro com progresso e posts sobre o livro",
+      "layer": "Biblioteca / busca / catálogo",
+      "coverage": [],
+      "status": "planned-or-other-layer"
+    },
+    {
+      "issue": 33,
+      "url": "https://github.com/ReadRace-AGES/ReadRace/issues/33",
+      "requirement": "Registrar em que página o usuário parou e calcular o XP da leitura",
+      "layer": "Leitura / gamificação / integração",
+      "coverage": [
+        {
+          "file": "smoke/flows.spec.ts",
+          "title": "Biblioteca: adicionar e registrar leitura #30 #33 #155"
+        },
+        {
+          "file": "regression/business.spec.ts",
+          "title": "Leitura: retrocesso e repetição não pagam XP novamente #33 #199"
+        },
+        {
+          "file": "regression/business.spec.ts",
+          "title": "Página inválida não altera perfil nem livro #33 #95"
+        },
+        {
+          "file": "regression/business.spec.ts",
+          "title": "Falha no progresso preserva formulário e não grava #33 #203"
+        }
+      ],
+      "status": "partial"
+    },
+    {
+      "issue": 34,
+      "url": "https://github.com/ReadRace-AGES/ReadRace/issues/34",
+      "requirement": "Entregar o feed de comunidades com meus clubes e minhas comunidades",
+      "layer": "Feed / comunidades / social",
+      "coverage": [
+        {
+          "file": "smoke/flows.spec.ts",
+          "title": "Feed: clubes, comunidades e sequência #34"
+        }
+      ],
+      "status": "partial"
+    },
+    {
+      "issue": 35,
+      "url": "https://github.com/ReadRace-AGES/ReadRace/issues/35",
+      "requirement": "Entregar a Página do clube com livro atual, ações e ranking por pontos",
+      "layer": "Clubes / fórum / chat / papéis",
+      "coverage": [
+        {
+          "file": "smoke/flows.spec.ts",
+          "title": "Clube: ranking, fórum, chat e quiz #35 #149 #151 #153 #162"
+        }
+      ],
+      "status": "partial"
+    },
+    {
+      "issue": 36,
+      "url": "https://github.com/ReadRace-AGES/ReadRace/issues/36",
+      "requirement": "Entregar o Fórum do clube com a lista de posts da leitura atual",
+      "layer": "Clubes / fórum / chat / papéis",
+      "coverage": [],
+      "status": "planned-or-other-layer"
+    },
+    {
+      "issue": 37,
+      "url": "https://github.com/ReadRace-AGES/ReadRace/issues/37",
+      "requirement": "Criar a API de desafios entre amigos — listar, criar e acompanhar progresso",
+      "layer": "Desafios / regras temporais",
+      "coverage": [],
+      "status": "planned-or-other-layer"
+    },
+    {
+      "issue": 43,
+      "url": "https://github.com/ReadRace-AGES/ReadRace/issues/43",
+      "requirement": "Criar a API de busca de livros, usuários e comunidades",
+      "layer": "Biblioteca / busca / catálogo",
+      "coverage": [
+        {
+          "file": "smoke/flows.spec.ts",
+          "title": "Busca: três abas, seguir e seguidores #43 #44 #154 #201"
+        }
+      ],
+      "status": "partial"
+    },
+    {
+      "issue": 44,
+      "url": "https://github.com/ReadRace-AGES/ReadRace/issues/44",
+      "requirement": "Construir a tela Buscar com as três abas de resultado",
+      "layer": "Biblioteca / busca / catálogo",
+      "coverage": [
+        {
+          "file": "smoke/flows.spec.ts",
+          "title": "Busca: três abas, seguir e seguidores #43 #44 #154 #201"
+        }
+      ],
+      "status": "partial"
+    },
+    {
+      "issue": 45,
+      "url": "https://github.com/ReadRace-AGES/ReadRace/issues/45",
+      "requirement": "Criar a API e a tela de Perfil de outro usuário",
+      "layer": "Perfil / conquistas / personalização",
+      "coverage": [],
+      "status": "planned-or-other-layer"
+    },
+    {
+      "issue": 48,
+      "url": "https://github.com/ReadRace-AGES/ReadRace/issues/48",
+      "requirement": "Criar API para busca de livro",
+      "layer": "Biblioteca / busca / catálogo",
+      "coverage": [],
+      "status": "planned-or-other-layer"
+    },
+    {
+      "issue": 51,
+      "url": "https://github.com/ReadRace-AGES/ReadRace/issues/51",
+      "requirement": "Fundação — projeto, banco e tema",
+      "layer": "Agregador: cobertura pelos requisitos filhos",
+      "coverage": [],
+      "status": "planned-or-other-layer"
+    },
+    {
+      "issue": 52,
+      "url": "https://github.com/ReadRace-AGES/ReadRace/issues/52",
+      "requirement": "Componentes genéricos — a biblioteca de UI da sprint",
+      "layer": "Agregador: cobertura pelos requisitos filhos",
+      "coverage": [],
+      "status": "planned-or-other-layer"
+    },
+    {
+      "issue": 53,
+      "url": "https://github.com/ReadRace-AGES/ReadRace/issues/53",
+      "requirement": "Biblioteca — a aba Meus Livros",
+      "layer": "Agregador: cobertura pelos requisitos filhos",
+      "coverage": [],
+      "status": "planned-or-other-layer"
+    },
+    {
+      "issue": 54,
+      "url": "https://github.com/ReadRace-AGES/ReadRace/issues/54",
+      "requirement": "Detalhe do livro e progresso",
+      "layer": "Agregador: cobertura pelos requisitos filhos",
+      "coverage": [],
+      "status": "planned-or-other-layer"
+    },
+    {
+      "issue": 55,
+      "url": "https://github.com/ReadRace-AGES/ReadRace/issues/55",
+      "requirement": "Social — feed de comunidades, página do clube e fórum",
+      "layer": "Agregador: cobertura pelos requisitos filhos",
+      "coverage": [],
+      "status": "planned-or-other-layer"
+    },
+    {
+      "issue": 57,
+      "url": "https://github.com/ReadRace-AGES/ReadRace/issues/57",
+      "requirement": "Busca e perfil de outro usuário",
+      "layer": "Agregador: cobertura pelos requisitos filhos",
+      "coverage": [],
+      "status": "planned-or-other-layer"
+    },
+    {
+      "issue": 38,
+      "url": "https://github.com/ReadRace-AGES/ReadRace/issues/38",
+      "requirement": "Construir a tela Desafiar amigo com meta por páginas",
+      "layer": "Desafios / regras temporais",
+      "coverage": [
+        {
+          "file": "smoke/flows.spec.ts",
+          "title": "Desafios: sistema e amigo por páginas #38 #198"
+        }
+      ],
+      "status": "partial"
+    },
+    {
+      "issue": 39,
+      "url": "https://github.com/ReadRace-AGES/ReadRace/issues/39",
+      "requirement": "Adicionar a meta por livro específico à tela Desafiar",
+      "layer": "Desafios / regras temporais",
+      "coverage": [],
+      "status": "planned-or-other-layer"
+    },
+    {
+      "issue": 40,
+      "url": "https://github.com/ReadRace-AGES/ReadRace/issues/40",
+      "requirement": "Construir a tela Escolher Livro do desafio",
+      "layer": "Desafios / regras temporais",
+      "coverage": [],
+      "status": "planned-or-other-layer"
+    },
+    {
+      "issue": 41,
+      "url": "https://github.com/ReadRace-AGES/ReadRace/issues/41",
+      "requirement": "Exibir o resultado de um desafio finalizado",
+      "layer": "Desafios / regras temporais",
+      "coverage": [],
+      "status": "planned-or-other-layer"
+    },
+    {
+      "issue": 42,
+      "url": "https://github.com/ReadRace-AGES/ReadRace/issues/42",
+      "requirement": "Construir a tela raiz da aba Desafios com a seção \"Desafio com amigos\"",
+      "layer": "Desafios / regras temporais",
+      "coverage": [],
+      "status": "planned-or-other-layer"
+    },
+    {
+      "issue": 56,
+      "url": "https://github.com/ReadRace-AGES/ReadRace/issues/56",
+      "requirement": "Desafio entre amigos",
+      "layer": "Agregador: cobertura pelos requisitos filhos",
+      "coverage": [],
+      "status": "planned-or-other-layer"
+    },
+    {
+      "issue": 95,
+      "url": "https://github.com/ReadRace-AGES/ReadRace/issues/95",
+      "requirement": "Somar o XP da leitura ao total do usuário e recalcular o nível",
+      "layer": "Leitura / gamificação / integração",
+      "coverage": [
+        {
+          "file": "regression/business.spec.ts",
+          "title": "Conclusão: bônus único, inclusive após retroceder #95 #199"
+        },
+        {
+          "file": "regression/business.spec.ts",
+          "title": "Página inválida não altera perfil nem livro #33 #95"
+        }
+      ],
+      "status": "partial"
+    },
+    {
+      "issue": 96,
+      "url": "https://github.com/ReadRace-AGES/ReadRace/issues/96",
+      "requirement": "Atualizar a sequência de dias consecutivos ao registrar leitura",
+      "layer": "Leitura / gamificação / integração",
+      "coverage": [],
+      "status": "planned-or-other-layer"
+    },
+    {
+      "issue": 97,
+      "url": "https://github.com/ReadRace-AGES/ReadRace/issues/97",
+      "requirement": "Avançar o progresso do desafio ativo e resolver o confronto",
+      "layer": "Leitura / gamificação / integração",
+      "coverage": [],
+      "status": "planned-or-other-layer"
+    },
+    {
+      "issue": 98,
+      "url": "https://github.com/ReadRace-AGES/ReadRace/issues/98",
+      "requirement": "Reavaliar e desbloquear conquistas quando o usuário lê ou termina um desafio",
+      "layer": "Leitura / gamificação / integração",
+      "coverage": [],
+      "status": "planned-or-other-layer"
+    },
+    {
+      "issue": 99,
+      "url": "https://github.com/ReadRace-AGES/ReadRace/issues/99",
+      "requirement": "Entregar a aba Perfil com o perfil do próprio usuário",
+      "layer": "Perfil / conquistas / personalização",
+      "coverage": [
+        {
+          "file": "smoke/flows.spec.ts",
+          "title": "Perfil: conquistas, mascote e nome persistido #99 #100 #164 #165"
+        }
+      ],
+      "status": "partial"
+    },
+    {
+      "issue": 100,
+      "url": "https://github.com/ReadRace-AGES/ReadRace/issues/100",
+      "requirement": "Construir a tela Minhas Conquistas com as desbloqueadas e as próximas",
+      "layer": "Perfil / conquistas / personalização",
+      "coverage": [
+        {
+          "file": "smoke/flows.spec.ts",
+          "title": "Perfil: conquistas, mascote e nome persistido #99 #100 #164 #165"
+        }
+      ],
+      "status": "partial"
+    },
+    {
+      "issue": 101,
+      "url": "https://github.com/ReadRace-AGES/ReadRace/issues/101",
+      "requirement": "Fazer o coração dos posts curtir e descurtir de verdade",
+      "layer": "Feed / comunidades / social",
+      "coverage": [
+        {
+          "file": "smoke/flows.spec.ts",
+          "title": "Comunidade: curtir, comentar e responder #101 #150"
+        }
+      ],
+      "status": "partial"
+    },
+    {
+      "issue": 102,
+      "url": "https://github.com/ReadRace-AGES/ReadRace/issues/102",
+      "requirement": "Corrigir o voltar do Detalhe do livro quando se chega pela Busca",
+      "layer": "Navegação / componentes / erros",
+      "coverage": [
+        {
+          "file": "regression/business.spec.ts",
+          "title": "Busca preserva termo e aba ao voltar; ausência é diferente de erro #102 #222"
+        }
+      ],
+      "status": "partial"
+    },
+    {
+      "issue": 103,
+      "url": "https://github.com/ReadRace-AGES/ReadRace/issues/103",
+      "requirement": "Tirar do app as rotas que não são produto",
+      "layer": "Navegação / componentes / erros",
+      "coverage": [],
+      "status": "planned-or-other-layer"
+    },
+    {
+      "issue": 104,
+      "url": "https://github.com/ReadRace-AGES/ReadRace/issues/104",
+      "requirement": "Trocar o aviso local de Meus Livros pelo componente de Toast",
+      "layer": "Navegação / componentes / erros",
+      "coverage": [],
+      "status": "planned-or-other-layer"
+    },
+    {
+      "issue": 105,
+      "url": "https://github.com/ReadRace-AGES/ReadRace/issues/105",
+      "requirement": "Fazer o CI do mobile rodar os testes, não só a verificação de tipos",
+      "layer": "Ambiente / API / migrações / CI",
+      "coverage": [],
+      "status": "planned-or-other-layer"
+    },
+    {
+      "issue": 106,
+      "url": "https://github.com/ReadRace-AGES/ReadRace/issues/106",
+      "requirement": "Corrigir as três capas do catálogo inicial que carregam em branco",
+      "layer": "Navegação / componentes / erros",
+      "coverage": [],
+      "status": "planned-or-other-layer"
+    },
+    {
+      "issue": 107,
+      "url": "https://github.com/ReadRace-AGES/ReadRace/issues/107",
+      "requirement": "Dar nome e papel de acessibilidade ao botão voltar do cabeçalho",
+      "layer": "Navegação / componentes / erros",
+      "coverage": [],
+      "status": "planned-or-other-layer"
+    },
+    {
+      "issue": 108,
+      "url": "https://github.com/ReadRace-AGES/ReadRace/issues/108",
+      "requirement": "Cascata do registro de leitura",
+      "layer": "Agregador: cobertura pelos requisitos filhos",
+      "coverage": [],
+      "status": "planned-or-other-layer"
+    },
+    {
+      "issue": 109,
+      "url": "https://github.com/ReadRace-AGES/ReadRace/issues/109",
+      "requirement": "Perfil e conquistas",
+      "layer": "Agregador: cobertura pelos requisitos filhos",
+      "coverage": [],
+      "status": "planned-or-other-layer"
+    },
+    {
+      "issue": 110,
+      "url": "https://github.com/ReadRace-AGES/ReadRace/issues/110",
+      "requirement": "Social interativo — parar de ser só leitura",
+      "layer": "Agregador: cobertura pelos requisitos filhos",
+      "coverage": [],
+      "status": "planned-or-other-layer"
+    },
+    {
+      "issue": 111,
+      "url": "https://github.com/ReadRace-AGES/ReadRace/issues/111",
+      "requirement": "Dívida da sprint 1",
+      "layer": "Agregador: cobertura pelos requisitos filhos",
+      "coverage": [],
+      "status": "planned-or-other-layer"
+    },
+    {
+      "issue": 131,
+      "url": "https://github.com/ReadRace-AGES/ReadRace/issues/131",
+      "requirement": "Autenticação — login com e-mail e senha",
+      "layer": "Agregador: cobertura pelos requisitos filhos",
+      "coverage": [],
+      "status": "planned-or-other-layer"
+    },
+    {
+      "issue": 132,
+      "url": "https://github.com/ReadRace-AGES/ReadRace/issues/132",
+      "requirement": "Ligar o usuário ao Cognito e extrair a interface UsuarioAtual",
+      "layer": "Ambiente / API / migrações / CI",
+      "coverage": [],
+      "status": "planned-or-other-layer"
+    },
+    {
+      "issue": 133,
+      "url": "https://github.com/ReadRace-AGES/ReadRace/issues/133",
+      "requirement": "Validar o token do Cognito e criar o perfil no primeiro acesso",
+      "layer": "Autenticação / sessão / autorização",
+      "coverage": [],
+      "status": "planned-or-other-layer"
+    },
+    {
+      "issue": 134,
+      "url": "https://github.com/ReadRace-AGES/ReadRace/issues/134",
+      "requirement": "Trazer o Cognito para o Terraform e liberar o cadastro pelo app",
+      "layer": "Ambiente / API / migrações / CI",
+      "coverage": [],
+      "status": "planned-or-other-layer"
+    },
+    {
+      "issue": 135,
+      "url": "https://github.com/ReadRace-AGES/ReadRace/issues/135",
+      "requirement": "Sessão do app e token em toda chamada da API",
+      "layer": "Autenticação / sessão / autorização",
+      "coverage": [],
+      "status": "planned-or-other-layer"
+    },
+    {
+      "issue": 146,
+      "url": "https://github.com/ReadRace-AGES/ReadRace/issues/146",
+      "requirement": "Desafiar de novo o mesmo amigo pelo botão \"Revanche\"",
+      "layer": "Desafios / regras temporais",
+      "coverage": [],
+      "status": "planned-or-other-layer"
+    },
+    {
+      "issue": 147,
+      "url": "https://github.com/ReadRace-AGES/ReadRace/issues/147",
+      "requirement": "Abrir o perfil de uma comunidade e seguir ou deixar de seguir",
+      "layer": "Feed / comunidades / social",
+      "coverage": [],
+      "status": "planned-or-other-layer"
+    },
+    {
+      "issue": 148,
+      "url": "https://github.com/ReadRace-AGES/ReadRace/issues/148",
+      "requirement": "Criar um clube do livro com o livro do catálogo e os primeiros membros",
+      "layer": "Clubes / fórum / chat / papéis",
+      "coverage": [
+        {
+          "file": "smoke/flows.spec.ts",
+          "title": "Criar clube: livro e dois membros #148"
+        }
+      ],
+      "status": "partial"
+    },
+    {
+      "issue": 149,
+      "url": "https://github.com/ReadRace-AGES/ReadRace/issues/149",
+      "requirement": "Escrever post no Fórum do clube",
+      "layer": "Clubes / fórum / chat / papéis",
+      "coverage": [
+        {
+          "file": "smoke/flows.spec.ts",
+          "title": "Clube: ranking, fórum, chat e quiz #35 #149 #151 #153 #162"
+        }
+      ],
+      "status": "partial"
+    },
+    {
+      "issue": 150,
+      "url": "https://github.com/ReadRace-AGES/ReadRace/issues/150",
+      "requirement": "Ler e escrever comentários num post da comunidade",
+      "layer": "Feed / comunidades / social",
+      "coverage": [
+        {
+          "file": "smoke/flows.spec.ts",
+          "title": "Comunidade: curtir, comentar e responder #101 #150"
+        }
+      ],
+      "status": "partial"
+    },
+    {
+      "issue": 151,
+      "url": "https://github.com/ReadRace-AGES/ReadRace/issues/151",
+      "requirement": "Conversar com os membros do clube no chat do clube",
+      "layer": "Clubes / fórum / chat / papéis",
+      "coverage": [
+        {
+          "file": "smoke/flows.spec.ts",
+          "title": "Clube: ranking, fórum, chat e quiz #35 #149 #151 #153 #162"
+        }
+      ],
+      "status": "partial"
+    },
+    {
+      "issue": 152,
+      "url": "https://github.com/ReadRace-AGES/ReadRace/issues/152",
+      "requirement": "Sair de um clube do livro",
+      "layer": "Clubes / fórum / chat / papéis",
+      "coverage": [],
+      "status": "planned-or-other-layer"
+    },
+    {
+      "issue": 153,
+      "url": "https://github.com/ReadRace-AGES/ReadRace/issues/153",
+      "requirement": "Mostrar o ranking completo do clube no \"Ver todos\"",
+      "layer": "Clubes / fórum / chat / papéis",
+      "coverage": [
+        {
+          "file": "smoke/flows.spec.ts",
+          "title": "Clube: ranking, fórum, chat e quiz #35 #149 #151 #153 #162"
+        }
+      ],
+      "status": "partial"
+    },
+    {
+      "issue": 154,
+      "url": "https://github.com/ReadRace-AGES/ReadRace/issues/154",
+      "requirement": "Seguir e deixar de seguir outro leitor pelo perfil dele",
+      "layer": "Feed / comunidades / social",
+      "coverage": [
+        {
+          "file": "smoke/flows.spec.ts",
+          "title": "Busca: três abas, seguir e seguidores #43 #44 #154 #201"
+        }
+      ],
+      "status": "partial"
+    },
+    {
+      "issue": 155,
+      "url": "https://github.com/ReadRace-AGES/ReadRace/issues/155",
+      "requirement": "Adicionar um livro à biblioteca buscando no catálogo e escolhendo a lista",
+      "layer": "Biblioteca / busca / catálogo",
+      "coverage": [
+        {
+          "file": "smoke/flows.spec.ts",
+          "title": "Biblioteca: adicionar e registrar leitura #30 #33 #155"
+        }
+      ],
+      "status": "partial"
+    },
+    {
+      "issue": 156,
+      "url": "https://github.com/ReadRace-AGES/ReadRace/issues/156",
+      "requirement": "Entrar com e-mail e senha na tela de login do app",
+      "layer": "Autenticação / sessão / autorização",
+      "coverage": [],
+      "status": "planned-or-other-layer"
+    },
+    {
+      "issue": 157,
+      "url": "https://github.com/ReadRace-AGES/ReadRace/issues/157",
+      "requirement": "Criar conta dentro do app, com o código de confirmação por e-mail",
+      "layer": "Autenticação / sessão / autorização",
+      "coverage": [],
+      "status": "planned-or-other-layer"
+    },
+    {
+      "issue": 158,
+      "url": "https://github.com/ReadRace-AGES/ReadRace/issues/158",
+      "requirement": "Entrar com a conta Google",
+      "layer": "Validação Android / OAuth real (#226)",
+      "coverage": [],
+      "status": "planned-or-other-layer"
+    },
+    {
+      "issue": 159,
+      "url": "https://github.com/ReadRace-AGES/ReadRace/issues/159",
+      "requirement": "Gerar o app instalável para Android e ligar o login em produção",
+      "layer": "Validação Android / OAuth real (#226)",
+      "coverage": [],
+      "status": "planned-or-other-layer"
+    },
+    {
+      "issue": 160,
+      "url": "https://github.com/ReadRace-AGES/ReadRace/issues/160",
+      "requirement": "Preparar o clube para o quiz: tabelas do quiz, quiz pronto no seed e o meu cargo no clube",
+      "layer": "Ambiente / API / migrações / CI",
+      "coverage": [],
+      "status": "planned-or-other-layer"
+    },
+    {
+      "issue": 161,
+      "url": "https://github.com/ReadRace-AGES/ReadRace/issues/161",
+      "requirement": "Deixar o líder do clube configurar o quiz e adicionar as perguntas",
+      "layer": "Quiz / papéis / recompensas",
+      "coverage": [
+        {
+          "file": "regression/social.spec.ts",
+          "title": "Líder configura e publica quiz #161"
+        }
+      ],
+      "status": "partial"
+    },
+    {
+      "issue": 162,
+      "url": "https://github.com/ReadRace-AGES/ReadRace/issues/162",
+      "requirement": "Deixar o membro responder o quiz do clube e ganhar pontos por acerto",
+      "layer": "Quiz / papéis / recompensas",
+      "coverage": [
+        {
+          "file": "smoke/flows.spec.ts",
+          "title": "Clube: ranking, fórum, chat e quiz #35 #149 #151 #153 #162"
+        }
+      ],
+      "status": "partial"
+    },
+    {
+      "issue": 163,
+      "url": "https://github.com/ReadRace-AGES/ReadRace/issues/163",
+      "requirement": "Somar pontos no clube quando o membro registra leitura do livro do clube",
+      "layer": "Leitura / gamificação / integração",
+      "coverage": [],
+      "status": "planned-or-other-layer"
+    },
+    {
+      "issue": 164,
+      "url": "https://github.com/ReadRace-AGES/ReadRace/issues/164",
+      "requirement": "Escolher o mascote entre os desbloqueados pelo nível",
+      "layer": "Perfil / conquistas / personalização",
+      "coverage": [
+        {
+          "file": "smoke/flows.spec.ts",
+          "title": "Perfil: conquistas, mascote e nome persistido #99 #100 #164 #165"
+        },
+        {
+          "file": "regression/business.spec.ts",
+          "title": "Mascote bloqueado é rejeitado pela API #164"
+        }
+      ],
+      "status": "partial"
+    },
+    {
+      "issue": 165,
+      "url": "https://github.com/ReadRace-AGES/ReadRace/issues/165",
+      "requirement": "Abrir as configurações pela engrenagem do perfil, editar nome e usuário, e desconectar",
+      "layer": "Perfil / conquistas / personalização",
+      "coverage": [
+        {
+          "file": "smoke/flows.spec.ts",
+          "title": "Perfil: conquistas, mascote e nome persistido #99 #100 #164 #165"
+        }
+      ],
+      "status": "partial"
+    },
+    {
+      "issue": 166,
+      "url": "https://github.com/ReadRace-AGES/ReadRace/issues/166",
+      "requirement": "Quiz e pontos do clube — o ranking passa a andar",
+      "layer": "Agregador: cobertura pelos requisitos filhos",
+      "coverage": [],
+      "status": "planned-or-other-layer"
+    },
+    {
+      "issue": 167,
+      "url": "https://github.com/ReadRace-AGES/ReadRace/issues/167",
+      "requirement": "Clube vivo — criar, conversar, ver o ranking e sair",
+      "layer": "Agregador: cobertura pelos requisitos filhos",
+      "coverage": [],
+      "status": "planned-or-other-layer"
+    },
+    {
+      "issue": 168,
+      "url": "https://github.com/ReadRace-AGES/ReadRace/issues/168",
+      "requirement": "Comunidades e conteúdo — entrar numa comunidade",
+      "layer": "Agregador: cobertura pelos requisitos filhos",
+      "coverage": [],
+      "status": "planned-or-other-layer"
+    },
+    {
+      "issue": 169,
+      "url": "https://github.com/ReadRace-AGES/ReadRace/issues/169",
+      "requirement": "Biblioteca — colocar livro novo",
+      "layer": "Agregador: cobertura pelos requisitos filhos",
+      "coverage": [],
+      "status": "planned-or-other-layer"
+    },
+    {
+      "issue": 170,
+      "url": "https://github.com/ReadRace-AGES/ReadRace/issues/170",
+      "requirement": "Autenticação no app — login de verdade, no celular de quem usa",
+      "layer": "Agregador: cobertura pelos requisitos filhos",
+      "coverage": [],
+      "status": "planned-or-other-layer"
+    },
+    {
+      "issue": 171,
+      "url": "https://github.com/ReadRace-AGES/ReadRace/issues/171",
+      "requirement": "Personalização — mascotes e configurações",
+      "layer": "Agregador: cobertura pelos requisitos filhos",
+      "coverage": [],
+      "status": "planned-or-other-layer"
+    },
+    {
+      "issue": 179,
+      "url": "https://github.com/ReadRace-AGES/ReadRace/issues/179",
+      "requirement": "Documentar a configuração do login com Cognito para o time",
+      "layer": "Documentação / operação / revisão fora da suíte de UI",
+      "coverage": [],
+      "status": "planned-or-other-layer"
+    },
+    {
+      "issue": 181,
+      "url": "https://github.com/ReadRace-AGES/ReadRace/issues/181",
+      "requirement": "Monitorar a produção: alarmes e logs no CloudWatch",
+      "layer": "Documentação / operação / revisão fora da suíte de UI",
+      "coverage": [],
+      "status": "planned-or-other-layer"
+    },
+    {
+      "issue": 184,
+      "url": "https://github.com/ReadRace-AGES/ReadRace/issues/184",
+      "requirement": "Publicar as páginas de Gerência, Processo e Design na wiki do projeto",
+      "layer": "Documentação / operação / revisão fora da suíte de UI",
+      "coverage": [],
+      "status": "planned-or-other-layer"
+    },
+    {
+      "issue": 185,
+      "url": "https://github.com/ReadRace-AGES/ReadRace/issues/185",
+      "requirement": "Documentar o banco de dados na wiki do projeto",
+      "layer": "Documentação / operação / revisão fora da suíte de UI",
+      "coverage": [],
+      "status": "planned-or-other-layer"
+    },
+    {
+      "issue": 195,
+      "url": "https://github.com/ReadRace-AGES/ReadRace/issues/195",
+      "requirement": "Recompensa e social da leitura — ler aparece para mim e para quem me segue",
+      "layer": "Agregador: cobertura pelos requisitos filhos",
+      "coverage": [],
+      "status": "planned-or-other-layer"
+    },
+    {
+      "issue": 196,
+      "url": "https://github.com/ReadRace-AGES/ReadRace/issues/196",
+      "requirement": "Desafios do sistema — a meta do mês e da semana",
+      "layer": "Agregador: cobertura pelos requisitos filhos",
+      "coverage": [],
+      "status": "planned-or-other-layer"
+    },
+    {
+      "issue": 197,
+      "url": "https://github.com/ReadRace-AGES/ReadRace/issues/197",
+      "requirement": "Mostrar na aba Social quantas páginas as pessoas que eu sigo leram",
+      "layer": "Feed / comunidades / social",
+      "coverage": [
+        {
+          "file": "regression/social.spec.ts",
+          "title": "Social abre autor e livro e preserva origem #197 #204"
+        }
+      ],
+      "status": "partial"
+    },
+    {
+      "issue": 198,
+      "url": "https://github.com/ReadRace-AGES/ReadRace/issues/198",
+      "requirement": "Mostrar o desafio do mês e o da semana na aba Desafios",
+      "layer": "Desafios / regras temporais",
+      "coverage": [
+        {
+          "file": "smoke/flows.spec.ts",
+          "title": "Desafios: sistema e amigo por páginas #38 #198"
+        }
+      ],
+      "status": "partial"
+    },
+    {
+      "issue": 199,
+      "url": "https://github.com/ReadRace-AGES/ReadRace/issues/199",
+      "requirement": "Fazer a leitura só dar recompensa quando a pessoa lê de verdade",
+      "layer": "Leitura / gamificação / integração",
+      "coverage": [
+        {
+          "file": "regression/business.spec.ts",
+          "title": "Leitura: retrocesso e repetição não pagam XP novamente #33 #199"
+        },
+        {
+          "file": "regression/business.spec.ts",
+          "title": "Conclusão: bônus único, inclusive após retroceder #95 #199"
+        }
+      ],
+      "status": "partial"
+    },
+    {
+      "issue": 200,
+      "url": "https://github.com/ReadRace-AGES/ReadRace/issues/200",
+      "requirement": "Colocar o usuário de demonstração no ranking do clube do quiz",
+      "layer": "Ambiente / API / migrações / CI",
+      "coverage": [],
+      "status": "planned-or-other-layer"
+    },
+    {
+      "issue": 201,
+      "url": "https://github.com/ReadRace-AGES/ReadRace/issues/201",
+      "requirement": "Ver quem segue e quem é seguido ao tocar nos números do perfil",
+      "layer": "Feed / comunidades / social",
+      "coverage": [
+        {
+          "file": "smoke/flows.spec.ts",
+          "title": "Busca: três abas, seguir e seguidores #43 #44 #154 #201"
+        }
+      ],
+      "status": "partial"
+    },
+    {
+      "issue": 202,
+      "url": "https://github.com/ReadRace-AGES/ReadRace/issues/202",
+      "requirement": "Abrir o perfil de um leitor tocando no ranking do clube",
+      "layer": "Clubes / fórum / chat / papéis",
+      "coverage": [],
+      "status": "planned-or-other-layer"
+    },
+    {
+      "issue": 203,
+      "url": "https://github.com/ReadRace-AGES/ReadRace/issues/203",
+      "requirement": "Mostrar o que ganhei logo depois de registrar leitura",
+      "layer": "Leitura / gamificação / integração",
+      "coverage": [
+        {
+          "file": "regression/business.spec.ts",
+          "title": "Falha no progresso preserva formulário e não grava #33 #203"
+        }
+      ],
+      "status": "partial"
+    },
+    {
+      "issue": 204,
+      "url": "https://github.com/ReadRace-AGES/ReadRace/issues/204",
+      "requirement": "Mostrar \"Terminou o livro\" na aba Social e abrir o perfil e o livro pelo card",
+      "layer": "Feed / comunidades / social",
+      "coverage": [
+        {
+          "file": "regression/social.spec.ts",
+          "title": "Social abre autor e livro e preserva origem #197 #204"
+        }
+      ],
+      "status": "partial"
+    },
+    {
+      "issue": 205,
+      "url": "https://github.com/ReadRace-AGES/ReadRace/issues/205",
+      "requirement": "Pagar o XP do desafio do mês e da semana quando a pessoa cumpre a meta",
+      "layer": "Desafios / regras temporais",
+      "coverage": [],
+      "status": "planned-or-other-layer"
+    },
+    {
+      "issue": 218,
+      "url": "https://github.com/ReadRace-AGES/ReadRace/issues/218",
+      "requirement": "Reusar o livro que já existe ao adicionar pelo catálogo",
+      "layer": "Biblioteca / busca / catálogo",
+      "coverage": [],
+      "status": "planned-or-other-layer"
+    },
+    {
+      "issue": 219,
+      "url": "https://github.com/ReadRace-AGES/ReadRace/issues/219",
+      "requirement": "Trocar a lista de um livro da biblioteca, favoritar e remover",
+      "layer": "Biblioteca / busca / catálogo",
+      "coverage": [
+        {
+          "file": "regression/business.spec.ts",
+          "title": "Biblioteca: marcar lido sem leitura não dá XP; remoção protege histórico #219"
+        }
+      ],
+      "status": "partial"
+    },
+    {
+      "issue": 220,
+      "url": "https://github.com/ReadRace-AGES/ReadRace/issues/220",
+      "requirement": "Deixar os dados de demonstração coerentes e criar o \"refrescar a demo\"",
+      "layer": "Ambiente / API / migrações / CI",
+      "coverage": [],
+      "status": "planned-or-other-layer"
+    },
+    {
+      "issue": 221,
+      "url": "https://github.com/ReadRace-AGES/ReadRace/issues/221",
+      "requirement": "Tirar os botões sem destino, acertar o voltar e o painel de registrar leitura",
+      "layer": "Navegação / componentes / erros",
+      "coverage": [],
+      "status": "planned-or-other-layer"
+    },
+    {
+      "issue": 222,
+      "url": "https://github.com/ReadRace-AGES/ReadRace/issues/222",
+      "requirement": "Acertar textos, mensagens de erro e telas pequenas",
+      "layer": "Navegação / componentes / erros",
+      "coverage": [
+        {
+          "file": "smoke/flows.spec.ts",
+          "title": "Erro: Feed permite recuperar a chamada real #222"
+        },
+        {
+          "file": "regression/business.spec.ts",
+          "title": "Busca preserva termo e aba ao voltar; ausência é diferente de erro #102 #222"
+        }
+      ],
+      "status": "partial"
+    },
+    {
+      "issue": 223,
+      "url": "https://github.com/ReadRace-AGES/ReadRace/issues/223",
+      "requirement": "Limpar o que sobrou do setup e reforçar o CI antes da entrega",
+      "layer": "Ambiente / API / migrações / CI",
+      "coverage": [],
+      "status": "planned-or-other-layer"
+    },
+    {
+      "issue": 224,
+      "url": "https://github.com/ReadRace-AGES/ReadRace/issues/224",
+      "requirement": "Deixar a API pronta para contas de verdade",
+      "layer": "Autenticação / sessão / autorização",
+      "coverage": [],
+      "status": "planned-or-other-layer"
+    },
+    {
+      "issue": 225,
+      "url": "https://github.com/ReadRace-AGES/ReadRace/issues/225",
+      "requirement": "Deixar pronta a conta de demonstração, com os dados do seed, para testes e apresentação",
+      "layer": "Autenticação / sessão / autorização",
+      "coverage": [],
+      "status": "planned-or-other-layer"
+    },
+    {
+      "issue": 226,
+      "url": "https://github.com/ReadRace-AGES/ReadRace/issues/226",
+      "requirement": "Testar o app instalado e caçar bugs antes da entrega",
+      "layer": "Validação Android / OAuth real (#226)",
+      "coverage": [],
+      "status": "planned-or-other-layer"
+    },
+    {
+      "issue": 227,
+      "url": "https://github.com/ReadRace-AGES/ReadRace/issues/227",
+      "requirement": "Atualizar as páginas Arquitetura e Configuração da wiki com o que existe hoje",
+      "layer": "Documentação / operação / revisão fora da suíte de UI",
+      "coverage": [],
+      "status": "planned-or-other-layer"
+    },
+    {
+      "issue": 228,
+      "url": "https://github.com/ReadRace-AGES/ReadRace/issues/228",
+      "requirement": "Atualizar Escopo, Gerência, Processo e Design da wiki e registrar as diferenças entre o Figma e o app",
+      "layer": "Documentação / operação / revisão fora da suíte de UI",
+      "coverage": [],
+      "status": "planned-or-other-layer"
+    },
+    {
+      "issue": 229,
+      "url": "https://github.com/ReadRace-AGES/ReadRace/issues/229",
+      "requirement": "App sem ponta solta — tudo o que aparece funciona",
+      "layer": "Agregador: cobertura pelos requisitos filhos",
+      "coverage": [],
+      "status": "planned-or-other-layer"
+    },
+    {
+      "issue": 230,
+      "url": "https://github.com/ReadRace-AGES/ReadRace/issues/230",
+      "requirement": "Pronto para entregar — produção, dados, testes e documentação",
+      "layer": "Agregador: cobertura pelos requisitos filhos",
+      "coverage": [],
+      "status": "planned-or-other-layer"
+    },
+    {
+      "issue": 233,
+      "url": "https://github.com/ReadRace-AGES/ReadRace/issues/233",
+      "requirement": "Testar os fluxos do app de ponta a ponta com Playwright e gravar a apresentação",
+      "layer": "Apresentação / suíte transversal",
+      "coverage": [],
+      "status": "planned-or-other-layer"
+    },
+    {
+      "issue": 234,
+      "url": "https://github.com/ReadRace-AGES/ReadRace/issues/234",
+      "requirement": "Pedir para entrar num clube e o líder aprovar ou recusar",
+      "layer": "Clubes / fórum / chat / papéis",
+      "coverage": [
+        {
+          "file": "regression/social.spec.ts",
+          "title": "Pedido de entrada não transforma solicitante em membro #234"
+        }
+      ],
+      "status": "partial"
+    },
+    {
+      "issue": 235,
+      "url": "https://github.com/ReadRace-AGES/ReadRace/issues/235",
+      "requirement": "Escrever post na comunidade e participar das comunidades sugeridas",
+      "layer": "Feed / comunidades / social",
+      "coverage": [
+        {
+          "file": "regression/social.spec.ts",
+          "title": "Comunidade sugerida passa para minhas comunidades #235"
+        }
+      ],
+      "status": "partial"
+    },
+    {
+      "issue": 236,
+      "url": "https://github.com/ReadRace-AGES/ReadRace/issues/236",
+      "requirement": "Comentar nos posts do fórum do clube e do detalhe do livro",
+      "layer": "Feed / comunidades / social",
+      "coverage": [],
+      "status": "planned-or-other-layer"
+    },
+    {
+      "issue": 237,
+      "url": "https://github.com/ReadRace-AGES/ReadRace/issues/237",
+      "requirement": "Passar a liderança do clube quando o único líder sai",
+      "layer": "Clubes / fórum / chat / papéis",
+      "coverage": [
+        {
+          "file": "regression/business.spec.ts",
+          "title": "Clube: saída do líder transfere liderança #237"
+        }
+      ],
+      "status": "partial"
+    },
+    {
+      "issue": 238,
+      "url": "https://github.com/ReadRace-AGES/ReadRace/issues/238",
+      "requirement": "Mostrar os posts \"Em alta\" no perfil da comunidade",
+      "layer": "Feed / comunidades / social",
+      "coverage": [],
+      "status": "planned-or-other-layer"
+    },
+    {
+      "issue": 239,
+      "url": "https://github.com/ReadRace-AGES/ReadRace/issues/239",
+      "requirement": "Escolher o avatar e o plano de fundo do perfil",
+      "layer": "Perfil / conquistas / personalização",
+      "coverage": [],
+      "status": "planned-or-other-layer"
+    },
+    {
+      "issue": 240,
+      "url": "https://github.com/ReadRace-AGES/ReadRace/issues/240",
+      "requirement": "Bugs da entrega — tudo o que o teste achar, com dono e prazo",
+      "layer": "Agregador: cobertura pelos requisitos filhos",
+      "coverage": [],
+      "status": "planned-or-other-layer"
+    },
+    {
+      "issue": 249,
+      "url": "https://github.com/ReadRace-AGES/ReadRace/issues/249",
+      "requirement": "Deixar nas Configurações gerais só o que funciona",
+      "layer": "Perfil / conquistas / personalização",
+      "coverage": [
+        {
+          "file": "regression/social.spec.ts",
+          "title": "Configurações gerais não oferece ações sem destino #249"
+        }
+      ],
+      "status": "partial"
+    },
+    {
+      "issue": 250,
+      "url": "https://github.com/ReadRace-AGES/ReadRace/issues/250",
+      "requirement": "Desenhar no Figma as telas que o app ganhou sem design",
+      "layer": "Documentação / operação / revisão fora da suíte de UI",
+      "coverage": [],
+      "status": "planned-or-other-layer"
+    },
+    {
+      "issue": 255,
+      "url": "https://github.com/ReadRace-AGES/ReadRace/issues/255",
+      "requirement": "Não registrar como ERROR o cliente que desconecta antes da resposta",
+      "layer": "Integração backend / observabilidade",
+      "coverage": [],
+      "status": "planned-or-other-layer"
+    }
+  ]
+}
