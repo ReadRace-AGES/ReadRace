@@ -207,11 +207,11 @@ public class BibliotecaService {
 
         List<LivroBibliotecaResponse> livros =
                 visiveis.stream()
-                        .map(item -> porId.get(item.getItemId()).getLivro())
+                        .map(item -> porId.get(item.getItemId()))
                         .map(
-                                livro ->
+                                item ->
                                         LivroBibliotecaResponse.de(
-                                                livro, generoPorLivro.get(livro.getId())))
+                                                item, generoPorLivro.get(item.getLivro().getId())))
                         .toList();
 
         ItemPaginado ultimo = visiveis.getLast();
