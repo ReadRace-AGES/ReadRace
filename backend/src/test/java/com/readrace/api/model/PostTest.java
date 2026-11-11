@@ -18,6 +18,7 @@ class PostTest {
 
     private static final UUID AUTOR_ID = UUID.randomUUID();
     private static final UUID CLUBE_ID = UUID.randomUUID();
+    private static final UUID COMUNIDADE_ID = UUID.randomUUID();
     private static final UUID POST_PAI_ID = UUID.randomUUID();
 
     @Test
@@ -33,6 +34,25 @@ class PostTest {
         assertThat(post.getId()).isNotNull();
         assertThat(post.getId().version()).isEqualTo(4);
         assertThat(post.getCriadoEm()).isBetween(antes, depois);
+        assertThat(post.getLivroId()).isNull();
+        assertThat(post.getPostPaiId()).isNull();
+        assertThat(post.getExcluidoEm()).isNull();
+    }
+
+    @Test
+    void cria_raiz_de_comunidade_preservando_texto_e_sem_outros_escopos() {
+        OffsetDateTime antes = OffsetDateTime.now();
+        String texto = " \t Minha leitura\r\ncontinua aqui. 😀 ";
+
+        Post post = Post.criarRaizDeComunidade(AUTOR_ID, COMUNIDADE_ID, texto);
+
+        assertThat(post.getId()).isNotNull();
+        assertThat(post.getId().version()).isEqualTo(4);
+        assertThat(post.getAutorId()).isEqualTo(AUTOR_ID);
+        assertThat(post.getComunidadeId()).isEqualTo(COMUNIDADE_ID);
+        assertThat(post.getConteudo()).isSameAs(texto);
+        assertThat(post.getCriadoEm()).isBetween(antes, OffsetDateTime.now());
+        assertThat(post.getClubeId()).isNull();
         assertThat(post.getLivroId()).isNull();
         assertThat(post.getPostPaiId()).isNull();
         assertThat(post.getExcluidoEm()).isNull();

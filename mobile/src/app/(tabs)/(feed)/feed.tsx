@@ -2,6 +2,8 @@ import { router, useFocusEffect, type Href } from 'expo-router';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { Keyboard } from 'react-native';
 
+import { useToastContext } from '@/components/toast-provider';
+import type { ComunidadeSugeridaFeed } from '@/features/feed/api';
 import {
   ABA_INICIAL_FEED,
   FeedComunidadesView,
@@ -47,7 +49,20 @@ function rotaDaBuscaDeLeitores(): Href {
 }
 
 export default function FeedScreen() {
-  const { feed, recarregar, atualizar } = useFeedComunidades();
+  const { feed, recarregar, atualizar, participar, participacoesPendentes } =
+    useFeedComunidades();
+  const { showSuccessToast, showErrorToast } = useToastContext();
+
+  async function participarDaComunidade(comunidade: ComunidadeSugeridaFeed) {
+    let sucesso: boolean;
+    try {
+      sucesso = await participar(comunidade);
+    } catch {
+      showErrorToast('Não foi possível participar. Tente novamente.');
+      return;
+    }
+    if (sucesso) showSuccessToast(['Você agora segue esta comunidade.']);
+  }
   const [aba, setAba] = useState<AbaFeed>(ABA_INICIAL_FEED);
   const social = useFeedSocial(aba === 'Social');
   const { atualizar: atualizarSocial } = social;
@@ -84,6 +99,8 @@ export default function FeedScreen() {
         feed={feed}
         recarregar={recarregar}
         atualizar={atualizar}
+        participacoesPendentes={participacoesPendentes}
+        onParticiparPress={participarDaComunidade}
         aba={aba}
         onAbaChange={setAba}
         social={social}

@@ -27,9 +27,7 @@ public class FeedController {
     }
 
     @GetMapping("/comunidades")
-    @Operation(
-            summary =
-                    "Clubes do livro e comunidades de que o usuário atual é membro, em duas listas")
+    @Operation(summary = "Clubes e comunidades do usuário atual, além de comunidades sugeridas")
     public FeedComunidadesResponse comunidades() {
         return feedComunidadesService.buscar();
     }
