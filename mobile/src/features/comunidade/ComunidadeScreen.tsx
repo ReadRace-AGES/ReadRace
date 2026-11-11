@@ -57,6 +57,7 @@ export function ComunidadeScreen({
     alternarSeguimento,
     alternarCurtida,
     somarComentario,
+    adicionarPost,
   } = useComunidade(comunidadeId, ordem);
   const [seguimentoPendente, setSeguimentoPendente] = useState(false);
   const [curtidasPendentes, setCurtidasPendentes] = useState<Set<string>>(

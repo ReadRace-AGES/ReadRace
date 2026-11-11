@@ -183,7 +183,10 @@ class ComunidadeControllerIT {
                 .extractingPath("$.posts[*].id")
                 .asList()
                 .containsExactly(
-                        dez.toString(), sete.toString(), seteMaisAntigo.toString(), tres.toString());
+                        dez.toString(),
+                        sete.toString(),
+                        seteMaisAntigo.toString(),
+                        tres.toString());
         assertThat(mvc.get().uri("/api/comunidades/" + comunidade + "?ordem=recentes"))
                 .hasStatusOk()
                 .bodyJson()

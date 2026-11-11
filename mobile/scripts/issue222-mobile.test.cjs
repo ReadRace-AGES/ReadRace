@@ -777,6 +777,8 @@ test('comunidade: falha em Em alta permite retry sem trocar a aba selecionada', 
       '@/features/comentarios/ComentariosSheet': {
         ComentariosSheet: 'ComentariosSheet',
       },
+      '@/features/forum/NovoPostSheet': { NovoPostSheet: 'NovoPostSheet' },
+      './api': {},
       '@/components/useVoltar': { useVoltar: () => noop },
       './ComunidadeScreen.styles': load(
         'features/comunidade/ComunidadeScreen.styles.ts',
