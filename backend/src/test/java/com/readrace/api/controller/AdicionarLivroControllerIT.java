@@ -7,6 +7,8 @@ import java.util.UUID;
 
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
@@ -275,5 +277,50 @@ class AdicionarLivroControllerIT {
         if (!ISBN_HOBBIT.equals(isbnOriginal)) {
             assertThat(contarLivrosPorIsbn(ISBN_HOBBIT)).isZero();
         }
+    }
+
+    @ParameterizedTest(name = "{index} - {1}")
+    @CsvSource({
+        "br001, Dom Casmurro",
+        "br002, Memórias Póstumas de Brás Cubas",
+        "br008, A Hora da Estrela",
+        "fan003, O Hobbit",
+        "sci001, 1984",
+        "sci002, Admirável Mundo Novo",
+        "rom001, Orgulho e Preconceito",
+        "rom003, O Pequeno Príncipe",
+        "rom004, Cem Anos de Solidão",
+        "cla001, Crime e Castigo",
+        "cla003, A Metamorfose",
+        "fic002, A Revolução dos Bichos",
+        "ter005, Frankenstein"
+    })
+    @DisplayName("Livros do catálogo reutilizam registros existentes")
+    void deve_reutilizar_os_13_livros_do_catalogo(String volumeId, String titulo) {
+        Map<String, Object> livroAntes =
+                jdbc.queryForMap(
+                        "SELECT id, isbn, titulo, total_paginas, capa_url FROM livro WHERE titulo = ?",
+                        titulo);
+
+        UUID livroId = (UUID) livroAntes.get("id");
+
+        Integer quantidadeAntes = jdbc.queryForObject("SELECT COUNT(*) FROM livro", Integer.class);
+
+        assertThat(post(volumeId, "desejo"))
+                .hasStatus(HttpStatus.CREATED)
+                .bodyJson()
+                .extractingPath("$.livroId")
+                .isEqualTo(livroId.toString());
+
+        Map<String, Object> livroDepois =
+                jdbc.queryForMap(
+                        "SELECT id, isbn, titulo, total_paginas, capa_url FROM livro WHERE id = ?",
+                        livroId);
+
+        Integer quantidadeDepois = jdbc.queryForObject("SELECT COUNT(*) FROM livro", Integer.class);
+
+        assertThat(livroDepois).isEqualTo(livroAntes);
+        assertThat(quantidadeDepois).isEqualTo(quantidadeAntes);
+        assertThat(contarItens(livroId)).isEqualTo(1);
     }
 }

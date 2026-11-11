@@ -14,6 +14,7 @@ const theme = {
 const dependencies = {
   'react-native': {
     View: 'View',
+    ActivityIndicator: 'ActivityIndicator',
     Text: 'Text',
     // Como o Pressable real, aceita children como função do estado.
     Pressable: ({ children, ...props }) =>
@@ -203,5 +204,35 @@ for (const count of [0, 1, 2]) {
     } finally {
       act(() => tree.unmount());
     }
+  });
+}
+
+for (const state of [{ loading: true }, { disabled: true }]) {
+  test(`ação indisponível preserva acessibilidade e bloqueia callback: ${JSON.stringify(state)}`, () => {
+    let calls = 0,
+      tree;
+    act(() => {
+      tree = create(
+        render({
+          variant: 'community',
+          title: 'Leitores',
+          action: { label: 'Participar', onPress: () => calls++, ...state },
+        })
+      );
+    });
+    const action = tree.root.findByType('Pressable');
+    assert.equal(action.props.disabled, true);
+    assert.deepEqual(action.props.accessibilityState, {
+      disabled: true,
+      busy: !!state.loading,
+    });
+    assert.equal(action.props.accessibilityLabel, 'Participar: Leitores');
+    assert.equal(
+      tree.root.findAllByType('ActivityIndicator').length,
+      state.loading ? 1 : 0
+    );
+    act(() => action.props.onPress());
+    assert.equal(calls, 0);
+    act(() => tree.unmount());
   });
 }

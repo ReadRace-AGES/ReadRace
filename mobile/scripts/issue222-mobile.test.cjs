@@ -702,6 +702,8 @@ test('comunidade: Seguir e Em alta preservam callbacks e têm área de botão', 
       '@/features/comentarios/ComentariosSheet': {
         ComentariosSheet: 'ComentariosSheet',
       },
+      '@/features/forum/NovoPostSheet': { NovoPostSheet: 'NovoPostSheet' },
+      './api': {},
       '@/components/useVoltar': { useVoltar: () => noop },
       './ComunidadeScreen.styles': load(
         'features/comunidade/ComunidadeScreen.styles.ts',

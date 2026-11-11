@@ -45,13 +45,19 @@ public interface ConquistaRepository extends JpaRepository<Conquista, UUID> {
             @Param("conquistaId") UUID conquistaId,
             @Param("usuarioId") UUID usuarioId);
 
+    /**
+     * Livro lido é o lido até a última página pelo registro de leitura: o "Lido" do catálogo
+     * sozinho não conta. O perfil ({@code PerfilRepository.resumo}) segue a mesma regra.
+     */
     @Query(
             value =
                     """
                     SELECT count(*)
-                    FROM item_biblioteca
-                    WHERE usuario_id = :usuarioId
-                      AND status_leitura = 'lido'
+                    FROM item_biblioteca i
+                    JOIN livro l ON l.id = i.livro_id
+                    WHERE i.usuario_id = :usuarioId
+                      AND i.status_leitura = 'lido'
+                      AND i.pagina_maxima >= l.total_paginas
                     """,
             nativeQuery = true)
     long contarLivrosLidos(@Param("usuarioId") UUID usuarioId);

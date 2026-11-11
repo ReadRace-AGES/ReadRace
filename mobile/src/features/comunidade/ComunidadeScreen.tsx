@@ -18,12 +18,14 @@ import { PrimaryButton } from '@/components/PrimaryButton';
 import { useToastContext } from '@/components/toast-provider';
 import { useVoltar } from '@/components/useVoltar';
 import { ComentariosSheet } from '@/features/comentarios/ComentariosSheet';
+import { NovoPostSheet } from '@/features/forum/NovoPostSheet';
 import { tempoRelativo } from '@/features/livro/model';
 import { colors } from '@/theme';
 
 import { useComunidade } from './useComunidade';
 import type { OrdemComunidade } from './api';
 import { styles } from './ComunidadeScreen.styles';
+import { publicarPostDaComunidade } from './api';
 
 const COPY = {
   tentarDeNovo: 'Tentar de novo',
@@ -65,6 +67,7 @@ export function ComunidadeScreen({
     null
   );
   const [comentariosAbertos, setComentariosAbertos] = useState(false);
+  const [novoPostAberto, setNovoPostAberto] = useState(false);
   const dados = comunidade.situacao === 'sucesso' ? comunidade.dados : null;
 
   async function alternar() {
@@ -177,6 +180,13 @@ export function ComunidadeScreen({
               <Text accessibilityRole="header" style={styles.postagens}>
                 Postagens
               </Text>
+              {dados.sigo && (
+                <PrimaryButton
+                  label="Escrever post"
+                  variant="outline"
+                  onPress={() => setNovoPostAberto(true)}
+                />
+              )}
               <View style={styles.abas}>
                 <Pressable
                   accessibilityRole="tab"
@@ -248,6 +258,15 @@ export function ComunidadeScreen({
           )}
         </View>
       </ScrollView>
+      <NovoPostSheet
+        visible={novoPostAberto}
+        destinoId={`comunidade:${comunidadeId}`}
+        publicar={(texto, signal) =>
+          publicarPostDaComunidade(comunidadeId, texto, signal)
+        }
+        onClose={() => setNovoPostAberto(false)}
+        onSuccess={adicionarPost}
+      />
       <ComentariosSheet
         visible={comentariosAbertos}
         postId={postDosComentarios}

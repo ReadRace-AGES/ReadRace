@@ -9,6 +9,8 @@ const { act, create } = require('react-test-renderer');
 globalThis.IS_REACT_ACT_ENVIRONMENT = true;
 
 function load(file, dependencies) {
+  if (file === 'features/feed/useFeedComunidades.ts')
+    dependencies = { '@/features/comunidade/api': {}, ...dependencies };
   const { outputText } = ts.transpileModule(
     fs.readFileSync(path.join(__dirname, '../src', file), 'utf8'),
     {

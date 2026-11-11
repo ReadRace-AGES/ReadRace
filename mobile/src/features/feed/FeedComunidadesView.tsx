@@ -19,7 +19,7 @@ import { SegmentedTabs } from '@/components/SegmentedTabs';
 import { colors, sizes, spacing } from '@/theme';
 
 import { ClubeCard } from './ClubeCard';
-import type { ClubeFeed, ComunidadeFeed } from './api';
+import type { ClubeFeed, ComunidadeFeed, ComunidadeSugeridaFeed } from './api';
 import { FeedSocialView } from './FeedSocialView';
 import type { FeedComunidadesState } from './useFeedComunidades';
 import type { FeedSocialState } from './useFeedSocial';
@@ -33,7 +33,8 @@ const COPY = {
   meusGrupos: 'Meus Grupos',
   verTodos: 'Ver todos',
   criarGrupo: 'Criar Grupo',
-  comunidadesSugeridas: 'Minhas comunidades',
+  minhasComunidades: 'Minhas comunidades',
+  comunidadesSugeridas: 'Comunidades sugeridas',
   tentarDeNovo: 'Tentar de novo',
   // Sem copy aprovada no Figma para as listas vazias (pendencia de design):
   // com o seed de #13 os vazios nao aparecem em uso normal, existem como defesa.
@@ -94,7 +95,10 @@ function CabecalhoSecao({
   );
 }
 
-export type FeedComunidadesViewProps = FeedComunidadesState & {
+export type FeedComunidadesViewProps = Pick<
+  FeedComunidadesState,
+  'feed' | 'recarregar' | 'atualizar' | 'participacoesPendentes'
+> & {
   aba: AbaFeed;
   onAbaChange: (aba: AbaFeed) => void;
   social: Pick<FeedSocialState, 'social' | 'recarregar'>;
@@ -104,7 +108,8 @@ export type FeedComunidadesViewProps = FeedComunidadesState & {
   onVerTodosPress: () => void;
   onCriarGrupoPress: () => void;
   onClubePress: (clube: ClubeFeed) => void;
-  onComunidadePress: (comunidade: ComunidadeFeed) => void;
+  onComunidadePress: (comunidade: Pick<ComunidadeFeed, 'id'>) => void;
+  onParticiparPress: (comunidade: ComunidadeSugeridaFeed) => void;
 };
 
 export function FeedComunidadesView({
@@ -120,6 +125,8 @@ export function FeedComunidadesView({
   onCriarGrupoPress,
   onClubePress,
   onComunidadePress,
+  onParticiparPress,
+  participacoesPendentes = new Set<string>(),
 }: FeedComunidadesViewProps) {
   const usuario = feed.situacao === 'sucesso' ? feed.dados.usuario : null;
 
@@ -212,7 +219,7 @@ export function FeedComunidadesView({
             onPress={onCriarGrupoPress}
           />
 
-          <CabecalhoSecao titulo={COPY.comunidadesSugeridas} />
+          <CabecalhoSecao titulo={COPY.minhasComunidades} />
           {feed.dados.comunidades.length === 0 ? (
             <Text className="font-inter text-bodySmall text-text-secondary">
               {COPY.semComunidades}
@@ -227,6 +234,26 @@ export function FeedComunidadesView({
                   imageUrl={comunidade.capaUrl}
                   memberCount={comunidade.totalMembros}
                   onPress={() => onComunidadePress(comunidade)}
+                />
+              ))}
+            </>
+          )}
+          {!!feed.dados.comunidadesSugeridas?.length && (
+            <>
+              <CabecalhoSecao titulo={COPY.comunidadesSugeridas} />
+              {feed.dados.comunidadesSugeridas.map((comunidade) => (
+                <ListItem
+                  key={comunidade.id}
+                  variant="community"
+                  title={comunidade.nome}
+                  imageUrl={comunidade.imagemUrl}
+                  memberCount={comunidade.membros}
+                  onPress={() => onComunidadePress(comunidade)}
+                  action={{
+                    label: 'Participar',
+                    loading: participacoesPendentes.has(comunidade.id),
+                    onPress: () => onParticiparPress(comunidade),
+                  }}
                 />
               ))}
             </>

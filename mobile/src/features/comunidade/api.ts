@@ -44,6 +44,17 @@ export function seguirComunidade(comunidadeId: string, signal?: AbortSignal) {
   );
 }
 
+export function publicarPostDaComunidade(
+  comunidadeId: string,
+  conteudo: string,
+  signal?: AbortSignal
+) {
+  return apiRequest<PostComunidade>(
+    `/api/comunidades/${encodeURIComponent(comunidadeId)}/posts`,
+    { method: 'POST', body: JSON.stringify({ conteudo }), signal }
+  );
+}
+
 export function deixarDeSeguirComunidade(
   comunidadeId: string,
   signal?: AbortSignal
