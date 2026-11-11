@@ -26,9 +26,11 @@ public class PerfilRepository {
                     WHERE s.seguido_id = ? AND u.excluido_em IS NULL) AS seguidores,
                    (SELECT count(*) FROM seguir s JOIN usuario u ON u.id = s.seguido_id
                     WHERE s.seguidor_id = ? AND u.excluido_em IS NULL) AS seguindo,
-                   count(*) FILTER (WHERE status_leitura = 'lido') AS livros,
-                   coalesce(sum(pagina_maxima), 0) AS paginas
-            FROM item_biblioteca WHERE usuario_id = ?
+                   count(*) FILTER (WHERE i.status_leitura = 'lido'
+                                      AND i.pagina_maxima >= l.total_paginas) AS livros,
+                   coalesce(sum(i.pagina_maxima), 0) AS paginas
+            FROM item_biblioteca i JOIN livro l ON l.id = i.livro_id
+            WHERE i.usuario_id = ?
             """,
                 (rs, row) ->
                         new Resumo(
