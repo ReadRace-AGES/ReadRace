@@ -310,6 +310,14 @@ export function DesafiosScreen() {
           Desafio com amigos
         </Text>
 
+        <View style={{ paddingHorizontal: spacing[4] }}>
+          <PrimaryButton
+            label="Desafiar Amigo"
+            icon={UsersIcon}
+            onPress={desafiarAmigo}
+          />
+        </View>
+
         {estado.situacao === 'carregando' && (
           <View
             className="items-center justify-center"
@@ -353,14 +361,6 @@ export function DesafiosScreen() {
             onRevanche={desafiarAmigo}
           />
         ))}
-
-        <View style={{ paddingHorizontal: spacing[4] }}>
-          <PrimaryButton
-            label="Desafiar Amigo"
-            icon={UsersIcon}
-            onPress={desafiarAmigo}
-          />
-        </View>
       </ScrollView>
     </View>
   );
