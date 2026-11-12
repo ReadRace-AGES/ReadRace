@@ -1,0 +1,28 @@
+services:
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: e2e
+      POSTGRES_PASSWORD: e2e-local-only
+      POSTGRES_DB: readrace_e2e
+    tmpfs:
+      - /var/lib/postgresql/data
+    healthcheck:
+      test: [CMD-SHELL, 'pg_isready -U e2e -d readrace_e2e']
+      interval: 2s
+      timeout: 3s
+      retries: 30
+  api:
+    build:
+      context: ../../backend
+    environment:
+      DB_URL: jdbc:postgresql://db:5432/readrace_e2e
+      DB_USER: e2e
+      DB_PASSWORD: e2e-local-only
+      AUTH_MODO: seed
+      SPRING_PROFILES_ACTIVE: dev
+    ports:
+      - '127.0.0.1:${E2E_API_PORT:-18080}:8080'
+    depends_on:
+      db:
+        condition: service_healthy
