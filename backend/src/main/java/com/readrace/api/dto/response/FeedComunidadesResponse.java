@@ -5,11 +5,15 @@ import java.util.UUID;
 
 /**
  * Resposta de {@code GET /api/feed/comunidades} (#34): os clubes do livro e as comunidades de que o
- * usuário atual é membro, como duas listas separadas. A distinção entre {@code ClubeDoLivro} e
- * {@code Comunidade} é estrutural (produto §3): só o clube tem {@code livroAtual}.
+ * usuário atual é membro, além de sugestões de comunidades sem participação. A distinção entre
+ * {@code ClubeDoLivro} e {@code Comunidade} é estrutural (produto §3): só o clube tem {@code
+ * livroAtual}.
  */
 public record FeedComunidadesResponse(
-        Usuario usuario, List<Clube> clubes, List<Comunidade> comunidades) {
+        Usuario usuario,
+        List<Clube> clubes,
+        List<Comunidade> comunidades,
+        List<ComunidadeSugerida> comunidadesSugeridas) {
 
     // `leuHoje` e `diasAtePerder` saem da última leitura do usuário (`SequenciaDeLeitura`).
     public record Usuario(
@@ -21,4 +25,6 @@ public record FeedComunidadesResponse(
     public record LivroAtual(String titulo, String autor) {}
 
     public record Comunidade(UUID id, String nome, String capaUrl, long totalMembros) {}
+
+    public record ComunidadeSugerida(UUID id, String nome, String imagemUrl, long membros) {}
 }

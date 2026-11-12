@@ -69,8 +69,7 @@ export const styles = StyleSheet.create({
   },
   aba: {
     ...textStyles.caption,
-    color: colors.accent,
-    textDecorationLine: 'underline',
+    color: colors.textSecondary,
   },
   post: { gap: spacing[1] },
 });

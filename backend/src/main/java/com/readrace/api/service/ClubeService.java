@@ -3,6 +3,7 @@ package com.readrace.api.service;
 import java.time.Clock;
 import java.time.OffsetDateTime;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
 import java.util.UUID;
@@ -16,25 +17,30 @@ import org.springframework.transaction.annotation.Transactional;
 import com.readrace.api.dto.request.CriarClubeRequest;
 import com.readrace.api.dto.response.ClubeCriadoResponse;
 import com.readrace.api.dto.response.ClubeResponse;
+import com.readrace.api.dto.response.ClubesResponse;
 import com.readrace.api.dto.response.RankingClubeResponse;
+import com.readrace.api.dto.response.SairDoClubeResponse;
+import com.readrace.api.dto.response.SolicitacoesClubeResponse;
 import com.readrace.api.exception.ClubeInvalidoException;
 import com.readrace.api.exception.ClubeNaoEncontradoException;
 import com.readrace.api.exception.LivroNaoEncontradoException;
 import com.readrace.api.exception.NaoEMembroException;
 import com.readrace.api.exception.ParametroInvalidoException;
 import com.readrace.api.exception.RecursoNaoEncontradoException;
+import com.readrace.api.exception.SoLiderCriaQuizException;
 import com.readrace.api.exception.SoMembroVeRankingException;
-import com.readrace.api.exception.UnicoLiderException;
 import com.readrace.api.exception.UsuarioNaoEncontradoException;
 import com.readrace.api.model.Cargo;
 import com.readrace.api.model.ClubeDoLivro;
 import com.readrace.api.model.Livro;
 import com.readrace.api.model.MembroClube;
+import com.readrace.api.model.Usuario;
 import com.readrace.api.repository.ClubeDoLivroRepository;
 import com.readrace.api.repository.LinhaRankingClube;
 import com.readrace.api.repository.LivroRepository;
 import com.readrace.api.repository.MembroClubeRepository;
 import com.readrace.api.repository.QuizRepository;
+import com.readrace.api.repository.SolicitacaoEntradaClubeRepository;
 import com.readrace.api.repository.UsuarioRepository;
 
 @Service
@@ -55,6 +61,7 @@ public class ClubeService {
     private final UsuarioRepository usuarioRepository;
     private final ConquistaService conquistaService;
     private final Clock clock;
+    private final SolicitacaoEntradaClubeRepository solicitacoes;
 
     public ClubeService(
             ClubeDoLivroRepository clubeRepository,
@@ -64,7 +71,8 @@ public class ClubeService {
             UsuarioRepository usuarioRepository,
             UsuarioAtual usuarioAtual,
             ConquistaService conquistaService,
-            Clock clock) {
+            Clock clock,
+            SolicitacaoEntradaClubeRepository solicitacoes) {
         this.clubeRepository = clubeRepository;
         this.membroClubeRepository = membroClubeRepository;
         this.quizRepository = quizRepository;
@@ -73,6 +81,47 @@ public class ClubeService {
         this.usuarioAtual = usuarioAtual;
         this.conquistaService = conquistaService;
         this.clock = clock;
+        this.solicitacoes = solicitacoes;
+    }
+
+    public ClubesResponse listar() {
+        UUID usuarioId = usuarioAtual.idDoUsuarioAtual().valor();
+        return new ClubesResponse(
+                clubeRepository.listarAtivos(usuarioId).stream()
+                        .map(ClubesResponse.Clube::de)
+                        .toList());
+    }
+
+    public SolicitacoesClubeResponse listarSolicitacoes(UUID clubeId) {
+        clubeRepository
+                .findByIdAndExcluidoEmIsNull(clubeId)
+                .orElseThrow(ClubeNaoEncontradoException::new);
+        if (!Cargo.ADMINISTRADOR.getValor().equals(meuCargo(clubeId))) {
+            throw new SoLiderCriaQuizException(
+                    "Só o administrador do clube pode ver as solicitações.");
+        }
+        var pendentes = solicitacoes.listarPendentes(clubeId);
+        Map<UUID, Usuario> usuarios =
+                usuarioRepository
+                        .findAllById(
+                                pendentes.stream().map(s -> s.getUsuarioId()).distinct().toList())
+                        .stream()
+                        .collect(Collectors.toMap(Usuario::getId, u -> u));
+        return new SolicitacoesClubeResponse(
+                pendentes.stream()
+                        .map(
+                                s -> {
+                                    Usuario usuario = usuarios.get(s.getUsuarioId());
+                                    return new SolicitacoesClubeResponse.Solicitacao(
+                                            s.getId(),
+                                            new SolicitacoesClubeResponse.Usuario(
+                                                    usuario.getId(),
+                                                    usuario.getNome(),
+                                                    usuario.getNomeUsuario(),
+                                                    usuario.getAvatarUrl()),
+                                            s.getCriadaEm());
+                                })
+                        .toList());
     }
 
     @Transactional
@@ -135,14 +184,31 @@ public class ClubeService {
         List<LinhaRankingClube> linhas =
                 membroClubeRepository.rankingDoClube(
                         clubeId, PageRequest.of(0, TAMANHO_DO_RANKING));
+        String meuCargo = meuCargo(clubeId);
+        ClubeResponse.Usuario proximoLider =
+                proximoLider(clubeId, meuCargo, usuarioAtual.idDoUsuarioAtual().valor());
 
         return new ClubeResponse(
                 clube.getId(),
                 clube.getNome(),
                 livroAtual(clube.getLivro()),
                 ranking(linhas),
-                meuCargo(clubeId),
-                quizRepository.existsByClubeIdAndAtivoTrue(clubeId));
+                meuCargo,
+                quizRepository.existsByClubeIdAndAtivoTrue(clubeId),
+                proximoLider,
+                situacao(clubeId, meuCargo),
+                Cargo.ADMINISTRADOR.getValor().equals(meuCargo)
+                        ? solicitacoes.contarPendentes(clubeId)
+                        : null);
+    }
+
+    private String situacao(UUID clubeId, String cargo) {
+        if (cargo != null) return "membro";
+        return solicitacoes
+                        .buscarPendente(clubeId, usuarioAtual.idDoUsuarioAtual().valor())
+                        .isPresent()
+                ? "pendente"
+                : "nenhuma";
     }
 
     public RankingClubeResponse buscarRanking(UUID clubeId, String cursor) {
@@ -189,7 +255,7 @@ public class ClubeService {
     }
 
     @Transactional
-    public void sairDoClube(UUID clubeId) {
+    public SairDoClubeResponse sairDoClube(UUID clubeId) {
         ClubeDoLivro clube =
                 clubeRepository
                         .buscarComLock(clubeId)
@@ -201,13 +267,25 @@ public class ClubeService {
                         .findByClube_IdAndUsuarioId(clubeId, usuarioId)
                         .orElseThrow(NaoEMembroException::new);
 
+        membroClubeRepository.buscarDoClubeComLock(clubeId);
+
         long totalMembros = membroClubeRepository.countByClube_Id(clubeId);
 
+        SairDoClubeResponse.NovoLider novoLider = null;
         if (totalMembros > 1
                 && membro.getCargoClube() == Cargo.ADMINISTRADOR
                 && membroClubeRepository.countByClube_IdAndCargoClube(clubeId, Cargo.ADMINISTRADOR)
                         == 1) {
-            throw new UnicoLiderException();
+            MembroClube sucessor =
+                    membroClubeRepository
+                            .candidatosALideranca(clubeId, usuarioId, PageRequest.of(0, 1))
+                            .getFirst();
+            sucessor.promoverAAdministrador();
+            var usuario =
+                    usuarioRepository
+                            .findByIdAndExcluidoEmIsNull(sucessor.getUsuarioId())
+                            .orElseThrow(UsuarioNaoEncontradoException::new);
+            novoLider = new SairDoClubeResponse.NovoLider(usuario.getId(), usuario.getNome());
         }
 
         membroClubeRepository.delete(membro);
@@ -215,6 +293,29 @@ public class ClubeService {
         if (totalMembros == 1) {
             clube.excluir(OffsetDateTime.now(clock));
         }
+        return new SairDoClubeResponse(novoLider);
+    }
+
+    private ClubeResponse.Usuario proximoLider(UUID clubeId, String meuCargo, UUID usuarioId) {
+        if (!Cargo.ADMINISTRADOR.getValor().equals(meuCargo)
+                || membroClubeRepository.countByClube_IdAndCargoClube(clubeId, Cargo.ADMINISTRADOR)
+                        != 1
+                || membroClubeRepository.countByClube_Id(clubeId) <= 1) {
+            return null;
+        }
+        return membroClubeRepository
+                .candidatosALideranca(clubeId, usuarioId, PageRequest.of(0, 1))
+                .stream()
+                .findFirst()
+                .flatMap(
+                        membro ->
+                                usuarioRepository.findByIdAndExcluidoEmIsNull(
+                                        membro.getUsuarioId()))
+                .map(
+                        usuario ->
+                                new ClubeResponse.Usuario(
+                                        usuario.getId(), usuario.getNome(), usuario.getAvatarUrl()))
+                .orElse(null);
     }
 
     private static ClubeResponse.LivroAtual livroAtual(Livro livro) {

@@ -122,6 +122,13 @@ export function AdicionarLivroScreen() {
         />
       </View>
 
+      {busca.situacao === 'inicial' && (
+        <EmptyState
+          icon={BookIcon}
+          message="Encontre sua próxima leitura. Busque por título, autor ou ISBN — por exemplo, O Hobbit. Depois escolha entre Quero ler, Lidos e Favoritos."
+        />
+      )}
+
       {busca.situacao === 'carregando' && (
         <View style={styles.estado}>
           <ActivityIndicator

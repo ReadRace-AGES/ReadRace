@@ -59,6 +59,18 @@ public class Post {
         return post;
     }
 
+    /** Cria um post raiz de comunidade, sem vínculo com livro ou clube. */
+    public static Post criarRaizDeComunidade(UUID autorId, UUID comunidadeId, String texto) {
+        String conteudo = ValidadorTextoPost.validar(texto);
+        Post post = new Post();
+        post.id = UUID.randomUUID();
+        post.autorId = autorId;
+        post.comunidadeId = comunidadeId;
+        post.conteudo = conteudo;
+        post.criadoEm = OffsetDateTime.now();
+        return post;
+    }
+
     /**
      * Cria um comentário: post com pai e sem clube, livro ou comunidade, porque o escopo vem do pai
      * ({@code chk_comentario_sem_escopo}). Limite de 1.000 unidades UTF-16 (#150).

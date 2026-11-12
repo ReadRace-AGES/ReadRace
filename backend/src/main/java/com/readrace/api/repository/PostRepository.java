@@ -1,6 +1,7 @@
 package com.readrace.api.repository;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -12,6 +13,8 @@ import com.readrace.api.model.Post;
 public interface PostRepository extends JpaRepository<Post, UUID> {
 
     boolean existsByIdAndExcluidoEmIsNull(UUID id);
+
+    Optional<Post> findByIdAndExcluidoEmIsNull(UUID id);
 
     List<Post> findByLivroIdAndPostPaiIdIsNullAndExcluidoEmIsNullOrderByCriadoEmDesc(UUID livroId);
 

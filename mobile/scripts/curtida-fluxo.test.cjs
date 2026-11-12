@@ -136,9 +136,11 @@ test('LivroDetalheScreen: curtir é otimista, ignora toque duplo em andamento, r
     '@/features/progresso/RegistrarProgressoSheet': {
       RegistrarProgressoSheet: 'RegistrarProgressoSheet',
     },
-
     '@/features/comentarios/ComentariosSheet': {
       ComentariosSheet: 'ComentariosSheet',
+    },
+    '@/features/biblioteca/MinhasListasSheet': {
+      MinhasListasSheet: 'MinhasListasSheet',
     },
   };
 

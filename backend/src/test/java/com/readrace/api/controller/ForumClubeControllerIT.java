@@ -311,17 +311,18 @@ class ForumClubeControllerIT {
         "membro, false, true",
         "administrador, false, true",
         "sem_vinculo, false, false",
+        "pendente, false, false",
         "membro, true, true",
         "administrador, true, true",
-        "sem_vinculo, true, false"
+        "sem_vinculo, true, false",
+        "pendente, true, false"
     })
     @Transactional
-    void deve_informar_permissao_de_escrita_sem_restringir_leitura(
+    void deve_permitir_leitura_e_preservar_permissao_de_escrita(
             String cargo, boolean forumVazio, boolean podeEscrever) {
         UUID clubeId = UUID.fromString(CLUBE);
         UUID usuarioId = UUID.fromString("00000000-0000-0000-0000-000000000001");
-
-        if (cargo.equals("sem_vinculo")) {
+        if (cargo.equals("sem_vinculo") || cargo.equals("pendente")) {
             assertThat(
                             jdbc.update(
                                     "DELETE FROM membro_clube WHERE clube_id = ? AND usuario_id = ?",
@@ -338,7 +339,15 @@ class ForumClubeControllerIT {
                                     usuarioId))
                     .isEqualTo(1);
         }
-
+        if (cargo.equals("pendente")) {
+            jdbc.update(
+                    "INSERT INTO solicitacao_entrada_clube"
+                            + " (id, clube_id, usuario_id, situacao, criada_em)"
+                            + " VALUES (?, ?, ?, 'pendente', now())",
+                    UUID.randomUUID(),
+                    clubeId,
+                    usuarioId);
+        }
         if (forumVazio) {
             jdbc.update("UPDATE post SET excluido_em = now() WHERE clube_id = ?", clubeId);
         }
@@ -348,6 +357,15 @@ class ForumClubeControllerIT {
         assertThat(JsonPath.<Boolean>read(resposta, "$.podeEscrever")).isEqualTo(podeEscrever);
         assertThat(JsonPath.<String>read(resposta, "$.clube.id")).isEqualTo(CLUBE);
         assertThat(JsonPath.<List<?>>read(resposta, "$.posts")).hasSize(forumVazio ? 0 : 6);
+        if (!podeEscrever) {
+            int antes = totalPosts();
+            assertThat(enviar(URL, "{\"texto\":\"Leitura de hoje\"}"))
+                    .hasStatus(HttpStatus.FORBIDDEN)
+                    .bodyJson()
+                    .extractingPath("$.code")
+                    .isEqualTo("SO_MEMBRO_POSTA");
+            assertThat(totalPosts()).isEqualTo(antes);
+        }
     }
 
     @Test
@@ -412,25 +430,27 @@ class ForumClubeControllerIT {
     }
 
     @Test
-    @DisplayName("curtidas são contagem de exibição — ((1 + p) % 7) + 1 no seed")
+    @DisplayName(
+            "curtidas são contagem de exibição — ((1 + p) % 7) + 1 no seed, sem a do autor (V29)")
     void deve_contar_as_curtidas_de_cada_post() {
         assertThat(mvc.get().uri(URL))
                 .hasStatusOk()
                 .bodyJson()
                 .extractingPath("$.posts[*].totalCurtidas")
                 .asList()
-                .containsExactly(3, 4, 5, 6, 7, 1);
+                .containsExactly(2, 3, 4, 5, 6, 1);
     }
 
     @Test
-    @DisplayName("curtidoPorMim reflete a curtida do usuário atual (curtiu tudo no seed) (#101)")
+    @DisplayName(
+            "curtidoPorMim reflete a curtida do usuário atual: todos menos o post dele (#101, V29)")
     void deve_marcar_curtidoPorMim_para_o_usuario_atual() {
         assertThat(mvc.get().uri(URL))
                 .hasStatusOk()
                 .bodyJson()
                 .extractingPath("$.posts[*].curtidoPorMim")
                 .asList()
-                .containsOnly(true);
+                .containsExactly(false, true, true, true, true, true);
     }
 
     @Test
@@ -503,6 +523,12 @@ class ForumClubeControllerIT {
                 "INSERT INTO clube_do_livro (id, livro_id, nome) VALUES"
                         + " (?, '30000000-0000-0000-0000-000000000001', 'Clube sem posts')",
                 clubeVazio);
+        jdbc.update(
+                "INSERT INTO membro_clube (id, clube_id, usuario_id, cargo_clube)"
+                        + " VALUES (?, ?, ?, 'membro')",
+                UUID.randomUUID(),
+                clubeVazio,
+                USUARIO_ATUAL);
 
         assertThat(mvc.get().uri("/api/clubes/{id}/posts", clubeVazio))
                 .hasStatusOk()

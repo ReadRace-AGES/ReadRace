@@ -14,6 +14,8 @@ export type LivroDetalhe = {
     paginaMaximaAlcancada: number;
     percentual: number;
     concluido: boolean;
+    statusLeitura?: 'lendo' | 'lido' | 'desejo';
+    favorito?: boolean;
   } | null;
   posts: PostLivro[];
 };

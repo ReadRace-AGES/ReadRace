@@ -20,6 +20,7 @@ import { colors, spacing, typography } from '@/theme';
 
 import { useForumClube } from './useForumClube';
 import { NovoPostSheet } from './NovoPostSheet';
+import { publicarPostDoClube } from './api';
 
 const COPY = {
   tentarDeNovo: 'Tentar de novo',
@@ -176,7 +177,10 @@ function ForumDoClube({ clubeId }: { clubeId: string }) {
       {dados?.podeEscrever === true && (
         <NovoPostSheet
           visible={novoPostAberto}
-          clubeId={clubeId}
+          destinoId={`clube:${clubeId}`}
+          publicar={(texto, signal) =>
+            publicarPostDoClube(clubeId, texto, signal)
+          }
           onClose={() => setNovoPostAberto(false)}
           onSuccess={adicionarPost}
         />

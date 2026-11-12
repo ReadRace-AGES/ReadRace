@@ -28,6 +28,13 @@ export type ComunidadeFeed = {
   totalMembros: number;
 };
 
+export type ComunidadeSugeridaFeed = {
+  id: string;
+  nome: string;
+  imagemUrl: string | null;
+  membros: number;
+};
+
 export type FeedComunidades = {
   usuario: {
     nome: string;
@@ -39,11 +46,53 @@ export type FeedComunidades = {
   };
   clubes: ClubeFeed[];
   comunidades: ComunidadeFeed[];
+  comunidadesSugeridas: ComunidadeSugeridaFeed[];
 };
 
-/** `GET /api/feed/comunidades` — clubes e comunidades do usuário atual, em duas listas. */
+/** `GET /api/feed/comunidades` — clubes, comunidades participantes e sugestões. */
 export function buscarFeedComunidades(signal?: AbortSignal) {
   return apiGet<FeedComunidades>('/api/feed/comunidades', { signal });
+}
+
+/**
+ * Um card da aba Social: o que alguém que eu sigo leu de um livro em um dia (`leitura`, #197) ou o
+ * livro que essa pessoa terminou (`conclusao`, #204).
+ */
+export type AtividadeSocial = {
+  tipo: 'leitura' | 'conclusao';
+  usuario: {
+    id: string;
+    nome: string;
+    avatarUrl: string | null;
+    sequenciaDias: number;
+  };
+  livro: {
+    id: string;
+    titulo: string;
+    autor: string | null;
+    totalPaginas: number;
+  };
+  /**
+   * Na leitura, as páginas novas do dia, acima da maior página já alcançada naquele livro. Na
+   * conclusão, o total de páginas do livro.
+   */
+  paginas: number;
+  xp: number;
+  /**
+   * Último registro do dia (leitura) ou o registro que chegou à última página (conclusão), com o
+   * deslocamento de São Paulo (ex.: `-03:00`).
+   */
+  em: string;
+};
+
+export type FeedSocial = { atividades: AtividadeSocial[] };
+
+/**
+ * `GET /api/feed/social` — a leitura e os livros terminados de quem o usuário atual segue, da mais
+ * recente à mais antiga.
+ */
+export function buscarFeedSocial(signal?: AbortSignal) {
+  return apiGet<FeedSocial>('/api/feed/social', { signal });
 }
 
 export function criarClube(request: CriarClubeRequest, signal?: AbortSignal) {

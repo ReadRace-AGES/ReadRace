@@ -121,11 +121,12 @@ function renderDetalhe(dados, options = {}) {
     '@/features/progresso/RegistrarProgressoSheet': {
       RegistrarProgressoSheet: 'RegistrarProgressoSheet',
     },
-
     '@/features/comentarios/ComentariosSheet': {
       ComentariosSheet: 'ComentariosSheet',
     },
-
+    '@/features/biblioteca/MinhasListasSheet': {
+      MinhasListasSheet: 'MinhasListasSheet',
+    },
     './model': { tempoRelativo },
 
     './useLivroDetalhe': {
@@ -231,13 +232,14 @@ test('cada entrada abre um caminho exclusivo dentro da própria aba', () => {
     react: {
       useState: (inicial) => [inicial, () => {}],
       useEffect: () => {},
+      useRef: (current) => ({ current }),
+      useCallback: (callback) => callback,
     },
-
     'expo-router': {
-      router: {
-        push: (destino) => destinos.push(destino),
-      },
+      router: { push: (destino) => destinos.push(destino) },
+      useFocusEffect: () => {},
       useLocalSearchParams: () => ({ livroId: '1' }),
+      useFocusEffect: () => {},
     },
 
     '@/components/toast-provider': {
@@ -257,11 +259,8 @@ test('cada entrada abre um caminho exclusivo dentro da própria aba', () => {
     '@/features/biblioteca/MeusLivrosView': {
       MeusLivrosView: 'MeusLivrosView',
     },
-
-    '@/features/biblioteca/useBiblioteca': {
-      useBiblioteca: () => ({}),
-    },
-
+    '@/features/biblioteca/useBiblioteca': { useBiblioteca: () => ({}) },
+    '@/features/progresso/RegistrarProgressoSheet': { RegistrarProgressoSheet: 'RegistrarProgressoSheet' },
     '@/features/livro/LivroDetalheScreen': {
       LivroDetalheScreen: 'LivroDetalheScreen',
     },
@@ -272,17 +271,10 @@ test('cada entrada abre um caminho exclusivo dentro da própria aba', () => {
     ['(biblioteca)', 'meus-livros', 'biblioteca-livro', '/meus-livros'],
   ]) {
     const base = `src/app/(tabs)/${aba}`;
-
-    const { default: Entrada } = load(
-      `${base}/${entrada}.tsx`,
-      dependencies
-    );
-
-    Entrada().props.onLivroPress({
-      id: '1',
-      livroId: '1',
-    });
-
+    const { default: Entrada } = load(`${base}/${entrada}.tsx`, dependencies);
+    const entradaRenderizada = Entrada();
+    const view = aba === '(biblioteca)' ? entradaRenderizada.props.children[0] : entradaRenderizada;
+    view.props.onLivroPress({ id: '1', livroId: '1' });
     assert.equal(destinos.at(-1), `/${detalhe}/1`);
 
     const { default: Detalhe } = load(

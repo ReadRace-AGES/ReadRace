@@ -1,4 +1,4 @@
-import { apiGet } from '@/api/client';
+import { apiGet, apiRequest } from '@/api/client';
 
 export type LivroBiblioteca = {
   livroId: string;
@@ -6,6 +6,9 @@ export type LivroBiblioteca = {
   autor: string | null;
   capaUrl: string | null;
   genero: string | null;
+  totalPaginas: number;
+  paginaAtual: number;
+  paginaMaximaAlcancada: number;
 };
 
 /** As quatro listas da aba Meus Livros, no nome que a API usa no path. */
@@ -28,6 +31,42 @@ export type PaginaBiblioteca = {
  * recente. Um favorito também aparece na lista do seu estado de leitura.
  */
 export type BibliotecaResponse = Record<ListaBiblioteca, PaginaBiblioteca>;
+
+export type BibliotecaItemResponse = {
+  livroId: string;
+  statusLeitura: 'lendo' | 'lido' | 'desejo';
+  favorito: boolean;
+};
+
+export function atualizarStatusBiblioteca(
+  livroId: string,
+  lista: 'lido' | 'desejo'
+) {
+  return apiRequest<BibliotecaItemResponse>(
+    `/api/biblioteca/${encodeURIComponent(livroId)}`,
+    { method: 'PATCH', body: JSON.stringify({ lista }) }
+  );
+}
+
+export function marcarFavoritoBiblioteca(livroId: string) {
+  return apiRequest<BibliotecaItemResponse>(
+    `/api/biblioteca/${encodeURIComponent(livroId)}/favorito`,
+    { method: 'PUT' }
+  );
+}
+
+export function desmarcarFavoritoBiblioteca(livroId: string) {
+  return apiRequest<BibliotecaItemResponse>(
+    `/api/biblioteca/${encodeURIComponent(livroId)}/favorito`,
+    { method: 'DELETE' }
+  );
+}
+
+export function removerDaBiblioteca(livroId: string) {
+  return apiRequest<void>(`/api/biblioteca/${encodeURIComponent(livroId)}`, {
+    method: 'DELETE',
+  });
+}
 
 /** Tamanho de página que a tela pede: cinco linhas de quatro capas. */
 export const TAMANHO_PAGINA = 20;

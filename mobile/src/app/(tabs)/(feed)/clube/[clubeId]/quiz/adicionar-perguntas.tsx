@@ -1,5 +1,6 @@
 import { useLocalSearchParams } from 'expo-router';
 
+import { AcessoClube } from '@/features/clube/AcessoClube';
 import { AdicionarPerguntasScreen } from '@/features/clube/quiz/AdicionarPerguntasScreen';
 
 export default function AdicionarPerguntasRoute() {
@@ -10,12 +11,14 @@ export default function AdicionarPerguntasRoute() {
     temQuizAtivo: string;
   }>();
   return (
-    <AdicionarPerguntasScreen
-      key={clubeId}
-      clubeId={clubeId}
-      titulo={titulo ?? ''}
-      recompensaXp={Number(recompensaXp)}
-      temQuizAtivo={temQuizAtivo === 'true'}
-    />
+    <AcessoClube clubeId={clubeId} administrador>
+      <AdicionarPerguntasScreen
+        key={clubeId}
+        clubeId={clubeId}
+        titulo={titulo ?? ''}
+        recompensaXp={Number(recompensaXp)}
+        temQuizAtivo={temQuizAtivo === 'true'}
+      />
+    </AcessoClube>
   );
 }
