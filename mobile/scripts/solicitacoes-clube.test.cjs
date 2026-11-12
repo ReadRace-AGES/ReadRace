@@ -328,7 +328,7 @@ test('pedido: três rótulos, duplicidade, erro recuperável, mensagem pública,
   assert.equal(pedidos, 1);
 });
 
-test('Todos os clubes: estados, cards, navegação independente do botão e Criar Grupo reutilizado', async () => {
+test('Todos os clubes: estados, cards, navegação independente do botão e Criar clube reutilizado', async () => {
   const router = focusRouter();
   let estado = { situacao: 'carregando' },
     retries = 0,
@@ -366,7 +366,7 @@ test('Todos os clubes: estados, cards, navegação independente do botão e Cria
     'Nenhum clube por aqui ainda.'
   );
   act(() => {
-    button(tree, 'Criar Grupo').props.onPress();
+    button(tree, 'Criar clube').props.onPress();
   });
   assert.equal(tree.root.findByType('CriarGrupoSheet').props.visible, true);
   act(() => tree.root.findByType('CriarGrupoSheet').props.onSuccess());
@@ -696,7 +696,7 @@ for (const [situacao, cargo] of [
     act(() => tree.unmount());
   });
 
-test('lista e detalhe convergem por foco; recusa permite novo pedido, JA_E_MEMBRO consulta dados reais e Meus Grupos atualiza', async () => {
+test('lista e detalhe convergem por foco; recusa permite novo pedido, JA_E_MEMBRO consulta dados reais e Meus clubes atualiza', async () => {
   let situacao = 'nenhuma';
   const listRouter = focusRouter(),
     detailRouter = focusRouter();

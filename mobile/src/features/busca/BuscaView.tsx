@@ -38,10 +38,10 @@ export const TIPO_POR_ABA: Record<Aba, TipoBusca> = {
 
 const COPY = {
   titulo: 'Buscar',
-  subtitulo: 'Encontre leitores e comunidades',
-  placeholder: 'Nome de usuário ou comunidade',
+  subtitulo: 'Descubra livros, leitores e comunidades',
+  placeholderUsuario: 'Nome ou @usuário do leitor',
+  placeholderComunidade: 'Nome da comunidade',
   placeholderLivros: 'Título ou autor do livro',
-  vazio: 'Busque por leitores, comunidades ou livros',
   tentarDeNovo: 'Tentar de novo',
 } as const;
 
@@ -66,8 +66,14 @@ function Carregando() {
   );
 }
 
-function Vazio() {
-  return <EmptyState icon={SearchIcon} message={COPY.vazio} />;
+function Vazio({ aba }: { aba: Aba }) {
+  const mensagem =
+    aba === 'Livros'
+      ? 'Qual será sua próxima leitura? Busque pelo título ou autor.'
+      : aba === 'Usuários'
+        ? 'Encontre outros leitores pelo nome ou @usuário.'
+        : 'Busque uma comunidade pelo nome para descobrir novas conversas.';
+  return <EmptyState icon={SearchIcon} message={mensagem} />;
 }
 
 function Erro({
@@ -247,12 +253,16 @@ export function BuscaView({
 }: BuscaViewProps) {
   return (
     <View className="flex-1 bg-surface">
-      <AppHeader title={COPY.titulo} subtitle={COPY.subtitulo} />
+      <AppHeader compact title={COPY.titulo} subtitle={COPY.subtitulo} />
 
       <View className="gap-4 px-6 pb-2 pt-6">
         <SearchInput
           placeholder={
-            aba === 'Livros' ? COPY.placeholderLivros : COPY.placeholder
+            aba === 'Livros'
+              ? COPY.placeholderLivros
+              : aba === 'Usuários'
+                ? COPY.placeholderUsuario
+                : COPY.placeholderComunidade
           }
           value={termo}
           onChangeText={onTermoChange}
@@ -266,7 +276,7 @@ export function BuscaView({
       </View>
 
       <View className="flex-1">
-        {busca.situacao === 'inicial' && <Vazio />}
+        {busca.situacao === 'inicial' && <Vazio aba={aba} />}
         {busca.situacao === 'carregando' && <Carregando />}
         {busca.situacao === 'erro' && (
           <Erro mensagem={busca.mensagem} onRetry={recarregar} />

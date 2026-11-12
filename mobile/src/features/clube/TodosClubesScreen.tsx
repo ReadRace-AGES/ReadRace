@@ -61,7 +61,7 @@ export function TodosClubesScreen() {
             message="Nenhum clube por aqui ainda."
             action={
               <PrimaryButton
-                label="Criar Grupo"
+                label="Criar clube"
                 onPress={() => setCriando(true)}
               />
             }

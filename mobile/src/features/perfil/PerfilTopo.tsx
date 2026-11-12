@@ -11,7 +11,7 @@ import {
 import { arteDoMascote } from '@/features/mascotes/imagens';
 import { colors, radius, sizes, spacing } from '@/theme';
 
-import { PlanoDeFundo, PROPORCAO_CENARIO } from './planosDeFundo';
+import { PlanoDeFundo } from './planosDeFundo';
 
 export function PerfilTopo({
   nome,
@@ -41,7 +41,7 @@ export function PerfilTopo({
             <Avatar
               name={nome}
               photoUrl={avatar}
-              size={sizes.avatarLarge * 3}
+              size={sizes.avatarLarge * 2}
             />
           </View>
         </View>
@@ -95,12 +95,12 @@ export function PerfilTopo({
 }
 
 const styles = StyleSheet.create({
-  topo: { width: '100%', aspectRatio: PROPORCAO_CENARIO, overflow: 'hidden' },
+  topo: { width: '100%', height: 224, overflow: 'hidden' },
   avatar: {
     position: 'absolute',
     left: 0,
     right: 0,
-    bottom: '22%',
+    bottom: '16%',
     alignItems: 'center',
   },
   avatarFrame: {
@@ -113,7 +113,8 @@ const styles = StyleSheet.create({
     position: 'absolute',
     right: '3%',
     bottom: '4%',
-    width: '30%',
+    width: '24%',
+    maxWidth: 100,
     aspectRatio: PROPORCAO_BRASAO,
   },
   // Ocupa a parte larga do brasão, com folga até a borda.

@@ -6,6 +6,9 @@ export type LivroBiblioteca = {
   autor: string | null;
   capaUrl: string | null;
   genero: string | null;
+  totalPaginas: number;
+  paginaAtual: number;
+  paginaMaximaAlcancada: number;
 };
 
 /** As quatro listas da aba Meus Livros, no nome que a API usa no path. */
