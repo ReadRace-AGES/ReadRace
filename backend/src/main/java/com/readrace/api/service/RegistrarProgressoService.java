@@ -1,8 +1,13 @@
 package com.readrace.api.service;
 
+import java.time.Clock;
+import java.time.Instant;
+import java.time.OffsetDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
+
+import jakarta.persistence.EntityManager;
 
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -15,6 +20,7 @@ import com.readrace.api.exception.PaginaInvalidaException;
 import com.readrace.api.exception.UsuarioNaoEncontradoException;
 import com.readrace.api.model.Conquista;
 import com.readrace.api.model.CurvaDeNivel;
+import com.readrace.api.model.DesafioSistema;
 import com.readrace.api.model.ItemBiblioteca;
 import com.readrace.api.model.Livro;
 import com.readrace.api.model.MembroClube;
@@ -43,6 +49,10 @@ public class RegistrarProgressoService {
     private final UsuarioAtual usuarioAtual;
     private final DesafioService desafioService;
     private final ConquistaService conquistaService;
+    private final DesafiosSistemaService desafiosSistemaService;
+    private final PagamentoDesafioSistemaService pagamentoDesafioSistemaService;
+    private final Clock clock;
+    private final EntityManager entityManager;
 
     public RegistrarProgressoService(
             LivroRepository livroRepository,
@@ -52,7 +62,11 @@ public class RegistrarProgressoService {
             MembroClubeRepository membroClubeRepository,
             UsuarioAtual usuarioAtual,
             DesafioService desafioService,
-            ConquistaService conquistaService) {
+            ConquistaService conquistaService,
+            DesafiosSistemaService desafiosSistemaService,
+            PagamentoDesafioSistemaService pagamentoDesafioSistemaService,
+            Clock clock,
+            EntityManager entityManager) {
         this.livroRepository = livroRepository;
         this.itemBibliotecaRepository = itemBibliotecaRepository;
         this.registroLeituraRepository = registroLeituraRepository;
@@ -61,6 +75,10 @@ public class RegistrarProgressoService {
         this.usuarioAtual = usuarioAtual;
         this.desafioService = desafioService;
         this.conquistaService = conquistaService;
+        this.desafiosSistemaService = desafiosSistemaService;
+        this.pagamentoDesafioSistemaService = pagamentoDesafioSistemaService;
+        this.clock = clock;
+        this.entityManager = entityManager;
     }
 
     @Transactional
@@ -85,9 +103,6 @@ public class RegistrarProgressoService {
         int paginasNovas = Math.max(0, pagina - paginaMaximaAnterior);
         int xpPaginas = paginasNovas;
 
-        item.registrarProgresso(pagina);
-        registroLeituraRepository.save(new RegistroLeitura(item, pagina));
-
         // Antes do lock do usuário, na mesma ordem do quiz (membro do clube, depois usuário): se
         // cada fluxo pegasse os dois locks em uma ordem, um ficaria esperando o outro (deadlock).
         somarPontosNosClubes(usuarioAtualId.valor(), livro.getId(), paginasNovas);
@@ -97,6 +112,26 @@ public class RegistrarProgressoService {
                 usuarioRepository
                         .buscarAtivoComLock(usuarioAtualId.valor())
                         .orElseThrow(UsuarioNaoEncontradoException::new);
+        // O resolvedor Cognito pode ter carregado o usuário antes do lock. A consulta com lock
+        // não atualiza uma entidade já gerenciada: recarregamos o XP confirmado por quem
+        // esperávamos.
+        entityManager.refresh(usuario);
+        int nivelAnterior = usuario.getNivel();
+        Instant instante = clock.instant();
+        OffsetDateTime registradoEm = instante.atZone(DesafioSistema.FUSO).toOffsetDateTime();
+        var dataDoPeriodo = registradoEm.toLocalDate();
+        var anterior = desafiosSistemaService.medir(usuario.getId(), dataDoPeriodo, instante);
+
+        // Nenhum registro atual pode estar pendente antes da medição anterior, pois consultas
+        // e locks podem provocar flush automático. Só criamos a leitura depois do lock do usuário.
+        item.registrarProgresso(pagina);
+        registroLeituraRepository.save(
+                new RegistroLeitura(item, pagina, paginasNovas, registradoEm));
+        registroLeituraRepository.flush();
+        var posterior = desafiosSistemaService.medir(usuario.getId(), dataDoPeriodo, instante);
+        pagamentoDesafioSistemaService.pagarCruzamentos(
+                usuario, dataDoPeriodo, registradoEm, anterior, posterior);
+
         // Repetir ou voltar de página não é leitura: a sequência só anda com página nova.
         if (paginasNovas > 0) {
             usuario.registrarLeitura(SequenciaDeLeitura.hoje());
@@ -109,9 +144,7 @@ public class RegistrarProgressoService {
         int xpGanho = xpPaginas + xpConclusao;
         int percentual = Math.round((pagina * 100f) / livro.getTotalPaginas());
 
-        // Desafio e conquista também pagam XP no mesmo usuário: o nível de antes é guardado aqui e
-        // os campos de nível só são calculados depois de todas as recompensas.
-        int nivelAnterior = usuario.getNivel();
+        // Os campos de nível só são calculados depois de todas as recompensas.
         // O desafio que finaliza aqui já desbloqueia a conquista de desafios: ela entra na lista
         // agora, porque a avaliação final não a encontra mais pendente.
         List<Conquista> desbloqueadas =

@@ -38,6 +38,7 @@ test('biblioteca atualiza ao retornar de leitura ou inclusão sem remontar a tel
     },
   });
   const { default: Screen } = load('app/(tabs)/(biblioteca)/meus-livros.tsx', {
+    '@/features/progresso/RegistrarProgressoSheet': { RegistrarProgressoSheet: 'RegistrarProgressoSheet' },
     'expo-router': {
       router: {},
       useFocusEffect: (callback) => {
@@ -481,11 +482,11 @@ test('Busca: placeholder segue a aba; vazio inicial é diferente de nenhum resul
   try {
     assert.equal(
       tree.root.findByType('TextInput').props.placeholder,
-      'Nome de usuário ou comunidade'
+      'Nome ou @usuário do leitor'
     );
     assert.equal(
       tree.root.findByType('EmptyState').props.message,
-      'Busque por leitores, comunidades ou livros'
+      'Encontre outros leitores pelo nome ou @usuário.'
     );
     for (const aba of ['Livros', 'Comunidades', 'Usuários']) {
       const tab = tree.root
@@ -500,7 +501,7 @@ test('Busca: placeholder segue a aba; vazio inicial é diferente de nenhum resul
         tree.root.findByType('TextInput').props.placeholder,
         aba === 'Livros'
           ? 'Título ou autor do livro'
-          : 'Nome de usuário ou comunidade'
+          : aba === 'Usuários' ? 'Nome ou @usuário do leitor' : 'Nome da comunidade'
       );
       act(() =>
         tree.root.findByType('TextInput').props.onChangeText('  xyzxyz  ')

@@ -340,7 +340,7 @@ test('envio valida o DTO, preserva erros, confirma sucesso e permite novo clube 
     act(() => tree.root.findByType('ListItem').props.onPress());
   };
   const prepare = () => {
-    change('Nome do Grupo', 'Leitores');
+    change('Nome do clube', 'Leitores');
     selectBook();
   };
   await act(async () => {
@@ -350,25 +350,25 @@ test('envio valida o DTO, preserva erros, confirma sucesso e permite novo clube 
   act(() => {
     button().props.onPress();
   });
-  change('Nome do Grupo', 'Leitores');
+  change('Nome do clube', 'Leitores');
   assert.equal(button().props.disabled, true);
   change('Título do Livro', 'Livro');
   assert.equal(button().props.disabled, true);
   act(() => tree.root.findByType('ListItem').props.onPress());
   for (const invalido of ['', '   ', 'x'.repeat(121)]) {
-    change('Nome do Grupo', invalido);
+    change('Nome do clube', invalido);
     assert.equal(button().props.disabled, true);
     act(() => {
       button().props.onPress();
     });
   }
   assert.equal(posts.length, 0);
-  change('Nome do Grupo', 'x'.repeat(120));
+  change('Nome do clube', 'x'.repeat(120));
   assert.equal(button().props.disabled, false);
   change('Título do Livro', 'Título editado');
   assert.equal(button().props.disabled, true);
   selectBook();
-  change('Nome do Grupo', '  Leitores  ');
+  change('Nome do clube', '  Leitores  ');
   change('Descrição, opcional', '  Descrição  ');
   change('Adicionar membros', 'Ana');
   act(() =>
@@ -410,8 +410,8 @@ test('envio valida o DTO, preserva erros, confirma sucesso e permite novo clube 
   );
   assert.equal(errors()[0].props.children, 'Clube inválido.');
   assert.equal(tree.root.findAllByType('BookCover').length, 0);
-  assert.equal(button().props.label, 'Criar Grupo');
-  assert.equal(field('Nome do Grupo').props.value, '  Leitores  ');
+  assert.equal(button().props.label, 'Criar clube');
+  assert.equal(field('Nome do clube').props.value, '  Leitores  ');
   assert.equal(field('Descrição, opcional').props.value, '  Descrição  ');
   assert.equal(field('Título do Livro').props.value, 'Livro');
   assert.equal(field('Autor, somente leitura').props.value, 'Autor');
@@ -477,7 +477,7 @@ test('envio valida o DTO, preserva erros, confirma sucesso e permite novo clube 
   assert.equal(atualizacoes, 1);
   assert.equal(fechamentos, 0);
   assert.equal(tree.root.findAllByType('BookCover').length, 0);
-  assert.equal(button().props.label, 'Criar Grupo');
+  assert.equal(button().props.label, 'Criar clube');
   assert.equal(button().props.disabled, true);
   for (const input of tree.root.findAllByType('TextInput'))
     assert.equal(input.props.value, '');
@@ -547,7 +547,7 @@ test('envio valida o DTO, preserva erros, confirma sucesso e permite novo clube 
   assert.equal(atualizacoes, 2);
   assert.equal(button().props.loading, true);
   assert.equal(tree.root.findAllByType('BookCover').length, 0);
-  assert.equal(field('Nome do Grupo').props.value, 'Leitores');
+  assert.equal(field('Nome do clube').props.value, 'Leitores');
   act(() => tree.update(render(false)));
   act(() => tree.update(render(true)));
   await act(async () =>
@@ -555,7 +555,7 @@ test('envio valida o DTO, preserva erros, confirma sucesso e permite novo clube 
   );
   assert.equal(errors().length, 0);
   assert.equal(button().props.loading, false);
-  assert.equal(field('Nome do Grupo').props.value, '');
+  assert.equal(field('Nome do clube').props.value, '');
   assert.equal(fechamentos, 1);
   assert.equal(atualizacoes, 2);
   prepare();
@@ -660,7 +660,7 @@ test('busca de livro seleciona, invalida e descarta respostas após troca, sele�
   assert.equal(requests.length, 0);
   assert.equal(empty().length, 0);
 
-  change('Nome do Grupo', 'Leitores');
+  change('Nome do clube', 'Leitores');
   change('Descrição, opcional', 'Descrição preservada');
   change('Adicionar membros', 'Texto preservado');
   search('C');
@@ -713,7 +713,7 @@ test('busca de livro seleciona, invalida e descarta respostas após troca, sele�
   );
   assert.equal(empty()[0].props.message, 'Catálogo indisponível.');
   assert.equal(field('Título do Livro').props.value, 'Falha');
-  assert.equal(field('Nome do Grupo').props.value, 'Leitores');
+  assert.equal(field('Nome do clube').props.value, 'Leitores');
   assert.equal(
     field('Descrição, opcional').props.value,
     'Descrição preservada'
@@ -842,7 +842,7 @@ test('membros excluem criador e duplicatas, preservam formulário e cancelam bus
   assert.equal(requests.length, 0);
   assert.equal(tree.root.findAllByType('EmptyState').length, 0);
 
-  change('Nome do Grupo', 'Leitores');
+  change('Nome do clube', 'Leitores');
   change('Descrição, opcional', 'Descrição');
   change('Título do Livro', 'Livro');
   await waitForSearch();
@@ -893,7 +893,7 @@ test('membros excluem criador e duplicatas, preservam formulário e cancelam bus
   act(() => actions('Adicionar Bia')[0].props.onPress());
   act(() => actions('Remover Ana')[0].props.onPress());
   assert.equal(actions('Remover ').length, 1);
-  assert.equal(field('Nome do Grupo').props.value, 'Leitores');
+  assert.equal(field('Nome do clube').props.value, 'Leitores');
   assert.equal(field('Descrição, opcional').props.value, 'Descrição');
   assert.equal(field('Título do Livro').props.value, 'Livro');
   assert.equal(field('Autor, somente leitura').props.value, 'Autor');

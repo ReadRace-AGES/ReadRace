@@ -178,15 +178,13 @@ export function CriarGrupoSheet({
       dismissible={!loading}
       onClose={onClose}
       accessibilityLabel={
-        clubeCriado
-          ? 'Clube criado com sucesso!'
-          : 'Criar novo Grupo de Leitura'
+        clubeCriado ? 'Clube criado com sucesso!' : 'Criar clube de leitura'
       }
     >
       <View style={styles.container}>
         <View style={styles.header}>
           <Text style={styles.title}>
-            {clubeCriado ? clubeCriado.nome : 'Criar novo Grupo de Leitura'}
+            {clubeCriado ? clubeCriado.nome : 'Criar clube de leitura'}
           </Text>
           <Pressable
             accessibilityRole="button"
@@ -229,9 +227,9 @@ export function CriarGrupoSheet({
         ) : (
           <>
             <View style={styles.field}>
-              <Text style={styles.label}>Nome do Grupo</Text>
+              <Text style={styles.label}>Nome do clube</Text>
               <TextInput
-                accessibilityLabel="Nome do Grupo"
+                accessibilityLabel="Nome do clube"
                 editable={!loading}
                 maxLength={120}
                 value={nome}
@@ -427,7 +425,7 @@ export function CriarGrupoSheet({
               </Text>
             )}
             <PrimaryButton
-              label="Criar Grupo"
+              label="Criar clube"
               loading={loading}
               disabled={!canSubmit}
               onPress={submit}

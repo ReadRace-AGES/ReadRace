@@ -30,9 +30,9 @@ export const ABA_INICIAL_FEED: AbaFeed = 'Comunidades';
 
 const COPY = {
   subtitulo: 'Continue sua jornada literária',
-  meusGrupos: 'Meus Grupos',
+  meusGrupos: 'Meus clubes',
   verTodos: 'Ver todos',
-  criarGrupo: 'Criar Grupo',
+  criarGrupo: 'Criar clube',
   minhasComunidades: 'Minhas comunidades',
   comunidadesSugeridas: 'Comunidades sugeridas',
   tentarDeNovo: 'Tentar de novo',
