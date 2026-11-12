@@ -1,4 +1,4 @@
-import { useRouter, type Href } from 'expo-router';
+import { useRouter } from 'expo-router';
 import {
   ActivityIndicator,
   FlatList,
@@ -12,11 +12,16 @@ import { Card } from '@/components/Card';
 import { EmptyState } from '@/components/EmptyState';
 import { BookIcon } from '@/components/icons/BookIcon';
 import { PrimaryButton } from '@/components/PrimaryButton';
-import { RankingRow } from '@/components/RankingRow';
+import {
+  RankingRow,
+  formatRankingLabel,
+  formatRankingPoints,
+} from '@/components/RankingRow';
 import { colors, spacing } from '@/theme';
 
 import { FaixaQuadriculada, RankingCard } from './RankingCard';
 import { useRankingClube } from './useRankingClube';
+import { useAbrirPerfilDoRanking } from './useAbrirPerfilDoRanking';
 
 const COPY = {
   titulo: 'Ranking',
@@ -24,15 +29,9 @@ const COPY = {
   voltar: 'Voltar',
 } as const;
 
-function rotaDoPerfilUsuario(usuarioId: string): Href {
-  return {
-    pathname: '/(tabs)/(feed)/perfil-usuario/[usuarioId]',
-    params: { usuarioId },
-  } as unknown as Href;
-}
-
 export function RankingClubeScreen({ clubeId }: { clubeId: string }) {
   const router = useRouter();
+  const abrirPerfil = useAbrirPerfilDoRanking(clubeId);
   const { ranking, recarregar, carregarMais } = useRankingClube(clubeId);
 
   function voltar() {
@@ -42,11 +41,6 @@ export function RankingClubeScreen({ clubeId }: { clubeId: string }) {
     }
 
     router.replace('/feed');
-  }
-
-  // Task #202: abre o perfil do participante selecionado.
-  function abrirPerfilDoRanking(usuarioId: string) {
-    router.push(rotaDoPerfilUsuario(usuarioId));
   }
 
   if (ranking.situacao === 'erro') {
@@ -105,8 +99,8 @@ export function RankingClubeScreen({ clubeId }: { clubeId: string }) {
             renderItem={({ item, index }) => (
               <Pressable
                 accessibilityRole="button"
-                accessibilityLabel={`Ver perfil de ${item.usuario.nome}`}
-                onPress={() => abrirPerfilDoRanking(item.usuario.id)}
+                accessibilityLabel={`${formatRankingLabel(item.posicao, item.usuario.nome)}, ${formatRankingPoints(item.pontos)}`}
+                onPress={() => void abrirPerfil(item.usuario.id)}
               >
                 <RankingRow
                   position={item.posicao}
@@ -133,7 +127,7 @@ export function RankingClubeScreen({ clubeId }: { clubeId: string }) {
         <View style={styles.conteudo}>
           <RankingCard
             ranking={dados?.ranking ?? null}
-            onLinhaPress={abrirPerfilDoRanking}
+            onLinhaPress={(usuarioId) => void abrirPerfil(usuarioId)}
           />
         </View>
       )}

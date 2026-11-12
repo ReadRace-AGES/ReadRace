@@ -20,7 +20,7 @@ import { RegistrarProgressoSheet } from '@/features/progresso/RegistrarProgresso
 import { colors, spacing, textStyles, typography } from '@/theme';
 
 import { sairDoClube } from './api';
-import { abrirPerfilDoRanking } from './abrirPerfilDoRanking';
+import { useAbrirPerfilDoRanking } from './useAbrirPerfilDoRanking';
 import { EntradaClubeButton } from './EntradaClubeButton';
 import { RankingCard } from './RankingCard';
 import { useClube } from './useClube';
@@ -138,8 +138,8 @@ function IconeChat({ size, color }: PrimaryButtonIconProps) {
 
 export function PaginaClubeScreen({ clubeId }: { clubeId: string }) {
   const router = useRouter();
-  const { showErrorToast, showToastAfterNavigation } =
-    useToastContext();
+  const abrirPerfil = useAbrirPerfilDoRanking(clubeId);
+  const { showErrorToast, showToastAfterNavigation } = useToastContext();
   const { clube, recarregar, atualizar, pedidoEnviado, cancelarCarregamento } =
     useClube(clubeId);
 
@@ -216,14 +216,6 @@ export function PaginaClubeScreen({ clubeId }: { clubeId: string }) {
     }
 
     router.replace('/feed');
-  }
-
-  async function abrirPerfil(usuarioId: string) {
-    try {
-      await abrirPerfilDoRanking(usuarioId, router);
-    } catch {
-      showErrorToast('Não foi possível abrir o perfil. Tente novamente.');
-    }
   }
 
   function abrirConfirmacaoSaida() {

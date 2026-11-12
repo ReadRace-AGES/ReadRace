@@ -1,4 +1,3 @@
-
 import { useCallback, useRef } from 'react';
 import { ActivityIndicator, FlatList, View } from 'react-native';
 import {
@@ -78,7 +77,7 @@ export function ListaSeguidoresScreen({
         params: {
           usuarioId: id,
         },
-      } as unknown as Href);
+      });
 
       return;
     }
@@ -91,9 +90,7 @@ export function ListaSeguidoresScreen({
       return;
     }
 
-    router.push(
-      `/(tabs)/(busca)/usuario/${encodeURIComponent(id)}` as Href
-    );
+    router.push(`/(tabs)/(busca)/usuario/${encodeURIComponent(id)}` as Href);
   }
 
   return (
@@ -101,11 +98,7 @@ export function ListaSeguidoresScreen({
       <AppHeader
         compact
         title={lista === 'seguidores' ? 'Seguidores' : 'Seguindo'}
-        subtitle={
-          carga.situacao === 'sucesso'
-            ? carga.nome
-            : undefined
-        }
+        subtitle={carga.situacao === 'sucesso' ? carga.nome : undefined}
         showBack
         onBackPress={voltar}
       />
@@ -123,12 +116,7 @@ export function ListaSeguidoresScreen({
         <EmptyState
           icon={SearchIcon}
           message={carga.mensagem}
-          action={
-            <PrimaryButton
-              label="Tentar de novo"
-              onPress={recarregar}
-            />
-          }
+          action={<PrimaryButton label="Tentar de novo" onPress={recarregar} />}
         />
       )}
 

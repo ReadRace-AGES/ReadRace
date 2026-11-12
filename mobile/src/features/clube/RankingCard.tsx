@@ -10,7 +10,11 @@ import {
 import { Card } from '@/components/Card';
 import { EmptyState } from '@/components/EmptyState';
 import { BookIcon } from '@/components/icons/BookIcon';
-import { RankingRow } from '@/components/RankingRow';
+import {
+  RankingRow,
+  formatRankingLabel,
+  formatRankingPoints,
+} from '@/components/RankingRow';
 import { colors, sizes, spacing, textStyles, typography } from '@/theme';
 
 import type { LinhaRanking } from './api';
@@ -98,7 +102,7 @@ export function RankingCard({
             key={linha.usuario.id}
             onPress={() => onLinhaPress(linha.usuario.id)}
             accessibilityRole="button"
-            accessibilityLabel={`${linha.posicao}º lugar: ${linha.usuario.nome}, ${linha.pontos} pontos`}
+            accessibilityLabel={`${formatRankingLabel(linha.posicao, linha.usuario.nome)}, ${formatRankingPoints(linha.pontos)}`}
           >
             <RankingRow
               position={linha.posicao}

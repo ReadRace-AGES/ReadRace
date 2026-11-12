@@ -386,6 +386,7 @@ test('ranking completo e paginação mantêm as posições vindas da API', async
   const { RankingClubeScreen } = load('features/clube/RankingClubeScreen.tsx', {
     ...base,
     './RankingCard': rankingComponents,
+    './useAbrirPerfilDoRanking': { useAbrirPerfilDoRanking: () => noop },
     './useRankingClube': {
       useRankingClube: () => ({
         ranking: {
