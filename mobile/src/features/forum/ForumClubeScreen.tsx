@@ -14,6 +14,7 @@ import { BookIcon } from '@/components/icons/BookIcon';
 import { PostCard } from '@/components/PostCard';
 import { PrimaryButton } from '@/components/PrimaryButton';
 import { useToastContext } from '@/components/toast-provider';
+import { ComentariosSheet } from '@/features/comentarios/ComentariosSheet';
 import { tempoRelativo } from '@/features/livro/model';
 import { colors, spacing, typography } from '@/theme';
 
@@ -24,8 +25,6 @@ import { publicarPostDoClube } from './api';
 const COPY = {
   tentarDeNovo: 'Tentar de novo',
   voltar: 'Voltar para o clube',
-  // O Figma nao desenha o forum vazio e nao ha copy aprovada; o texto abaixo foi definido com a
-  // gestao. Com o seed de #13 o estado nao aparece em uso normal: existe como defesa.
   semPosts: 'Ainda não há posts sobre a leitura atual deste clube.',
 } as const;
 
@@ -39,15 +38,22 @@ export function ForumClubeScreen({ clubeId }: { clubeId: string }) {
 
 function ForumDoClube({ clubeId }: { clubeId: string }) {
   const router = useRouter();
+
   const {
     forum,
     recarregar,
     alternarCurtida,
     curtidasPendentes,
     adicionarPost,
+    registrarComentario,
   } = useForumClube(clubeId);
+
   const { showErrorToast } = useToastContext();
+
   const [novoPostAberto, setNovoPostAberto] = useState(false);
+  const [postComentariosId, setPostComentariosId] = useState<string | null>(
+    null
+  );
 
   const dados = forum.situacao === 'sucesso' ? forum.dados : null;
 
@@ -68,6 +74,7 @@ function ForumDoClube({ clubeId }: { clubeId: string }) {
       router.back();
       return;
     }
+
     router.replace(rotaDoClube(clubeId));
   }
 
@@ -82,6 +89,7 @@ function ForumDoClube({ clubeId }: { clubeId: string }) {
           titleOverflow="wrap"
           titleNumberOfLines={2}
         />
+
         <EmptyState
           icon={BookIcon}
           message={forum.mensagem}
@@ -105,7 +113,7 @@ function ForumDoClube({ clubeId }: { clubeId: string }) {
   }
 
   const livro = dados?.clube.livroAtual;
-  // Título do livro em negrito seguido do autor em regular, como a definição travada pede.
+
   const subtitulo = livro ? (
     <>
       <Text style={styles.tituloDoLivro}>{livro.titulo}</Text>
@@ -135,6 +143,7 @@ function ForumDoClube({ clubeId }: { clubeId: string }) {
               onPress={() => setNovoPostAberto(true)}
             />
           )}
+
           {dados === null ? (
             <View
               style={styles.carregando}
@@ -157,11 +166,14 @@ function ForumDoClube({ clubeId }: { clubeId: string }) {
                 likedByMe={post.curtidoPorMim}
                 likeDisabled={curtidasPendentes.has(post.id)}
                 onLikePress={() => curtirPost(post.id)}
+                comments={post.totalComentarios ?? 0}
+                onCommentsPress={() => setPostComentariosId(post.id)}
               />
             ))
           )}
         </View>
       </ScrollView>
+
       {dados?.podeEscrever === true && (
         <NovoPostSheet
           visible={novoPostAberto}
@@ -173,17 +185,44 @@ function ForumDoClube({ clubeId }: { clubeId: string }) {
           onSuccess={adicionarPost}
         />
       )}
+
+      <ComentariosSheet
+        visible={postComentariosId !== null}
+        postId={postComentariosId}
+        contexto="clube"
+        onClose={() => setPostComentariosId(null)}
+        onComentado={registrarComentario}
+      />
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  tela: { flex: 1, backgroundColor: colors.surface },
-  tituloDoLivro: { fontFamily: typography.fontFamily.bold },
-  rolagem: { flexGrow: 1, paddingBottom: spacing[10] },
-  conteudo: { padding: spacing[6], gap: spacing[4], flexGrow: 1 },
-  carregando: { flexGrow: 1, justifyContent: 'center', alignItems: 'center' },
-  acoesDoErro: { alignSelf: 'stretch', gap: spacing[2] },
+  tela: {
+    flex: 1,
+    backgroundColor: colors.surface,
+  },
+  tituloDoLivro: {
+    fontFamily: typography.fontFamily.bold,
+  },
+  rolagem: {
+    flexGrow: 1,
+    paddingBottom: spacing[10],
+  },
+  conteudo: {
+    padding: spacing[6],
+    gap: spacing[4],
+    flexGrow: 1,
+  },
+  carregando: {
+    flexGrow: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  acoesDoErro: {
+    alignSelf: 'stretch',
+    gap: spacing[2],
+  },
 });
 
 export default ForumClubeScreen;

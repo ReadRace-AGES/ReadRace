@@ -61,6 +61,7 @@ class ForumClubeControllerIT {
                 cargo,
                 UUID.fromString(CLUBE),
                 USUARIO_ATUAL);
+
         // Datas antigas e distintas garantem que o topo não depende de empate no relógio.
         jdbc.update(
                 "UPDATE post SET criado_em = TIMESTAMPTZ '2020-01-01 00:00:00+00'"
@@ -68,6 +69,7 @@ class ForumClubeControllerIT {
                         + " (SELECT id, row_number() OVER (ORDER BY id) AS numero FROM post) autor"
                         + " WHERE post.id = autor.id AND post.clube_id = ?",
                 UUID.fromString(CLUBE));
+
         String outroClube = "/api/clubes/50000000-0000-0000-0000-000000000002/posts";
         String detalheLivro = "/api/livros/30000000-0000-0000-0000-000000000001";
         Object outroAntes = jsonGet(outroClube);
@@ -81,17 +83,30 @@ class ForumClubeControllerIT {
         assertThat(resposta).hasStatus(HttpStatus.CREATED);
         Map<String, Object> criado =
                 JsonPath.read(resposta.getResponse().getContentAsString(), "$");
+
         assertThat(criado)
                 .containsOnlyKeys(
-                        "id", "autor", "publicadoEm", "texto", "totalCurtidas", "curtidoPorMim");
+                        "id",
+                        "autor",
+                        "publicadoEm",
+                        "texto",
+                        "totalCurtidas",
+                        "curtidoPorMim",
+                        "totalComentarios");
+
         assertThat(criado)
                 .containsEntry("texto", texto)
                 .containsEntry("totalCurtidas", 0)
-                .containsEntry("curtidoPorMim", false);
+                .containsEntry("curtidoPorMim", false)
+                .containsEntry("totalComentarios", 0);
+
         UUID postId = UUID.fromString((String) criado.get("id"));
         entityManager.flush();
+
         assertThat(totalPosts()).isEqualTo(postsAntes + 1);
+
         Map<String, Object> salvo = jdbc.queryForMap("SELECT * FROM post WHERE id = ?", postId);
+
         assertThat(salvo)
                 .containsEntry("autor_id", USUARIO_ATUAL)
                 .containsEntry("clube_id", UUID.fromString(CLUBE))
@@ -100,23 +115,30 @@ class ForumClubeControllerIT {
                 .containsEntry("comunidade_id", null)
                 .containsEntry("post_pai_id", null)
                 .containsEntry("excluido_em", null);
+
         assertThat(salvo.get("criado_em")).isNotNull();
+
         assertThat(
                         jdbc.queryForObject(
                                 "SELECT COUNT(*) FROM curtida WHERE post_id = ?",
                                 Integer.class,
                                 postId))
                 .isZero();
+
         Map<String, Object> primeiro = JsonPath.read(corpo(), "$.posts[0]");
         assertThat(primeiro).isEqualTo(criado);
+
         assertThat(JsonPath.<String>read(corpo(), "$.posts[0].autor.id"))
                 .isEqualTo(USUARIO_ATUAL.toString());
+
         assertThat(JsonPath.<List<String>>read(corpo(), "$.posts[*].publicadoEm"))
                 .doesNotHaveDuplicates();
+
         assertThat(jsonGet(outroClube)).isEqualTo(outroAntes);
         assertThat(jsonGet(detalheLivro)).isEqualTo(livroAntes);
 
         String curtida = "/api/posts/" + postId + "/curtida";
+
         assertThat(mvc.post().uri(curtida))
                 .hasStatusOk()
                 .bodyJson()
@@ -124,7 +146,9 @@ class ForumClubeControllerIT {
                 .asMap()
                 .containsEntry("totalCurtidas", 1)
                 .containsEntry("curtidoPorMim", true);
+
         assertThat(JsonPath.<Boolean>read(corpo(), "$.posts[0].curtidoPorMim")).isTrue();
+
         assertThat(mvc.delete().uri(curtida))
                 .hasStatusOk()
                 .bodyJson()
@@ -132,6 +156,7 @@ class ForumClubeControllerIT {
                 .asMap()
                 .containsEntry("totalCurtidas", 0)
                 .containsEntry("curtidoPorMim", false);
+
         assertThat(JsonPath.<Map<String, Object>>read(corpo(), "$.posts[0]")).isEqualTo(criado);
         assertThat(gamificacao()).isEqualTo(gamificacaoAntes);
     }
@@ -143,6 +168,7 @@ class ForumClubeControllerIT {
                 "DELETE FROM membro_clube WHERE clube_id = ? AND usuario_id = ?",
                 UUID.fromString(CLUBE),
                 USUARIO_ATUAL);
+
         int antes = totalPosts();
 
         assertThat(enviar(URL, "{\"texto\":\"Leitura de hoje\"}"))
@@ -162,9 +188,11 @@ class ForumClubeControllerIT {
     @Transactional
     void nao_deve_publicar_em_clube_inexistente_ou_excluido(boolean excluido) {
         UUID clubeId = excluido ? UUID.fromString(CLUBE) : UUID.randomUUID();
+
         if (excluido) {
             jdbc.update("UPDATE clube_do_livro SET excluido_em = now() WHERE id = ?", clubeId);
         }
+
         int antes = totalPosts();
 
         assertThat(enviar("/api/clubes/" + clubeId + "/posts", "{\"texto\":\"Leitura\"}"))
@@ -177,6 +205,7 @@ class ForumClubeControllerIT {
 
         entityManager.flush();
         assertThat(totalPosts()).isEqualTo(antes);
+
         assertThat(mvc.get().uri("/api/clubes/{id}/posts", clubeId))
                 .hasStatus(HttpStatus.NOT_FOUND)
                 .bodyJson()
@@ -225,9 +254,12 @@ class ForumClubeControllerIT {
                 .bodyJson()
                 .extractingPath("$.texto")
                 .isEqualTo(texto);
+
         entityManager.flush();
+
         UUID id =
                 UUID.fromString(JsonPath.read(resposta.getResponse().getContentAsString(), "$.id"));
+
         assertThat(jdbc.queryForObject("SELECT conteudo FROM post WHERE id = ?", String.class, id))
                 .isEqualTo(texto);
     }
@@ -263,12 +295,15 @@ class ForumClubeControllerIT {
     private Map<String, List<Map<String, Object>>> gamificacao() {
         return Map.of(
                 "usuarios",
-                        jdbc.queryForList(
-                                "SELECT id, xp_total, nivel, dias_consecutivos,"
-                                        + " ultima_leitura_em FROM usuario ORDER BY id"),
-                "membros", jdbc.queryForList("SELECT id, pontos FROM membro_clube ORDER BY id"),
-                "conquistas", jdbc.queryForList("SELECT * FROM conquista_usuario ORDER BY id"),
-                "desafios", jdbc.queryForList("SELECT * FROM progresso_desafio ORDER BY id"));
+                jdbc.queryForList(
+                        "SELECT id, xp_total, nivel, dias_consecutivos,"
+                                + " ultima_leitura_em FROM usuario ORDER BY id"),
+                "membros",
+                jdbc.queryForList("SELECT id, pontos FROM membro_clube ORDER BY id"),
+                "conquistas",
+                jdbc.queryForList("SELECT * FROM conquista_usuario ORDER BY id"),
+                "desafios",
+                jdbc.queryForList("SELECT * FROM progresso_desafio ORDER BY id"));
     }
 
     @ParameterizedTest(name = "cargo={0}, fórum vazio={1}, podeEscrever={2}")
@@ -318,6 +353,7 @@ class ForumClubeControllerIT {
         }
 
         String resposta = corpo();
+
         assertThat(JsonPath.<Boolean>read(resposta, "$.podeEscrever")).isEqualTo(podeEscrever);
         assertThat(JsonPath.<String>read(resposta, "$.clube.id")).isEqualTo(CLUBE);
         assertThat(JsonPath.<List<?>>read(resposta, "$.posts")).hasSize(forumVazio ? 0 : 6);
@@ -340,14 +376,17 @@ class ForumClubeControllerIT {
                 .bodyJson()
                 .extractingPath("$.clube.nome")
                 .isEqualTo("Clube dos Clássicos Brasileiros");
+
         assertThat(mvc.get().uri(URL))
                 .bodyJson()
                 .extractingPath("$.clube.livroAtual.titulo")
                 .isEqualTo("Dom Casmurro");
+
         assertThat(mvc.get().uri(URL))
                 .bodyJson()
                 .extractingPath("$.clube.livroAtual.autor")
                 .isEqualTo("Machado de Assis");
+
         assertThat(mvc.get().uri(URL))
                 .bodyJson()
                 .extractingPath("$.clube.livroAtual.capaUrl")
@@ -369,14 +408,17 @@ class ForumClubeControllerIT {
                 .bodyJson()
                 .extractingPath("$.posts[0].autor.id")
                 .isEqualTo("00000000-0000-0000-0000-000000000001");
+
         assertThat(mvc.get().uri(URL))
                 .bodyJson()
                 .extractingPath("$.posts[0].autor.nome")
                 .isEqualTo("Daniel Ribeiro");
+
         assertThat(mvc.get().uri(URL))
                 .bodyJson()
                 .extractingPath("$.posts[0].autor.avatarUrl")
                 .isEqualTo("https://i.pravatar.cc/300?img=12");
+
         assertThat(mvc.get().uri(URL))
                 .bodyJson()
                 .extractingPath("$.posts[0].autor.sequenciaDias")
@@ -434,6 +476,7 @@ class ForumClubeControllerIT {
                         "SELECT id::text FROM post WHERE comunidade_id = ?",
                         String.class,
                         UUID.fromString(COMUNIDADE));
+
         List<String> idsNaResposta = JsonPath.read(corpo(), "$.posts[*].id");
 
         assertThat(idsDaComunidade).isNotEmpty();
@@ -446,6 +489,7 @@ class ForumClubeControllerIT {
     void nao_deve_devolver_comentario() {
         UUID comentario = UUID.fromString("39000000-0000-0000-0000-000000000001");
         String pai = jdbc.queryForObject("SELECT md5('post-clube-1-1')::uuid::text", String.class);
+
         jdbc.update(
                 "INSERT INTO post (id, autor_id, post_pai_id, conteudo)"
                         + " VALUES (?, '00000000-0000-0000-0000-000000000001', ?, 'Comentário')",
@@ -474,6 +518,7 @@ class ForumClubeControllerIT {
     @DisplayName("clube sem posts devolve lista vazia, com o cabeçalho completo")
     void deve_devolver_lista_vazia_quando_o_clube_nao_tem_posts() {
         UUID clubeVazio = UUID.fromString("59000000-0000-0000-0000-000000000002");
+
         jdbc.update(
                 "INSERT INTO clube_do_livro (id, livro_id, nome) VALUES"
                         + " (?, '30000000-0000-0000-0000-000000000001', 'Clube sem posts')",
@@ -490,6 +535,7 @@ class ForumClubeControllerIT {
                 .bodyJson()
                 .extractingPath("$.clube.livroAtual.titulo")
                 .isEqualTo("Dom Casmurro");
+
         assertThat(mvc.get().uri("/api/clubes/{id}/posts", clubeVazio))
                 .bodyJson()
                 .extractingPath("$.posts.length()")

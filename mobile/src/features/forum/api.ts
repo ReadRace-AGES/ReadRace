@@ -30,6 +30,7 @@ export type PostForum = {
   texto: string;
   totalCurtidas: number;
   curtidoPorMim: boolean;
+  totalComentarios?: number;
 };
 
 /** `GET /api/clubes/{clubeId}/posts` — já ordenado do mais recente para o mais antigo. */
