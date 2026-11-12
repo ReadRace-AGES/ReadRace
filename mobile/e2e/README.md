@@ -59,11 +59,13 @@ O runner gera outro build, com autenticação habilitada, faz login e percorre a
 
 A API e o client Cognito precisam aceitar a origem local usada pela apresentação; configurar CORS e callbacks no ambiente de homologação apropriado.
 
-## Validação em 11/11/2026
+## Validação em 12/11/2026
 
-Execução completa local com Chromium, API real, JDK 21 e PostgreSQL 17 temporário: **22 testes passaram, sem retries, em 48 segundos** (fora do tempo de build/startup). Também passaram `npm test`, `tsc --noEmit`, Prettier e a exportação web. Os tipos de rotas locais do Expo foram regenerados antes do typecheck.
+Após integrar a `dev` em `1210474`, os seletores foram atualizados para “Meus clubes” e para os textos da criação de clube. O fluxo da biblioteca agora seleciona “Quero ler” antes de abrir o livro adicionado.
 
-O Docker Desktop local não respondeu; o caminho Docker/CI foi preparado, mas não executado nesta validação. O roteiro de apresentação autenticada não foi executado por depender de credenciais e configuração do Cognito. Screenshots, vídeos e contexto de erro foram produzidos nas rodadas de diagnóstico; as falhas da suíte foram corrigidas antes da execução completa acima.
+Execução completa local pelo runner padrão (`npm run test:e2e -- --retries=0`), com Chromium, API real, JDK 21 e PostgreSQL 16 via Docker: **22 testes passaram, sem retries, em 9,2 minutos**, incluindo os resets entre testes e fora do build/startup inicial. O ambiente descartável foi removido ao terminar. Também passaram `npm test`, `tsc --noEmit`, Prettier nos arquivos alterados e a exportação web.
+
+O roteiro de apresentação autenticada não foi executado por depender de credenciais e configuração do Cognito. A execução seed não comprova o login real no Cognito nem os comportamentos nativos descritos abaixo.
 
 ## Cobertura e limites
 

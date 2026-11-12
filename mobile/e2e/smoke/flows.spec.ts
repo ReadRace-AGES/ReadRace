@@ -57,6 +57,7 @@ test.describe('Nove fluxos da #233 @smoke', () => {
     const livro = await response.json();
     await expect(text(page, 'Livro adicionado com sucesso!')).toBeVisible();
     await button(page, 'Fechar').last().click();
+    await page.getByRole('tab', { name: 'Quero ler', exact: true }).click();
     await button(page, livro.titulo).click();
     const detalhe = await get<LivroDetalhe>(
       api,
@@ -248,8 +249,8 @@ test.describe('Nove fluxos da #233 @smoke', () => {
     }>(api, '/api/busca?tipo=usuarios&q=a');
     expect(membros.length).toBeGreaterThanOrEqual(2);
     await home(page);
-    await button(page, 'Criar Grupo').click();
-    await page.getByLabel('Nome do Grupo', { exact: true }).fill('Clube E2E');
+    await button(page, 'Criar clube').click();
+    await page.getByLabel('Nome do clube', { exact: true }).fill('Clube E2E');
     await page.getByLabel('Título do Livro', { exact: true }).fill('Hobbit');
     await button(page, /^O Hobbit,/).click();
     for (const membro of membros.slice(0, 2)) {
@@ -265,8 +266,8 @@ test.describe('Nove fluxos da #233 @smoke', () => {
       (r) => r.url().endsWith('/api/clubes') && r.request().method() === 'POST'
     );
     await page
-      .getByLabel('Criar novo Grupo de Leitura', { exact: true })
-      .getByRole('button', { name: 'Criar Grupo', exact: true })
+      .getByLabel('Criar clube de leitura', { exact: true })
+      .getByRole('button', { name: 'Criar clube', exact: true })
       .click();
     const response = await created;
     expect(response.status()).toBe(201);
@@ -366,7 +367,7 @@ test.describe('Nove fluxos da #233 @smoke', () => {
     ).toBeVisible();
     await page.unroute('**/api/feed/comunidades');
     await button(page, 'Tentar de novo').click();
-    await expect(text(page, 'Meus Grupos')).toBeVisible();
+    await expect(text(page, 'Meus clubes')).toBeVisible();
     await expect(
       text(page, 'Não foi possível carregar. Tente novamente.')
     ).not.toBeVisible();

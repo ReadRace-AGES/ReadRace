@@ -50,7 +50,7 @@ export async function tab(page: Page, name: string) {
 export async function home(page: Page) {
   await page.goto('/');
   await expect(button(page, 'Feed')).toBeVisible();
-  await expect(text(page, 'Meus Grupos')).toBeVisible();
+  await expect(text(page, 'Meus clubes')).toBeVisible();
 }
 export const starts = (value: string) =>
   new RegExp(`^${value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}`);
