@@ -186,6 +186,144 @@ test('resposta de uma aba antiga nao substitui a ordem atualmente selecionada', 
   }
 });
 
+test('consulta iniciada depois da confirmação usa os contadores atuais da API', async () => {
+  let chamadas = 0;
+  const tela = await montar({
+    buscar: async () => {
+      const atualizada = ++chamadas > 1;
+      return {
+        id: 'comunidade',
+        sigo: atualizada,
+        seguidores: atualizada ? 10 : 2,
+        posts: [
+          {
+            id: 'a',
+            curtidoPorMim: atualizada,
+            totalCurtidas: atualizada ? 9 : 0,
+          },
+        ],
+      };
+    },
+  });
+  try {
+    await act(async () => {
+      await tela.hook.alternarCurtida('a');
+      await tela.hook.alternarSeguimento();
+    });
+    assert.equal(tela.hook.comunidade.dados.posts[0].totalCurtidas, 7);
+    assert.equal(tela.hook.comunidade.dados.seguidores, 3);
+
+    await act(async () => tela.mudarOrdem('em_alta'));
+    assert.equal(tela.hook.comunidade.dados.posts[0].totalCurtidas, 9);
+    assert.equal(tela.hook.comunidade.dados.posts[0].curtidoPorMim, true);
+    assert.equal(tela.hook.comunidade.dados.seguidores, 10);
+    assert.equal(tela.hook.comunidade.dados.sigo, true);
+  } finally {
+    await tela.fechar();
+  }
+});
+
+test('consulta iniciada durante mutações preserva alterações ainda pendentes', async () => {
+  const seguir = pendente();
+  const curtir = pendente();
+  const tela = await montar({
+    seguir: () => seguir.promise,
+    curtir: () => curtir.promise,
+  });
+  try {
+    let participacao, curtida;
+    await act(async () => {
+      participacao = tela.hook.alternarSeguimento();
+      curtida = tela.hook.alternarCurtida('a');
+    });
+    await act(async () => tela.mudarOrdem('em_alta'));
+    assert.equal(tela.hook.comunidade.dados.sigo, true);
+    assert.equal(tela.hook.comunidade.dados.seguidores, 3);
+    assert.equal(tela.hook.comunidade.dados.posts[0].curtidoPorMim, true);
+    assert.equal(tela.hook.comunidade.dados.posts[0].totalCurtidas, 1);
+
+    await act(async () => {
+      seguir.resolve({ sigo: true, seguidores: 4 });
+      curtir.resolve({ curtidoPorMim: true, totalCurtidas: 8 });
+      await Promise.all([participacao, curtida]);
+    });
+    assert.equal(tela.hook.comunidade.dados.seguidores, 4);
+    assert.equal(tela.hook.comunidade.dados.posts[0].totalCurtidas, 8);
+  } finally {
+    await tela.fechar();
+  }
+});
+
+for (const ordem of ['recentes', 'em_alta']) {
+  test(`publicar em ${ordem} respeita a aba e o desempate por data`, async () => {
+    const novo = {
+      id: 'novo',
+      publicadoEm: '2026-11-12T12:00:00Z',
+      totalCurtidas: 0,
+      curtidoPorMim: false,
+      totalComentarios: 0,
+    };
+    const posts = [
+      { ...novo, id: 'dez', totalCurtidas: 10 },
+      { ...novo, id: 'sete', totalCurtidas: 7 },
+      { ...novo, id: 'zero-antigo', publicadoEm: '2026-11-11T12:00:00Z' },
+    ];
+    const tela = await montar({
+      ordemInicial: ordem,
+      buscar: async () => ({
+        id: 'comunidade',
+        sigo: true,
+        seguidores: 2,
+        posts,
+      }),
+    });
+    try {
+      await act(async () => tela.hook.adicionarPost(novo));
+      assert.deepEqual(
+        tela.hook.comunidade.dados.posts.map((post) => post.id),
+        ordem === 'em_alta'
+          ? ['dez', 'sete', 'novo', 'zero-antigo']
+          : ['novo', 'dez', 'sete', 'zero-antigo']
+      );
+    } finally {
+      await tela.fechar();
+    }
+  });
+}
+
+test('publicar em Em alta preserva a posição dos posts já curtidos localmente', async () => {
+  const posts = [
+    { id: 'a', totalCurtidas: 1, curtidoPorMim: false },
+    { id: 'b', totalCurtidas: 1, curtidoPorMim: false },
+  ];
+  const tela = await montar({
+    ordemInicial: 'em_alta',
+    buscar: async () => ({
+      id: 'comunidade',
+      sigo: true,
+      seguidores: 2,
+      posts,
+    }),
+  });
+  try {
+    await act(async () => tela.hook.alternarCurtida('b'));
+    await act(async () =>
+      tela.hook.adicionarPost({
+        id: 'novo',
+        totalCurtidas: 0,
+        publicadoEm: '2026-11-12T12:00:00Z',
+      })
+    );
+    assert.deepEqual(
+      tela.hook.comunidade.dados.posts.map((post) => post.id),
+      ['a', 'b', 'novo']
+    );
+    assert.equal(tela.hook.comunidade.dados.posts[1].totalCurtidas, 7);
+  } finally {
+    await tela.fechar();
+  }
+});
+
 for (const sigo of [false, true]) {
   test(`falha ao ${sigo ? 'sair' : 'seguir'} preserva curtida concluída`, async () => {
     const chamada = pendente();

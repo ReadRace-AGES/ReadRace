@@ -103,13 +103,8 @@ export function useComunidade(
           !controller.signal.aborted &&
           requisicao === requisicaoAtualRef.current
         ) {
-          const seguimento = seguimentoRef.current;
-          const dadosComAlteracoes = aplicarSobreposicoes(
-            dados,
-            curtidasRef.current,
-            seguimento
-          );
-          setComunidade({ situacao: 'sucesso', dados: dadosComAlteracoes });
+          // O GET já inclui mutações confirmadas antes de começar; só protege as
+          // pendentes ou confirmadas depois, sem ocultar contadores mais novos.
           for (const [postId, sobreposicao] of curtidasRef.current) {
             if (
               sobreposicao.confirmadaEm !== null &&
@@ -118,6 +113,7 @@ export function useComunidade(
               curtidasRef.current.delete(postId);
             }
           }
+          const seguimento = seguimentoRef.current;
           if (
             seguimento !== null &&
             seguimento.confirmadaEm !== null &&
@@ -125,6 +121,12 @@ export function useComunidade(
           ) {
             seguimentoRef.current = null;
           }
+          const dadosComAlteracoes = aplicarSobreposicoes(
+            dados,
+            curtidasRef.current,
+            seguimentoRef.current
+          );
+          setComunidade({ situacao: 'sucesso', dados: dadosComAlteracoes });
           setCarregandoPosts(false);
         }
       })
@@ -227,8 +229,7 @@ export function useComunidade(
     curtidasRef.current.set(postId, {
       token,
       curtidoPorMim: !anterior.curtidoPorMim,
-      totalCurtidas:
-        anterior.totalCurtidas + (anterior.curtidoPorMim ? -1 : 1),
+      totalCurtidas: anterior.totalCurtidas + (anterior.curtidoPorMim ? -1 : 1),
       confirmadaEm: null,
     });
     revisaoMutacoesRef.current++;
@@ -309,22 +310,26 @@ export function useComunidade(
 
   const adicionarPost = useCallback(
     (post: PostComunidade) => {
-      setComunidade((atual) =>
-        atual.situacao === 'sucesso' && atual.dados.id === comunidadeId
-          ? {
-              ...atual,
-              dados: {
-                ...atual.dados,
-                posts: [
-                  post,
-                  ...atual.dados.posts.filter((item) => item.id !== post.id),
-                ],
-              },
-            }
-          : atual
-      );
+      setComunidade((atual) => {
+        if (atual.situacao !== 'sucesso' || atual.dados.id !== comunidadeId) {
+          return atual;
+        }
+        const posts = atual.dados.posts.filter((item) => item.id !== post.id);
+        const indice =
+          ordem === 'em_alta'
+            ? posts.findIndex(
+                (item) =>
+                  post.totalCurtidas > item.totalCurtidas ||
+                  (post.totalCurtidas === item.totalCurtidas &&
+                    Date.parse(post.publicadoEm) > Date.parse(item.publicadoEm))
+              )
+            : 0;
+        // Insere só o post novo: curtidas locais não reordenam os demais cards.
+        posts.splice(indice < 0 ? posts.length : indice, 0, post);
+        return { ...atual, dados: { ...atual.dados, posts } };
+      });
     },
-    [comunidadeId]
+    [comunidadeId, ordem]
   );
 
   return {
