@@ -689,13 +689,14 @@ test('Desafiar amigo: Livro Específico permite quebra e lupa não encolhe com o
 });
 
 test('comunidade: Seguir e Em alta preservam callbacks e têm área de botão', async () => {
-  let follow = 0,
-    toast = 0;
+  let follow = 0;
+  const ordens = [];
   const { ComunidadeScreen } = load(
     'features/comunidade/ComunidadeScreen.tsx',
     {
       ...base,
       '@/components/PostCard': { PostCard: 'PostCard' },
+      '@/components/PrimaryButton': { PrimaryButton: 'PrimaryButton' },
       '@/components/toast-provider': {
         useToastContext: () => ({ showToast: () => toast++ }),
       },
@@ -710,7 +711,9 @@ test('comunidade: Seguir e Em alta preservam callbacks e têm área de botão', 
         base
       ),
       './useComunidade': {
-        useComunidade: () => ({
+        useComunidade: (_comunidadeId, ordem) => {
+          ordens.push(ordem);
+          return {
           comunidade: {
             situacao: 'sucesso',
             dados: {
@@ -723,7 +726,8 @@ test('comunidade: Seguir e Em alta preservam callbacks e têm área de botão', 
           alternarSeguimento: async () => {
             follow++;
           },
-        }),
+          };
+        },
       },
     }
   );
@@ -732,16 +736,96 @@ test('comunidade: Seguir e Em alta preservam callbacks e têm área de botão', 
     origem: '/buscar',
   });
   try {
+    const maisRecentes = tree.root
+      .findAllByType('Pressable')
+      .find((n) => n.props.accessibilityLabel === 'Mais recentes');
+    assert.equal(maisRecentes.props.accessibilityRole, 'tab');
+    assert.deepEqual(maisRecentes.props.accessibilityState, {
+      selected: true,
+    });
     for (const label of ['Seguir', 'Em alta']) {
       const action = tree.root
         .findAllByType('Pressable')
         .find((n) => n.props.accessibilityLabel === label);
-      assert.equal(action.props.accessibilityRole, 'button');
+      if (label === 'Em alta') {
+        assert.equal(action.props.accessibilityRole, 'tab');
+        assert.deepEqual(action.props.accessibilityState, {
+          selected: false,
+        });
+      } else {
+        assert.equal(action.props.accessibilityRole, 'button');
+      }
       assertTouchTarget(action);
       await act(async () => action.props.onPress());
     }
+    const emAlta = tree.root
+      .findAllByType('Pressable')
+      .find((n) => n.props.accessibilityLabel === 'Em alta');
+    assert.deepEqual(emAlta.props.accessibilityState, { selected: true });
     assert.equal(follow, 1);
-    assert.equal(toast, 1);
+    assert.equal(ordens.at(-1), 'em_alta');
+  } finally {
+    await close(tree);
+  }
+});
+
+test('comunidade: falha em Em alta permite retry sem trocar a aba selecionada', async () => {
+  const { ComunidadeScreen } = load(
+    'features/comunidade/ComunidadeScreen.tsx',
+    {
+      ...base,
+      '@/components/PostCard': { PostCard: 'PostCard' },
+      '@/features/comentarios/ComentariosSheet': {
+        ComentariosSheet: 'ComentariosSheet',
+      },
+      '@/features/forum/NovoPostSheet': { NovoPostSheet: 'NovoPostSheet' },
+      './api': {},
+      '@/components/useVoltar': { useVoltar: () => noop },
+      './ComunidadeScreen.styles': load(
+        'features/comunidade/ComunidadeScreen.styles.ts',
+        base
+      ),
+      './useComunidade': {
+        useComunidade: (_comunidadeId, ordem) => {
+          const [recuperado, setRecuperado] = React.useState(false);
+          return {
+            comunidade: {
+              situacao: 'sucesso',
+              dados: {
+                nome: 'Comunidade',
+                sigo: false,
+                seguidores: 10,
+                posts: [],
+              },
+            },
+            carregandoPosts: false,
+            erroPosts: ordem === 'em_alta' && !recuperado ? 'Falha' : null,
+            recarregar: () => setRecuperado(true),
+            alternarSeguimento: async () => {},
+            alternarCurtida: async () => {},
+            somarComentario: () => {},
+          };
+        },
+      },
+    }
+  );
+  const tree = await mount(ComunidadeScreen, {
+    comunidadeId: 'id',
+    origem: '/buscar',
+  });
+  try {
+    const emAlta = () =>
+      tree.root
+        .findAllByType('Pressable')
+        .find((n) => n.props.accessibilityLabel === 'Em alta');
+    await act(async () => emAlta().props.onPress());
+    assert.equal(tree.root.findByType('EmptyState').props.message, 'Falha');
+    assert.deepEqual(emAlta().props.accessibilityState, { selected: true });
+    await act(async () =>
+      tree.root.findByType('EmptyState').props.action.props.onPress()
+    );
+    assert.equal(tree.root.findAllByType('EmptyState').length, 1);
+    assert.deepEqual(emAlta().props.accessibilityState, { selected: true });
   } finally {
     await close(tree);
   }

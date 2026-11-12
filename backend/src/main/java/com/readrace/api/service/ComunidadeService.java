@@ -1,5 +1,7 @@
 package com.readrace.api.service;
 
+import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -13,6 +15,7 @@ import org.springframework.transaction.annotation.Transactional;
 import com.readrace.api.dto.response.ComunidadeResponse;
 import com.readrace.api.dto.response.MembroComunidadeResponse;
 import com.readrace.api.exception.ComunidadeNaoEncontradaException;
+import com.readrace.api.exception.ParametroInvalidoException;
 import com.readrace.api.exception.SoMembroPostaException;
 import com.readrace.api.exception.UnicoAdministradorException;
 import com.readrace.api.model.Cargo;
@@ -53,12 +56,21 @@ public class ComunidadeService {
     }
 
     public ComunidadeResponse buscar(UUID comunidadeId) {
+        return buscar(comunidadeId, "recentes");
+    }
+
+    public ComunidadeResponse buscar(UUID comunidadeId, String ordem) {
         Comunidade comunidade = comunidade(comunidadeId);
         UUID usuarioId = usuarioAtual.idDoUsuarioAtual().valor();
+        if (!ordem.equals("recentes") && !ordem.equals("em_alta")) {
+            throw new ParametroInvalidoException(
+                    "O parâmetro 'ordem' deve ser recentes ou em_alta.");
+        }
         List<Post> posts =
-                postRepository
-                        .findByComunidadeIdAndPostPaiIdIsNullAndExcluidoEmIsNullOrderByCriadoEmDesc(
-                                comunidadeId);
+                new ArrayList<>(
+                        postRepository
+                                .findByComunidadeIdAndPostPaiIdIsNullAndExcluidoEmIsNullOrderByCriadoEmDesc(
+                                        comunidadeId));
         List<UUID> postIds = posts.stream().map(Post::getId).toList();
         Map<UUID, Usuario> autores =
                 usuarioRepository
@@ -73,6 +85,12 @@ public class ComunidadeService {
                                         Collectors.toMap(
                                                 CurtidaRepository.ContagemPorPost::getPostId,
                                                 CurtidaRepository.ContagemPorPost::getTotal));
+        if (ordem.equals("em_alta")) {
+            posts.sort(
+                    Comparator.comparingLong((Post post) -> curtidas.getOrDefault(post.getId(), 0L))
+                            .reversed()
+                            .thenComparing(Post::getCriadoEm, Comparator.reverseOrder()));
+        }
         Set<UUID> curtidosPorMim =
                 postIds.isEmpty()
                         ? Set.of()

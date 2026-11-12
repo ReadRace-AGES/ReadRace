@@ -23,6 +23,7 @@ import { tempoRelativo } from '@/features/livro/model';
 import { colors } from '@/theme';
 
 import { useComunidade } from './useComunidade';
+import type { OrdemComunidade } from './api';
 import { styles } from './ComunidadeScreen.styles';
 import { publicarPostDaComunidade } from './api';
 
@@ -46,15 +47,18 @@ export function ComunidadeScreen({
 }) {
   const voltar = useVoltar(origem);
   const insets = useSafeAreaInsets();
-  const { showToast, showErrorToast } = useToastContext();
+  const { showErrorToast } = useToastContext();
+  const [ordem, setOrdem] = useState<OrdemComunidade>('recentes');
   const {
     comunidade,
+    carregandoPosts,
+    erroPosts,
     recarregar,
     alternarSeguimento,
     alternarCurtida,
     somarComentario,
     adicionarPost,
-  } = useComunidade(comunidadeId);
+  } = useComunidade(comunidadeId, ordem);
   const [seguimentoPendente, setSeguimentoPendente] = useState(false);
   const [curtidasPendentes, setCurtidasPendentes] = useState<Set<string>>(
     new Set()
@@ -185,17 +189,50 @@ export function ComunidadeScreen({
                 />
               )}
               <View style={styles.abas}>
-                <Text style={styles.abaAtiva}>{COPY.maisRecentes}</Text>
                 <Pressable
-                  accessibilityRole="button"
-                  accessibilityLabel={COPY.emAlta}
-                  onPress={showToast}
+                  accessibilityRole="tab"
+                  accessibilityLabel={COPY.maisRecentes}
+                  accessibilityState={{ selected: ordem === 'recentes' }}
+                  onPress={() => setOrdem('recentes')}
                   style={styles.acao}
                 >
-                  <Text style={styles.aba}>{COPY.emAlta}</Text>
+                  <Text
+                    style={ordem === 'recentes' ? styles.abaAtiva : styles.aba}
+                  >
+                    {COPY.maisRecentes}
+                  </Text>
+                </Pressable>
+                <Pressable
+                  accessibilityRole="tab"
+                  accessibilityLabel={COPY.emAlta}
+                  accessibilityState={{ selected: ordem === 'em_alta' }}
+                  onPress={() => setOrdem('em_alta')}
+                  style={styles.acao}
+                >
+                  <Text
+                    style={ordem === 'em_alta' ? styles.abaAtiva : styles.aba}
+                  >
+                    {COPY.emAlta}
+                  </Text>
                 </Pressable>
               </View>
-              {dados.posts.length === 0 ? (
+              {carregandoPosts ? (
+                <View style={styles.carregando} accessibilityLabel="Carregando">
+                  <ActivityIndicator color={colors.primary} />
+                </View>
+              ) : erroPosts ? (
+                <EmptyState
+                  icon={BookIcon}
+                  message={erroPosts}
+                  action={
+                    <PrimaryButton
+                      label={COPY.tentarDeNovo}
+                      variant="outline"
+                      onPress={recarregar}
+                    />
+                  }
+                />
+              ) : dados.posts.length === 0 ? (
                 <EmptyState icon={BookIcon} message={COPY.semPosts} />
               ) : (
                 dados.posts.map((post) => (
