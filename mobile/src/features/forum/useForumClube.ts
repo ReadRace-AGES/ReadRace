@@ -1,4 +1,4 @@
-﻿import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 
 import { ApiError, mensagemErroCarregamento } from '@/api/client';
 import { curtir, descurtir } from '@/features/posts/api';
@@ -33,7 +33,7 @@ function mensagemDe(erro: unknown) {
 function mensagemDeCurtida(erro: unknown) {
   return erro instanceof ApiError
     ? erro.message
-    : 'NÃ£o foi possÃ­vel registrar sua curtida. Tente novamente.';
+    : 'Não foi possível registrar sua curtida. Tente novamente.';
 }
 
 function comPost(
@@ -49,7 +49,7 @@ function comPost(
   };
 }
 
-/** CabeÃ§alho e posts chegam na mesma resposta: nenhum card sai meio renderizado. */
+/** Cabeçalho e posts chegam na mesma resposta: nenhum card sai meio renderizado. */
 export function useForumClube(clubeId: string): ForumClubeState {
   const [forum, setForum] = useState<ForumCarga>({ situacao: 'carregando' });
   const [versao, setVersao] = useState(0);
@@ -57,8 +57,8 @@ export function useForumClube(clubeId: string): ForumClubeState {
     new Set()
   );
   const sessaoRef = useRef<SessaoForum | null>(null);
-  // Espelha `forum` de forma sÃ­ncrona: o updater de setState roda no momento em que
-  // o React decide, nÃ£o no momento da chamada â€” ler o post atual precisa de algo sÃ­ncrono.
+  // Espelha `forum` de forma síncrona: o updater de setState roda no momento em que
+  // o React decide, não no momento da chamada — ler o post atual precisa de algo síncrono.
   const forumRef = useRef(forum);
   forumRef.current = forum;
 
@@ -82,8 +82,8 @@ export function useForumClube(clubeId: string): ForumClubeState {
     const controller = new AbortController();
     const cancelado = () =>
       controller.signal.aborted || sessao.controller.signal.aborted;
-    // Uma recarga mantÃ©m o conteÃºdo visÃ­vel. Se houver mutaÃ§Ã£o enquanto o GET
-    // estiver pendente, a resposta antiga nÃ£o substitui posts ou curtidas locais.
+    // Uma recarga mantém o conteúdo visível. Se houver mutação enquanto o GET
+    // estiver pendente, a resposta antiga não substitui posts ou curtidas locais.
     setForum((atual) =>
       atual.situacao === 'sucesso' ? atual : { situacao: 'carregando' }
     );
@@ -210,7 +210,11 @@ export function useForumClube(clubeId: string): ForumClubeState {
           maisRecente.situacao === 'sucesso'
             ? {
                 situacao: 'sucesso',
-                dados: comPost(maisRecente.dados, postId, () => anterior),
+                dados: comPost(maisRecente.dados, postId, (post) => ({
+                  ...post,
+                  curtidoPorMim: anterior.curtidoPorMim,
+                  totalCurtidas: anterior.totalCurtidas,
+                })),
               }
             : maisRecente
         );

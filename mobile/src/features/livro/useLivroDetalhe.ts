@@ -84,14 +84,18 @@ export function useLivroDetalhe(livroId: string) {
     const anterior = atual.dados.posts.find((post) => post.id === postId);
     if (!anterior) return;
 
-    setEstado({
-      situacao: 'sucesso',
-      dados: comPost(atual.dados, postId, (post) => ({
-        ...post,
-        curtidoPorMim: !post.curtidoPorMim,
-        curtidas: post.curtidas + (post.curtidoPorMim ? -1 : 1),
-      })),
-    });
+    setEstado((maisRecente) =>
+      maisRecente.situacao === 'sucesso'
+        ? {
+            situacao: 'sucesso',
+            dados: comPost(maisRecente.dados, postId, (post) => ({
+              ...post,
+              curtidoPorMim: !anterior.curtidoPorMim,
+              curtidas: anterior.curtidas + (anterior.curtidoPorMim ? -1 : 1),
+            })),
+          }
+        : maisRecente
+    );
 
     try {
       await (anterior.curtidoPorMim ? descurtir : curtir)(postId);
@@ -100,7 +104,11 @@ export function useLivroDetalhe(livroId: string) {
         maisRecente.situacao === 'sucesso'
           ? {
               situacao: 'sucesso',
-              dados: comPost(maisRecente.dados, postId, () => anterior),
+              dados: comPost(maisRecente.dados, postId, (post) => ({
+                ...post,
+                curtidoPorMim: anterior.curtidoPorMim,
+                curtidas: anterior.curtidas,
+              })),
             }
           : maisRecente
       );
