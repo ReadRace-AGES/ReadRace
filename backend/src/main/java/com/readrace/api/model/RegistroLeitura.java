@@ -30,13 +30,25 @@ public class RegistroLeitura {
     @Column(name = "ultima_pagina", nullable = false)
     private Integer ultimaPagina;
 
+    @Column(name = "paginas_novas")
+    private Integer paginasNovas;
+
     @Column(name = "registrado_em", nullable = false)
     private OffsetDateTime registradoEm;
 
     public RegistroLeitura(ItemBiblioteca itemBiblioteca, int ultimaPagina) {
+        this(itemBiblioteca, ultimaPagina, null, OffsetDateTime.now());
+    }
+
+    public RegistroLeitura(
+            ItemBiblioteca itemBiblioteca,
+            int ultimaPagina,
+            Integer paginasNovas,
+            OffsetDateTime registradoEm) {
         this.id = UUID.randomUUID();
         this.itemBiblioteca = itemBiblioteca;
         this.ultimaPagina = ultimaPagina;
-        this.registradoEm = OffsetDateTime.now();
+        this.paginasNovas = paginasNovas;
+        this.registradoEm = registradoEm;
     }
 }

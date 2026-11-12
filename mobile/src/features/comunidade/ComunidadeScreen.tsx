@@ -7,7 +7,6 @@ import {
   View,
 } from 'react-native';
 import { Image } from 'expo-image';
-import { useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Svg, { Path } from 'react-native-svg';
 
@@ -17,12 +16,16 @@ import { BookIcon } from '@/components/icons/BookIcon';
 import { PostCard } from '@/components/PostCard';
 import { PrimaryButton } from '@/components/PrimaryButton';
 import { useToastContext } from '@/components/toast-provider';
+import { useVoltar } from '@/components/useVoltar';
 import { ComentariosSheet } from '@/features/comentarios/ComentariosSheet';
+import { NovoPostSheet } from '@/features/forum/NovoPostSheet';
 import { tempoRelativo } from '@/features/livro/model';
 import { colors } from '@/theme';
 
 import { useComunidade } from './useComunidade';
+import type { OrdemComunidade } from './api';
 import { styles } from './ComunidadeScreen.styles';
+import { publicarPostDaComunidade } from './api';
 
 const COPY = {
   tentarDeNovo: 'Tentar de novo',
@@ -34,17 +37,28 @@ const COPY = {
   erroCurtida: 'Não foi possível registrar sua curtida. Tente novamente.',
 } as const;
 
-export function ComunidadeScreen({ comunidadeId }: { comunidadeId: string }) {
-  const router = useRouter();
+export function ComunidadeScreen({
+  comunidadeId,
+  origem,
+}: {
+  comunidadeId: string;
+  /** Aba que abriu a comunidade; é para onde o voltar vai quando não há histórico. */
+  origem: '/feed' | '/buscar';
+}) {
+  const voltar = useVoltar(origem);
   const insets = useSafeAreaInsets();
-  const { showToast, showErrorToast } = useToastContext();
+  const { showErrorToast } = useToastContext();
+  const [ordem, setOrdem] = useState<OrdemComunidade>('recentes');
   const {
     comunidade,
+    carregandoPosts,
+    erroPosts,
     recarregar,
     alternarSeguimento,
     alternarCurtida,
     somarComentario,
-  } = useComunidade(comunidadeId);
+    adicionarPost,
+  } = useComunidade(comunidadeId, ordem);
   const [seguimentoPendente, setSeguimentoPendente] = useState(false);
   const [curtidasPendentes, setCurtidasPendentes] = useState<Set<string>>(
     new Set()
@@ -54,6 +68,7 @@ export function ComunidadeScreen({ comunidadeId }: { comunidadeId: string }) {
     null
   );
   const [comentariosAbertos, setComentariosAbertos] = useState(false);
+  const [novoPostAberto, setNovoPostAberto] = useState(false);
   const dados = comunidade.situacao === 'sucesso' ? comunidade.dados : null;
 
   async function alternar() {
@@ -105,7 +120,7 @@ export function ComunidadeScreen({ comunidadeId }: { comunidadeId: string }) {
           <Pressable
             accessibilityRole="button"
             accessibilityLabel="Voltar"
-            onPress={() => router.back()}
+            onPress={voltar}
             style={styles.back}
             hitSlop={12}
           >
@@ -166,18 +181,58 @@ export function ComunidadeScreen({ comunidadeId }: { comunidadeId: string }) {
               <Text accessibilityRole="header" style={styles.postagens}>
                 Postagens
               </Text>
+              {dados.sigo && (
+                <PrimaryButton
+                  label="Escrever post"
+                  variant="outline"
+                  onPress={() => setNovoPostAberto(true)}
+                />
+              )}
               <View style={styles.abas}>
-                <Text style={styles.abaAtiva}>{COPY.maisRecentes}</Text>
                 <Pressable
-                  accessibilityRole="button"
-                  accessibilityLabel={COPY.emAlta}
-                  onPress={showToast}
+                  accessibilityRole="tab"
+                  accessibilityLabel={COPY.maisRecentes}
+                  accessibilityState={{ selected: ordem === 'recentes' }}
+                  onPress={() => setOrdem('recentes')}
                   style={styles.acao}
                 >
-                  <Text style={styles.aba}>{COPY.emAlta}</Text>
+                  <Text
+                    style={ordem === 'recentes' ? styles.abaAtiva : styles.aba}
+                  >
+                    {COPY.maisRecentes}
+                  </Text>
+                </Pressable>
+                <Pressable
+                  accessibilityRole="tab"
+                  accessibilityLabel={COPY.emAlta}
+                  accessibilityState={{ selected: ordem === 'em_alta' }}
+                  onPress={() => setOrdem('em_alta')}
+                  style={styles.acao}
+                >
+                  <Text
+                    style={ordem === 'em_alta' ? styles.abaAtiva : styles.aba}
+                  >
+                    {COPY.emAlta}
+                  </Text>
                 </Pressable>
               </View>
-              {dados.posts.length === 0 ? (
+              {carregandoPosts ? (
+                <View style={styles.carregando} accessibilityLabel="Carregando">
+                  <ActivityIndicator color={colors.primary} />
+                </View>
+              ) : erroPosts ? (
+                <EmptyState
+                  icon={BookIcon}
+                  message={erroPosts}
+                  action={
+                    <PrimaryButton
+                      label={COPY.tentarDeNovo}
+                      variant="outline"
+                      onPress={recarregar}
+                    />
+                  }
+                />
+              ) : dados.posts.length === 0 ? (
                 <EmptyState icon={BookIcon} message={COPY.semPosts} />
               ) : (
                 dados.posts.map((post) => (
@@ -204,6 +259,15 @@ export function ComunidadeScreen({ comunidadeId }: { comunidadeId: string }) {
           )}
         </View>
       </ScrollView>
+      <NovoPostSheet
+        visible={novoPostAberto}
+        destinoId={`comunidade:${comunidadeId}`}
+        publicar={(texto, signal) =>
+          publicarPostDaComunidade(comunidadeId, texto, signal)
+        }
+        onClose={() => setNovoPostAberto(false)}
+        onSuccess={adicionarPost}
+      />
       <ComentariosSheet
         visible={comentariosAbertos}
         postId={postDosComentarios}

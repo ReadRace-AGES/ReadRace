@@ -67,10 +67,28 @@ class PerfilControllerIT {
     }
 
     @Test
-    void retornaOutroUsuarioSemBibliotecaComTodasConquistasBloqueadas() {
+    void retornaOutroUsuarioDoSeedComBibliotecaCoerenteComOXp() {
+        // V29 (#220): 3 livros lidos e O Hobbit em andamento somam 1075 páginas; com Primeiros
+        // Passos, Mil Páginas e Em Boa Companhia, fecham os 1850 de XP.
         var perfil = service.buscar(UUID.fromString("00000000-0000-0000-0000-000000000002"));
         assertThat(perfil.nome()).isEqualTo("Ana Silva");
         assertThat(perfil.xpAtual()).isEqualTo(1850);
+        assertThat(perfil.estatisticas().livrosLidos()).isEqualTo(3);
+        assertThat(perfil.estatisticas().paginasLidas()).isEqualTo(1075);
+        assertThat(perfil.estatisticas().conquistas()).isEqualTo(3);
+        assertThat(perfil.conquistas()).hasSize(6);
+    }
+
+    @Test
+    @Transactional
+    void retornaUsuarioSemBibliotecaComTodasConquistasBloqueadas() {
+        UUID semBiblioteca = UUID.randomUUID();
+        jdbc.update(
+                "INSERT INTO usuario (id, nome, nome_usuario, email) VALUES (?, 'Sem Biblioteca',"
+                        + " 'sem_biblioteca', 'sem.biblioteca@example.com')",
+                semBiblioteca);
+
+        var perfil = service.buscar(semBiblioteca);
         assertThat(perfil.estatisticas().livrosLidos()).isZero();
         assertThat(perfil.estatisticas().paginasLidas()).isZero();
         assertThat(perfil.estatisticas().conquistas()).isZero();

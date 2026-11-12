@@ -1,6 +1,8 @@
 package com.readrace.api.service;
 
+import java.util.ArrayList;
 import java.util.EnumMap;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -29,17 +31,19 @@ public class ConquistaService {
         this.usuarioRepository = usuarioRepository;
     }
 
+    /** Grava e paga as conquistas alcançadas e devolve as que foram desbloqueadas agora. */
     @Transactional
-    public void avaliar(UUID usuarioId) {
+    public List<Conquista> avaliar(UUID usuarioId) {
         Optional<Usuario> usuario = usuarioRepository.buscarAtivoComLock(usuarioId);
         if (usuario.isEmpty()) {
-            return;
+            return List.of();
         }
 
         conquistaRepository.flush();
         List<Conquista> pendentes =
                 conquistaRepository.buscarPendentes(usuarioId, CriterioConquista.valores());
         Map<CriterioConquista, Long> medicoes = new EnumMap<>(CriterioConquista.class);
+        List<Conquista> desbloqueadas = new ArrayList<>();
         int recompensa = 0;
 
         for (Conquista conquista : pendentes) {
@@ -51,6 +55,7 @@ public class ConquistaService {
                     && conquistaRepository.registrarSeAusente(
                                     UUID.randomUUID(), conquista.getId(), usuarioId)
                             > 0) {
+                desbloqueadas.add(conquista);
                 recompensa += conquista.getRecompensaXp();
             }
         }
@@ -58,13 +63,18 @@ public class ConquistaService {
         if (recompensa > 0) {
             usuario.get().receberXp(recompensa);
         }
+
+        return desbloqueadas;
     }
 
+    /** Avalia os dois participantes e devolve o que cada um desbloqueou, pelo id do usuário. */
     @Transactional
-    public void avaliarParticipantes(DesafioAmigo desafio) {
+    public Map<UUID, List<Conquista>> avaliarParticipantes(DesafioAmigo desafio) {
+        Map<UUID, List<Conquista>> desbloqueadas = new HashMap<>();
         Stream.of(desafio.getCriador().getId(), desafio.getOponente().getId())
                 .sorted()
-                .forEach(this::avaliar);
+                .forEach(usuarioId -> desbloqueadas.put(usuarioId, avaliar(usuarioId)));
+        return desbloqueadas;
     }
 
     private long medir(CriterioConquista criterio, UUID usuarioId) {

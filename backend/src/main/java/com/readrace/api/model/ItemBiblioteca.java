@@ -71,8 +71,20 @@ public class ItemBiblioteca {
         this.statusLeitura = estaConcluido() ? StatusLeitura.lido : StatusLeitura.lendo;
     }
 
+    public void setFavorito(boolean favorito) {
+        this.favorito = favorito;
+    }
+
     public boolean estaConcluido() {
         return statusLeitura == StatusLeitura.lido || paginaMaxima >= livro.getTotalPaginas();
+    }
+
+    /**
+     * Lido até a última página pelo registro de leitura (decisão do gestor em 15/10 e 23/10). O
+     * status {@code lido} marcado pelo catálogo organiza a biblioteca, mas não dá recompensa.
+     */
+    public boolean leuAteOFim() {
+        return paginaMaxima >= livro.getTotalPaginas();
     }
 
     @Override

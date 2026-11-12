@@ -5,6 +5,8 @@ import Svg, { Path } from 'react-native-svg';
 import { ApiError } from '@/api/client';
 import { PrimaryButton } from '@/components/PrimaryButton';
 import { BottomSheet } from '@/components/BottomSheet';
+import { useToastContext } from '@/components/toast-provider';
+import { CloseIcon } from '@/features/desafios/DesafiarAmigoIcons';
 import { colors, radius, sizes, spacing, textStyles } from '@/theme';
 
 import {
@@ -12,6 +14,9 @@ import {
   ProgressoTimeoutError,
   type ProgressoLeituraResponse,
 } from './api';
+import { linhasDaRecompensa } from './recompensa';
+
+const AVISO_PAGINA_ANTERIOR = 'Você já passou desta página. Ela não soma XP.';
 
 export type RegistrarProgressoSheetProps = {
   visible: boolean;
@@ -43,10 +48,25 @@ function CheckIcon({ color = colors.textInverse }: { color?: string }) {
   );
 }
 
+// Livro com marcador antes do total de páginas, como no layout do `Adicionar progresso` 2060-1910:
+// o glifo ocupa 12x15, por isso o viewBox recorta só a área dele.
+function LivroIcon({ color = colors.text }: { color?: string }) {
+  return (
+    <Svg width={12} height={15} viewBox="4 2 16 20" fill="none">
+      <Path
+        d="M18 2H6c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm0 18H6V4h2v8l2.5-1.5L13 12V4h5v16z"
+        fill={color}
+      />
+    </Svg>
+  );
+}
+
 export function RegistrarProgressoSheet({
   visible,
   livroId,
   totalPaginas,
+  paginaAtual,
+  paginaMaximaAlcancada = paginaAtual,
   onClose,
   onSuccess,
 }: RegistrarProgressoSheetProps) {
@@ -54,13 +74,15 @@ export function RegistrarProgressoSheet({
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const submitting = useRef(false);
+  const { showSuccessToast } = useToastContext();
 
   useEffect(() => {
+    // Abre já na página de agora, e a barra mostra o percentual atual.
     if (visible) {
-      setPage('');
+      setPage(paginaAtual > 0 ? String(paginaAtual) : '');
       setError(null);
     }
-  }, [livroId, visible]);
+  }, [livroId, visible, paginaAtual]);
 
   const parsedPage = useMemo(() => {
     if (!/^\d+$/.test(page)) return null;
@@ -69,6 +91,19 @@ export function RegistrarProgressoSheet({
       ? parsed
       : null;
   }, [page, totalPaginas]);
+
+  // O parsedPage vira null acima do total; aqui fica o número cru para avisar quanto o livro tem.
+  const paginaDigitada = /^\d+$/.test(page) ? Number(page) : null;
+  const passouDoTotal = paginaDigitada != null && paginaDigitada > totalPaginas;
+  // Página anterior é aceita, só avisa antes de confirmar. O XP conta a partir da maior página
+  // já alcançada, que pode estar à frente da atual.
+  const paginaAnterior =
+    parsedPage != null && parsedPage < paginaMaximaAlcancada;
+  const aviso = passouDoTotal
+    ? `O livro tem ${totalPaginas} páginas.`
+    : paginaAnterior
+      ? AVISO_PAGINA_ANTERIOR
+      : null;
 
   const previewPage =
     parsedPage == null || Number.isNaN(parsedPage)
@@ -92,7 +127,9 @@ export function RegistrarProgressoSheet({
     try {
       const response = await registrarProgresso(livroId, parsedPage);
       onSuccess?.(response);
+      // O painel é um Modal e ficaria por cima do aviso: fecha antes de mostrar a recompensa.
       onClose();
+      showSuccessToast(linhasDaRecompensa(response));
     } catch (err) {
       setError(
         err instanceof ApiError || err instanceof ProgressoTimeoutError
@@ -126,7 +163,7 @@ export function RegistrarProgressoSheet({
             hitSlop={spacing[3]}
             style={styles.closeButton}
           >
-            <Text style={styles.closeText}>✕</Text>
+            <CloseIcon size={sizes.icon} color={colors.text} />
           </Pressable>
         </View>
 
@@ -145,7 +182,10 @@ export function RegistrarProgressoSheet({
         />
 
         <View style={styles.progressBlock}>
-          <Text style={styles.totalLabel}>/ {totalPaginas} páginas</Text>
+          <View style={styles.totalRow}>
+            <LivroIcon />
+            <Text style={styles.totalLabel}>/ {totalPaginas} páginas</Text>
+          </View>
           <View style={styles.progressTrack}>
             <View
               style={[styles.progressFill, { width: `${progressPercent}%` }]}
@@ -153,6 +193,12 @@ export function RegistrarProgressoSheet({
           </View>
           <Text style={styles.percentLabel}>{progressPercent}%</Text>
         </View>
+
+        {aviso && (
+          <Text accessibilityLiveRegion="polite" style={styles.aviso}>
+            {aviso}
+          </Text>
+        )}
 
         {error && (
           <Text
@@ -212,10 +258,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  closeText: {
-    ...textStyles.h1,
-    color: colors.text,
-  },
   input: {
     ...textStyles.display,
     height: spacing[10] * 2,
@@ -228,6 +270,11 @@ const styles = StyleSheet.create({
   progressBlock: {
     alignItems: 'center',
     gap: spacing[4],
+  },
+  totalRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing[2],
   },
   totalLabel: {
     ...textStyles.bodyStrong,
@@ -248,6 +295,11 @@ const styles = StyleSheet.create({
   percentLabel: {
     ...textStyles.bodyStrong,
     color: colors.textSecondary,
+  },
+  aviso: {
+    ...textStyles.bodySmall,
+    color: colors.textSecondary,
+    textAlign: 'center',
   },
   error: {
     ...textStyles.bodySmall,

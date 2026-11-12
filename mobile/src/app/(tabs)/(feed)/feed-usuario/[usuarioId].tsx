@@ -1,0 +1,8 @@
+import { useLocalSearchParams } from 'expo-router';
+
+import { PerfilScreen } from '@/features/perfil/PerfilScreen';
+
+export default function PerfilUsuarioFeedRoute() {
+  const { usuarioId } = useLocalSearchParams<{ usuarioId: string }>();
+  return <PerfilScreen key={usuarioId} usuarioId={usuarioId} origem="feed" />;
+}

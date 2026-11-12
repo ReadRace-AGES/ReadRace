@@ -56,6 +56,120 @@ class AutenticacaoCognitoIT {
     @Autowired private SeguirRepository seguir;
 
     @Test
+    void mutacoesDeSolicitacoesUsamSolicitanteEAdministradorDoToken() {
+        String base = "/api/clubes/50000000-0000-0000-0000-000000000001/solicitacoes";
+        String pedido = "78000000-0000-0000-0000-000000000001";
+        for (String rota :
+                new String[] {
+                    base, base + "/" + pedido + "/aceitar", base + "/" + pedido + "/recusar"
+                }) {
+            assertThat(mvc.post().uri(rota)).hasStatus(HttpStatus.UNAUTHORIZED);
+        }
+        UUID pedro = UUID.fromString("00000000-0000-0000-0000-000000000009");
+        UUID ana = UUID.fromString("00000000-0000-0000-0000-000000000002");
+        jdbc.update("UPDATE usuario SET cognito_sub = 'sub-pedro-mutacao-234' WHERE id = ?", pedro);
+        jdbc.update("UPDATE usuario SET cognito_sub = 'sub-ana-mutacao-234' WHERE id = ?", ana);
+        jdbc.update(
+                "UPDATE membro_clube SET cargo_clube = 'administrador' WHERE usuario_id = ? AND clube_id = '50000000-0000-0000-0000-000000000001'",
+                ana);
+        assertThat(mvc.post().uri(base).with(token("sub-pedro-mutacao-234", "token-pedro-234")))
+                .hasStatus(HttpStatus.CREATED)
+                .bodyJson()
+                .extractingPath("$.id")
+                .isEqualTo(pedido);
+        assertThat(
+                        mvc.post()
+                                .uri(base + "/" + pedido + "/aceitar")
+                                .with(token("sub-pedro-mutacao-234", "token-pedro-234")))
+                .hasStatus(HttpStatus.FORBIDDEN);
+        assertThat(
+                        mvc.post()
+                                .uri(base + "/" + pedido + "/aceitar")
+                                .with(token("sub-ana-mutacao-234", "token-ana-234")))
+                .hasStatusOk()
+                .bodyJson()
+                .extractingPath("$.situacao")
+                .isEqualTo("aceita");
+        assertThat(
+                        jdbc.queryForObject(
+                                "SELECT administrador_id FROM solicitacao_entrada_clube WHERE id = ?",
+                                UUID.class,
+                                UUID.fromString(pedido)))
+                .isEqualTo(ana);
+    }
+
+    @Test
+    void consultasDeClubesExigemLoginEUsamSituacaoDoUsuarioDoToken() {
+        String clube = "50000000-0000-0000-0000-000000000001";
+        for (String rota :
+                new String[] {
+                    "/api/clubes",
+                    "/api/clubes/" + clube,
+                    "/api/clubes/" + clube + "/solicitacoes",
+                    "/api/clubes/" + clube + "/posts"
+                }) {
+            assertThat(mvc.get().uri(rota)).hasStatus(HttpStatus.UNAUTHORIZED);
+        }
+        jdbc.update(
+                "UPDATE usuario SET cognito_sub = 'sub-pedro-234' WHERE id = ?",
+                UUID.fromString("00000000-0000-0000-0000-000000000009"));
+        assertThat(mvc.get().uri("/api/clubes").with(token("sub-pedro-234", "token-pedro-234")))
+                .hasStatusOk()
+                .bodyJson()
+                .extractingPath("$.clubes[?(@.id == '" + clube + "')].situacao")
+                .asList()
+                .containsExactly("pendente");
+        assertThat(
+                        mvc.get()
+                                .uri("/api/clubes/" + clube)
+                                .with(token("sub-pedro-234", "token-pedro-234")))
+                .hasStatusOk()
+                .bodyJson()
+                .extractingPath("$.situacao")
+                .isEqualTo("pendente");
+        assertThat(
+                        mvc.get()
+                                .uri("/api/clubes/" + clube + "/solicitacoes")
+                                .with(token("sub-pedro-234", "token-pedro-234")))
+                .hasStatus(HttpStatus.FORBIDDEN)
+                .bodyJson()
+                .extractingPath("$.code")
+                .isEqualTo("SO_LIDER_CRIA_QUIZ");
+        assertThat(
+                        mvc.get()
+                                .uri("/api/clubes/" + clube + "/posts")
+                                .with(token("sub-pedro-234", "token-pedro-234")))
+                .hasStatusOk()
+                .bodyJson()
+                .extractingPath("$.podeEscrever")
+                .isEqualTo(false);
+    }
+
+    @Test
+    void administradorDoTokenPodeListarSolicitacoesSemDependerDoSeed() {
+        UUID ana = UUID.fromString("00000000-0000-0000-0000-000000000002");
+        UUID clube = UUID.fromString("50000000-0000-0000-0000-000000000003");
+        jdbc.update("UPDATE usuario SET cognito_sub = 'sub-ana-234' WHERE id = ?", ana);
+        assertThat(
+                        mvc.get()
+                                .uri("/api/clubes/" + clube + "/solicitacoes")
+                                .with(token("sub-ana-234", "token-ana-234")))
+                .hasStatusOk()
+                .bodyJson()
+                .extractingPath("$.solicitacoes")
+                .asList()
+                .isEmpty();
+        assertThat(
+                        mvc.get()
+                                .uri("/api/clubes/" + clube)
+                                .with(token("sub-ana-234", "token-ana-234")))
+                .hasStatusOk()
+                .bodyJson()
+                .extractingPath("$.solicitacoesPendentes")
+                .isEqualTo(0);
+    }
+
+    @Test
     void buscaExcluiOUsuarioDoTokenEmVezDoUsuarioDeDemonstracao() {
         String idAna = "00000000-0000-0000-0000-000000000002";
         String sub = "sub-busca-222";
@@ -134,8 +248,13 @@ class AutenticacaoCognitoIT {
     @AfterTransaction
     void limparPrimeirosAcessos() {
         jdbc.update(
-                "DELETE FROM usuario WHERE cognito_sub IN ('sub-novo', 'sub-dominio-real', 'sub-seguir')");
-        jdbc.update("UPDATE usuario SET cognito_sub = NULL WHERE cognito_sub = 'sub-daniel'");
+                """
+                DELETE FROM usuario WHERE cognito_sub IN (
+                    'sub-novo', 'sub-dominio-real', 'sub-seguir', 'sub-sem-email',
+                    'sub-email-em-branco', 'sub-nome-longo', 'sub-daniel-b', 'sub-nao-verificado')
+                """);
+        jdbc.update(
+                "UPDATE usuario SET cognito_sub = NULL WHERE cognito_sub IN ('sub-daniel', 'sub-daniel-a')");
     }
 
     @Test
@@ -236,6 +355,117 @@ class AutenticacaoCognitoIT {
                 .bodyJson()
                 .extractingPath("$.id")
                 .isNotEqualTo(ID_DANIEL);
+    }
+
+    @Test
+    void deve_criar_perfil_para_conta_sem_email() {
+        given(userInfoClient.buscar("token-sem-email"))
+                .willReturn(new CognitoUserInfo("sub-sem-email", null, null, null, null));
+
+        assertThat(mvc.get().uri("/api/me").with(token("sub-sem-email", "token-sem-email")))
+                .hasStatusOk();
+
+        Usuario criado =
+                usuarios.findByCognitoSubAndExcluidoEmIsNull("sub-sem-email").orElseThrow();
+        assertThat(criado.getNomeUsuario()).startsWith("leitor");
+        assertThat(criado.getNome()).isNotBlank();
+        assertThat(criado.getEmail()).isEqualTo("sub-sem-email@sem-email.invalid");
+    }
+
+    @Test
+    void deve_tratar_email_em_branco_como_ausente() {
+        given(userInfoClient.buscar("token-em-branco"))
+                .willReturn(new CognitoUserInfo("sub-email-em-branco", "  ", "true", "Ana", null));
+
+        assertThat(mvc.get().uri("/api/me").with(token("sub-email-em-branco", "token-em-branco")))
+                .hasStatusOk();
+
+        Usuario criado =
+                usuarios.findByCognitoSubAndExcluidoEmIsNull("sub-email-em-branco").orElseThrow();
+        assertThat(criado.getNome()).isEqualTo("Ana");
+        assertThat(criado.getEmail()).isEqualTo("sub-email-em-branco@sem-email.invalid");
+    }
+
+    @Test
+    void deve_cortar_nome_com_mais_de_120_caracteres() {
+        given(userInfoClient.buscar("token-nome-longo"))
+                .willReturn(
+                        new CognitoUserInfo(
+                                "sub-nome-longo",
+                                "nome.longo@teste.com",
+                                "true",
+                                "A".repeat(200),
+                                null));
+
+        assertThat(mvc.get().uri("/api/me").with(token("sub-nome-longo", "token-nome-longo")))
+                .hasStatusOk();
+
+        Usuario criado =
+                usuarios.findByCognitoSubAndExcluidoEmIsNull("sub-nome-longo").orElseThrow();
+        assertThat(criado.getNome()).hasSize(120);
+    }
+
+    @Test
+    void nao_deve_tomar_o_perfil_ja_vinculado_a_outra_identidade() {
+        given(userInfoClient.buscar("token-daniel-a"))
+                .willReturn(
+                        new CognitoUserInfo(
+                                "sub-daniel-a", "daniel@example.com", "true", "Daniel", null));
+        given(userInfoClient.buscar("token-daniel-b"))
+                .willReturn(
+                        new CognitoUserInfo(
+                                "sub-daniel-b", "daniel@example.com", "true", "Outro", null));
+
+        assertThat(mvc.get().uri("/api/me").with(token("sub-daniel-a", "token-daniel-a")))
+                .hasStatusOk()
+                .bodyJson()
+                .extractingPath("$.id")
+                .isEqualTo(ID_DANIEL);
+        assertThat(mvc.get().uri("/api/me").with(token("sub-daniel-b", "token-daniel-b")))
+                .hasStatusOk()
+                .bodyJson()
+                .extractingPath("$.id")
+                .isNotEqualTo(ID_DANIEL);
+
+        assertThat(
+                        jdbc.queryForObject(
+                                "SELECT cognito_sub FROM usuario WHERE id = ?",
+                                String.class,
+                                UUID.fromString(ID_DANIEL)))
+                .isEqualTo("sub-daniel-a");
+        assertThat(
+                        jdbc.queryForObject(
+                                "SELECT email FROM usuario WHERE cognito_sub = 'sub-daniel-b'",
+                                String.class))
+                .isEqualTo("sub-daniel-b@sem-email.invalid");
+    }
+
+    @Test
+    void deve_criar_perfil_novo_quando_o_email_ja_existe_mas_nao_foi_verificado() {
+        given(userInfoClient.buscar("token-nao-verificado"))
+                .willReturn(
+                        new CognitoUserInfo(
+                                "sub-nao-verificado",
+                                "daniel@example.com",
+                                "false",
+                                "Alguém",
+                                null));
+
+        assertThat(
+                        mvc.get()
+                                .uri("/api/me")
+                                .with(token("sub-nao-verificado", "token-nao-verificado")))
+                .hasStatusOk()
+                .bodyJson()
+                .extractingPath("$.id")
+                .isNotEqualTo(ID_DANIEL);
+
+        assertThat(
+                        jdbc.queryForObject(
+                                "SELECT cognito_sub FROM usuario WHERE id = ?",
+                                String.class,
+                                UUID.fromString(ID_DANIEL)))
+                .isNull();
     }
 
     private static RequestPostProcessor token(String sub, String valorDoToken) {

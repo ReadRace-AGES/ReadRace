@@ -24,9 +24,15 @@ export type EstadoMembroComunidade = {
   sigo: boolean;
 };
 
-export function buscarComunidade(comunidadeId: string, signal?: AbortSignal) {
+export type OrdemComunidade = 'recentes' | 'em_alta';
+
+export function buscarComunidade(
+  comunidadeId: string,
+  ordem: OrdemComunidade = 'recentes',
+  signal?: AbortSignal
+) {
   return apiGet<Comunidade>(
-    `/api/comunidades/${encodeURIComponent(comunidadeId)}`,
+    `/api/comunidades/${encodeURIComponent(comunidadeId)}?ordem=${ordem}`,
     { signal }
   );
 }
@@ -35,6 +41,17 @@ export function seguirComunidade(comunidadeId: string, signal?: AbortSignal) {
   return apiRequest<EstadoMembroComunidade>(
     `/api/comunidades/${encodeURIComponent(comunidadeId)}/membros/eu`,
     { method: 'POST', signal }
+  );
+}
+
+export function publicarPostDaComunidade(
+  comunidadeId: string,
+  conteudo: string,
+  signal?: AbortSignal
+) {
+  return apiRequest<PostComunidade>(
+    `/api/comunidades/${encodeURIComponent(comunidadeId)}/posts`,
+    { method: 'POST', body: JSON.stringify({ conteudo }), signal }
   );
 }
 

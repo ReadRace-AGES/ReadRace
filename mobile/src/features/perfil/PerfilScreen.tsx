@@ -1,4 +1,3 @@
-
 import { useFocusEffect, useRouter, type Href } from 'expo-router';
 import { Fragment, useCallback, useRef, type ReactNode } from 'react';
 import {
@@ -9,7 +8,6 @@ import {
   Text,
   View,
 } from 'react-native';
-
 import { AppHeader } from '@/components/AppHeader';
 import { Avatar } from '@/components/avatar';
 import { BookCover } from '@/components/BookCover';
@@ -19,16 +17,9 @@ import { BookIcon } from '@/components/icons/BookIcon';
 import { PawIcon } from '@/components/icons/PawIcon';
 import { PrimaryButton } from '@/components/PrimaryButton';
 import { useToastContext } from '@/components/toast-provider';
+import { useVoltar } from '@/components/useVoltar';
 import { IconeConquista } from '@/features/conquistas/IconeConquista';
-import {
-  bookCover,
-  colors,
-  radius,
-  sizes,
-  spacing,
-  textStyles,
-} from '@/theme';
-
+import { bookCover, colors, radius, sizes, spacing, textStyles } from '@/theme';
 import type { Perfil } from './api';
 import { NivelAnel } from './NivelAnel';
 import { PerfilTopo } from './PerfilTopo';
@@ -41,7 +32,8 @@ export function PerfilConteudo({
   onPlaceholder,
   onVerSeguidores = onPlaceholder,
   onVerSeguindo = onPlaceholder,
-  onVerMaisConquistas = onPlaceholder,
+  onVerMaisConquistas,
+  onAdicionarFavorito,
   proprio = false,
   onAbrirLivro,
   onMascotes = onPlaceholder,
@@ -52,7 +44,9 @@ export function PerfilConteudo({
   onPlaceholder: () => void;
   onVerSeguidores?: () => void;
   onVerSeguindo?: () => void;
+  /** Sem callback, o "Ver mais" não aparece (perfil de outro leitor). */
   onVerMaisConquistas?: () => void;
+  onAdicionarFavorito?: () => void;
   proprio?: boolean;
   onAbrirLivro?: (livroId: string) => void;
   onMascotes?: () => void;
@@ -61,10 +55,10 @@ export function PerfilConteudo({
 }) {
   const stats = perfil.estatisticas;
   const mostrarFavoritos = proprio || perfil.livrosFavoritos.length > 0;
-
   return (
     <View style={styles.content}>
       {proprio ? (
+        // No próprio perfil a foto já está na arte do topo: nome à esquerda, anel à direita.
         <View style={styles.identityProprio}>
           <View style={styles.identityCopy}>
             <Text style={[styles.profileName, styles.alignStart]}>
@@ -74,7 +68,6 @@ export function PerfilConteudo({
               “{perfil.titulo}”
             </Text>
           </View>
-
           <NivelAnel
             nivel={perfil.nivel}
             xpNoNivel={perfil.xpNoNivel}
@@ -90,10 +83,8 @@ export function PerfilConteudo({
               size={sizes.avatarLarge}
             />
           </View>
-
           <Text style={styles.profileName}>{perfil.nome}</Text>
           <Text style={styles.profileTitle}>“{perfil.titulo}”</Text>
-
           <View style={styles.progressSummary}>
             <View
               style={styles.level}
@@ -102,7 +93,6 @@ export function PerfilConteudo({
             >
               <Text style={styles.levelValue}>{perfil.nivel}</Text>
             </View>
-
             <View style={styles.levelCopy}>
               <Text style={styles.caption}>Nível de leitura</Text>
               <Text style={styles.xp}>{numero(perfil.xpAtual)} XP</Text>
@@ -110,13 +100,12 @@ export function PerfilConteudo({
           </View>
         </View>
       )}
-
       <View style={styles.social}>
         {(['Seguidores', 'Seguindo'] as const).map((label, index) => (
           <Fragment key={label}>
             {index > 0 && <View style={styles.socialDivider} />}
-
             <Pressable
+              // Preserva o callback de estilo nativo, sem a conversão do NativeWind.
               cssInterop={false}
               accessibilityRole="button"
               onPress={index === 0 ? onVerSeguidores : onVerSeguindo}
@@ -133,15 +122,9 @@ export function PerfilConteudo({
           </Fragment>
         ))}
       </View>
-
       {proprio && (
-        <PrimaryButton
-          label="Mascotes"
-          icon={PawIcon}
-          onPress={onMascotes}
-        />
+        <PrimaryButton label="Mascotes" icon={PawIcon} onPress={onMascotes} />
       )}
-
       {!proprio && onAlternarSeguir && (
         <PrimaryButton
           label={
@@ -156,11 +139,9 @@ export function PerfilConteudo({
           onPress={onAlternarSeguir}
         />
       )}
-
       <Text accessibilityRole="header" style={styles.heading}>
         Estatísticas
       </Text>
-
       <View style={styles.grid}>
         {[
           ['Livros lidos', numero(stats.livrosLidos)],
@@ -179,35 +160,29 @@ export function PerfilConteudo({
           </View>
         ))}
       </View>
-
       <View style={styles.sectionHeader}>
         <Text accessibilityRole="header" style={styles.heading}>
           Conquistas
         </Text>
-
-        <Pressable
-          cssInterop={false}
-          accessibilityRole="button"
-          accessibilityLabel="Ver mais conquistas"
-          onPress={onVerMaisConquistas}
-          style={({ pressed }) => [
-            styles.link,
-            pressed && styles.pressed,
-          ]}
-        >
-          <Text style={styles.linkText}>Ver mais</Text>
-        </Pressable>
+        {onVerMaisConquistas && (
+          <Pressable
+            cssInterop={false}
+            accessibilityRole="button"
+            accessibilityLabel="Ver mais conquistas"
+            onPress={onVerMaisConquistas}
+            style={({ pressed }) => [styles.link, pressed && styles.pressed]}
+          >
+            <Text style={styles.linkText}>Ver mais</Text>
+          </Pressable>
+        )}
       </View>
-
       <View style={styles.grid}>
         {perfil.conquistas.map((conquista) => (
           <View
             key={conquista.id}
             style={styles.cell}
             accessible
-            accessibilityLabel={`${conquista.nome}. ${conquista.descricao}. ${
-              conquista.desbloqueada ? 'Desbloqueada' : 'Bloqueada'
-            }`}
+            accessibilityLabel={`${conquista.nome}. ${conquista.descricao}. ${conquista.desbloqueada ? 'Desbloqueada' : 'Bloqueada'}`}
           >
             <Card
               style={styles.achievementCard}
@@ -228,7 +203,6 @@ export function PerfilConteudo({
                   bloqueada={!conquista.desbloqueada}
                 />
               </View>
-
               <Text
                 style={[
                   styles.achievementName,
@@ -237,7 +211,6 @@ export function PerfilConteudo({
               >
                 {conquista.nome}
               </Text>
-
               <Text style={styles.caption}>
                 {conquista.desbloqueada ? 'Desbloqueada' : 'Bloqueada'}
               </Text>
@@ -245,13 +218,11 @@ export function PerfilConteudo({
           </View>
         ))}
       </View>
-
       {mostrarFavoritos && (
         <>
           <Text accessibilityRole="header" style={styles.heading}>
             Livros favoritos
           </Text>
-
           <ScrollView
             horizontal
             showsHorizontalScrollIndicator={false}
@@ -262,28 +233,22 @@ export function PerfilConteudo({
                 <BookCover
                   size="grid"
                   source={livro.capa}
-                  accessibilityLabel={`${livro.titulo}${
-                    livro.autor ? `, ${livro.autor}` : ''
-                  }`}
+                  accessibilityLabel={`${livro.titulo}${livro.autor ? `, ${livro.autor}` : ''}`}
                   onPress={
-                    onAbrirLivro
-                      ? () => onAbrirLivro(livro.id)
-                      : onPlaceholder
+                    onAbrirLivro ? () => onAbrirLivro(livro.id) : onPlaceholder
                   }
                 />
-
                 <Text numberOfLines={2} style={styles.favoriteTitle}>
                   {livro.titulo}
                 </Text>
               </View>
             ))}
-
             {proprio && (
               <View style={styles.favorite}>
                 <BookCover
                   variant="add-favorite"
                   accessibilityLabel="Adicionar favorito"
-                  onPress={onPlaceholder}
+                  onPress={onAdicionarFavorito ?? onPlaceholder}
                 />
               </View>
             )}
@@ -311,42 +276,44 @@ export function PerfilScreen({
     alterandoSeguir,
     proprio: perfilProprio,
   } = usePerfil(usuarioId);
-
   const router = useRouter();
-
-  // Task #202: mantém Seguidores e Seguindo na aba de origem.
   const rotaLeitores =
     origem === 'perfil'
       ? '/(tabs)/(perfil)/leitores/[usuarioId]'
       : origem === 'feed'
         ? '/(tabs)/(feed)/leitores/[usuarioId]'
         : '/(tabs)/(busca)/leitores/[usuarioId]';
-
   const { showToast, showErrorToast } = useToastContext();
-
   const proprio = usuarioId === undefined || perfilProprio;
-
-  const dados =
-    estado.situacao === 'sucesso' ? estado.dados : undefined;
-
+  // Sem histórico (ex.: app reaberto direto na rota), o voltar cai na aba de onde se veio.
+  const voltar = useVoltar(
+    origem === 'perfil' ? '/perfil' : origem === 'feed' ? '/feed' : '/buscar'
+  );
+  // Com usuarioId, a tela foi empilhada (Busca, lista de leitores) e precisa de seta, mesmo no
+  // próprio perfil. Sem ele, é a raiz da aba Perfil.
+  const abertoPorRota = usuarioId !== undefined;
+  // O detalhe do livro abre na pilha da aba de origem, para a aba marcada não mudar.
+  const rotaLivro =
+    origem === 'perfil'
+      ? '/perfil-livro'
+      : origem === 'feed'
+        ? '/feed-livro'
+        : '/buscar-livro';
+  const dados = estado.situacao === 'sucesso' ? estado.dados : undefined;
+  // A aba fica montada: sem buscar de novo ao voltar, o XP e o nível de uma leitura registrada em
+  // outra aba não apareceriam. O primeiro foco já é coberto pela carga inicial do hook.
   const primeiroFoco = useRef(true);
-
   useFocusEffect(
     useCallback(() => {
       if (primeiroFoco.current) {
         primeiroFoco.current = false;
         return;
       }
-
       atualizar();
     }, [atualizar])
   );
-
   return (
-    <ScrollView
-      style={styles.screen}
-      contentContainerStyle={styles.scroll}
-    >
+    <ScrollView style={styles.screen} contentContainerStyle={styles.scroll}>
       {proprio ? (
         <PerfilTopo
           nome={dados?.nome}
@@ -354,22 +321,11 @@ export function PerfilScreen({
           planoFundo={dados?.planoFundo}
           mascote={dados?.mascote?.imagem}
           onConfiguracoes={() => router.push('/configuracoes')}
+          onVoltar={abertoPorRota ? voltar : undefined}
         />
       ) : (
-        <AppHeader
-          compact
-          title="Perfil"
-          showBack
-          onBackPress={() =>
-            router.canGoBack()
-              ? router.back()
-              : router.replace(
-                  origem === 'feed' ? '/feed' : '/buscar'
-                )
-          }
-        />
+        <AppHeader compact title="Perfil" showBack onBackPress={voltar} />
       )}
-
       {estado.situacao === 'carregando' && (
         <ActivityIndicator
           style={styles.content}
@@ -377,20 +333,13 @@ export function PerfilScreen({
           color={colors.primary}
         />
       )}
-
       {estado.situacao === 'erro' && (
         <EmptyState
           icon={BookIcon}
           message={estado.mensagem}
-          action={
-            <PrimaryButton
-              label="Tentar novamente"
-              onPress={recarregar}
-            />
-          }
+          action={<PrimaryButton label="Tentar de novo" onPress={recarregar} />}
         />
       )}
-
       {estado.situacao === 'sucesso' && (
         <PerfilConteudo
           perfil={estado.dados}
@@ -405,65 +354,38 @@ export function PerfilScreen({
           onVerSeguidores={() =>
             router.push({
               pathname: rotaLeitores,
-              params: {
-                usuarioId: estado.dados.id,
-                tipo: 'seguidores',
-              },
-            } as unknown as Href)
+              params: { usuarioId: estado.dados.id, tipo: 'seguidores' },
+            })
           }
           onVerSeguindo={() =>
             router.push({
               pathname: rotaLeitores,
-              params: {
-                usuarioId: estado.dados.id,
-                tipo: 'seguindo',
-              },
-            } as unknown as Href)
+              params: { usuarioId: estado.dados.id, tipo: 'seguindo' },
+            })
           }
           onVerMaisConquistas={
-            proprio
-              ? () => router.push('/conquistas' as Href)
-              : undefined
+            proprio ? () => router.push('/conquistas' as Href) : undefined
           }
           onMascotes={
-            proprio
-              ? () => router.push('/mascotes' as Href)
-              : undefined
+            proprio ? () => router.push('/mascotes' as Href) : undefined
           }
-          onAbrirLivro={
-            proprio
-              ? (livroId) =>
-                  router.push(
-                    `/perfil-livro/${encodeURIComponent(
-                      livroId
-                    )}` as Href
-                  )
-              : undefined
+          onAdicionarFavorito={
+            proprio ? () => router.push('/adicionar-livro') : undefined
+          }
+          onAbrirLivro={(livroId) =>
+            router.push(`${rotaLivro}/${encodeURIComponent(livroId)}` as Href)
           }
         />
       )}
-
       {rodape}
     </ScrollView>
   );
 }
 
 const styles = StyleSheet.create({
-  screen: {
-    flex: 1,
-    backgroundColor: colors.surface,
-  },
-
-  scroll: {
-    flexGrow: 1,
-    paddingBottom: sizes.navHeight + spacing[6],
-  },
-
-  content: {
-    padding: spacing[4],
-    gap: spacing[4],
-  },
-
+  screen: { flex: 1, backgroundColor: colors.surface },
+  scroll: { flexGrow: 1, paddingBottom: sizes.navHeight + spacing[6] },
+  content: { padding: spacing[4], gap: spacing[4] },
   identity: {
     alignItems: 'center',
     gap: spacing[2],
@@ -471,44 +393,30 @@ const styles = StyleSheet.create({
     backgroundColor: colors.surfacePink,
     borderRadius: radius.xl,
   },
-
   identityProprio: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: spacing[4],
     paddingHorizontal: spacing[2],
   },
-
-  identityCopy: {
-    flex: 1,
-    minWidth: 0,
-    gap: spacing[1],
-  },
-
-  alignStart: {
-    textAlign: 'left',
-    marginTop: 0,
-  },
-
+  identityCopy: { flex: 1, minWidth: 0, gap: spacing[1] },
+  alignStart: { textAlign: 'left', marginTop: 0 },
   avatarFrame: {
     padding: spacing[1],
     borderRadius: radius.pill,
     backgroundColor: colors.surface,
   },
-
   profileName: {
     ...textStyles.h1,
     color: colors.primary,
     textAlign: 'center',
     marginTop: spacing[1],
   },
-
   profileTitle: {
     ...textStyles.bodySmall,
     color: colors.primarySoft,
     textAlign: 'center',
   },
-
   progressSummary: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -519,43 +427,13 @@ const styles = StyleSheet.create({
     backgroundColor: colors.surface,
     borderRadius: radius.pill,
   },
-
-  levelCopy: {
-    flexShrink: 1,
-    gap: spacing[1],
-  },
-
-  levelValue: {
-    ...textStyles.h3,
-    color: colors.primary,
-  },
-
-  xp: {
-    ...textStyles.bodyStrong,
-    color: colors.primary,
-  },
-
-  caption: {
-    ...textStyles.caption,
-    color: colors.textSecondary,
-  },
-
-  name: {
-    ...textStyles.h3,
-    color: colors.text,
-  },
-
-  heading: {
-    ...textStyles.h3,
-    color: colors.text,
-    marginTop: spacing[2],
-  },
-
-  body: {
-    ...textStyles.bodySmall,
-    color: colors.text,
-  },
-
+  levelCopy: { flexShrink: 1, gap: spacing[1] },
+  levelValue: { ...textStyles.h3, color: colors.primary },
+  xp: { ...textStyles.bodyStrong, color: colors.primary },
+  caption: { ...textStyles.caption, color: colors.textSecondary },
+  name: { ...textStyles.h3, color: colors.text },
+  heading: { ...textStyles.h3, color: colors.text, marginTop: spacing[2] },
+  body: { ...textStyles.bodySmall, color: colors.text },
   level: {
     borderRadius: radius.pill,
     borderWidth: sizes.borderWidth,
@@ -565,7 +443,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-
   social: {
     flexDirection: 'row',
     alignItems: 'stretch',
@@ -575,23 +452,13 @@ const styles = StyleSheet.create({
     backgroundColor: colors.surface,
     overflow: 'hidden',
   },
-
   socialDivider: {
     width: sizes.borderWidth,
     backgroundColor: colors.textSecondary,
     marginVertical: spacing[2],
   },
-
-  socialLabel: {
-    ...textStyles.micro,
-    color: colors.textSecondary,
-  },
-
-  socialValue: {
-    ...textStyles.bodySmall,
-    color: colors.text,
-  },
-
+  socialLabel: { ...textStyles.micro, color: colors.textSecondary },
+  socialValue: { ...textStyles.bodySmall, color: colors.text },
   socialButton: {
     alignItems: 'center',
     justifyContent: 'center',
@@ -600,34 +467,16 @@ const styles = StyleSheet.create({
     padding: spacing[2],
     minHeight: sizes.buttonHeight,
   },
-
-  grid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    rowGap: spacing[3],
-  },
-
-  cell: {
-    width: '50%',
-    paddingHorizontal: spacing[1],
-  },
-
+  grid: { flexDirection: 'row', flexWrap: 'wrap', rowGap: spacing[3] },
+  cell: { width: '50%', paddingHorizontal: spacing[1] },
   statCard: {
     backgroundColor: colors.surface,
     gap: spacing[1],
     borderWidth: sizes.borderWidth,
     borderColor: colors.border,
   },
-
-  statValue: {
-    ...textStyles.h1,
-    color: colors.primary,
-  },
-
-  achievementCard: {
-    flexGrow: 1,
-  },
-
+  statValue: { ...textStyles.h1, color: colors.primary },
+  achievementCard: { flexGrow: 1 },
   achievement: {
     flexGrow: 1,
     alignItems: 'center',
@@ -636,68 +485,34 @@ const styles = StyleSheet.create({
     borderWidth: sizes.borderWidth,
     borderColor: colors.border,
   },
-
   achievementIcon: {
     padding: spacing[3],
     borderRadius: radius.pill,
     backgroundColor: colors.surfacePink,
   },
-
   achievementName: {
     ...textStyles.bodySmallStrong,
     flexGrow: 1,
     color: colors.text,
     textAlign: 'center',
   },
-
-  lockedIcon: {
-    backgroundColor: colors.surfaceAlt,
-  },
-
+  lockedIcon: { backgroundColor: colors.surfaceAlt },
   sectionHeader: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
   },
-
   link: {
     borderRadius: radius.pill,
     padding: spacing[2],
     minHeight: sizes.buttonHeight,
     justifyContent: 'center',
   },
-
-  linkText: {
-    ...textStyles.bodySmallStrong,
-    color: colors.accent,
-  },
-
-  locked: {
-    backgroundColor: colors.surfaceDisabled,
-  },
-
-  muted: {
-    color: colors.textMuted,
-  },
-
-  favorites: {
-    gap: spacing[4],
-    paddingBottom: spacing[2],
-  },
-
-  favorite: {
-    width: bookCover.grid.width,
-    gap: spacing[2],
-  },
-
-  favoriteTitle: {
-    ...textStyles.captionStrong,
-    color: colors.text,
-  },
-
-  pressed: {
-    backgroundColor: colors.surfacePink,
-  },
+  linkText: { ...textStyles.bodySmallStrong, color: colors.accent },
+  locked: { backgroundColor: colors.surfaceDisabled },
+  muted: { color: colors.textMuted },
+  favorites: { gap: spacing[4], paddingBottom: spacing[2] },
+  favorite: { width: bookCover.grid.width, gap: spacing[2] },
+  favoriteTitle: { ...textStyles.captionStrong, color: colors.text },
+  pressed: { backgroundColor: colors.surfacePink },
 });
-
-export default PerfilScreen;

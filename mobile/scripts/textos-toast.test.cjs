@@ -48,7 +48,10 @@ const deps = {
     Path: 'Path',
   },
 };
-const { ClubeCard } = load('features/feed/ClubeCard.tsx', deps);
+const { ClubeCard } = load('features/feed/ClubeCard.tsx', {
+  ...deps,
+  '@/components/Card': load('components/Card.tsx', deps),
+});
 const { PostCard } = load('components/PostCard.tsx', deps);
 
 for (const count of [0, 1, 2]) {

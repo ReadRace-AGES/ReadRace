@@ -18,7 +18,6 @@ import { EmptyState } from '@/components/EmptyState';
 import { BookIcon } from '@/components/icons/BookIcon';
 import { PrimaryButton } from '@/components/PrimaryButton';
 import { Slider } from '@/components/Slider';
-import { useToastContext } from '@/components/toast-provider';
 import { useClube } from '@/features/clube/useClube';
 import { colors, radius, sizes, spacing, textStyles } from '@/theme';
 
@@ -36,7 +35,6 @@ const COPY = {
   placeholderTitulo: 'Ex: Feitiços e Poções - Ano 1',
   livroBase: 'Livro Base',
   sagaSelecionada: 'Saga Selecionada',
-  alterar: 'Alterar',
   secaoMecanicas: 'MECÂNICAS',
   recompensa: 'Recompensa de XP',
   recompensaApoio: 'Pontos ganhos por conclusão',
@@ -52,7 +50,6 @@ export type ConfigurarQuizScreenProps = {
 export function ConfigurarQuizScreen({ clubeId }: ConfigurarQuizScreenProps) {
   const router = useRouter();
   const insets = useSafeAreaInsets();
-  const { showToast } = useToastContext();
   const { clube, recarregar } = useClube(clubeId);
   const [titulo, setTitulo] = useState('');
   const [recompensaXp, setRecompensaXp] = useState(RECOMPENSA_INICIAL);
@@ -172,11 +169,6 @@ export function ConfigurarQuizScreen({ clubeId }: ConfigurarQuizScreenProps) {
                 ) : null}
               </>
             )}
-            <PrimaryButton
-              label={COPY.alterar}
-              variant="outline"
-              onPress={showToast}
-            />
           </Card>
         </View>
 

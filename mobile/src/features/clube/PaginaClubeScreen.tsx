@@ -1,4 +1,3 @@
-
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useFocusEffect, useRouter, type Href } from 'expo-router';
@@ -22,6 +21,7 @@ import { colors, spacing, textStyles, typography } from '@/theme';
 
 import { sairDoClube } from './api';
 import { abrirPerfilDoRanking } from './abrirPerfilDoRanking';
+import { EntradaClubeButton } from './EntradaClubeButton';
 import { RankingCard } from './RankingCard';
 import { useClube } from './useClube';
 
@@ -37,10 +37,15 @@ const COPY = {
   sairDoClube: 'Sair do clube',
   tituloConfirmacao: 'Sair do clube?',
   descricaoConfirmacao:
-    'Você deixa de ver o clube nos seus grupos e perde seus pontos nele.',
+    'Você deixa de ver o clube nos seus clubes e perde seus pontos nele.',
+  confirmacaoSucessao: (nome: string) =>
+    `Você é o único líder. Ao sair, ${nome} passa a liderar o clube.`,
   confirmarSaida: 'Sair',
   cancelar: 'Cancelar',
-  sucessoSaida: 'Você saiu do clube.',
+  sucessoSaida: (nome?: string) =>
+    nome
+      ? `Você saiu do clube. ${nome} agora é o líder.`
+      : 'Você saiu do clube.',
   erroSaida: 'Não foi possível sair do clube. Tente novamente.',
   quizJaRespondido: 'Você já respondeu o quiz deste clube.',
   quizInexistente: 'Este clube ainda não tem quiz.',
@@ -135,7 +140,8 @@ export function PaginaClubeScreen({ clubeId }: { clubeId: string }) {
   const router = useRouter();
   const { showErrorToast, showToastAfterNavigation } =
     useToastContext();
-  const { clube, recarregar } = useClube(clubeId);
+  const { clube, recarregar, atualizar, pedidoEnviado, cancelarCarregamento } =
+    useClube(clubeId);
 
   const [livroDoModal, setLivroDoModal] = useState<LivroDetalhe | null>(null);
   const [abrindoModal, setAbrindoModal] = useState(false);
@@ -157,10 +163,27 @@ export function PaginaClubeScreen({ clubeId }: { clubeId: string }) {
   useFocusEffect(useCallback(() => () => fecharModal(), [fecharModal]));
 
   const dados = clube.situacao === 'sucesso' ? clube.dados : null;
-  const podeSairDoClube = dados !== null && dados.meuCargo !== null;
+  const membro = dados?.situacao === 'membro';
+  const podeSairDoClube = membro && dados.meuCargo !== null;
+  const administrador = membro && dados.meuCargo === 'administrador';
+  const primeiroFoco = useRef(true);
+  useFocusEffect(
+    useCallback(() => {
+      if (primeiroFoco.current) {
+        primeiroFoco.current = false;
+      } else {
+        atualizar();
+      }
+      return cancelarCarregamento;
+    }, [atualizar, cancelarCarregamento])
+  );
+  useEffect(() => {
+    if (!membro) fecharModal();
+  }, [membro, fecharModal]);
 
-  // Voltando do quiz: responder mexeu nos pontos, então o ranking recarrega.
-  // O resumo só aparece depois do ranking novo.
+  // Voltando do quiz: responder mexeu nos Pontos, então o ranking recarrega. O resumo de quem
+  // concluiu só aparece depois do ranking novo, e não ao ganhar foco: o toast é escondido na troca
+  // de rota.
   useFocusEffect(
     useCallback(() => {
       const retorno = consumirRetorno(clubeId);
@@ -170,7 +193,9 @@ export function PaginaClubeScreen({ clubeId }: { clubeId: string }) {
     }, [clubeId, recarregar])
   );
 
-  // Mostra o resumo depois que a recarga passou por carregando e voltou.
+  // No render em que o resumo chega, `clube` ainda é o sucesso antigo: mostrar ali faria o toast
+  // subir antes da troca de rota e ser escondido por ela. Só mostra depois que a recarga passou
+  // por `carregando` e voltou.
   const recargaDoQuizComecou = useRef(false);
   useEffect(() => {
     if (!resumoDoQuiz) return;
@@ -219,10 +244,10 @@ export function PaginaClubeScreen({ clubeId }: { clubeId: string }) {
     setSaindoDoClube(true);
     setErroAoSair(null);
     try {
-      await sairDoClube(clubeId);
+      const resultado = await sairDoClube(clubeId);
       setConfirmandoSaida(false);
-      showToastAfterNavigation(COPY.sucessoSaida);
-      voltar();
+      showToastAfterNavigation(COPY.sucessoSaida(resultado.novoLider?.nome));
+      router.replace('/feed');
     } catch (erro: unknown) {
       setErroAoSair(erro instanceof ApiError ? erro.message : COPY.erroSaida);
     } finally {
@@ -232,7 +257,7 @@ export function PaginaClubeScreen({ clubeId }: { clubeId: string }) {
   }
 
   async function abrirRegistroDeLeitura() {
-    if (!dados || abrindoModal) return;
+    if (!membro || !dados || abrindoModal) return;
 
     setAbrindoModal(true);
     setErroDoModal(null);
@@ -260,9 +285,9 @@ export function PaginaClubeScreen({ clubeId }: { clubeId: string }) {
     }
   }
 
-  /** O que o "Acessar Quiz" faz depende de `meuCargo` e do estado do quiz. */
+  /** O que o "Acessar Quiz" faz depende de `meuCargo` e, para o membro, do estado do quiz. */
   async function acessarQuiz() {
-    if (!dados || abrindoQuiz) return;
+    if (!membro || !dados || abrindoQuiz) return;
     if (dados.meuCargo === 'administrador') {
       router.push(rotaDaConfiguracaoDoQuiz(clubeId));
       return;
@@ -294,7 +319,7 @@ export function PaginaClubeScreen({ clubeId }: { clubeId: string }) {
     }
   }
 
-  // Título do livro em negrito seguido do autor em regular.
+  // Título do livro em negrito seguido do autor em regular, como a definição travada pede.
   const subtitulo = dados ? (
     <>
       <Text style={styles.tituloDoLivro}>{dados.livroAtual.titulo}</Text>
@@ -318,6 +343,7 @@ export function PaginaClubeScreen({ clubeId }: { clubeId: string }) {
         <EmptyState
           icon={BookIcon}
           message={clube.mensagem}
+          messageStyle={{ color: colors.danger }}
           action={
             <View style={styles.acoesDoErro}>
               <PrimaryButton
@@ -357,37 +383,66 @@ export function PaginaClubeScreen({ clubeId }: { clubeId: string }) {
             <PrimaryButton
               label={COPY.registrarLeitura}
               icon={IconePlus}
-              disabled={!dados}
+              disabled={!membro}
               loading={abrindoModal}
               onPress={abrirRegistroDeLeitura}
             />
 
             <PrimaryButton
               label={COPY.acessarQuiz}
+              variant="outline"
               icon={IconeCheck}
-              disabled={!dados}
+              disabled={!membro}
               loading={abrindoQuiz}
               onPress={acessarQuiz}
             />
+            {dados && (
+              <Text className="text-center font-inter text-caption text-text-secondary">
+                {dados.temQuizAtivo
+                  ? 'Quiz do livro disponível'
+                  : administrador
+                    ? 'Crie um quiz para este livro'
+                    : 'Ainda não há quiz para este livro'}
+              </Text>
+            )}
 
             <PrimaryButton
               label={COPY.forum}
+              variant="outline"
               icon={IconeLista}
               disabled={!dados}
-              onPress={() => router.push(rotaDoForum(clubeId))}
+              onPress={() => {
+                if (dados) router.push(rotaDoForum(clubeId));
+              }}
             />
 
             <PrimaryButton
               label={COPY.chat}
+              variant="outline"
               icon={IconeChat}
-              disabled={!dados}
+              disabled={!membro}
               onPress={() => {
-                if (dados) {
+                if (membro && dados) {
                   router.push(rotaDoChat(clubeId, dados.nome));
                 }
               }}
             />
           </View>
+
+          {administrador && (
+            <PrimaryButton
+              label={
+                dados.solicitacoesPendentes === undefined
+                  ? 'Solicitações'
+                  : `Solicitações (${dados.solicitacoesPendentes})`
+              }
+              variant="outline"
+              onPress={() => {
+                if (administrador)
+                  router.push(`/clube/${clubeId}/solicitacoes` as Href);
+              }}
+            />
+          )}
 
           {erroDoModal && (
             <Text accessibilityRole="alert" style={styles.erroDoModal}>
@@ -399,11 +454,19 @@ export function PaginaClubeScreen({ clubeId }: { clubeId: string }) {
             ranking={dados?.ranking ?? null}
             onLinhaPress={(usuarioId) => void abrirPerfil(usuarioId)}
             onVerTodosPress={
-              dados?.meuCargo
-                ? () => router.push(rotaDoRanking(clubeId))
-                : undefined
+              membro ? () => router.push(rotaDoRanking(clubeId)) : undefined
             }
           />
+
+          {dados && !membro && (
+            <EntradaClubeButton
+              key={clubeId}
+              clubeId={clubeId}
+              situacao={dados.situacao}
+              onPedido={pedidoEnviado}
+              onReconciliar={atualizar}
+            />
+          )}
 
           {podeSairDoClube && (
             <PrimaryButton
@@ -416,7 +479,7 @@ export function PaginaClubeScreen({ clubeId }: { clubeId: string }) {
         </View>
       </ScrollView>
 
-      {livroDoModal && (
+      {membro && livroDoModal && (
         <RegistrarProgressoSheet
           visible
           livroId={livroDoModal.livro.id}
@@ -439,7 +502,9 @@ export function PaginaClubeScreen({ clubeId }: { clubeId: string }) {
         <View style={styles.confirmacaoSaida}>
           <Text style={styles.tituloConfirmacao}>{COPY.tituloConfirmacao}</Text>
           <Text style={styles.descricaoConfirmacao}>
-            {COPY.descricaoConfirmacao}
+            {dados?.proximoLider
+              ? COPY.confirmacaoSucessao(dados.proximoLider.nome)
+              : COPY.descricaoConfirmacao}
           </Text>
           {erroAoSair && (
             <Text accessibilityRole="alert" style={styles.erroDoModal}>
@@ -495,21 +560,15 @@ const styles = StyleSheet.create({
 
   erroDoModal: {
     ...textStyles.bodySmall,
-    color: colors.accent,
+    color: colors.danger,
     textAlign: 'center',
   },
-
-  confirmacaoSaida: {
-    paddingBottom: spacing[6],
-    gap: spacing[4],
-  },
-
+  confirmacaoSaida: { paddingBottom: spacing[6], gap: spacing[4] },
   tituloConfirmacao: {
     ...textStyles.body,
     fontFamily: typography.fontFamily.bold,
     textAlign: 'center',
   },
-
   descricaoConfirmacao: {
     ...textStyles.body,
     color: colors.textMuted,

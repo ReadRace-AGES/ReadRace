@@ -78,7 +78,7 @@ const deferred = () => {
   return { promise, resolve, reject };
 };
 
-async function mount(dados = forum()) {
+async function mount(dados = forum(), erroInicial = null) {
   const h = { gets: [], posts: [], likes: [], erros: [] };
   const request = (list, args) => {
     const d = deferred();
@@ -126,6 +126,7 @@ async function mount(dados = forum()) {
     },
     '@/features/livro/model': { tempoRelativo: () => '' },
     './NovoPostSheet': { NovoPostSheet },
+    './api': api,
     './useForumClube': {
       useForumClube: (id) => {
         h.state = useForumClube(id);
@@ -133,11 +134,24 @@ async function mount(dados = forum()) {
       },
     },
   });
-  h.render = (clubeId) => React.createElement(ForumClubeScreen, { clubeId });
+  let rotaClubeId;
+  const { default: ForumRoute } = load(
+    'app/(tabs)/(feed)/clube/[clubeId]/forum.tsx',
+    {
+      'expo-router': { useLocalSearchParams: () => ({ clubeId: rotaClubeId }) },
+      '@/features/forum/ForumClubeScreen': { ForumClubeScreen },
+    }
+  );
+  h.render = (clubeId) => {
+    rotaClubeId = clubeId;
+    return React.createElement(ForumRoute);
+  };
   await act(async () => {
     h.tree = create(h.render(dados.clube.id));
   });
-  await act(async () => h.gets[0].resolve(dados));
+  await act(async () =>
+    erroInicial ? h.gets[0].reject(erroInicial) : h.gets[0].resolve(dados)
+  );
   h.all = (type) => h.tree.root.findAllByType(type);
   h.button = (label) =>
     h.all('PrimaryButton').find((item) => item.props.label === label);
@@ -251,6 +265,7 @@ test('entrada outline aparece exclusivamente com permissão, em fórum cheio ou 
     for (const posts of [[], [post('antigo')]]) {
       const h = await mount(forum(permitido, posts));
       try {
+        assert.equal(h.all('PostCard').length, posts.length);
         assert.equal(!!h.button('Escrever post'), permitido);
         if (permitido)
           assert.equal(h.button('Escrever post').props.variant, 'outline');
@@ -259,6 +274,40 @@ test('entrada outline aparece exclusivamente com permissão, em fórum cheio ou 
         await h.dispose();
       }
     }
+});
+
+for (const situacao of ['nenhuma', 'pendente', 'membro'])
+  test(`rota direta do fórum permite leitura para ${situacao} e respeita publicação`, async () => {
+    const h = await mount(forum(situacao === 'membro', [post('visivel')]));
+    try {
+      assert.equal(h.all('PostCard')[0].props.text, post('visivel').texto);
+      assert.equal(!!h.button('Escrever post'), situacao === 'membro');
+      assert.equal(h.posts.length, 0);
+    } finally {
+      await h.dispose();
+    }
+  });
+
+test('rota direta preserva erro de clube indisponível e permite tentar novamente', async () => {
+  const h = await mount(
+    forum(),
+    new client.ApiError(404, {
+      code: 'RECURSO_NAO_ENCONTRADO',
+      message: 'Clube não encontrado.',
+    })
+  );
+  try {
+    assert.equal(h.all('EmptyState')[0].props.message, 'Clube não encontrado.');
+    assert.equal(h.all('PostCard').length, 0);
+    assert.equal(h.button('Escrever post'), undefined);
+    await act(async () =>
+      h.all('EmptyState')[0].props.action.props.children[0].props.onPress()
+    );
+    await act(async () => h.gets[1].resolve(forum(false, [post('visivel')])));
+    assert.equal(h.all('PostCard').length, 1);
+  } finally {
+    await h.dispose();
+  }
 });
 
 test('painel não trunca texto, desabilita inválidos e descarta ao fechar', async () => {

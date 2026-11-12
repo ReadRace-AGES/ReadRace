@@ -7,6 +7,131 @@ const React = require('react');
 const { act, create } = require('react-test-renderer');
 globalThis.IS_REACT_ACT_ENVIRONMENT = true;
 
+test('biblioteca atualiza ao retornar de leitura ou inclusão sem remontar a tela', async () => {
+  const listas = ['favoritos', 'lendo', 'desejo', 'lidos'];
+  const resposta = (lista, ids, cursor = null) =>
+    Object.fromEntries(
+      listas.map((nome) => [
+        nome,
+        {
+          itens: nome === lista ? ids.map((livroId) => ({ livroId })) : [],
+          proximoCursor: nome === lista ? cursor : null,
+        },
+      ])
+    );
+  let resolver;
+  let chamadas = 0;
+  let foco;
+  let estado;
+  const { useBiblioteca } = load('features/biblioteca/useBiblioteca.ts', {
+    '@/api/client': { mensagemErroCarregamento: () => 'Erro' },
+    './api': {
+      LISTAS_BIBLIOTECA: listas,
+      buscarBiblioteca: () => {
+        chamadas++;
+        return chamadas === 1
+          ? Promise.resolve(resposta('lendo', ['livro']))
+          : new Promise((resolve) => {
+              resolver = resolve;
+            });
+      },
+    },
+  });
+  const { default: Screen } = load('app/(tabs)/(biblioteca)/meus-livros.tsx', {
+    '@/features/progresso/RegistrarProgressoSheet': { RegistrarProgressoSheet: 'RegistrarProgressoSheet' },
+    'expo-router': {
+      router: {},
+      useFocusEffect: (callback) => {
+        foco = callback;
+        React.useEffect(callback, [callback]);
+      },
+    },
+    '@/features/biblioteca/useBiblioteca': { useBiblioteca },
+    '@/features/biblioteca/MeusLivrosView': {
+      MeusLivrosView: (props) => {
+        estado = props;
+        return null;
+      },
+    },
+  });
+  const tree = await mount(Screen);
+  try {
+    assert.equal(chamadas, 1, 'primeiro foco não duplica a carga');
+    await act(async () => foco());
+    assert.equal(estado.biblioteca.situacao, 'sucesso');
+    await act(async () => resolver(resposta('lidos', ['livro'])));
+    assert.equal(estado.biblioteca.dados.lendo.itens.length, 0);
+    assert.equal(estado.biblioteca.dados.lidos.itens[0].livroId, 'livro');
+    await act(async () => foco());
+    await act(async () => resolver(resposta('desejo', ['novo'])));
+    assert.equal(estado.biblioteca.dados.desejo.itens[0].livroId, 'novo');
+    assert.equal(chamadas, 3);
+  } finally {
+    await close(tree);
+  }
+});
+
+test('atualização preserva páginas exploradas, ignora respostas antigas e tolera falha de rede', async () => {
+  let estado;
+  let versao = 0;
+  let paginaAntiga;
+  let signalAntigo;
+  const { useBiblioteca } = load('features/biblioteca/useBiblioteca.ts', {
+    '@/api/client': { mensagemErroCarregamento: () => 'Erro' },
+    './api': {
+      LISTAS_BIBLIOTECA: ['lendo'],
+      buscarBiblioteca: async () => {
+        if (versao === 2) throw new Error('offline');
+        return {
+          lendo: {
+            itens: [{ livroId: `inicio-${versao}` }],
+            proximoCursor: `cursor-${versao}`,
+          },
+        };
+      },
+      buscarPaginaBiblioteca: async (lista, cursor, signal) => {
+        if (cursor === 'pendente') {
+          signalAntigo = signal;
+          return new Promise((resolve) => {
+            paginaAntiga = resolve;
+          });
+        }
+        return {
+          itens: [{ livroId: `fim-${versao}` }],
+          proximoCursor: versao === 0 ? 'pendente' : null,
+        };
+      },
+    },
+  });
+  function Probe() {
+    estado = useBiblioteca();
+    return null;
+  }
+  const tree = await mount(Probe);
+  try {
+    await act(async () => estado.carregarMais('lendo'));
+    await act(async () => estado.carregarMais('lendo'));
+    versao = 1;
+    await act(async () => estado.atualizar());
+    assert.equal(signalAntigo.aborted, true);
+    assert.deepEqual(
+      estado.biblioteca.dados.lendo.itens.map((i) => i.livroId),
+      ['inicio-1', 'fim-1']
+    );
+    await act(async () =>
+      paginaAntiga({ itens: [{ livroId: 'obsoleto' }], proximoCursor: null })
+    );
+    assert.equal(estado.biblioteca.dados.lendo.itens.length, 2);
+    versao = 2;
+    await act(async () => estado.atualizar());
+    assert.equal(estado.biblioteca.situacao, 'sucesso');
+    assert.equal(estado.biblioteca.dados.lendo.carregandoMais, false);
+    assert.equal(estado.biblioteca.dados.lendo.itens[0].livroId, 'inicio-1');
+  } finally {
+    await close(tree);
+  }
+});
+
 function load(file, dependencies = {}) {
   const { outputText } = ts.transpileModule(
     fs.readFileSync(path.join(__dirname, '../src', file), 'utf8'),
@@ -330,9 +455,13 @@ test('ranking completo e paginação mantêm as posições vindas da API', async
 test('Busca: placeholder segue a aba; vazio inicial é diferente de nenhum resultado', async () => {
   const { BuscaView } = load('features/busca/BuscaView.tsx', base);
   const { default: BuscarScreen } = load('app/(tabs)/(busca)/buscar.tsx', {
-    'expo-router': { router: { push: noop } },
+    'expo-router': {
+      router: { push: noop },
+      useLocalSearchParams: () => ({}),
+    },
     '@/features/busca/BuscaView': {
       BuscaView,
+      ABAS: ['Livros', 'Usuários', 'Comunidades'],
       ABA_INICIAL: 'Usuários',
       TIPO_POR_ABA: {
         Livros: 'livros',
@@ -353,11 +482,11 @@ test('Busca: placeholder segue a aba; vazio inicial é diferente de nenhum resul
   try {
     assert.equal(
       tree.root.findByType('TextInput').props.placeholder,
-      'Nome de usuário ou comunidade'
+      'Nome ou @usuário do leitor'
     );
     assert.equal(
       tree.root.findByType('EmptyState').props.message,
-      'Busque por leitores, comunidades ou livros'
+      'Encontre outros leitores pelo nome ou @usuário.'
     );
     for (const aba of ['Livros', 'Comunidades', 'Usuários']) {
       const tab = tree.root
@@ -372,7 +501,7 @@ test('Busca: placeholder segue a aba; vazio inicial é diferente de nenhum resul
         tree.root.findByType('TextInput').props.placeholder,
         aba === 'Livros'
           ? 'Título ou autor do livro'
-          : 'Nome de usuário ou comunidade'
+          : aba === 'Usuários' ? 'Nome ou @usuário do leitor' : 'Nome da comunidade'
       );
       act(() =>
         tree.root.findByType('TextInput').props.onChangeText('  xyzxyz  ')
@@ -426,7 +555,11 @@ test('Feed: saudação inteira com quebra de linha, selo preservado e Ver todos 
   let all = 0;
   const { FeedComunidadesView } = load(
     'features/feed/FeedComunidadesView.tsx',
-    { ...base, './ClubeCard': { ClubeCard: 'ClubeCard' } }
+    {
+      ...base,
+      './ClubeCard': { ClubeCard: 'ClubeCard' },
+      './FeedSocialView': { FeedSocialView: 'FeedSocialView' },
+    }
   );
   const tree = await mount(FeedComunidadesView, {
     feed: {
@@ -437,8 +570,11 @@ test('Feed: saudação inteira com quebra de linha, selo preservado e Ver todos 
         comunidades: [],
       },
     },
+    aba: 'Comunidades',
+    onAbaChange: noop,
+    social: { social: { situacao: 'carregando' }, recarregar: noop },
+    onBuscarLeitoresPress: noop,
     onVerTodosPress: () => all++,
-    onSocialPress: noop,
   });
   try {
     const greeting = tree.root
@@ -553,25 +689,31 @@ test('Desafiar amigo: Livro Específico permite quebra e lupa não encolhe com o
 });
 
 test('comunidade: Seguir e Em alta preservam callbacks e têm área de botão', async () => {
-  let follow = 0,
-    toast = 0;
+  let follow = 0;
+  const ordens = [];
   const { ComunidadeScreen } = load(
     'features/comunidade/ComunidadeScreen.tsx',
     {
       ...base,
       '@/components/PostCard': { PostCard: 'PostCard' },
+      '@/components/PrimaryButton': { PrimaryButton: 'PrimaryButton' },
       '@/components/toast-provider': {
         useToastContext: () => ({ showToast: () => toast++ }),
       },
       '@/features/comentarios/ComentariosSheet': {
         ComentariosSheet: 'ComentariosSheet',
       },
+      '@/features/forum/NovoPostSheet': { NovoPostSheet: 'NovoPostSheet' },
+      './api': {},
+      '@/components/useVoltar': { useVoltar: () => noop },
       './ComunidadeScreen.styles': load(
         'features/comunidade/ComunidadeScreen.styles.ts',
         base
       ),
       './useComunidade': {
-        useComunidade: () => ({
+        useComunidade: (_comunidadeId, ordem) => {
+          ordens.push(ordem);
+          return {
           comunidade: {
             situacao: 'sucesso',
             dados: {
@@ -584,22 +726,106 @@ test('comunidade: Seguir e Em alta preservam callbacks e têm área de botão', 
           alternarSeguimento: async () => {
             follow++;
           },
-        }),
+          };
+        },
       },
     }
   );
-  const tree = await mount(ComunidadeScreen, { comunidadeId: 'id' });
+  const tree = await mount(ComunidadeScreen, {
+    comunidadeId: 'id',
+    origem: '/buscar',
+  });
   try {
+    const maisRecentes = tree.root
+      .findAllByType('Pressable')
+      .find((n) => n.props.accessibilityLabel === 'Mais recentes');
+    assert.equal(maisRecentes.props.accessibilityRole, 'tab');
+    assert.deepEqual(maisRecentes.props.accessibilityState, {
+      selected: true,
+    });
     for (const label of ['Seguir', 'Em alta']) {
       const action = tree.root
         .findAllByType('Pressable')
         .find((n) => n.props.accessibilityLabel === label);
-      assert.equal(action.props.accessibilityRole, 'button');
+      if (label === 'Em alta') {
+        assert.equal(action.props.accessibilityRole, 'tab');
+        assert.deepEqual(action.props.accessibilityState, {
+          selected: false,
+        });
+      } else {
+        assert.equal(action.props.accessibilityRole, 'button');
+      }
       assertTouchTarget(action);
       await act(async () => action.props.onPress());
     }
+    const emAlta = tree.root
+      .findAllByType('Pressable')
+      .find((n) => n.props.accessibilityLabel === 'Em alta');
+    assert.deepEqual(emAlta.props.accessibilityState, { selected: true });
     assert.equal(follow, 1);
-    assert.equal(toast, 1);
+    assert.equal(ordens.at(-1), 'em_alta');
+  } finally {
+    await close(tree);
+  }
+});
+
+test('comunidade: falha em Em alta permite retry sem trocar a aba selecionada', async () => {
+  const { ComunidadeScreen } = load(
+    'features/comunidade/ComunidadeScreen.tsx',
+    {
+      ...base,
+      '@/components/PostCard': { PostCard: 'PostCard' },
+      '@/features/comentarios/ComentariosSheet': {
+        ComentariosSheet: 'ComentariosSheet',
+      },
+      '@/features/forum/NovoPostSheet': { NovoPostSheet: 'NovoPostSheet' },
+      './api': {},
+      '@/components/useVoltar': { useVoltar: () => noop },
+      './ComunidadeScreen.styles': load(
+        'features/comunidade/ComunidadeScreen.styles.ts',
+        base
+      ),
+      './useComunidade': {
+        useComunidade: (_comunidadeId, ordem) => {
+          const [recuperado, setRecuperado] = React.useState(false);
+          return {
+            comunidade: {
+              situacao: 'sucesso',
+              dados: {
+                nome: 'Comunidade',
+                sigo: false,
+                seguidores: 10,
+                posts: [],
+              },
+            },
+            carregandoPosts: false,
+            erroPosts: ordem === 'em_alta' && !recuperado ? 'Falha' : null,
+            recarregar: () => setRecuperado(true),
+            alternarSeguimento: async () => {},
+            alternarCurtida: async () => {},
+            somarComentario: () => {},
+          };
+        },
+      },
+    }
+  );
+  const tree = await mount(ComunidadeScreen, {
+    comunidadeId: 'id',
+    origem: '/buscar',
+  });
+  try {
+    const emAlta = () =>
+      tree.root
+        .findAllByType('Pressable')
+        .find((n) => n.props.accessibilityLabel === 'Em alta');
+    await act(async () => emAlta().props.onPress());
+    assert.equal(tree.root.findByType('EmptyState').props.message, 'Falha');
+    assert.deepEqual(emAlta().props.accessibilityState, { selected: true });
+    await act(async () =>
+      tree.root.findByType('EmptyState').props.action.props.onPress()
+    );
+    assert.equal(tree.root.findAllByType('EmptyState').length, 1);
+    assert.deepEqual(emAlta().props.accessibilityState, { selected: true });
   } finally {
     await close(tree);
   }

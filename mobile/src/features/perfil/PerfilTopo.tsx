@@ -1,6 +1,7 @@
 import { Image } from 'expo-image';
 import { Pressable, StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import Svg, { Path } from 'react-native-svg';
 import { Avatar } from '@/components/avatar';
 import { GearIcon } from '@/components/icons/GearIcon';
 import {
@@ -10,7 +11,7 @@ import {
 import { arteDoMascote } from '@/features/mascotes/imagens';
 import { colors, radius, sizes, spacing } from '@/theme';
 
-import { PlanoDeFundo, PROPORCAO_CENARIO } from './planosDeFundo';
+import { PlanoDeFundo } from './planosDeFundo';
 
 export function PerfilTopo({
   nome,
@@ -18,6 +19,7 @@ export function PerfilTopo({
   planoFundo,
   mascote,
   onConfiguracoes,
+  onVoltar,
 }: {
   nome?: string;
   avatar?: string | null;
@@ -26,6 +28,8 @@ export function PerfilTopo({
   /** Chave da arte do mascote escolhido; sem ela, o perfil ainda não carregou. */
   mascote?: string;
   onConfiguracoes: () => void;
+  /** Só quando o perfil foi empilhado (ex.: tocar em si mesmo na Busca). */
+  onVoltar?: () => void;
 }) {
   const insets = useSafeAreaInsets();
   return (
@@ -37,7 +41,7 @@ export function PerfilTopo({
             <Avatar
               name={nome}
               photoUrl={avatar}
-              size={sizes.avatarLarge * 3}
+              size={sizes.avatarLarge * 2}
             />
           </View>
         </View>
@@ -53,6 +57,30 @@ export function PerfilTopo({
           />
         </View>
       )}
+      {onVoltar && (
+        <Pressable
+          accessibilityRole="button"
+          accessibilityLabel="Voltar"
+          onPress={onVoltar}
+          hitSlop={spacing[2]}
+          style={[styles.voltar, { top: insets.top + spacing[2] }]}
+        >
+          <Svg
+            width={sizes.icon}
+            height={sizes.icon}
+            viewBox="0 0 24 24"
+            fill="none"
+          >
+            <Path
+              d="M15 5l-7 7 7 7"
+              stroke={colors.primary}
+              strokeWidth={2}
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            />
+          </Svg>
+        </Pressable>
+      )}
       <Pressable
         accessibilityRole="button"
         accessibilityLabel="Configurações"
@@ -67,12 +95,12 @@ export function PerfilTopo({
 }
 
 const styles = StyleSheet.create({
-  topo: { width: '100%', aspectRatio: PROPORCAO_CENARIO, overflow: 'hidden' },
+  topo: { width: '100%', height: 224, overflow: 'hidden' },
   avatar: {
     position: 'absolute',
     left: 0,
     right: 0,
-    bottom: '22%',
+    bottom: '16%',
     alignItems: 'center',
   },
   avatarFrame: {
@@ -85,7 +113,8 @@ const styles = StyleSheet.create({
     position: 'absolute',
     right: '3%',
     bottom: '4%',
-    width: '30%',
+    width: '24%',
+    maxWidth: 100,
     aspectRatio: PROPORCAO_BRASAO,
   },
   // Ocupa a parte larga do brasão, com folga até a borda.
@@ -95,6 +124,13 @@ const styles = StyleSheet.create({
     top: '8%',
     width: '84%',
     height: '64%',
+  },
+  voltar: {
+    position: 'absolute',
+    left: spacing[4],
+    padding: spacing[2],
+    borderRadius: radius.pill,
+    backgroundColor: colors.surfacePink,
   },
   engrenagem: {
     position: 'absolute',

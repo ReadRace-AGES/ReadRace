@@ -9,6 +9,8 @@ const { act, create } = require('react-test-renderer');
 globalThis.IS_REACT_ACT_ENVIRONMENT = true;
 
 function load(file, dependencies = {}) {
+  if (file === 'features/feed/useFeedComunidades.ts')
+    dependencies = { '@/features/comunidade/api': {}, ...dependencies };
   const { outputText } = ts.transpileModule(
     fs.readFileSync(path.join(__dirname, '../src', file), 'utf8'),
     {
@@ -397,7 +399,11 @@ test('comunidade: erro mantém hero/voltar, retry correto e transição para loa
     'features/comunidade/ComunidadeScreen.tsx',
     {
       ...screenDeps(() => back++),
+      // A comunidade volta pelo useVoltar (RQ-140), não direto pelo router.
+      '@/components/useVoltar': { useVoltar: () => () => back++ },
       './useComunidade': { useComunidade },
+      './api': {},
+      '@/features/forum/NovoPostSheet': { NovoPostSheet: 'NovoPostSheet' },
       './ComunidadeScreen.styles': load(
         'features/comunidade/ComunidadeScreen.styles.ts',
         {
@@ -411,7 +417,10 @@ test('comunidade: erro mantém hero/voltar, retry correto e transição para loa
   try {
     await act(async () => {
       tree = create(
-        React.createElement(ComunidadeScreen, { comunidadeId: 'id' })
+        React.createElement(ComunidadeScreen, {
+          comunidadeId: 'id',
+          origem: '/buscar',
+        })
       );
     });
     assert.equal(calls, 1);
@@ -452,10 +461,17 @@ test('feed: erro mantém cabeçalho e botão refaz somente o carregamento do fee
     {
       ...screenDeps(() => {}),
       './ClubeCard': { ClubeCard: 'ClubeCard' },
+      './FeedSocialView': { FeedSocialView: 'FeedSocialView' },
     }
   );
   function App() {
-    return React.createElement(FeedComunidadesView, useFeedComunidades());
+    return React.createElement(FeedComunidadesView, {
+      ...useFeedComunidades(),
+      aba: 'Comunidades',
+      onAbaChange: () => {},
+      social: { social: { situacao: 'carregando' }, recarregar: () => {} },
+      onBuscarLeitoresPress: () => {},
+    });
   }
   let tree;
   try {

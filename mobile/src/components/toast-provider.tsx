@@ -17,10 +17,22 @@ type ToastContextValue = {
   /** Mensagem específica de erro (ex.: falha ao curtir) — não confundir com {@link showToast}. */
   showErrorToast: (message: string) => void;
   showToastAfterNavigation: (message: string) => void;
+  /** Aviso de sucesso com uma linha por item (ex.: o que a leitura rendeu). Lista vazia não mostra nada. */
+  showSuccessToast: (linhas: string[]) => void;
   setTabBarHeight: (height: number) => void;
 };
 
 const VALIDADE_DO_TOAST_PENDENTE_MS = 2000;
+// A primeira linha fica o tempo do aviso comum; cada linha a mais ganha tempo para ser lida.
+const DURACAO_PRIMEIRA_LINHA_MS = 2500;
+const DURACAO_POR_LINHA_EXTRA_MS = 1500;
+
+export function duracaoDoAviso(totalDeLinhas: number): number {
+  return (
+    DURACAO_PRIMEIRA_LINHA_MS +
+    Math.max(0, totalDeLinhas - 1) * DURACAO_POR_LINHA_EXTRA_MS
+  );
+}
 
 const ToastContext = createContext<ToastContextValue | null>(null);
 
@@ -60,15 +72,23 @@ export function ToastProvider({ children }: ToastProviderProps) {
   const showToastAfterNavigation = useCallback((mensagem: string) => {
     pendingToast.current = { message: mensagem, criadoEm: Date.now() };
   }, []);
+  const showSuccessToast = useCallback(
+    (linhas: string[]) => {
+      if (linhas.length === 0) return;
+      show(linhas.join('\n'), duracaoDoAviso(linhas.length));
+    },
+    [show]
+  );
 
   const value = useMemo<ToastContextValue>(
     () => ({
       showToast,
       showErrorToast,
       showToastAfterNavigation,
+      showSuccessToast,
       setTabBarHeight,
     }),
-    [showToast, showErrorToast, showToastAfterNavigation]
+    [showToast, showErrorToast, showToastAfterNavigation, showSuccessToast]
   );
 
   return (
