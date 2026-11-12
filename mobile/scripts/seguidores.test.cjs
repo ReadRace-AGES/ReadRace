@@ -53,11 +53,14 @@ test('API usa as rotas existentes de usuários e encaminha cancelamento', async 
   assert.equal(chamadas[0][1].signal, controller.signal);
 });
 
-for (const origem of ['perfil', 'busca']) {
+for (const origem of ['perfil', 'busca', 'feed']) {
   test(`lista na aba ${origem}: estados, cabeçalho, navegação e recarga no retorno`, async () => {
     let carga = { situacao: 'carregando' },
       foco,
-      recargas = 0;
+      recargas = 0,
+      historico = true,
+      voltas = 0;
+    const substituicoes = [];
     const rotas = [],
       params = { usuarioId: 'outro', tipo: 'seguidores' };
     const { ListaSeguidoresScreen } = load(
@@ -76,8 +79,9 @@ for (const origem of ['perfil', 'busca']) {
           useRouter: () => ({
             push: (rota) => rotas.push(rota),
             navigate: (rota) => rotas.push(rota),
-            canGoBack: () => true,
-            back: () => {},
+            canGoBack: () => historico,
+            back: () => voltas++,
+            replace: (rota) => substituicoes.push(rota),
           }),
         },
         '@/components/AppHeader': { AppHeader: 'AppHeader' },
@@ -127,7 +131,12 @@ for (const origem of ['perfil', 'busca']) {
       assert.deepEqual(rotas, [
         origem === 'perfil'
           ? '/(tabs)/(perfil)/perfil-usuario/outro'
-          : '/(tabs)/(busca)/usuario/outro',
+          : origem === 'feed'
+            ? {
+                pathname: '/(tabs)/(feed)/perfil-usuario/[usuarioId]',
+                params: { usuarioId: 'outro' },
+              }
+            : '/(tabs)/(busca)/usuario/outro',
         '/(tabs)/(perfil)/perfil',
       ]);
       params.tipo = 'seguindo';
@@ -140,6 +149,17 @@ for (const origem of ['perfil', 'busca']) {
       );
       await act(async () => foco());
       assert.equal(recargas, 2);
+      act(() => tree.root.findByType('AppHeader').props.onBackPress());
+      assert.equal(voltas, 1);
+      historico = false;
+      act(() => tree.root.findByType('AppHeader').props.onBackPress());
+      assert.deepEqual(substituicoes, [
+        origem === 'feed'
+          ? '/feed'
+          : origem === 'perfil'
+            ? '/perfil'
+            : '/buscar',
+      ]);
     } finally {
       await act(async () => tree.unmount());
     }

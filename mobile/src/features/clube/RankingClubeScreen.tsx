@@ -17,11 +17,11 @@ import {
   formatRankingLabel,
   formatRankingPoints,
 } from '@/components/RankingRow';
-import { useToastContext } from '@/components/toast-provider';
 import { colors, spacing } from '@/theme';
 
 import { FaixaQuadriculada, RankingCard } from './RankingCard';
 import { useRankingClube } from './useRankingClube';
+import { useAbrirPerfilDoRanking } from './useAbrirPerfilDoRanking';
 
 const COPY = {
   titulo: 'Ranking',
@@ -31,7 +31,7 @@ const COPY = {
 
 export function RankingClubeScreen({ clubeId }: { clubeId: string }) {
   const router = useRouter();
-  const { showToast } = useToastContext();
+  const abrirPerfil = useAbrirPerfilDoRanking(clubeId);
   const { ranking, recarregar, carregarMais } = useRankingClube(clubeId);
 
   function voltar() {
@@ -39,6 +39,7 @@ export function RankingClubeScreen({ clubeId }: { clubeId: string }) {
       router.back();
       return;
     }
+
     router.replace('/feed');
   }
 
@@ -62,6 +63,7 @@ export function RankingClubeScreen({ clubeId }: { clubeId: string }) {
                 onPress={recarregar}
                 variant="outline"
               />
+
               <PrimaryButton
                 label={COPY.voltar}
                 onPress={voltar}
@@ -90,14 +92,15 @@ export function RankingClubeScreen({ clubeId }: { clubeId: string }) {
       {dados && dados.ranking.length > 0 ? (
         <Card style={styles.card} surfaceStyle={styles.superficie}>
           <FaixaQuadriculada />
+
           <FlatList
             data={dados.ranking}
             keyExtractor={(linha) => linha.usuario.id}
             renderItem={({ item, index }) => (
               <Pressable
-                onPress={showToast}
                 accessibilityRole="button"
                 accessibilityLabel={`${formatRankingLabel(item.posicao, item.usuario.nome)}, ${formatRankingPoints(item.pontos)}`}
+                onPress={() => void abrirPerfil(item.usuario.id)}
               >
                 <RankingRow
                   position={item.posicao}
@@ -124,7 +127,7 @@ export function RankingClubeScreen({ clubeId }: { clubeId: string }) {
         <View style={styles.conteudo}>
           <RankingCard
             ranking={dados?.ranking ?? null}
-            onLinhaPress={showToast}
+            onLinhaPress={(usuarioId) => void abrirPerfil(usuarioId)}
           />
         </View>
       )}
@@ -133,12 +136,33 @@ export function RankingClubeScreen({ clubeId }: { clubeId: string }) {
 }
 
 const styles = StyleSheet.create({
-  tela: { flex: 1, backgroundColor: colors.surface },
-  conteudo: { padding: spacing[6] },
-  card: { flex: 1, margin: spacing[6] },
-  superficie: { flex: 1, padding: spacing[0] },
-  carregandoMais: { padding: spacing[4] },
-  acoesDoErro: { alignSelf: 'stretch', gap: spacing[2] },
+  tela: {
+    flex: 1,
+    backgroundColor: colors.surface,
+  },
+
+  conteudo: {
+    padding: spacing[6],
+  },
+
+  card: {
+    flex: 1,
+    margin: spacing[6],
+  },
+
+  superficie: {
+    flex: 1,
+    padding: spacing[0],
+  },
+
+  carregandoMais: {
+    padding: spacing[4],
+  },
+
+  acoesDoErro: {
+    alignSelf: 'stretch',
+    gap: spacing[2],
+  },
 });
 
 export default RankingClubeScreen;

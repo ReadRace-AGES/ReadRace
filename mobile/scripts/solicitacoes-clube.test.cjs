@@ -589,6 +589,7 @@ for (const [situacao, cargo] of [
       './api': api,
       './useClube': hooks,
       './RankingCard': { RankingCard: 'RankingCard' },
+      './useAbrirPerfilDoRanking': { useAbrirPerfilDoRanking: () => () => {} },
       './EntradaClubeButton': { EntradaClubeButton: 'EntradaClubeButton' },
       '@/features/livro/api': {
         buscarDetalhe: async (id) => {
@@ -1124,6 +1125,7 @@ test('Página aborta a leitura do detalhe ao perder foco e não aplica a respost
     './useClube': hooks,
     './api': {},
     './RankingCard': { RankingCard: 'RankingCard' },
+    './useAbrirPerfilDoRanking': { useAbrirPerfilDoRanking: () => () => {} },
     './EntradaClubeButton': { EntradaClubeButton: 'EntradaClubeButton' },
     '@/features/livro/api': {},
     '@/features/quiz/api': { ERRO_QUIZ: {} },

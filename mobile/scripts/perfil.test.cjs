@@ -86,7 +86,7 @@ const dependencies = {
 };
 
 test('perfil de outro leitor abre as duas listas no stack de origem', async () => {
-  for (const origem of ['busca', 'perfil']) {
+  for (const origem of ['busca', 'perfil', 'feed']) {
     const rotas = [];
     const { PerfilScreen } = load('features/perfil/PerfilScreen.tsx', {
       ...dependencies,
@@ -129,7 +129,7 @@ test('perfil de outro leitor abre as duas listas no stack de origem', async () =
           params: { usuarioId: '1', tipo },
         })),
         // A capa de um favorito abre o detalhe do livro na pilha da aba de origem.
-        `/${origem === 'perfil' ? 'perfil-livro' : 'buscar-livro'}/livro`,
+        `/${origem === 'perfil' ? 'perfil-livro' : origem === 'feed' ? 'feed-livro' : 'buscar-livro'}/livro`,
       ]);
       assert.equal(
         botoes.length,
@@ -201,42 +201,48 @@ test('perfil exibe dados persistidos, conquistas bloqueadas e três ações de T
   act(() => tree.unmount());
 });
 
-test('carregamento e erro mantêm voltar e permitem nova tentativa', () => {
-  let estado = { situacao: 'carregando' };
-  let retries = 0,
-    backs = 0,
-    tree;
-  const { PerfilScreen } = load('features/perfil/PerfilScreen.tsx', {
-    ...dependencies,
-    'expo-router': {
-      useFocusEffect: () => {},
-      useRouter: () => ({ canGoBack: () => true, back: () => backs++ }),
-    },
-    '@/components/toast-provider': {
-      useToastContext: () => ({ showToast: () => {} }),
-    },
-    './usePerfil': {
-      usePerfil: () => ({ estado, recarregar: () => retries++ }),
-    },
+for (const origem of ['busca', 'feed']) {
+  test(`carregamento e erro na aba ${origem} mantêm voltar e permitem nova tentativa`, () => {
+    let estado = { situacao: 'carregando' };
+    let retries = 0,
+      backs = 0,
+      tree;
+    const { PerfilScreen } = load('features/perfil/PerfilScreen.tsx', {
+      ...dependencies,
+      'expo-router': {
+        useFocusEffect: () => {},
+        useRouter: () => ({ canGoBack: () => true, back: () => backs++ }),
+      },
+      '@/components/toast-provider': {
+        useToastContext: () => ({ showToast: () => {} }),
+      },
+      './usePerfil': {
+        usePerfil: () => ({ estado, recarregar: () => retries++ }),
+      },
+    });
+    act(() => {
+      tree = create(
+        React.createElement(PerfilScreen, { usuarioId: '1', origem })
+      );
+    });
+    assert.equal(tree.root.findAllByType('ActivityIndicator').length, 1);
+    act(() => tree.root.findByType('AppHeader').props.onBackPress());
+    assert.equal(backs, 1);
+    estado = { situacao: 'erro', mensagem: 'Usuário não encontrado.' };
+    act(() =>
+      tree.update(React.createElement(PerfilScreen, { usuarioId: '1', origem }))
+    );
+    const empty = tree.root.findByType('EmptyState');
+    assert.equal(empty.props.message, estado.mensagem);
+    act(() => empty.props.action.props.onPress());
+    assert.equal(retries, 1);
+    assert.equal(tree.root.findByType('AppHeader').props.showBack, true);
+    // O useVoltar trava depois do primeiro toque: a tela já está saindo da pilha.
+    act(() => tree.root.findByType('AppHeader').props.onBackPress());
+    assert.equal(backs, 1);
+    act(() => tree.unmount());
   });
-  act(() => {
-    tree = create(React.createElement(PerfilScreen, { usuarioId: '1' }));
-  });
-  assert.equal(tree.root.findAllByType('ActivityIndicator').length, 1);
-  act(() => tree.root.findByType('AppHeader').props.onBackPress());
-  assert.equal(backs, 1);
-  estado = { situacao: 'erro', mensagem: 'Usuário não encontrado.' };
-  act(() => tree.update(React.createElement(PerfilScreen, { usuarioId: '1' })));
-  const empty = tree.root.findByType('EmptyState');
-  assert.equal(empty.props.message, estado.mensagem);
-  act(() => empty.props.action.props.onPress());
-  assert.equal(retries, 1);
-  assert.equal(tree.root.findByType('AppHeader').props.showBack, true);
-  // O useVoltar trava depois do primeiro toque: a tela já está saindo da pilha.
-  act(() => tree.root.findByType('AppHeader').props.onBackPress());
-  assert.equal(backs, 1);
-  act(() => tree.unmount());
-});
+}
 
 test('próprio perfil na aba fica sem voltar e "Ver mais" abre Minhas Conquistas; outro leitor não tem "Ver mais"', () => {
   const rotas = [];

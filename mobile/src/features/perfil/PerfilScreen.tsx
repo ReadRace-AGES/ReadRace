@@ -280,7 +280,9 @@ export function PerfilScreen({
   const rotaLeitores =
     origem === 'perfil'
       ? '/(tabs)/(perfil)/leitores/[usuarioId]'
-      : '/(tabs)/(busca)/leitores/[usuarioId]';
+      : origem === 'feed'
+        ? '/(tabs)/(feed)/leitores/[usuarioId]'
+        : '/(tabs)/(busca)/leitores/[usuarioId]';
   const { showToast, showErrorToast } = useToastContext();
   const proprio = usuarioId === undefined || perfilProprio;
   // Sem histórico (ex.: app reaberto direto na rota), o voltar cai na aba de onde se veio.

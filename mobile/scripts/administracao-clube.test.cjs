@@ -653,6 +653,7 @@ function paginaDeps(router, hooks) {
     './useClube': hooks,
     './api': {},
     './RankingCard': { RankingCard: 'RankingCard' },
+    './useAbrirPerfilDoRanking': { useAbrirPerfilDoRanking: () => () => {} },
     './EntradaClubeButton': { EntradaClubeButton: 'EntradaClubeButton' },
     '@/features/livro/api': {},
     '@/features/quiz/api': { ERRO_QUIZ: {} },
