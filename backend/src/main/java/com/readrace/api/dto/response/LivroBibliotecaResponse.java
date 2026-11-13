@@ -3,15 +3,31 @@ package com.readrace.api.dto.response;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
+import com.readrace.api.model.ItemBiblioteca;
 import com.readrace.api.model.Livro;
 
-/** Um livro como a aba Meus Livros o exibe: só o que cabe numa capa com título e autor. */
+/** Identificação e progresso carregados junto da página, sem consultas por livro. */
 public record LivroBibliotecaResponse(
-        UUID livroId, String titulo, String autor, String capaUrl, String genero) {
+        UUID livroId,
+        String titulo,
+        String autor,
+        String capaUrl,
+        String genero,
+        int totalPaginas,
+        int paginaAtual,
+        int paginaMaximaAlcancada) {
 
-    public static LivroBibliotecaResponse de(Livro livro, String genero) {
+    public static LivroBibliotecaResponse de(ItemBiblioteca item, String genero) {
+        Livro livro = item.getLivro();
         return new LivroBibliotecaResponse(
-                livro.getId(), livro.getTitulo(), autorDe(livro), livro.getCapaUrl(), genero);
+                livro.getId(),
+                livro.getTitulo(),
+                autorDe(livro),
+                livro.getCapaUrl(),
+                genero,
+                livro.getTotalPaginas(),
+                item.getPaginaAtual(),
+                item.getPaginaMaxima());
     }
 
     /** Mesma regra da busca (#72): autores na ordem do vínculo, separados por vírgula. */

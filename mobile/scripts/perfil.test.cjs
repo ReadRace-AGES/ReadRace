@@ -19,13 +19,20 @@ function load(file, dependencies = {}) {
   );
   const module = { exports: {} };
   new Function('require', 'module', 'exports', outputText)(
-    (name) => dependencies[name] ?? require(name),
+    (name) =>
+      dependencies[name] ??
+      // O useVoltar real, com o mesmo expo-router simulado do teste.
+      (name === '@/components/useVoltar'
+        ? load('components/useVoltar.ts', {
+            'expo-router': dependencies['expo-router'],
+          })
+        : require(name)),
     module,
     module.exports
   );
   return module.exports;
 }
-const { ApiError } = load('api/client.ts');
+const { ApiError, mensagemErroCarregamento } = load('api/client.ts');
 const perfil = {
   id: '1',
   nome: 'Daniel',
@@ -79,7 +86,7 @@ const dependencies = {
 };
 
 test('perfil de outro leitor abre as duas listas no stack de origem', async () => {
-  for (const origem of ['busca', 'perfil']) {
+  for (const origem of ['busca', 'perfil', 'feed']) {
     const rotas = [];
     const { PerfilScreen } = load('features/perfil/PerfilScreen.tsx', {
       ...dependencies,
@@ -115,12 +122,19 @@ test('perfil de outro leitor abre as duas listas no stack de origem', async () =
         .findAllByType('Pressable')
         .filter((b) => b.props.accessibilityLabel !== 'Ver mais conquistas');
       await act(async () => botoes.forEach((b) => b.props.onPress()));
-      assert.deepEqual(
-        rotas,
-        ['seguidores', 'seguindo'].map((tipo) => ({
+      await act(async () => tree.root.findByType('BookCover').props.onPress());
+      assert.deepEqual(rotas, [
+        ...['seguidores', 'seguindo'].map((tipo) => ({
           pathname: `/(tabs)/(${origem})/leitores/[usuarioId]`,
           params: { usuarioId: '1', tipo },
-        }))
+        })),
+        // A capa de um favorito abre o detalhe do livro na pilha da aba de origem.
+        `/${origem === 'perfil' ? 'perfil-livro' : origem === 'feed' ? 'feed-livro' : 'buscar-livro'}/livro`,
+      ]);
+      assert.equal(
+        botoes.length,
+        tree.root.findAllByType('Pressable').length,
+        'perfil de outro leitor não tem "Ver mais" nas conquistas'
       );
     } finally {
       await act(async () => tree.unmount());
@@ -136,7 +150,7 @@ for (const name of [
 ])
   dependencies[`@/components/${name}`] = { [name]: name };
 
-test('perfil exibe dados persistidos, conquistas bloqueadas e quatro ações de Toast', () => {
+test('perfil exibe dados persistidos, conquistas bloqueadas e três ações de Toast', () => {
   const { PerfilConteudo } = load(
     'features/perfil/PerfilScreen.tsx',
     dependencies
@@ -171,7 +185,9 @@ test('perfil exibe dados persistidos, conquistas bloqueadas e quatro ações de 
       .forEach((button) => button.props.onPress());
     tree.root.findByType('BookCover').props.onPress();
   });
-  assert.equal(calls, 4);
+  // Seguidores, Seguindo e a capa; sem callback, o "Ver mais" nem aparece.
+  assert.equal(calls, 3);
+  assert.doesNotMatch(text, /Ver mais/);
   act(() =>
     tree.update(
       React.createElement(PerfilConteudo, {
@@ -185,42 +201,50 @@ test('perfil exibe dados persistidos, conquistas bloqueadas e quatro ações de 
   act(() => tree.unmount());
 });
 
-test('carregamento e erro mantêm voltar e permitem nova tentativa', () => {
-  let estado = { situacao: 'carregando' };
-  let retries = 0,
-    backs = 0,
-    tree;
-  const { PerfilScreen } = load('features/perfil/PerfilScreen.tsx', {
-    ...dependencies,
-    'expo-router': {
-      useFocusEffect: () => {},
-      useRouter: () => ({ canGoBack: () => true, back: () => backs++ }),
-    },
-    '@/components/toast-provider': {
-      useToastContext: () => ({ showToast: () => {} }),
-    },
-    './usePerfil': {
-      usePerfil: () => ({ estado, recarregar: () => retries++ }),
-    },
+for (const origem of ['busca', 'feed']) {
+  test(`carregamento e erro na aba ${origem} mantêm voltar e permitem nova tentativa`, () => {
+    let estado = { situacao: 'carregando' };
+    let retries = 0,
+      backs = 0,
+      tree;
+    const { PerfilScreen } = load('features/perfil/PerfilScreen.tsx', {
+      ...dependencies,
+      'expo-router': {
+        useFocusEffect: () => {},
+        useRouter: () => ({ canGoBack: () => true, back: () => backs++ }),
+      },
+      '@/components/toast-provider': {
+        useToastContext: () => ({ showToast: () => {} }),
+      },
+      './usePerfil': {
+        usePerfil: () => ({ estado, recarregar: () => retries++ }),
+      },
+    });
+    act(() => {
+      tree = create(
+        React.createElement(PerfilScreen, { usuarioId: '1', origem })
+      );
+    });
+    assert.equal(tree.root.findAllByType('ActivityIndicator').length, 1);
+    act(() => tree.root.findByType('AppHeader').props.onBackPress());
+    assert.equal(backs, 1);
+    estado = { situacao: 'erro', mensagem: 'Usuário não encontrado.' };
+    act(() =>
+      tree.update(React.createElement(PerfilScreen, { usuarioId: '1', origem }))
+    );
+    const empty = tree.root.findByType('EmptyState');
+    assert.equal(empty.props.message, estado.mensagem);
+    act(() => empty.props.action.props.onPress());
+    assert.equal(retries, 1);
+    assert.equal(tree.root.findByType('AppHeader').props.showBack, true);
+    // O useVoltar trava depois do primeiro toque: a tela já está saindo da pilha.
+    act(() => tree.root.findByType('AppHeader').props.onBackPress());
+    assert.equal(backs, 1);
+    act(() => tree.unmount());
   });
-  act(() => {
-    tree = create(React.createElement(PerfilScreen, { usuarioId: '1' }));
-  });
-  assert.equal(tree.root.findAllByType('ActivityIndicator').length, 1);
-  act(() => tree.root.findByType('AppHeader').props.onBackPress());
-  assert.equal(backs, 1);
-  estado = { situacao: 'erro', mensagem: 'Usuário não encontrado.' };
-  act(() => tree.update(React.createElement(PerfilScreen, { usuarioId: '1' })));
-  const empty = tree.root.findByType('EmptyState');
-  assert.equal(empty.props.message, estado.mensagem);
-  act(() => empty.props.action.props.onPress());
-  assert.equal(retries, 1);
-  act(() => tree.root.findByType('AppHeader').props.onBackPress());
-  assert.equal(backs, 2);
-  act(() => tree.unmount());
-});
+}
 
-test('próprio perfil fica sem voltar e "Ver mais" abre Minhas Conquistas', () => {
+test('próprio perfil na aba fica sem voltar e "Ver mais" abre Minhas Conquistas; outro leitor não tem "Ver mais"', () => {
   const rotas = [];
   let avisos = 0,
     tree;
@@ -251,14 +275,15 @@ test('próprio perfil fica sem voltar e "Ver mais" abre Minhas Conquistas', () =
   });
   assert.equal(tree.root.findAllByType('AppHeader').length, 0);
   assert.equal(tree.root.findAllByType('PerfilTopo').length, 1);
+  assert.equal(tree.root.findByType('PerfilTopo').props.onVoltar, undefined);
   act(() => verMais().props.onPress());
   assert.deepEqual(rotas, ['/conquistas']);
   assert.equal(avisos, 0);
   act(() => tree.update(React.createElement(PerfilScreen, { usuarioId: '1' })));
   assert.equal(tree.root.findByType('AppHeader').props.showBack, true);
-  act(() => verMais().props.onPress());
+  assert.equal(verMais(), undefined);
   assert.deepEqual(rotas, ['/conquistas']);
-  assert.equal(avisos, 1);
+  assert.equal(avisos, 0);
   act(() => tree.unmount());
 });
 
@@ -310,8 +335,8 @@ test('próprio perfil mostra anel, Mascotes, engrenagem e slot de favorito', () 
     adicionar.props.onPress();
     tree.root.findByType('PerfilTopo').props.onConfiguracoes();
   });
-  // Só o slot de favorito continua como aviso; listas e Mascotes abrem suas telas.
-  assert.equal(avisos, 1);
+  // Nenhum botão dá aviso; o slot de favorito abre Adicionar livro, como em Meus Livros.
+  assert.equal(avisos, 0);
   assert.equal(tree.root.findByType('PerfilTopo').props.mascote, 'o-cinzento');
   act(() => capa.props.onPress());
   assert.deepEqual(rotas, [
@@ -324,6 +349,7 @@ test('próprio perfil mostra anel, Mascotes, engrenagem e slot de favorito', () 
       params: { usuarioId: '1', tipo: 'seguindo' },
     },
     '/mascotes',
+    '/adicionar-livro',
     '/configuracoes',
     '/perfil-livro/livro',
   ]);
@@ -334,6 +360,57 @@ test('próprio perfil mostra anel, Mascotes, engrenagem e slot de favorito', () 
   assert.equal(capas.length, 1);
   assert.equal(capas[0].props.variant, 'add-favorite');
   act(() => tree.unmount());
+});
+
+test('voltar sem histórico vai para a aba de origem; próprio perfil empilhado tem seta', () => {
+  for (const [origem, destino] of [
+    ['busca', '/buscar'],
+    ['feed', '/feed'],
+    ['perfil', '/perfil'],
+  ]) {
+    const navegacoes = [];
+    let proprio = false,
+      tree;
+    const { PerfilScreen } = load('features/perfil/PerfilScreen.tsx', {
+      ...dependencies,
+      'expo-router': {
+        useFocusEffect: () => {},
+        useRouter: () => ({
+          canGoBack: () => false,
+          replace: (rota) => navegacoes.push(rota),
+        }),
+      },
+      '@/components/toast-provider': {
+        useToastContext: () => ({ showToast: () => {} }),
+      },
+      './usePerfil': {
+        usePerfil: () => ({
+          estado: { situacao: 'sucesso', dados: perfil },
+          recarregar: () => {},
+          proprio,
+        }),
+      },
+    });
+    act(() => {
+      tree = create(
+        React.createElement(PerfilScreen, { usuarioId: '1', origem })
+      );
+    });
+    act(() => tree.root.findByType('AppHeader').props.onBackPress());
+    assert.deepEqual(navegacoes, [destino]);
+    act(() => tree.unmount());
+    // Tocar em si mesmo (ex.: na Busca) abre o próprio perfil empilhado, com seta.
+    proprio = true;
+    act(() => {
+      tree = create(
+        React.createElement(PerfilScreen, { usuarioId: 'eu', origem })
+      );
+    });
+    const topo = tree.root.findByType('PerfilTopo');
+    act(() => topo.props.onVoltar());
+    assert.deepEqual(navegacoes, [destino, destino]);
+    act(() => tree.unmount());
+  }
 });
 
 test('próprio perfil busca de novo ao voltar para a aba, sem repetir a carga inicial', () => {
@@ -393,7 +470,7 @@ test('API usa somente o usuário exibido e encaminha cancelamento', async () => 
 test('hook cancela perfil antigo, ignora resposta atrasada e permite tentar novamente', async () => {
   const pending = [];
   const { usePerfil } = load('features/perfil/usePerfil.ts', {
-    '@/api/client': { ApiError },
+    '@/api/client': { ApiError, mensagemErroCarregamento },
     './api': {
       buscarUsuarioAtual: async () => ({ id: 'eu' }),
       buscarPerfil: (id, signal) =>
@@ -429,7 +506,7 @@ test('hook cancela perfil antigo, ignora resposta atrasada e permite tentar nova
 test('atualização de fundo mantém o perfil na tela, inclusive se falhar', async () => {
   const pending = [];
   const { usePerfil } = load('features/perfil/usePerfil.ts', {
-    '@/api/client': { ApiError },
+    '@/api/client': { ApiError, mensagemErroCarregamento },
     './api': {
       buscarPerfil: (id, signal) =>
         new Promise((resolve, reject) =>
@@ -525,7 +602,7 @@ function carregarHookSeguir() {
   const leituras = [],
     alteracoes = [];
   const hook = load('features/perfil/usePerfil.ts', {
-    '@/api/client': { ApiError },
+    '@/api/client': { ApiError, mensagemErroCarregamento },
     './api': {
       buscarUsuarioAtual: async () => ({ id: 'eu' }),
       buscarPerfil: (id, signal) =>
@@ -742,3 +819,32 @@ test('mutação ignora leitura anterior e resposta de outro perfil, inclusive ao
     await envio;
   });
 });
+
+for (const dias of [0, 1, 2]) {
+  test(`estatística de sequência: ${dias} dia(s)`, () => {
+    const { PerfilConteudo } = load(
+      'features/perfil/PerfilScreen.tsx',
+      dependencies
+    );
+    let tree;
+    act(() => {
+      tree = create(
+        React.createElement(PerfilConteudo, {
+          perfil: {
+            ...perfil,
+            estatisticas: { ...perfil.estatisticas, sequenciaDias: dias },
+          },
+          onPlaceholder: () => {},
+        })
+      );
+    });
+    try {
+      const textos = tree.root
+        .findAllByType('Text')
+        .map((n) => React.Children.toArray(n.props.children).join(''));
+      assert.ok(textos.includes(`${dias} ${dias === 1 ? 'dia' : 'dias'}`));
+    } finally {
+      act(() => tree.unmount());
+    }
+  });
+}

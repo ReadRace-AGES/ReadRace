@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
 
-import { ApiError } from '@/api/client';
+import { mensagemErroCarregamento } from '@/api/client';
 import {
   buscarBiblioteca,
   buscarPaginaBiblioteca,
@@ -22,9 +22,7 @@ export type EstadoEstante =
 const LISTAS_DE_STATUS = ['lendo', 'desejo', 'lidos'] as const;
 
 function mensagemDe(erro: unknown) {
-  return erro instanceof ApiError
-    ? erro.message
-    : 'Não foi possível carregar sua biblioteca.';
+  return mensagemErroCarregamento(erro);
 }
 
 async function listaCompleta(

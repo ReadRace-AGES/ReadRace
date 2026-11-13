@@ -38,13 +38,15 @@ export const TIPO_POR_ABA: Record<Aba, TipoBusca> = {
 
 const COPY = {
   titulo: 'Buscar',
-  subtitulo: 'Encontre leitores e comunidades',
-  placeholder: 'Nome de usuário ou comunidade',
-  vazio: 'Busque por leitores, comunidades ou livros',
+  subtitulo: 'Descubra livros, leitores e comunidades',
+  placeholderUsuario: 'Nome ou @usuário do leitor',
+  placeholderComunidade: 'Nome da comunidade',
+  placeholderLivros: 'Título ou autor do livro',
   tentarDeNovo: 'Tentar de novo',
 } as const;
 
 export type BuscaViewProps = BuscaState & {
+  aba: Aba;
   termo: string;
   onTermoChange: (termo: string) => void;
   onAbaChange: (aba: Aba) => void;
@@ -64,8 +66,14 @@ function Carregando() {
   );
 }
 
-function Vazio() {
-  return <EmptyState icon={SearchIcon} message={COPY.vazio} />;
+function Vazio({ aba }: { aba: Aba }) {
+  const mensagem =
+    aba === 'Livros'
+      ? 'Qual será sua próxima leitura? Busque pelo título ou autor.'
+      : aba === 'Usuários'
+        ? 'Encontre outros leitores pelo nome ou @usuário.'
+        : 'Busque uma comunidade pelo nome para descobrir novas conversas.';
+  return <EmptyState icon={SearchIcon} message={mensagem} />;
 }
 
 function Erro({
@@ -152,14 +160,21 @@ function Lista<T extends { id: string }>({
 
 function Resultados({
   dados,
+  termo,
   onLivroPress,
   onUsuarioPress,
   onComunidadePress,
-}: { dados: ResultadoBusca } & Pick<
+}: { dados: ResultadoBusca; termo: string } & Pick<
   BuscaViewProps,
   'onLivroPress' | 'onUsuarioPress' | 'onComunidadePress'
 >) {
-  if (dados.itens.length === 0) return <Vazio />;
+  if (dados.itens.length === 0)
+    return (
+      <EmptyState
+        icon={SearchIcon}
+        message={`Nenhum resultado para "${termo.trim()}".`}
+      />
+    );
 
   switch (dados.tipo) {
     case 'livros':
@@ -226,6 +241,7 @@ function Resultados({
 }
 
 export function BuscaView({
+  aba,
   busca,
   recarregar,
   termo,
@@ -237,24 +253,30 @@ export function BuscaView({
 }: BuscaViewProps) {
   return (
     <View className="flex-1 bg-surface">
-      <AppHeader title={COPY.titulo} subtitle={COPY.subtitulo} />
+      <AppHeader compact title={COPY.titulo} subtitle={COPY.subtitulo} />
 
       <View className="gap-4 px-6 pb-2 pt-6">
         <SearchInput
-          placeholder={COPY.placeholder}
+          placeholder={
+            aba === 'Livros'
+              ? COPY.placeholderLivros
+              : aba === 'Usuários'
+                ? COPY.placeholderUsuario
+                : COPY.placeholderComunidade
+          }
           value={termo}
           onChangeText={onTermoChange}
           returnKeyType="search"
         />
         <SegmentedTabs
           options={[...ABAS]}
-          initialOption={ABA_INICIAL}
+          value={aba}
           onChange={(opcao) => onAbaChange(opcao as Aba)}
         />
       </View>
 
       <View className="flex-1">
-        {busca.situacao === 'inicial' && <Vazio />}
+        {busca.situacao === 'inicial' && <Vazio aba={aba} />}
         {busca.situacao === 'carregando' && <Carregando />}
         {busca.situacao === 'erro' && (
           <Erro mensagem={busca.mensagem} onRetry={recarregar} />
@@ -262,6 +284,7 @@ export function BuscaView({
         {busca.situacao === 'sucesso' && (
           <Resultados
             dados={busca.dados}
+            termo={termo}
             onLivroPress={onLivroPress}
             onUsuarioPress={onUsuarioPress}
             onComunidadePress={onComunidadePress}

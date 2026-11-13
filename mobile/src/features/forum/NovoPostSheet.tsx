@@ -6,22 +6,28 @@ import { BottomSheet } from '@/components/BottomSheet';
 import { PrimaryButton } from '@/components/PrimaryButton';
 import { colors, radius, sizes, spacing, textStyles } from '@/theme';
 
-import { publicarPostDoClube, type PostForum } from './api';
 import { textoPostValido } from './model';
 
-type NovoPostSheetProps = {
+type NovoPostSheetProps<Post> = {
   visible: boolean;
-  clubeId: string;
+  destinoId: string;
+  publicar: (texto: string, signal: AbortSignal) => Promise<Post>;
   onClose: () => void;
-  onSuccess: (post: PostForum) => void;
+  onSuccess: (post: Post) => void;
 };
 
-export function NovoPostSheet({
+export function NovoPostSheet<Post>(props: NovoPostSheetProps<Post>) {
+  // A identidade inclui o tipo de destino: trocar de clube/comunidade desmonta o
+  // rascunho anterior e cancela o envio, mesmo que ambos tenham o mesmo ID.
+  return <PainelNovoPost key={props.destinoId} {...props} />;
+}
+
+function PainelNovoPost<Post>({
   visible,
-  clubeId,
+  publicar,
   onClose,
   onSuccess,
-}: NovoPostSheetProps) {
+}: NovoPostSheetProps<Post>) {
   const [texto, setTexto] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -36,7 +42,7 @@ export function NovoPostSheet({
       submitting.current?.abort();
       submitting.current = null;
     };
-  }, [clubeId, visible]);
+  }, [visible]);
 
   function fechar() {
     if (!submitting.current) onClose();
@@ -49,7 +55,7 @@ export function NovoPostSheet({
     setLoading(true);
     setError(null);
     try {
-      const post = await publicarPostDoClube(clubeId, texto, controller.signal);
+      const post = await publicar(texto, controller.signal);
       if (controller.signal.aborted) return;
       onSuccess(post);
       setTexto('');

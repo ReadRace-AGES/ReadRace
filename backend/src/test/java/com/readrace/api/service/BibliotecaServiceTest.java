@@ -206,6 +206,24 @@ class BibliotecaServiceTest {
                 .containsExactly("Primeiro, Segundo", null);
     }
 
+    @Test
+    void deve_devolver_progresso_do_item_sem_confundir_pagina_atual_com_maxima() {
+        ItemBiblioteca item = new ItemBiblioteca(USUARIO, livro("Leitura em andamento"));
+        item.registrarProgresso(60);
+        item.registrarProgresso(40);
+        when(repositorio.paginarPorStatus(eq(USUARIO), eq("lendo"), any(), any(), anyInt()))
+                .thenReturn(List.of(paginado(item.getId())));
+        when(repositorio.findByIdIn(anyCollection())).thenReturn(List.of(item));
+
+        LivroBibliotecaResponse resposta =
+                service.buscarPagina("lendo", null, null).itens().getFirst();
+
+        assertThat(resposta.totalPaginas()).isEqualTo(100);
+        assertThat(resposta.paginaAtual()).isEqualTo(40);
+        assertThat(resposta.paginaMaximaAlcancada()).isEqualTo(60);
+        verify(repositorio, org.mockito.Mockito.times(1)).findByIdIn(anyCollection());
+    }
+
     private static List<ItemPaginado> paginados(int quantidade) {
         return IntStream.range(0, quantidade)
                 .mapToObj(i -> paginado(UUID.randomUUID(), AGORA.minusSeconds(i)))

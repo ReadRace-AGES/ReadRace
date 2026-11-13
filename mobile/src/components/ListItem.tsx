@@ -1,4 +1,10 @@
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import {
+  ActivityIndicator,
+  Pressable,
+  StyleSheet,
+  Text,
+  View,
+} from 'react-native';
 import Svg, { Circle, Path } from 'react-native-svg';
 
 import { Avatar } from '@/components/avatar';
@@ -18,7 +24,12 @@ export type ListItemProps = SharedProps &
     | {
         variant: 'community';
         memberCount?: number;
-        action?: { label: string; onPress: () => void };
+        action?: {
+          label: string;
+          onPress: () => void;
+          loading?: boolean;
+          disabled?: boolean;
+        };
         genre?: never;
         selected?: never;
       }
@@ -39,7 +50,7 @@ export function ListItem(props: ListItemProps) {
   const selected = props.variant === 'book' && props.selected === true;
   const metadata =
     props.variant === 'community' && props.memberCount !== undefined
-      ? `${props.memberCount} membros`
+      ? `${props.memberCount} ${props.memberCount === 1 ? 'membro' : 'membros'}`
       : props.variant === 'book'
         ? props.genre
         : undefined;
@@ -140,12 +151,23 @@ export function ListItem(props: ListItemProps) {
           <Pressable
             accessibilityRole="button"
             accessibilityLabel={`${action.label}: ${title}`}
-            onPress={action.onPress}
+            disabled={action.disabled || action.loading}
+            accessibilityState={{
+              disabled: !!(action.disabled || action.loading),
+              busy: !!action.loading,
+            }}
+            onPress={() => {
+              if (!action.disabled && !action.loading) action.onPress();
+            }}
             style={styles.actionPressable}
           >
             {({ pressed }) => (
               <View style={[styles.action, pressed && styles.pressed]}>
-                <Text style={styles.actionLabel}>{action.label}</Text>
+                {action.loading ? (
+                  <ActivityIndicator color={colors.accent} />
+                ) : (
+                  <Text style={styles.actionLabel}>{action.label}</Text>
+                )}
               </View>
             )}
           </Pressable>

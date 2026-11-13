@@ -13,6 +13,8 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.readrace.api.dto.response.LivroDetalheResponse;
 import com.readrace.api.exception.LivroNaoEncontradoException;
+import com.readrace.api.exception.PostNaoEncontradoException;
+import com.readrace.api.exception.SoAutorApagaPostException;
 import com.readrace.api.model.Genero;
 import com.readrace.api.model.ItemBiblioteca;
 import com.readrace.api.model.Livro;
@@ -64,7 +66,7 @@ public class LivroService {
         String autor =
                 livro.getLivroAutores().stream()
                         .map(vinculo -> vinculo.getAutor().getNome())
-                        .collect(java.util.stream.Collectors.joining(", "));
+                        .collect(Collectors.joining(", "));
 
         Genero genero = generoRepository.buscarPorLivroId(livroId).orElse(null);
 
@@ -86,6 +88,35 @@ public class LivroService {
         return new LivroDetalheResponse(livroResponse, progresso, posts);
     }
 
+    @Transactional
+    public LivroDetalheResponse.Post publicarPost(UUID livroId, String texto) {
+        livroRepository.findById(livroId).orElseThrow(LivroNaoEncontradoException::new);
+        UUID autorId = usuarioAtual.idDoUsuarioAtual().valor();
+        Post post = postRepository.save(Post.criarRaizDeLivro(autorId, livroId, texto));
+        Map<UUID, Usuario> autores =
+                usuarioRepository.findById(autorId).stream()
+                        .collect(Collectors.toMap(Usuario::getId, Function.identity()));
+        return criarPostResponse(
+                post, autores, Map.of(), Map.of(), Set.of(), autorId, SequenciaDeLeitura.hoje());
+    }
+
+    @Transactional
+    public void apagarPost(UUID livroId, UUID postId) {
+        Post post =
+                postRepository
+                        .findById(postId)
+                        .filter(
+                                encontrado ->
+                                        livroId.equals(encontrado.getLivroId())
+                                                && encontrado.getPostPaiId() == null
+                                                && encontrado.getExcluidoEm() == null)
+                        .orElseThrow(PostNaoEncontradoException::new);
+        if (!post.getAutorId().equals(usuarioAtual.idDoUsuarioAtual().valor())) {
+            throw new SoAutorApagaPostException();
+        }
+        post.excluir();
+    }
+
     private LivroDetalheResponse.Progresso buscarProgresso(UUID usuarioId, Livro livro) {
 
         return itemBibliotecaRepository
@@ -101,7 +132,12 @@ public class LivroService {
         boolean concluido = item.estaConcluido();
 
         return new LivroDetalheResponse.Progresso(
-                item.getPaginaAtual(), item.getPaginaMaxima(), percentual, concluido);
+                item.getPaginaAtual(),
+                item.getPaginaMaxima(),
+                percentual,
+                concluido,
+                item.getStatusLeitura() == null ? null : item.getStatusLeitura().name(),
+                item.isFavorito());
     }
 
     private List<LivroDetalheResponse.Post> buscarPosts(UUID livroId, UUID usuarioId) {
@@ -110,7 +146,10 @@ public class LivroService {
                 postRepository
                         .findByLivroIdAndPostPaiIdIsNullAndExcluidoEmIsNullOrderByCriadoEmDesc(
                                 livroId);
-        if (posts.isEmpty()) return List.of();
+
+        if (posts.isEmpty()) {
+            return List.of();
+        }
 
         List<UUID> postIds = posts.stream().map(Post::getId).toList();
 
@@ -119,36 +158,61 @@ public class LivroService {
                         .findAllById(posts.stream().map(Post::getAutorId).distinct().toList())
                         .stream()
                         .collect(Collectors.toMap(Usuario::getId, Function.identity()));
+
         Map<UUID, Long> curtidas =
                 curtidaRepository.contarPorPostIds(postIds).stream()
                         .collect(
                                 Collectors.toMap(
                                         CurtidaRepository.ContagemPorPost::getPostId,
                                         CurtidaRepository.ContagemPorPost::getTotal));
+
+        Map<UUID, Long> comentarios =
+                postRepository.contarComentariosPorPostIds(postIds).stream()
+                        .collect(
+                                Collectors.toMap(
+                                        PostRepository.ContagemComentarios::getPostId,
+                                        PostRepository.ContagemComentarios::getTotal));
+
         Set<UUID> curtidosPorMim =
                 Set.copyOf(curtidaRepository.postsCurtidosPorUsuario(usuarioId, postIds));
+
         LocalDate hoje = SequenciaDeLeitura.hoje();
 
         return posts.stream()
-                .map(post -> criarPostResponse(post, autores, curtidas, curtidosPorMim, hoje))
+                .map(
+                        post ->
+                                criarPostResponse(
+                                        post,
+                                        autores,
+                                        curtidas,
+                                        comentarios,
+                                        curtidosPorMim,
+                                        usuarioId,
+                                        hoje))
                 .toList();
     }
 
     private LivroDetalheResponse.Post criarPostResponse(
             Post post,
             Map<UUID, Usuario> autores,
-            Map<UUID, Long> contagens,
+            Map<UUID, Long> curtidasPorPost,
+            Map<UUID, Long> comentariosPorPost,
             Set<UUID> curtidosPorMim,
+            UUID usuarioId,
             LocalDate hoje) {
+
         Usuario autor = autores.get(post.getAutorId());
-        if (autor == null)
+
+        if (autor == null) {
             throw new IllegalStateException("Autor do post não encontrado: " + post.getAutorId());
+        }
 
         LivroDetalheResponse.Autor autorResponse =
                 new LivroDetalheResponse.Autor(
                         autor.getNome(), autor.getAvatarUrl(), autor.sequenciaExibida(hoje));
 
-        long curtidas = contagens.getOrDefault(post.getId(), 0L);
+        long curtidas = curtidasPorPost.getOrDefault(post.getId(), 0L);
+        long totalComentarios = comentariosPorPost.getOrDefault(post.getId(), 0L);
 
         return new LivroDetalheResponse.Post(
                 post.getId(),
@@ -156,6 +220,8 @@ public class LivroService {
                 post.getConteudo(),
                 post.getCriadoEm(),
                 curtidas,
-                curtidosPorMim.contains(post.getId()));
+                curtidosPorMim.contains(post.getId()),
+                totalComentarios,
+                post.getAutorId().equals(usuarioId));
     }
 }

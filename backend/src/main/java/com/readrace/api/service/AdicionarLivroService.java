@@ -1,8 +1,10 @@
 package com.readrace.api.service;
 
+import java.text.Normalizer;
 import java.util.List;
 import java.util.Locale;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
 
@@ -13,10 +15,14 @@ import com.readrace.api.dto.GoogleBookVolume;
 import com.readrace.api.dto.IndustryIdentifier;
 import com.readrace.api.dto.VolumeInfo;
 import com.readrace.api.dto.request.AdicionarLivroRequest;
+import com.readrace.api.dto.request.RegistrarProgressoRequest;
 import com.readrace.api.dto.response.AdicionarLivroResponse;
+import com.readrace.api.dto.response.ProgressoLeituraResponse;
 import com.readrace.api.exception.ListaInvalidaException;
+import com.readrace.api.exception.LivroEmProgressoException;
 import com.readrace.api.exception.LivroNaoEncontradoException;
 import com.readrace.api.exception.LivroSemIsbnOuPaginasException;
+import com.readrace.api.exception.PaginaInvalidaException;
 import com.readrace.api.model.Autor;
 import com.readrace.api.model.ItemBiblioteca;
 import com.readrace.api.model.Livro;
@@ -37,7 +43,8 @@ import com.readrace.api.repository.LivroRepository;
 @Service
 public class AdicionarLivroService {
 
-    private static final Set<String> LISTAS_VALIDAS = Set.of("lido", "desejo", "favorito");
+    private static final Set<String> LISTAS_VALIDAS = Set.of("lido", "desejo", "favorito", "lendo");
+    private static final int TITULO_MAXIMO = 255;
 
     private final BookSearchPort bookSearchPort;
     private final LivroRepository livroRepository;
@@ -46,6 +53,7 @@ public class AdicionarLivroService {
     private final GeneroRepository generoRepository;
     private final ItemBibliotecaRepository itemBibliotecaRepository;
     private final UsuarioAtual usuarioAtual;
+    private final RegistrarProgressoService registrarProgressoService;
 
     public AdicionarLivroService(
             BookSearchPort bookSearchPort,
@@ -54,7 +62,8 @@ public class AdicionarLivroService {
             LivroAutorRepository livroAutorRepository,
             GeneroRepository generoRepository,
             ItemBibliotecaRepository itemBibliotecaRepository,
-            UsuarioAtual usuarioAtual) {
+            UsuarioAtual usuarioAtual,
+            RegistrarProgressoService registrarProgressoService) {
         this.bookSearchPort = bookSearchPort;
         this.livroRepository = livroRepository;
         this.autorRepository = autorRepository;
@@ -62,6 +71,7 @@ public class AdicionarLivroService {
         this.generoRepository = generoRepository;
         this.itemBibliotecaRepository = itemBibliotecaRepository;
         this.usuarioAtual = usuarioAtual;
+        this.registrarProgressoService = registrarProgressoService;
     }
 
     @Transactional
@@ -69,6 +79,10 @@ public class AdicionarLivroService {
         String lista = validarLista(request.lista());
         if (request.volumeId() == null || request.volumeId().isBlank()) {
             throw new LivroNaoEncontradoException();
+        }
+        // "Lendo" só com uma página lida: sem ela, o livro nem é buscado no catálogo.
+        if (lista.equals("lendo") && request.pagina() == null) {
+            throw new PaginaInvalidaException("Informe a página em que você está.");
         }
 
         // Não confia no que o app manda: busca os detalhes do volume pelo catálogo.
@@ -79,19 +93,27 @@ public class AdicionarLivroService {
         VolumeInfo info = volume.volumeInfo();
 
         String isbn = isbnDe(info);
-        if (isbn == null || info.pageCount() == null || info.pageCount() <= 0) {
+        String titulo = tituloDe(info);
+        if (isbn == null || titulo == null || info.pageCount() == null || info.pageCount() <= 0) {
             throw new LivroSemIsbnOuPaginasException();
         }
 
-        Livro livro = buscarOuCriarLivro(isbn, info);
+        Livro livro = buscarOuCriarLivro(isbn, titulo, info);
         UUID usuarioId = usuarioAtual.idDoUsuarioAtual().valor();
 
+        ProgressoLeituraResponse progresso = null;
         switch (lista) {
             case "lido" -> definirStatus(usuarioId, livro.getId(), StatusLeitura.lido);
             case "desejo" -> definirStatus(usuarioId, livro.getId(), StatusLeitura.desejo);
             case "favorito" ->
                     itemBibliotecaRepository.marcarFavorito(
                             UUID.randomUUID(), usuarioId, livro.getId());
+            // O registro de leitura cria o item em "lendo" e paga o XP. Na mesma transação: página
+            // inválida desfaz tudo e o livro não entra na biblioteca.
+            case "lendo" ->
+                    progresso =
+                            registrarProgressoService.registrar(
+                                    livro.getId(), new RegistrarProgressoRequest(request.pagina()));
             default -> throw new ListaInvalidaException();
         }
 
@@ -105,10 +127,24 @@ public class AdicionarLivroService {
                 livro.getTitulo(),
                 livro.getCapaUrl(),
                 item.getStatusLeitura().name(),
-                item.isFavorito());
+                item.isFavorito(),
+                progresso);
     }
 
+    /**
+     * Livro que já tem leitura registrada não troca de lista por aqui, a mesma regra de {@code
+     * PATCH /api/biblioteca/{livroId}}: o status dele só anda pelo registro de leitura. Pedir a
+     * lista em que o livro já está não muda nada e passa.
+     */
     private void definirStatus(UUID usuarioId, UUID livroId, StatusLeitura status) {
+        itemBibliotecaRepository
+                .findByUsuarioIdAndLivro_Id(usuarioId, livroId)
+                .filter(item -> item.getPaginaMaxima() > 0)
+                .filter(item -> item.getStatusLeitura() != status)
+                .ifPresent(
+                        item -> {
+                            throw new LivroEmProgressoException();
+                        });
         itemBibliotecaRepository.definirStatus(
                 UUID.randomUUID(), usuarioId, livroId, status.name());
     }
@@ -118,6 +154,21 @@ public class AdicionarLivroService {
             throw new ListaInvalidaException();
         }
         return lista.trim().toLowerCase(Locale.ROOT);
+    }
+
+    /**
+     * Título do catálogo, sem espaços nas pontas e cortado em 255 caracteres (a coluna). Conta em
+     * pontos de código, para não partir um par substituto ao cortar. Sem título, devolve null.
+     */
+    private static String tituloDe(VolumeInfo info) {
+        if (info == null || info.title() == null || info.title().isBlank()) {
+            return null;
+        }
+        String titulo = info.title().trim();
+        if (titulo.codePointCount(0, titulo.length()) <= TITULO_MAXIMO) {
+            return titulo;
+        }
+        return titulo.substring(0, titulo.offsetByCodePoints(0, TITULO_MAXIMO));
     }
 
     /** Prefere o ISBN de 13 dígitos; sem ele, usa o de 10. */
@@ -153,27 +204,81 @@ public class AdicionarLivroService {
     }
 
     /**
-     * O ISBN identifica o livro entre usuários: se já existe, reaproveita (autores e gêneros já
-     * foram vinculados por quem criou primeiro). Só cria autores/gêneros quando a própria chamada
-     * cria a linha do livro, para não recriar vínculos de um livro já existente.
+     * Reutiliza um livro existente quando o ISBN coincide ou quando o título e o primeiro autor são
+     * equivalentes após normalização.
+     *
+     * <p>Se não encontrar correspondência, cria o livro normalmente.
      */
-    private Livro buscarOuCriarLivro(String isbn, VolumeInfo info) {
-        return livroRepository
-                .findByIsbn(isbn)
-                .orElseGet(
-                        () -> {
-                            UUID novoId = UUID.randomUUID();
-                            livroRepository.criarSeAusente(
-                                    novoId, isbn, info.title(), info.pageCount(), capaDe(info));
-                            Livro livro = livroRepository.findByIsbn(isbn).orElseThrow();
+    private Livro buscarOuCriarLivro(String isbn, String titulo, VolumeInfo info) {
+        Optional<Livro> livroPorIsbn = livroRepository.findByIsbn(isbn);
 
-                            if (livro.getId().equals(novoId)) {
-                                vincularAutores(livro, info.authors());
-                                vincularGeneros(livro, info.categories());
-                            }
+        if (livroPorIsbn.isPresent()) {
+            return livroPorIsbn.get();
+        }
 
-                            return livro;
-                        });
+        Optional<Livro> livroPorTituloEAutor = buscarPorTituloEAutor(titulo, info);
+
+        if (livroPorTituloEAutor.isPresent()) {
+            return livroPorTituloEAutor.get();
+        }
+
+        UUID novoId = UUID.randomUUID();
+        livroRepository.criarSeAusente(novoId, isbn, titulo, info.pageCount(), capaDe(info));
+
+        Livro livro = livroRepository.findByIsbn(isbn).orElseThrow();
+
+        if (livro.getId().equals(novoId)) {
+            vincularAutores(livro, info.authors());
+            vincularGeneros(livro, info.categories());
+        }
+
+        return livro;
+    }
+
+    /**
+     * Procura um livro pelo título e pelo primeiro autor. A comparação ignora acentos, pontuação,
+     * espaços e maiúsculas.
+     */
+    private Optional<Livro> buscarPorTituloEAutor(String titulo, VolumeInfo info) {
+        if (info.authors() == null || info.authors().isEmpty()) {
+            return Optional.empty();
+        }
+
+        String tituloNormalizado = normalizarTexto(titulo);
+        String primeiroAutorNormalizado = normalizarTexto(info.authors().get(0));
+
+        if (tituloNormalizado.isEmpty() || primeiroAutorNormalizado.isEmpty()) {
+            return Optional.empty();
+        }
+
+        return livroRepository.buscarLivrosComAutores().stream()
+                .filter(livro -> tituloNormalizado.equals(normalizarTexto(livro.getTitulo())))
+                .filter(livro -> !livro.getLivroAutores().isEmpty())
+                .filter(
+                        livro -> {
+                            LivroAutor primeiroVinculo = livro.getLivroAutores().get(0);
+                            Autor autor = primeiroVinculo.getAutor();
+
+                            return autor != null
+                                    && primeiroAutorNormalizado.equals(
+                                            normalizarTexto(autor.getNome()));
+                        })
+                .findFirst();
+    }
+
+    /**
+     * Normaliza textos removendo acentos, pontuação, espaços e diferenças entre letras maiúsculas e
+     * minúsculas.
+     */
+    private String normalizarTexto(String texto) {
+        if (texto == null) {
+            return "";
+        }
+
+        String textoSemAcentos =
+                Normalizer.normalize(texto, Normalizer.Form.NFD).replaceAll("\\p{M}+", "");
+
+        return textoSemAcentos.toLowerCase(Locale.ROOT).replaceAll("[^\\p{L}\\p{N}]", "");
     }
 
     private void vincularAutores(Livro livro, List<String> autores) {

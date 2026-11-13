@@ -1,7 +1,7 @@
 import { useCallback, useRef, useState } from 'react';
 import { useFocusEffect } from 'expo-router';
 
-import { ApiError } from '@/api/client';
+import { mensagemErroCarregamento } from '@/api/client';
 
 import { buscarRankingClube, type RankingClube } from './api';
 
@@ -17,9 +17,7 @@ export type RankingClubeState = {
 };
 
 function mensagemDe(erro: unknown) {
-  return erro instanceof ApiError
-    ? erro.message
-    : 'Não foi possível carregar o ranking.';
+  return mensagemErroCarregamento(erro);
 }
 
 export function useRankingClube(clubeId: string): RankingClubeState {

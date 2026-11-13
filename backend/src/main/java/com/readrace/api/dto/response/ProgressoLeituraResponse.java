@@ -1,5 +1,7 @@
 package com.readrace.api.dto.response;
 
+import java.util.List;
+
 public record ProgressoLeituraResponse(
         Integer paginaAtual,
         Integer paginaMaximaAlcancada,
@@ -14,4 +16,5 @@ public record ProgressoLeituraResponse(
         Integer xpDoUsuario,
         Integer xpNoNivel,
         Integer xpDoNivel,
-        Boolean subiuDeNivel) {}
+        Boolean subiuDeNivel,
+        List<ConquistaDesbloqueadaResponse> conquistasDesbloqueadas) {}

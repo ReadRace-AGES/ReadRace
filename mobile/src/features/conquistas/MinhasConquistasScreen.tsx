@@ -141,9 +141,7 @@ export function MinhasConquistasScreen() {
         <EmptyState
           icon={BookIcon}
           message={estado.mensagem}
-          action={
-            <PrimaryButton label="Tentar novamente" onPress={recarregar} />
-          }
+          action={<PrimaryButton label="Tentar de novo" onPress={recarregar} />}
         />
       )}
       {secoes && (

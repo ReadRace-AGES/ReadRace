@@ -41,3 +41,9 @@ example
 # generated native folders
 /ios
 /android
+
+# Playwright (may contain session data and private screenshots)
+/playwright-report/
+/test-results/
+/e2e-artifacts/
+/.auth/

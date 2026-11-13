@@ -4,7 +4,11 @@ import { apiGet, apiRequest } from '@/api/client';
  * A Página do clube só existe para `ClubeDoLivro`: comunidade não tem livro atual nem ranking.
  * A moeda do ranking é `Pontos`, do clube — `XP` nunca aparece aqui.
  */
+export type SituacaoClube = 'membro' | 'pendente' | 'nenhuma';
+
 export type Clube = {
+  situacao: SituacaoClube;
+  solicitacoesPendentes?: number;
   id: string;
   nome: string;
   livroAtual: { id: string; titulo: string; autor: string | null };
@@ -13,6 +17,7 @@ export type Clube = {
   meuCargo: 'administrador' | 'membro' | null;
   /** Se o clube já tem quiz publicado: o líder não pode abrir `GET /quiz` para descobrir (#161). */
   temQuizAtivo: boolean;
+  proximoLider: { id: string; nome: string; avatarUrl: string | null } | null;
 };
 
 export type LinhaRanking = {
@@ -28,8 +33,12 @@ export function buscarClube(clubeId: string, signal?: AbortSignal) {
   });
 }
 
-export async function sairDoClube(clubeId: string): Promise<void> {
-  await apiRequest<void>(
+export type SaidaDoClube = {
+  novoLider: { id: string; nome: string } | null;
+};
+
+export function sairDoClube(clubeId: string): Promise<SaidaDoClube> {
+  return apiRequest<SaidaDoClube>(
     `/api/clubes/${encodeURIComponent(clubeId)}/membros/eu`,
     { method: 'DELETE' }
   );
@@ -50,5 +59,57 @@ export function buscarRankingClube(
   return apiGet<RankingClube>(
     `/api/clubes/${encodeURIComponent(clubeId)}/ranking${consulta}`,
     { signal }
+  );
+}
+
+export type ClubeDisponivel = {
+  id: string;
+  nome: string;
+  capaUrl: string | null;
+  livro: { titulo: string; autor: string | null };
+  membros: number;
+  situacao: SituacaoClube;
+};
+
+export function buscarClubes(signal?: AbortSignal) {
+  return apiGet<{ clubes: ClubeDisponivel[] }>('/api/clubes', { signal });
+}
+
+export function solicitarEntrada(clubeId: string, signal?: AbortSignal) {
+  return apiRequest<{ id: string; situacao: 'pendente' }>(
+    `/api/clubes/${encodeURIComponent(clubeId)}/solicitacoes`,
+    { method: 'POST', signal }
+  );
+}
+
+export type SolicitacaoEntrada = {
+  id: string;
+  usuario: {
+    id: string;
+    nome: string;
+    nomeUsuario: string;
+    avatarUrl: string | null;
+  };
+  criadaEm: string;
+};
+
+export type RespostaSolicitacao = 'aceitar' | 'recusar';
+
+export function buscarSolicitacoes(clubeId: string, signal?: AbortSignal) {
+  return apiGet<{ solicitacoes: SolicitacaoEntrada[] }>(
+    `/api/clubes/${encodeURIComponent(clubeId)}/solicitacoes`,
+    { signal }
+  );
+}
+
+export function responderSolicitacao(
+  clubeId: string,
+  id: string,
+  resposta: RespostaSolicitacao,
+  signal?: AbortSignal
+) {
+  return apiRequest<{ id: string; situacao: 'aceita' | 'recusada' }>(
+    `/api/clubes/${encodeURIComponent(clubeId)}/solicitacoes/${encodeURIComponent(id)}/${resposta}`,
+    { method: 'POST', signal }
   );
 }

@@ -1,4 +1,3 @@
-
 import { useEffect, useRef, useState } from 'react';
 import {
   ActivityIndicator,
@@ -118,9 +117,7 @@ function BalaoMensagem({ mensagem }: { mensagem: MensagemClube }) {
     <View
       style={[
         styles.linhaMensagem,
-        mensagem.minha
-          ? styles.linhaMensagemMinha
-          : styles.linhaMensagemOutro,
+        mensagem.minha ? styles.linhaMensagemMinha : styles.linhaMensagemOutro,
       ]}
     >
       {!mensagem.minha && (
@@ -157,12 +154,7 @@ function BalaoMensagem({ mensagem }: { mensagem: MensagemClube }) {
             {mensagem.texto}
           </Text>
 
-          <Text
-            style={[
-              styles.horario,
-              mensagem.minha && styles.horarioMinha,
-            ]}
-          >
+          <Text style={[styles.horario, mensagem.minha && styles.horarioMinha]}>
             {formatarHorario(mensagem.enviadaEm)}
           </Text>
         </View>
@@ -171,10 +163,7 @@ function BalaoMensagem({ mensagem }: { mensagem: MensagemClube }) {
   );
 }
 
-export function ChatClubeScreen({
-  clubeId,
-  nomeClube,
-}: ChatClubeScreenProps) {
+export function ChatClubeScreen({ clubeId, nomeClube }: ChatClubeScreenProps) {
   const router = useRouter();
   const scrollRef = useRef<ScrollView>(null);
   const telaRef = useRef<View>(null);
@@ -189,8 +178,7 @@ export function ChatClubeScreen({
 
   const [texto, setTexto] = useState('');
 
-  const textoValido =
-    texto.trim().length > 0 && texto.trim().length <= 1000;
+  const textoValido = texto.trim().length > 0 && texto.trim().length <= 1000;
 
   const titulo = nomeClube?.trim() || COPY.titulo;
 
@@ -381,12 +369,7 @@ export function ChatClubeScreen({
             {enviando ? (
               <ActivityIndicator color={colors.surface} size="small" />
             ) : (
-              <Svg
-                width={22}
-                height={22}
-                viewBox="0 0 24 24"
-                fill="none"
-              >
+              <Svg width={22} height={22} viewBox="0 0 24 24" fill="none">
                 <Path
                   d="M22 2 11 13"
                   stroke={colors.surface}
@@ -406,7 +389,9 @@ export function ChatClubeScreen({
           </TouchableOpacity>
         </View>
 
-        <Text style={styles.contador}>{texto.length}/1000</Text>
+        <Text style={styles.contador}>
+          {texto.length.toLocaleString('pt-BR')}/1.000
+        </Text>
       </View>
     </View>
   );

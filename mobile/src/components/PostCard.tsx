@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import { Pressable, Text, View } from 'react-native';
 
 import { sizes } from '@/theme';
@@ -7,6 +7,7 @@ import { Avatar, StreakBadge } from './avatar';
 import { Card } from './Card';
 import { CommentsIcon } from './icons/CommentsIcon';
 import { HeartIcon } from './icons/HeartIcon';
+import type { Ancora } from './MenuSuspenso';
 
 // Linhas visiveis do texto recolhido, antes do "Ler mais" (`tela livro` 2011-674).
 const LINHAS_RECOLHIDO = 4;
@@ -29,6 +30,7 @@ export type PostCardProps = {
   likeDisabled?: boolean;
   /** Sem handler, o balão fica só exibição; com ele, abre os comentários (#150). */
   onCommentsPress?: () => void;
+  onMorePress?: (ancora: Ancora) => void;
 };
 
 /**
@@ -107,7 +109,9 @@ export function PostCard({
   onLikePress,
   likeDisabled = false,
   onCommentsPress,
+  onMorePress,
 }: PostCardProps) {
+  const maisOpcoes = useRef<View>(null);
   const temSequencia = authorStreak != null && authorStreak !== '';
   const temTexto = text.trim() !== '';
 
@@ -133,6 +137,24 @@ export function PostCard({
             {timeAgo}
           </Text>
         </View>
+        {onMorePress && (
+          <Pressable
+            ref={maisOpcoes}
+            accessibilityRole="button"
+            accessibilityLabel="Opções do post"
+            hitSlop={8}
+            onPress={() =>
+              maisOpcoes.current?.measureInWindow((x, y, width, height) =>
+                onMorePress({ x, y, width, height })
+              )
+            }
+            className="h-10 w-10 items-center justify-center gap-[3px] rounded-pill active:bg-surface-pink"
+          >
+            <View className="h-1 w-1 rounded-pill bg-text-secondary" />
+            <View className="h-1 w-1 rounded-pill bg-text-secondary" />
+            <View className="h-1 w-1 rounded-pill bg-text-secondary" />
+          </Pressable>
+        )}
       </View>
 
       {temTexto && (
@@ -146,7 +168,7 @@ export function PostCard({
           <Pressable
             accessibilityRole="button"
             accessibilityState={{ disabled: likeDisabled, selected: likedByMe }}
-            accessibilityLabel={`${likes} curtidas${likedByMe ? ', curtido por você' : ''}`}
+            accessibilityLabel={`${likes} ${likes === 1 ? 'curtida' : 'curtidas'}${likedByMe ? ', curtido por você' : ''}`}
             disabled={likeDisabled}
             onPress={onLikePress}
             hitSlop={8}
@@ -160,7 +182,7 @@ export function PostCard({
         ) : (
           <View
             accessible
-            accessibilityLabel={`${likes} curtidas${likedByMe ? ', curtido por você' : ''}`}
+            accessibilityLabel={`${likes} ${likes === 1 ? 'curtida' : 'curtidas'}${likedByMe ? ', curtido por você' : ''}`}
             className="flex-row items-center gap-1"
           >
             <HeartIcon filled={likedByMe} />
@@ -173,7 +195,7 @@ export function PostCard({
           (onCommentsPress ? (
             <Pressable
               accessibilityRole="button"
-              accessibilityLabel={`${comments} comentários`}
+              accessibilityLabel={`${comments} ${comments === 1 ? 'comentário' : 'comentários'}`}
               accessibilityHint="Abre os comentários"
               onPress={onCommentsPress}
               hitSlop={8}
@@ -187,7 +209,7 @@ export function PostCard({
           ) : (
             <View
               accessible
-              accessibilityLabel={`${comments} comentários`}
+              accessibilityLabel={`${comments} ${comments === 1 ? 'comentário' : 'comentários'}`}
               className="flex-row items-center gap-1"
             >
               <CommentsIcon size={sizes.iconSmall} />

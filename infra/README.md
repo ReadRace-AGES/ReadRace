@@ -20,6 +20,7 @@ Endereço da API: `https://3-19-247-112.sslip.io` (sem domínio comprado; o
 |---|---|
 | `infra/terraform/` | Tudo da AWS que é gerenciado por código |
 | `infra/producao/` | `docker-compose.yml`, `Caddyfile`, `subir.sh` e o backup do banco, que rodam na EC2 |
+| `infra/demo/` | Script de refrescar a demo, rodado à mão antes das apresentações |
 | `.github/workflows/deploy.yml` | Deploy automático a cada push na `main` |
 
 ## O que existe na AWS
@@ -127,6 +128,42 @@ sudo docker exec -i readrace-db-1 psql -U readrace -d readrace -c \
 
 Nunca ligar contas por e-mail: os e-mails do seed (`@readrace.com`) são de um domínio real
 de terceiros.
+
+### Refrescar a demo
+
+O seed é relativo à data em que o banco foi criado e envelhece: a sequência do Daniel zera,
+o desafio dele vence e os posts aparecem como "há 3 semanas". O script
+`infra/demo/refrescar_demo.sql` (#220) reaplica as datas do seed a partir do momento em que
+roda:
+
+- sequência de 12 dias, com a última leitura ontem;
+- desafio Daniel × Ana em andamento por mais 10 dias, com placar 240 × 210 de 300;
+- leituras, posts e comentários do seed nos últimos dias, na mesma ordem.
+
+Ele só mexe em linhas do seed, encontradas pelos ids fixos das migrations; nada criado pelo
+app muda. Pode rodar mais de uma vez. **Quando rodar:** antes de cada apresentação (09/11,
+regressão; 16/11, véspera da entrega).
+
+Na EC2, pelo Session Manager:
+
+```bash
+# 1. backup antes
+sudo /opt/readrace/backup-banco.sh manual
+
+# 2. baixar o script da dev (o repositório é público) e rodar numa transação só
+curl -fsSL https://raw.githubusercontent.com/ReadRace-AGES/ReadRace/dev/infra/demo/refrescar_demo.sql \
+  -o /var/tmp/refrescar_demo.sql
+DB=$(sudo docker ps -q --filter label=com.docker.compose.service=db)
+sudo docker exec -i $DB psql -U readrace -d readrace -1 -v ON_ERROR_STOP=1 < /var/tmp/refrescar_demo.sql
+rm /var/tmp/refrescar_demo.sql
+```
+
+Saída esperada, uma linha por bloco do script:
+`UPDATE 1`, `UPDATE 15`, `UPDATE 30`, `UPDATE 30`, `UPDATE 6`, `UPDATE 30`, `UPDATE 10`,
+`UPDATE 1`, `UPDATE 2`. Um número menor indica que algum dado do seed foi apagado. Com
+`-1`, qualquer erro desfaz tudo.
+
+O `RefrescarDemoIT` roda o script contra um banco com o seed envelhecido a cada mudança nele.
 
 ## Orçamento
 

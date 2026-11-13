@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import { useRouter } from 'expo-router';
 import {
   ActivityIndicator,
@@ -19,7 +19,13 @@ import { PrimaryButton } from '@/components/PrimaryButton';
 import { SearchInput } from '@/components/SearchInput';
 import { colors, spacing, textStyles } from '@/theme';
 
-import type { LivroAdicionado, ResultadoCatalogo } from './api';
+import { RegistrarProgressoSheet } from '@/features/progresso/RegistrarProgressoSheet';
+
+import {
+  adicionarLendo,
+  type LivroAdicionado,
+  type ResultadoCatalogo,
+} from './api';
 import { SelecionarListaSheet } from './SelecionarListaSheet';
 import { useBuscaCatalogo } from './useBuscaCatalogo';
 
@@ -42,6 +48,32 @@ export function AdicionarLivroScreen() {
   const [livroSelecionado, setLivroSelecionado] =
     useState<ResultadoCatalogo | null>(null);
   const [confirmacao, setConfirmacao] = useState<LivroAdicionado | null>(null);
+  // "Lendo agora": o livro só entra na biblioteca quando a página é registrada.
+  const [livroLendo, setLivroLendo] = useState<ResultadoCatalogo | null>(null);
+  const adicionadoLendo = useRef<LivroAdicionado | null>(null);
+
+  async function enviarLendo(pagina: number) {
+    const resultado = await adicionarLendo(livroLendo!.volumeId, pagina);
+    adicionadoLendo.current = resultado;
+    if (!resultado.progresso) {
+      throw new Error('Não foi possível registrar o progresso.');
+    }
+    return resultado.progresso;
+  }
+
+  function fecharRegistroLendo() {
+    const adicionado = adicionadoLendo.current;
+    const livro = livroLendo;
+    adicionadoLendo.current = null;
+    setLivroLendo(null);
+    if (adicionado) {
+      setAdicionouLivro(true);
+      setConfirmacao(adicionado);
+    } else {
+      // Cancelou: nada foi gravado. Volta para a escolha de lista do mesmo livro.
+      setLivroSelecionado(livro);
+    }
+  }
 
   function voltar() {
     if (adicionouLivro) {
@@ -122,6 +154,13 @@ export function AdicionarLivroScreen() {
         />
       </View>
 
+      {busca.situacao === 'inicial' && (
+        <EmptyState
+          icon={BookIcon}
+          message="Encontre sua próxima leitura. Busque por título, autor ou ISBN — por exemplo, O Hobbit. Depois escolha se está lendo agora ou em qual lista guardar."
+        />
+      )}
+
       {busca.situacao === 'carregando' && (
         <View style={styles.estado}>
           <ActivityIndicator
@@ -180,7 +219,23 @@ export function AdicionarLivroScreen() {
           setAdicionouLivro(true);
           setConfirmacao(resultado);
         }}
+        onLendoAgora={() => {
+          adicionadoLendo.current = null;
+          setLivroLendo(livroSelecionado);
+          setLivroSelecionado(null);
+        }}
       />
+
+      {livroLendo && (
+        <RegistrarProgressoSheet
+          key={livroLendo.volumeId}
+          visible
+          enviar={enviarLendo}
+          totalPaginas={livroLendo.paginas}
+          paginaAtual={0}
+          onClose={fecharRegistroLendo}
+        />
+      )}
     </View>
   );
 }

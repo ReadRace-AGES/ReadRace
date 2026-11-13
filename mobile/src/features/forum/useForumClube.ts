@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 
-import { ApiError } from '@/api/client';
+import { ApiError, mensagemErroCarregamento } from '@/api/client';
 import { curtir, descurtir } from '@/features/posts/api';
 
 import { buscarForumDoClube, type ForumClube, type PostForum } from './api';
@@ -16,6 +16,7 @@ export type ForumClubeState = {
   alternarCurtida: (postId: string) => Promise<void>;
   curtidasPendentes: Set<string>;
   adicionarPost: (post: PostForum) => void;
+  registrarComentario: (postId: string) => void;
 };
 
 type SessaoForum = {
@@ -26,9 +27,7 @@ type SessaoForum = {
 };
 
 function mensagemDe(erro: unknown) {
-  return erro instanceof ApiError
-    ? erro.message
-    : 'Não foi possível carregar o fórum do clube.';
+  return mensagemErroCarregamento(erro);
 }
 
 function mensagemDeCurtida(erro: unknown) {
@@ -139,6 +138,34 @@ export function useForumClube(clubeId: string): ForumClubeState {
     [clubeId]
   );
 
+  const registrarComentario = useCallback(
+    (postId: string) => {
+      const sessao = sessaoRef.current;
+
+      if (
+        !sessao ||
+        sessao.clubeId !== clubeId ||
+        sessao.controller.signal.aborted
+      ) {
+        return;
+      }
+
+      sessao.revisao++;
+
+      setForum((atual) =>
+        atual.situacao === 'sucesso'
+          ? {
+              ...atual,
+              dados: comPost(atual.dados, postId, (post) => ({
+                ...post,
+                totalComentarios: (post.totalComentarios ?? 0) + 1,
+              })),
+            }
+          : atual
+      );
+    },
+    [clubeId]
+  );
   const alternarCurtida = useCallback(
     async (postId: string) => {
       const sessao = sessaoRef.current;
@@ -183,7 +210,11 @@ export function useForumClube(clubeId: string): ForumClubeState {
           maisRecente.situacao === 'sucesso'
             ? {
                 situacao: 'sucesso',
-                dados: comPost(maisRecente.dados, postId, () => anterior),
+                dados: comPost(maisRecente.dados, postId, (post) => ({
+                  ...post,
+                  curtidoPorMim: anterior.curtidoPorMim,
+                  totalCurtidas: anterior.totalCurtidas,
+                })),
               }
             : maisRecente
         );
@@ -204,5 +235,6 @@ export function useForumClube(clubeId: string): ForumClubeState {
     alternarCurtida,
     curtidasPendentes,
     adicionarPost,
+    registrarComentario,
   };
 }

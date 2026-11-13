@@ -34,6 +34,7 @@ import com.readrace.api.exception.OponenteNaoEAmigoException;
 import com.readrace.api.exception.OponenteNaoEncontradoException;
 import com.readrace.api.exception.ParametroInvalidoException;
 import com.readrace.api.exception.PrazoInvalidoException;
+import com.readrace.api.model.Conquista;
 import com.readrace.api.model.DesafioAmigo;
 import com.readrace.api.model.Livro;
 import com.readrace.api.model.ProgressoDesafio;
@@ -237,13 +238,18 @@ public class DesafioService {
         return paraResponse(desafio, usuarioId, progressos);
     }
 
+    /**
+     * Avança os desafios ativos do usuário e devolve as conquistas que ele desbloqueou quando algum
+     * deles finalizou: elas já ficam gravadas aqui e a avaliação seguinte não as vê mais pendentes.
+     */
     @Transactional
-    public void avancarDesafios(UUID usuarioId, Livro livro, int pagina, int paginasNovas) {
+    public List<Conquista> avancarDesafios(
+            UUID usuarioId, Livro livro, int pagina, int paginasNovas) {
         List<DesafioAmigo> desafios =
                 desafioRepository.buscarDoUsuarioComLock(usuarioId, StatusDesafio.ATIVO);
 
         if (desafios.isEmpty()) {
-            return;
+            return List.of();
         }
 
         List<UUID> desafioIds = new ArrayList<>();
@@ -255,6 +261,7 @@ public class DesafioService {
         Map<UUID, List<ProgressoDesafio>> progressosPorDesafio =
                 agruparProgressos(progressoRepository.buscarPorDesafios(desafioIds));
         OffsetDateTime agora = OffsetDateTime.now(ZoneOffset.UTC);
+        List<Conquista> desbloqueadas = new ArrayList<>();
 
         for (DesafioAmigo desafio : desafios) {
             desafio.finalizarSePrazoEncerrado(agora);
@@ -269,9 +276,14 @@ public class DesafioService {
             }
 
             if (desafio.estaFinalizado()) {
-                conquistaService.avaliarParticipantes(desafio);
+                desbloqueadas.addAll(
+                        conquistaService
+                                .avaliarParticipantes(desafio)
+                                .getOrDefault(usuarioId, List.of()));
             }
         }
+
+        return desbloqueadas;
     }
 
     private void avancar(
@@ -295,7 +307,9 @@ public class DesafioService {
             return;
         }
 
-        if (pagina >= livro.getTotalPaginas()) {
+        // Só vence quem chega à última página lendo: com o livro já lido até o fim, registrar a
+        // última página de novo não traz página nova e não finaliza o desafio.
+        if (pagina >= livro.getTotalPaginas() && paginasNovas > 0) {
             progresso.concluirLivro(livro.getTotalPaginas());
             desafio.finalizar();
         } else {

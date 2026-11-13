@@ -5,11 +5,33 @@ import { colors, radius, sizes, spacing, textStyles } from '@/theme';
 export const styles = StyleSheet.create({
   tela: { flex: 1, backgroundColor: colors.surface },
   rolagem: { flexGrow: 1, paddingBottom: spacing[10] },
-  hero: { height: 248, overflow: 'hidden', position: 'relative' },
+  hero: { height: spacing[10] * 5, overflow: 'hidden', position: 'relative' },
   heroImage: { ...StyleSheet.absoluteFill },
   heroPlaceholder: {
     ...StyleSheet.absoluteFill,
-    backgroundColor: colors.surfaceAlt,
+    backgroundColor: colors.primary,
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: spacing[3],
+  },
+  heroCaption: { ...textStyles.captionStrong, color: colors.logoCream },
+  descricao: { ...textStyles.bodySmall, color: colors.textSecondary },
+  vazio: {
+    gap: spacing[2],
+    alignItems: 'center',
+    padding: spacing[5],
+    borderRadius: radius.lg,
+    backgroundColor: colors.surfaceMuted,
+  },
+  vazioTitulo: {
+    ...textStyles.bodySmallStrong,
+    color: colors.primary,
+    textAlign: 'center',
+  },
+  vazioMensagem: {
+    ...textStyles.caption,
+    color: colors.textSecondary,
+    textAlign: 'center',
   },
   heroShade: {
     ...StyleSheet.absoluteFill,
@@ -54,8 +76,22 @@ export const styles = StyleSheet.create({
   seguidores: { ...textStyles.bodySmallStrong, color: colors.text },
   rotulo: { ...textStyles.micro, color: colors.textSecondary },
   postagens: { ...textStyles.bodyStrong, color: colors.text },
-  abas: { flexDirection: 'row', gap: spacing[6] },
-  abaAtiva: { ...textStyles.caption, color: colors.accent, textDecorationLine: 'underline' },
-  aba: { ...textStyles.caption, color: colors.accent, textDecorationLine: 'underline' },
+  abas: { flexDirection: 'row', alignItems: 'center', gap: spacing[6] },
+  acao: {
+    minHeight: sizes.searchInputHeight,
+    minWidth: sizes.searchInputHeight,
+    paddingHorizontal: spacing[2],
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  abaAtiva: {
+    ...textStyles.caption,
+    color: colors.accent,
+    textDecorationLine: 'underline',
+  },
+  aba: {
+    ...textStyles.caption,
+    color: colors.textSecondary,
+  },
   post: { gap: spacing[1] },
 });

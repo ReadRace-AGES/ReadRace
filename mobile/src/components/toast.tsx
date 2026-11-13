@@ -11,9 +11,15 @@ const DURACAO_FADE_MS = 200;
 type ToastProps = {
   visible: boolean;
   message?: string;
+  /** Altura medida da barra visível, já incluindo seu padding de área segura. */
+  tabBarHeight?: number;
 };
 
-export function Toast({ visible, message = COPY_PADRAO }: ToastProps) {
+export function Toast({
+  visible,
+  message = COPY_PADRAO,
+  tabBarHeight = 0,
+}: ToastProps) {
   const opacity = useRef(new Animated.Value(0)).current;
   const [renderizado, setRenderizado] = useState(visible);
   const insets = useSafeAreaInsets();
@@ -39,15 +45,38 @@ export function Toast({ visible, message = COPY_PADRAO }: ToastProps) {
 
   if (!renderizado) return null;
 
+  // Cada linha da mensagem vira um Text: o aviso de recompensa tem até uma linha por item ganho.
+  const linhas = message.split('\n');
+  const variasLinhas = linhas.length > 1;
+
   return (
     <View
       pointerEvents="none"
-      style={[styles.wrapper, { bottom: insets.bottom + spacing[6] }]}
+      style={[
+        styles.wrapper,
+        {
+          bottom:
+            (tabBarHeight > 0 ? tabBarHeight : insets.bottom) + spacing[6],
+        },
+      ]}
     >
-      <Animated.View style={[styles.pill, shadows.floating, { opacity }]}>
-        <Text className="text-bodySmall font-inter-semibold text-text-inverse">
-          {message}
-        </Text>
+      <Animated.View
+        style={[
+          styles.pill,
+          variasLinhas && styles.bloco,
+          shadows.floating,
+          { opacity },
+        ]}
+      >
+        {linhas.map((linha, indice) => (
+          <Text
+            key={indice}
+            className="text-bodySmall font-inter-semibold text-text-inverse"
+            style={variasLinhas ? styles.linhaCentralizada : undefined}
+          >
+            {linha}
+          </Text>
+        ))}
       </Animated.View>
     </View>
   );
@@ -67,12 +96,21 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing[5],
     paddingVertical: spacing[3],
   },
+  // Com mais de uma linha, a pílula vira um bloco de cantos arredondados.
+  bloco: {
+    borderRadius: radius.lg,
+    gap: spacing[1],
+  },
+  linhaCentralizada: {
+    textAlign: 'center',
+  },
 });
 
 type UseToastReturn = {
   visible: boolean;
   message: string;
-  show: (message?: string) => void;
+  /** `duracaoMs` vale só para este aviso; sem ele vale a duração do hook. */
+  show: (message?: string, duracaoMs?: number) => void;
   hide: () => void;
 };
 
@@ -91,14 +129,14 @@ export function useToast(
   }, []);
 
   const show = useCallback(
-    (mensagem?: string) => {
+    (mensagem?: string, duracaoDoAvisoMs?: number) => {
       limparTimer();
       setMessage(mensagem ?? COPY_PADRAO);
       setVisible(true);
       timeoutRef.current = setTimeout(() => {
         setVisible(false);
         timeoutRef.current = null;
-      }, duracaoMs);
+      }, duracaoDoAvisoMs ?? duracaoMs);
     },
     [duracaoMs, limparTimer]
   );

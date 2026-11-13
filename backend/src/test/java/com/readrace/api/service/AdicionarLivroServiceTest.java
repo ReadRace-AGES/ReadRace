@@ -1,17 +1,26 @@
 package com.readrace.api.service;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
+import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
@@ -19,19 +28,26 @@ import com.readrace.api.dto.GoogleBookVolume;
 import com.readrace.api.dto.IndustryIdentifier;
 import com.readrace.api.dto.VolumeInfo;
 import com.readrace.api.dto.request.AdicionarLivroRequest;
+import com.readrace.api.dto.request.RegistrarProgressoRequest;
+import com.readrace.api.dto.response.ProgressoLeituraResponse;
+import com.readrace.api.exception.CodigoErro;
 import com.readrace.api.exception.ListaInvalidaException;
+import com.readrace.api.exception.LivroEmProgressoException;
 import com.readrace.api.exception.LivroNaoEncontradoException;
 import com.readrace.api.exception.LivroSemIsbnOuPaginasException;
+import com.readrace.api.exception.PaginaInvalidaException;
+import com.readrace.api.model.Autor;
+import com.readrace.api.model.ItemBiblioteca;
+import com.readrace.api.model.Livro;
+import com.readrace.api.model.LivroAutor;
+import com.readrace.api.model.StatusLeitura;
+import com.readrace.api.model.UsuarioId;
 import com.readrace.api.repository.AutorRepository;
 import com.readrace.api.repository.GeneroRepository;
 import com.readrace.api.repository.ItemBibliotecaRepository;
 import com.readrace.api.repository.LivroAutorRepository;
 import com.readrace.api.repository.LivroRepository;
 
-/**
- * Teste unitário das validações de {@link AdicionarLivroService}. Mocka o {@link BookSearchPort}
- * para cobrir volumes sem ISBN/páginas, algo que não ocorre no catálogo local de teste (#155).
- */
 @ExtendWith(MockitoExtension.class)
 @DisplayName("AdicionarLivroService")
 class AdicionarLivroServiceTest {
@@ -43,6 +59,7 @@ class AdicionarLivroServiceTest {
     @Mock private GeneroRepository generoRepository;
     @Mock private ItemBibliotecaRepository itemBibliotecaRepository;
     @Mock private UsuarioAtual usuarioAtual;
+    @Mock private RegistrarProgressoService registrarProgressoService;
 
     private AdicionarLivroService service() {
         return new AdicionarLivroService(
@@ -52,14 +69,19 @@ class AdicionarLivroServiceTest {
                 livroAutorRepository,
                 generoRepository,
                 itemBibliotecaRepository,
-                usuarioAtual);
+                usuarioAtual,
+                registrarProgressoService);
     }
 
-    private VolumeInfo volumeInfo(List<IndustryIdentifier> identificadores, Integer paginas) {
+    private VolumeInfo volumeInfo(
+            String titulo,
+            List<String> autores,
+            List<IndustryIdentifier> identificadores,
+            Integer paginas) {
         return new VolumeInfo(
-                "Título de teste",
+                titulo,
                 null,
-                List.of("Autor de teste"),
+                autores,
                 null,
                 null,
                 null,
@@ -76,12 +98,100 @@ class AdicionarLivroServiceTest {
                 null);
     }
 
+    private VolumeInfo volumeInfo(List<IndustryIdentifier> identificadores, Integer paginas) {
+        return volumeInfo("Título de teste", List.of("Autor de teste"), identificadores, paginas);
+    }
+
+    private void configurarCatalogo(
+            String volumeId, String titulo, List<String> autores, String isbn) {
+        VolumeInfo info =
+                volumeInfo(titulo, autores, List.of(new IndustryIdentifier("ISBN_13", isbn)), 200);
+
+        when(bookSearchPort.getById(volumeId))
+                .thenReturn(Optional.of(GoogleBookVolume.of(volumeId, info)));
+    }
+
+    private Livro livroExistente(UUID livroId, String titulo, String nomePrimeiroAutor) {
+        Livro livro = mock(Livro.class);
+        Autor autor = mock(Autor.class);
+        LivroAutor vinculo = mock(LivroAutor.class);
+
+        when(livro.getTitulo()).thenReturn(titulo);
+        when(livro.getLivroAutores()).thenReturn(List.of(vinculo));
+        when(vinculo.getAutor()).thenReturn(autor);
+        when(autor.getNome()).thenReturn(nomePrimeiroAutor);
+
+        return livro;
+    }
+
+    private void configurarBiblioteca(UUID livroId) {
+        UUID usuarioId = UUID.randomUUID();
+
+        when(usuarioAtual.idDoUsuarioAtual()).thenReturn(new UsuarioId(usuarioId));
+
+        ItemBiblioteca item = mock(ItemBiblioteca.class);
+
+        when(item.getStatusLeitura()).thenReturn(StatusLeitura.desejo);
+
+        when(itemBibliotecaRepository.findByUsuarioIdAndLivroId(usuarioId, livroId))
+                .thenReturn(Optional.of(item));
+    }
+
     @Test
-    @DisplayName(
-            "lista fora de lido/desejo/favorito devolve ListaInvalidaException, sem consultar o catálogo")
+    @DisplayName("lista inválida não consulta o catálogo")
     void deve_recusar_lista_invalida() {
-        assertThatThrownBy(() -> service().adicionar(new AdicionarLivroRequest("v1", "lendo")))
+        assertThatThrownBy(() -> service().adicionar(new AdicionarLivroRequest("v1", "abandonado")))
                 .isInstanceOf(ListaInvalidaException.class);
+    }
+
+    @Test
+    @DisplayName("lendo sem página não consulta o catálogo nem adiciona o livro")
+    void deve_recusar_lendo_sem_pagina() {
+        assertThatThrownBy(() -> service().adicionar(new AdicionarLivroRequest("v1", "lendo")))
+                .isInstanceOf(PaginaInvalidaException.class);
+
+        verifyNoInteractions(bookSearchPort, livroRepository, registrarProgressoService);
+        verifyNoInteractions(itemBibliotecaRepository);
+    }
+
+    @Test
+    @DisplayName("lendo registra a página informada e devolve a recompensa da leitura")
+    void deve_adicionar_em_lendo_registrando_a_pagina() {
+        String isbn = "9786586490077";
+        UUID livroId = UUID.randomUUID();
+        configurarCatalogo("br001", "Dom Casmurro", List.of("Machado de Assis"), isbn);
+        Livro livro = mock(Livro.class);
+        when(livro.getId()).thenReturn(livroId);
+        when(livroRepository.findByIsbn(isbn)).thenReturn(Optional.of(livro));
+        configurarBiblioteca(livroId);
+        ProgressoLeituraResponse progresso = mock(ProgressoLeituraResponse.class);
+        when(registrarProgressoService.registrar(eq(livroId), any())).thenReturn(progresso);
+
+        var resposta = service().adicionar(new AdicionarLivroRequest("br001", "lendo", 42));
+
+        var request = ArgumentCaptor.forClass(RegistrarProgressoRequest.class);
+        verify(registrarProgressoService).registrar(eq(livroId), request.capture());
+        assertThat(request.getValue().pagina()).isEqualTo(42);
+        assertThat(resposta.progresso()).isSameAs(progresso);
+        verify(itemBibliotecaRepository, never()).definirStatus(any(), any(), any(), anyString());
+    }
+
+    @Test
+    @DisplayName("página inválida em lendo propaga o erro do registro de leitura")
+    void deve_propagar_pagina_invalida_em_lendo() {
+        String isbn = "9786586490077";
+        UUID livroId = UUID.randomUUID();
+        configurarCatalogo("br001", "Dom Casmurro", List.of("Machado de Assis"), isbn);
+        Livro livro = mock(Livro.class);
+        when(livro.getId()).thenReturn(livroId);
+        when(livroRepository.findByIsbn(isbn)).thenReturn(Optional.of(livro));
+        when(usuarioAtual.idDoUsuarioAtual()).thenReturn(new UsuarioId(UUID.randomUUID()));
+        when(registrarProgressoService.registrar(eq(livroId), any()))
+                .thenThrow(new PaginaInvalidaException("Informe uma página entre 1 e 200."));
+
+        assertThatThrownBy(
+                        () -> service().adicionar(new AdicionarLivroRequest("br001", "lendo", 0)))
+                .isInstanceOf(PaginaInvalidaException.class);
     }
 
     @Test
@@ -91,7 +201,7 @@ class AdicionarLivroServiceTest {
     }
 
     @Test
-    @DisplayName("volumeId que o catálogo não conhece devolve LivroNaoEncontradoException")
+    @DisplayName("volume inexistente devolve LivroNaoEncontradoException")
     void deve_recusar_volume_inexistente() {
         when(bookSearchPort.getById("inexistente")).thenReturn(Optional.empty());
 
@@ -104,37 +214,46 @@ class AdicionarLivroServiceTest {
     }
 
     @Test
-    @DisplayName("volume sem industryIdentifiers devolve LivroSemIsbnOuPaginasException")
+    @DisplayName("volume sem ISBN é recusado")
     void deve_recusar_volume_sem_isbn() {
-        GoogleBookVolume volume = GoogleBookVolume.of("v1", volumeInfo(List.of(), 200));
-        when(bookSearchPort.getById("v1")).thenReturn(Optional.of(volume));
+        when(bookSearchPort.getById("v1"))
+                .thenReturn(Optional.of(GoogleBookVolume.of("v1", volumeInfo(List.of(), 200))));
 
         assertThatThrownBy(() -> service().adicionar(new AdicionarLivroRequest("v1", "desejo")))
                 .isInstanceOf(LivroSemIsbnOuPaginasException.class);
     }
 
     @Test
-    @DisplayName("volume sem pageCount devolve LivroSemIsbnOuPaginasException mesmo com ISBN")
+    @DisplayName("volume sem páginas é recusado")
     void deve_recusar_volume_sem_paginas() {
-        GoogleBookVolume volume =
-                GoogleBookVolume.of(
-                        "v1",
-                        volumeInfo(
-                                List.of(new IndustryIdentifier("ISBN_13", "9786586490077")), null));
-        when(bookSearchPort.getById("v1")).thenReturn(Optional.of(volume));
+        when(bookSearchPort.getById("v1"))
+                .thenReturn(
+                        Optional.of(
+                                GoogleBookVolume.of(
+                                        "v1",
+                                        volumeInfo(
+                                                List.of(
+                                                        new IndustryIdentifier(
+                                                                "ISBN_13", "9786586490077")),
+                                                null))));
 
         assertThatThrownBy(() -> service().adicionar(new AdicionarLivroRequest("v1", "desejo")))
                 .isInstanceOf(LivroSemIsbnOuPaginasException.class);
     }
 
     @Test
-    @DisplayName("pageCount zero também não cabe na biblioteca")
+    @DisplayName("volume com zero páginas é recusado")
     void deve_recusar_paginas_zero() {
-        GoogleBookVolume volume =
-                GoogleBookVolume.of(
-                        "v1",
-                        volumeInfo(List.of(new IndustryIdentifier("ISBN_13", "9786586490077")), 0));
-        when(bookSearchPort.getById("v1")).thenReturn(Optional.of(volume));
+        when(bookSearchPort.getById("v1"))
+                .thenReturn(
+                        Optional.of(
+                                GoogleBookVolume.of(
+                                        "v1",
+                                        volumeInfo(
+                                                List.of(
+                                                        new IndustryIdentifier(
+                                                                "ISBN_13", "9786586490077")),
+                                                0))));
 
         assertThatThrownBy(() -> service().adicionar(new AdicionarLivroRequest("v1", "desejo")))
                 .isInstanceOf(LivroSemIsbnOuPaginasException.class);
@@ -153,9 +272,11 @@ class AdicionarLivroServiceTest {
                                                             new IndustryIdentifier(
                                                                     "ISBN_13", isbn)),
                                                     200))));
+
             assertThatThrownBy(() -> service().adicionar(new AdicionarLivroRequest("v1", "desejo")))
                     .isInstanceOf(LivroSemIsbnOuPaginasException.class);
         }
+
         verifyNoInteractions(livroRepository, itemBibliotecaRepository);
     }
 
@@ -171,9 +292,88 @@ class AdicionarLivroServiceTest {
                                                         new IndustryIdentifier(
                                                                 "ISBN_13", "9786586490077")),
                                                 -1))));
+
         assertThatThrownBy(() -> service().adicionar(new AdicionarLivroRequest("v1", "desejo")))
                 .isInstanceOf(LivroSemIsbnOuPaginasException.class);
+
         verifyNoInteractions(livroRepository, itemBibliotecaRepository);
+    }
+
+    @Test
+    @DisplayName("volume sem título (nulo, vazio ou em branco) responde como livro sem ISBN")
+    void deve_recusar_volume_sem_titulo_sem_gravar() {
+        for (String titulo : new String[] {null, "", "   "}) {
+            when(bookSearchPort.getById("v1"))
+                    .thenReturn(
+                            Optional.of(
+                                    GoogleBookVolume.of(
+                                            "v1",
+                                            volumeInfo(
+                                                    titulo,
+                                                    List.of("Autor de teste"),
+                                                    List.of(
+                                                            new IndustryIdentifier(
+                                                                    "ISBN_13", "9786586490077")),
+                                                    200))));
+            assertThatThrownBy(() -> service().adicionar(new AdicionarLivroRequest("v1", "desejo")))
+                    .isInstanceOf(LivroSemIsbnOuPaginasException.class);
+        }
+        verifyNoInteractions(livroRepository, itemBibliotecaRepository);
+    }
+
+    @Test
+    @DisplayName("título com mais de 255 caracteres é cortado em 255 ao criar o livro")
+    void deve_cortar_titulo_longo() {
+        assertThat(tituloGravadoPara("t".repeat(300))).hasSize(255);
+    }
+
+    @Test
+    @DisplayName("o corte do título conta caracteres, sem partir um par substituto (emoji)")
+    void deve_cortar_titulo_sem_partir_emoji() {
+        String titulo = "a".repeat(254) + "😀😀";
+
+        String gravado = tituloGravadoPara(titulo);
+
+        assertThat(gravado.codePointCount(0, gravado.length())).isEqualTo(255);
+        assertThat(gravado).endsWith("😀").doesNotEndWith("😀😀");
+    }
+
+    @Test
+    @DisplayName("título com espaços nas pontas é gravado sem eles")
+    void deve_aparar_o_titulo() {
+        assertThat(tituloGravadoPara("  Dom Casmurro  ")).isEqualTo("Dom Casmurro");
+    }
+
+    private String tituloGravadoPara(String titulo) {
+        String isbn = "9786586490077";
+        when(bookSearchPort.getById("v1"))
+                .thenReturn(
+                        Optional.of(
+                                GoogleBookVolume.of(
+                                        "v1",
+                                        volumeInfo(
+                                                titulo,
+                                                List.of("Autor de teste"),
+                                                List.of(new IndustryIdentifier("ISBN_13", isbn)),
+                                                200))));
+        var livro = mock(com.readrace.api.model.Livro.class);
+        var livroId = java.util.UUID.randomUUID();
+        var usuarioId = java.util.UUID.randomUUID();
+        when(livro.getId()).thenReturn(livroId);
+        when(livroRepository.findByIsbn(isbn)).thenReturn(Optional.empty(), Optional.of(livro));
+        when(usuarioAtual.idDoUsuarioAtual())
+                .thenReturn(new com.readrace.api.model.UsuarioId(usuarioId));
+        var item = mock(com.readrace.api.model.ItemBiblioteca.class);
+        when(item.getStatusLeitura()).thenReturn(com.readrace.api.model.StatusLeitura.desejo);
+        when(itemBibliotecaRepository.findByUsuarioIdAndLivroId(usuarioId, livroId))
+                .thenReturn(Optional.of(item));
+
+        service().adicionar(new AdicionarLivroRequest("v1", "desejo"));
+
+        var capturado = ArgumentCaptor.forClass(String.class);
+        verify(livroRepository)
+                .criarSeAusente(any(), eq(isbn), capturado.capture(), eq(200), any());
+        return capturado.getValue();
     }
 
     @Test
@@ -198,18 +398,259 @@ class AdicionarLivroServiceTest {
         when(bookSearchPort.getById("v1"))
                 .thenReturn(
                         Optional.of(GoogleBookVolume.of("v1", volumeInfo(identificadores, 200))));
-        var livro = mock(com.readrace.api.model.Livro.class);
-        var livroId = java.util.UUID.randomUUID();
-        var usuarioId = java.util.UUID.randomUUID();
+
+        Livro livro = mock(Livro.class);
+        UUID livroId = UUID.randomUUID();
+        UUID usuarioId = UUID.randomUUID();
+
         when(livro.getId()).thenReturn(livroId);
         when(livroRepository.findByIsbn(esperado)).thenReturn(Optional.of(livro));
-        when(usuarioAtual.idDoUsuarioAtual())
-                .thenReturn(new com.readrace.api.model.UsuarioId(usuarioId));
-        var item = mock(com.readrace.api.model.ItemBiblioteca.class);
-        when(item.getStatusLeitura()).thenReturn(com.readrace.api.model.StatusLeitura.desejo);
+
+        when(usuarioAtual.idDoUsuarioAtual()).thenReturn(new UsuarioId(usuarioId));
+
+        ItemBiblioteca item = mock(ItemBiblioteca.class);
+
+        when(item.getStatusLeitura()).thenReturn(StatusLeitura.desejo);
+
         when(itemBibliotecaRepository.findByUsuarioIdAndLivroId(usuarioId, livroId))
                 .thenReturn(Optional.of(item));
+
         service().adicionar(new AdicionarLivroRequest("v1", "desejo"));
+
         verify(livroRepository).findByIsbn(esperado);
+    }
+
+    private static final String ISBN_TROCA = "9780060850524";
+
+    /** Livro que o catálogo devolve em "sci002" e que já existe no banco, achado pelo ISBN. */
+    private UUID livroDoCatalogoJaCadastrado() {
+        UUID livroId = UUID.randomUUID();
+        configurarCatalogo("sci002", "Admirável Mundo Novo", List.of("Aldous Huxley"), ISBN_TROCA);
+        Livro livro = mock(Livro.class);
+        when(livro.getId()).thenReturn(livroId);
+        when(livroRepository.findByIsbn(ISBN_TROCA)).thenReturn(Optional.of(livro));
+        return livroId;
+    }
+
+    private UUID usuarioLogado() {
+        UUID usuarioId = UUID.randomUUID();
+        when(usuarioAtual.idDoUsuarioAtual()).thenReturn(new UsuarioId(usuarioId));
+        return usuarioId;
+    }
+
+    /** O item que a trava de troca de lista encontra na biblioteca do usuário. */
+    private ItemBiblioteca itemNaBiblioteca(
+            UUID usuarioId, UUID livroId, StatusLeitura status, int paginaMaxima) {
+        ItemBiblioteca item = mock(ItemBiblioteca.class);
+        when(item.getPaginaMaxima()).thenReturn(paginaMaxima);
+        when(item.getStatusLeitura()).thenReturn(status);
+        when(itemBibliotecaRepository.findByUsuarioIdAndLivro_Id(usuarioId, livroId))
+                .thenReturn(Optional.of(item));
+        return item;
+    }
+
+    @ParameterizedTest(name = "{0} para {1}")
+    @CsvSource({"lendo, lido", "lendo, desejo", "lido, desejo"})
+    @DisplayName("livro com leitura registrada não troca de lista e nada é gravado")
+    void deve_recusar_troca_de_lista_de_livro_com_leitura(StatusLeitura atual, String lista) {
+        UUID livroId = livroDoCatalogoJaCadastrado();
+        UUID usuarioId = usuarioLogado();
+        itemNaBiblioteca(usuarioId, livroId, atual, 94);
+
+        assertThatThrownBy(() -> service().adicionar(new AdicionarLivroRequest("sci002", lista)))
+                .isInstanceOf(LivroEmProgressoException.class)
+                .extracting(erro -> ((LivroEmProgressoException) erro).getCodigo())
+                .isEqualTo(CodigoErro.LIVRO_EM_PROGRESSO);
+
+        verify(itemBibliotecaRepository, never())
+                .definirStatus(any(UUID.class), any(UUID.class), any(UUID.class), anyString());
+        verify(itemBibliotecaRepository, never())
+                .marcarFavorito(any(UUID.class), any(UUID.class), any(UUID.class));
+    }
+
+    @Test
+    @DisplayName("favoritar livro com leitura registrada passa e não troca o status")
+    void deve_favoritar_livro_com_leitura() {
+        UUID livroId = livroDoCatalogoJaCadastrado();
+        UUID usuarioId = usuarioLogado();
+        ItemBiblioteca item = mock(ItemBiblioteca.class);
+        when(item.getStatusLeitura()).thenReturn(StatusLeitura.lendo);
+        when(item.isFavorito()).thenReturn(true);
+        when(itemBibliotecaRepository.findByUsuarioIdAndLivroId(usuarioId, livroId))
+                .thenReturn(Optional.of(item));
+
+        var resposta = service().adicionar(new AdicionarLivroRequest("sci002", "favorito"));
+
+        assertThat(resposta.status()).isEqualTo("lendo");
+        assertThat(resposta.favorito()).isTrue();
+        verify(itemBibliotecaRepository)
+                .marcarFavorito(any(UUID.class), eq(usuarioId), eq(livroId));
+        verify(itemBibliotecaRepository, never())
+                .definirStatus(any(UUID.class), any(UUID.class), any(UUID.class), anyString());
+    }
+
+    @ParameterizedTest(name = "para {0}")
+    @CsvSource({"lido", "desejo"})
+    @DisplayName("livro da biblioteca sem leitura registrada troca de lista")
+    void deve_trocar_lista_de_livro_sem_leitura(String lista) {
+        UUID livroId = livroDoCatalogoJaCadastrado();
+        UUID usuarioId = usuarioLogado();
+        ItemBiblioteca item = mock(ItemBiblioteca.class);
+        when(item.getPaginaMaxima()).thenReturn(0);
+        when(item.getStatusLeitura()).thenReturn(StatusLeitura.valueOf(lista));
+        when(itemBibliotecaRepository.findByUsuarioIdAndLivro_Id(usuarioId, livroId))
+                .thenReturn(Optional.of(item));
+        when(itemBibliotecaRepository.findByUsuarioIdAndLivroId(usuarioId, livroId))
+                .thenReturn(Optional.of(item));
+
+        var resposta = service().adicionar(new AdicionarLivroRequest("sci002", lista));
+
+        assertThat(resposta.status()).isEqualTo(lista);
+        verify(itemBibliotecaRepository)
+                .definirStatus(any(UUID.class), eq(usuarioId), eq(livroId), eq(lista));
+    }
+
+    @Test
+    @DisplayName("pedir a lista em que o livro com leitura já está não é recusado")
+    void deve_aceitar_a_lista_em_que_o_livro_ja_esta() {
+        UUID livroId = livroDoCatalogoJaCadastrado();
+        UUID usuarioId = usuarioLogado();
+        ItemBiblioteca item = itemNaBiblioteca(usuarioId, livroId, StatusLeitura.lido, 288);
+        when(itemBibliotecaRepository.findByUsuarioIdAndLivroId(usuarioId, livroId))
+                .thenReturn(Optional.of(item));
+
+        var resposta = service().adicionar(new AdicionarLivroRequest("sci002", "lido"));
+
+        assertThat(resposta.status()).isEqualTo("lido");
+        verify(itemBibliotecaRepository)
+                .definirStatus(any(UUID.class), eq(usuarioId), eq(livroId), eq("lido"));
+    }
+
+    @Test
+    @DisplayName("livro que o usuário ainda não tem entra na lista pedida")
+    void deve_adicionar_livro_que_o_usuario_nao_tem() {
+        UUID livroId = livroDoCatalogoJaCadastrado();
+        UUID usuarioId = usuarioLogado();
+        when(itemBibliotecaRepository.findByUsuarioIdAndLivro_Id(usuarioId, livroId))
+                .thenReturn(Optional.empty());
+        ItemBiblioteca item = mock(ItemBiblioteca.class);
+        when(item.getStatusLeitura()).thenReturn(StatusLeitura.desejo);
+        when(itemBibliotecaRepository.findByUsuarioIdAndLivroId(usuarioId, livroId))
+                .thenReturn(Optional.of(item));
+
+        var resposta = service().adicionar(new AdicionarLivroRequest("sci002", "desejo"));
+
+        assertThat(resposta.status()).isEqualTo("desejo");
+        verify(itemBibliotecaRepository)
+                .definirStatus(any(UUID.class), eq(usuarioId), eq(livroId), eq("desejo"));
+    }
+
+    @Test
+    @DisplayName("ISBN igual reutiliza o livro sem consultar título e autor")
+    void deve_priorizar_isbn_existente() {
+        String isbn = "9786586490077";
+        UUID livroId = UUID.randomUUID();
+
+        configurarCatalogo("br001", "Dom Casmurro", List.of("Machado de Assis"), isbn);
+
+        Livro livro = mock(Livro.class);
+        when(livro.getId()).thenReturn(livroId);
+
+        when(livroRepository.findByIsbn(isbn)).thenReturn(Optional.of(livro));
+
+        configurarBiblioteca(livroId);
+
+        var resposta = service().adicionar(new AdicionarLivroRequest("br001", "desejo"));
+
+        assertThat(resposta.livroId()).isEqualTo(livroId);
+
+        verify(livroRepository, never()).buscarLivrosComAutores();
+        verify(livroRepository, never())
+                .criarSeAusente(
+                        any(UUID.class), anyString(), anyString(), any(Integer.class), any());
+    }
+
+    @Test
+    @DisplayName("ISBN diferente e mesmo título e autor reutiliza livro")
+    void deve_reutilizar_livro_por_titulo_e_autor() {
+        String isbnCatalogo = "9786586490077";
+        UUID livroId = UUID.randomUUID();
+
+        configurarCatalogo("br001", "Dom Casmurro", List.of("Machado de Assis"), isbnCatalogo);
+
+        Livro existente = livroExistente(livroId, "Dom Casmurro", "Machado de Assis");
+
+        when(existente.getId()).thenReturn(livroId);
+
+        when(livroRepository.findByIsbn(isbnCatalogo)).thenReturn(Optional.empty());
+
+        when(livroRepository.buscarLivrosComAutores()).thenReturn(List.of(existente));
+
+        configurarBiblioteca(livroId);
+
+        var resposta = service().adicionar(new AdicionarLivroRequest("br001", "desejo"));
+
+        assertThat(resposta.livroId()).isEqualTo(livroId);
+
+        verify(livroRepository, never())
+                .criarSeAusente(
+                        any(UUID.class), anyString(), anyString(), any(Integer.class), any());
+    }
+
+    @Test
+    @DisplayName("ignora maiúsculas, acentos, espaços e pontuação")
+    void deve_normalizar_titulo_e_primeiro_autor() {
+        String isbnCatalogo = "9788525053251";
+        UUID livroId = UUID.randomUUID();
+
+        configurarCatalogo(
+                "br002",
+                "MEMÓRIAS PÓSTUMAS DE BRÁS CUBAS",
+                List.of("MACHADO DE ASSIS"),
+                isbnCatalogo);
+
+        Livro existente =
+                livroExistente(livroId, "Memorias - Postumas de Bras Cubas!", "Machado, de Assis");
+
+        when(existente.getId()).thenReturn(livroId);
+
+        when(livroRepository.findByIsbn(isbnCatalogo)).thenReturn(Optional.empty());
+
+        when(livroRepository.buscarLivrosComAutores()).thenReturn(List.of(existente));
+
+        configurarBiblioteca(livroId);
+
+        var resposta = service().adicionar(new AdicionarLivroRequest("br002", "desejo"));
+
+        assertThat(resposta.livroId()).isEqualTo(livroId);
+
+        verify(livroRepository, never())
+                .criarSeAusente(
+                        any(UUID.class), anyString(), anyString(), any(Integer.class), any());
+    }
+
+    @Test
+    @DisplayName("mesmo título com primeiro autor diferente não reutiliza")
+    void deve_diferenciar_livros_com_autores_diferentes() {
+        String isbnCatalogo = "9786586490077";
+
+        configurarCatalogo("br001", "Dom Casmurro", List.of("Machado de Assis"), isbnCatalogo);
+
+        Livro outroAutor = livroExistente(UUID.randomUUID(), "Dom Casmurro", "Outro Autor");
+
+        when(livroRepository.findByIsbn(isbnCatalogo)).thenReturn(Optional.empty());
+
+        when(livroRepository.buscarLivrosComAutores()).thenReturn(List.of(outroAutor));
+
+        assertThatThrownBy(() -> service().adicionar(new AdicionarLivroRequest("br001", "desejo")))
+                .isInstanceOf(java.util.NoSuchElementException.class);
+
+        verify(livroRepository)
+                .criarSeAusente(
+                        any(UUID.class),
+                        org.mockito.ArgumentMatchers.eq(isbnCatalogo),
+                        org.mockito.ArgumentMatchers.eq("Dom Casmurro"),
+                        org.mockito.ArgumentMatchers.eq(200),
+                        any());
     }
 }

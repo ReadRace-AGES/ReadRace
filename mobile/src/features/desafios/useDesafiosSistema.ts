@@ -1,7 +1,7 @@
 import { useCallback, useRef, useState } from 'react';
 import { useFocusEffect } from 'expo-router';
 
-import { ApiError } from '@/api/client';
+import { mensagemErroCarregamento } from '@/api/client';
 
 import {
   consultarDesafiosSistema,
@@ -38,10 +38,7 @@ export function useDesafiosSistema() {
         return;
       setEstado({
         situacao: 'erro',
-        mensagem:
-          erro instanceof ApiError
-            ? erro.message
-            : 'Não foi possível carregar os desafios do sistema.',
+        mensagem: mensagemErroCarregamento(erro),
       });
     } finally {
       if (requisicao.current === controller) requisicao.current = null;

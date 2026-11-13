@@ -2,6 +2,7 @@ package com.readrace.api.service;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -26,14 +27,17 @@ public class BuscaService {
     private final LivroRepository livroRepository;
     private final UsuarioRepository usuarioRepository;
     private final ComunidadeRepository comunidadeRepository;
+    private final UsuarioAtual usuarioAtual;
 
     public BuscaService(
             LivroRepository livroRepository,
             UsuarioRepository usuarioRepository,
-            ComunidadeRepository comunidadeRepository) {
+            ComunidadeRepository comunidadeRepository,
+            UsuarioAtual usuarioAtual) {
         this.livroRepository = livroRepository;
         this.usuarioRepository = usuarioRepository;
         this.comunidadeRepository = comunidadeRepository;
+        this.usuarioAtual = usuarioAtual;
     }
 
     public BuscaResponse<?> buscar(String termo, String tipo) {
@@ -46,7 +50,10 @@ public class BuscaService {
         TipoBusca tipoBusca = TipoBusca.de(tipo);
 
         if (tipoBusca == TipoBusca.LIVROS) {
-            List<Livro> livros = livroRepository.findByTituloContainingIgnoreCase(termo);
+            List<Livro> livros =
+                    livroRepository
+                            .findDistinctByTituloContainingIgnoreCaseOrLivroAutores_Autor_NomeContainingIgnoreCase(
+                                    termo, termo);
             List<LivroBuscaResponse> itens = new ArrayList<>();
 
             for (Livro livro : livros) {
@@ -56,10 +63,11 @@ public class BuscaService {
             return new BuscaResponse<>(tipoBusca.getValor(), itens);
         } else if (tipoBusca == TipoBusca.USUARIOS) {
 
+            UUID usuarioId = usuarioAtual.idDoUsuarioAtual().valor();
             List<Usuario> usuarios =
                     usuarioRepository
-                            .findByNomeContainingIgnoreCaseAndExcluidoEmIsNullOrNomeUsuarioContainingIgnoreCaseAndExcluidoEmIsNull(
-                                    termo, termo);
+                            .findByNomeContainingIgnoreCaseAndExcluidoEmIsNullAndIdNotOrNomeUsuarioContainingIgnoreCaseAndExcluidoEmIsNullAndIdNot(
+                                    termo, usuarioId, termo, usuarioId);
             List<UsuarioBuscaResponse> itens = new ArrayList<>();
 
             for (Usuario usuario : usuarios) {

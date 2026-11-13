@@ -1,8 +1,14 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { ApiError } from '@/api/client';
+import { ApiError, mensagemErroCarregamento } from '@/api/client';
 import type { ProgressoLeituraResponse } from '@/features/progresso/api';
 import { curtir, descurtir } from '@/features/posts/api';
-import { buscarDetalhe, type LivroDetalhe, type PostLivro } from './api';
+import {
+  apagarPostDoLivro,
+  buscarDetalhe,
+  publicarPostDoLivro,
+  type LivroDetalhe,
+  type PostLivro,
+} from './api';
 import { aplicarProgresso } from './model';
 
 function mensagemDeCurtida(erro: unknown) {
@@ -32,15 +38,17 @@ type Estado =
 export function useLivroDetalhe(livroId: string) {
   const [estado, setEstado] = useState<Estado>({ situacao: 'carregando' });
   const [tentativa, setTentativa] = useState(0);
-  // Espelha `estado` de forma síncrona: o updater de setState roda no momento em que
-  // o React decide, não no momento da chamada — ler o post atual precisa de algo síncrono.
+
   const estadoRef = useRef(estado);
   estadoRef.current = estado;
+
   useEffect(() => {
     const controller = new AbortController();
     let ativo = true;
     const timeout = setTimeout(() => controller.abort(), 15000);
+
     setEstado({ situacao: 'carregando' });
+
     buscarDetalhe(livroId, controller.signal)
       .then((dados) => {
         if (ativo) setEstado({ situacao: 'sucesso', dados });
@@ -49,19 +57,18 @@ export function useLivroDetalhe(livroId: string) {
         if (ativo)
           setEstado({
             situacao: 'erro',
-            mensagem:
-              erro instanceof ApiError
-                ? erro.message
-                : 'Não foi possível carregar o livro. Tente novamente.',
+            mensagem: mensagemErroCarregamento(erro),
           });
       })
       .finally(() => clearTimeout(timeout));
+
     return () => {
       ativo = false;
       clearTimeout(timeout);
       controller.abort();
     };
   }, [livroId, tentativa]);
+
   const atualizarProgresso = useCallback(
     (resposta: ProgressoLeituraResponse) => {
       setEstado((atual) =>
@@ -79,17 +86,22 @@ export function useLivroDetalhe(livroId: string) {
   const alternarCurtida = useCallback(async (postId: string) => {
     const atual = estadoRef.current;
     if (atual.situacao !== 'sucesso') return;
+
     const anterior = atual.dados.posts.find((post) => post.id === postId);
     if (!anterior) return;
 
-    setEstado({
-      situacao: 'sucesso',
-      dados: comPost(atual.dados, postId, (post) => ({
-        ...post,
-        curtidoPorMim: !post.curtidoPorMim,
-        curtidas: post.curtidas + (post.curtidoPorMim ? -1 : 1),
-      })),
-    });
+    setEstado((maisRecente) =>
+      maisRecente.situacao === 'sucesso'
+        ? {
+            situacao: 'sucesso',
+            dados: comPost(maisRecente.dados, postId, (post) => ({
+              ...post,
+              curtidoPorMim: !anterior.curtidoPorMim,
+              curtidas: anterior.curtidas + (anterior.curtidoPorMim ? -1 : 1),
+            })),
+          }
+        : maisRecente
+    );
 
     try {
       await (anterior.curtidoPorMim ? descurtir : curtir)(postId);
@@ -98,18 +110,89 @@ export function useLivroDetalhe(livroId: string) {
         maisRecente.situacao === 'sucesso'
           ? {
               situacao: 'sucesso',
-              dados: comPost(maisRecente.dados, postId, () => anterior),
+              dados: comPost(maisRecente.dados, postId, (post) => ({
+                ...post,
+                curtidoPorMim: anterior.curtidoPorMim,
+                curtidas: anterior.curtidas,
+              })),
             }
           : maisRecente
       );
+
       throw new Error(mensagemDeCurtida(erro));
     }
   }, []);
+
+  const registrarComentario = useCallback((postId: string) => {
+    setEstado((atual) =>
+      atual.situacao === 'sucesso'
+        ? {
+            situacao: 'sucesso',
+            dados: comPost(atual.dados, postId, (post) => ({
+              ...post,
+              totalComentarios: (post.totalComentarios ?? 0) + 1,
+            })),
+          }
+        : atual
+    );
+  }, []);
+
+  const publicarPost = useCallback(
+    (texto: string, signal: AbortSignal) =>
+      publicarPostDoLivro(livroId, texto, signal),
+    [livroId]
+  );
+
+  const adicionarPost = useCallback((post: PostLivro) => {
+    setEstado((atual) =>
+      atual.situacao === 'sucesso'
+        ? {
+            situacao: 'sucesso',
+            dados: {
+              ...atual.dados,
+              posts: [
+                post,
+                ...atual.dados.posts.filter((item) => item.id !== post.id),
+              ],
+            },
+          }
+        : atual
+    );
+  }, []);
+
+  const apagarPost = useCallback(
+    async (postId: string) => {
+      try {
+        await apagarPostDoLivro(livroId, postId);
+      } catch (erro) {
+        throw new Error(
+          (erro instanceof ApiError ? erro.publicMessage : null) ??
+            'Não foi possível apagar o post. Tente novamente.'
+        );
+      }
+      setEstado((atual) =>
+        atual.situacao === 'sucesso'
+          ? {
+              situacao: 'sucesso',
+              dados: {
+                ...atual.dados,
+                posts: atual.dados.posts.filter((post) => post.id !== postId),
+              },
+            }
+          : atual
+      );
+    },
+    [livroId]
+  );
 
   return {
     estado,
     recarregar: () => setTentativa((t) => t + 1),
     atualizarProgresso,
     alternarCurtida,
+    registrarComentario,
+    publicarPost,
+    adicionarPost,
+    apagarPost,
   };
 }

@@ -3,6 +3,8 @@ package com.readrace.api.dto.response;
 import java.util.List;
 import java.util.UUID;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
+
 /**
  * Resposta de {@code GET /api/clubes/{clubeId}} (#35): o cabeçalho da Página do clube e o ranking
  * de membros.
@@ -27,12 +29,15 @@ public record ClubeResponse(
         LivroAtual livroAtual,
         List<LinhaRanking> ranking,
         String meuCargo,
-        boolean temQuizAtivo) {
+        boolean temQuizAtivo,
+        Usuario proximoLider,
+        String situacao,
+        @JsonInclude(JsonInclude.Include.NON_NULL) Long solicitacoesPendentes) {
 
     /** {@code id} vem porque "Registrar leitura" precisa saber sobre qual livro o modal abre. */
     public record LivroAtual(UUID id, String titulo, String autor) {}
 
-    /** {@code posicao} começa em 1 e é calculada aqui: a tela não ordena nem numera. */
+    /** {@code posicao} vem do ranking global por Pontos (1, 1, 3): a tela não ordena nem numera. */
     public record LinhaRanking(int posicao, Usuario usuario, int pontos) {}
 
     public record Usuario(UUID id, String nome, String avatarUrl) {}

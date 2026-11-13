@@ -1,5 +1,7 @@
 package com.readrace.api.service;
 
+import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -10,10 +12,15 @@ import java.util.stream.Collectors;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.readrace.api.dto.request.CriarComunidadeRequest;
+import com.readrace.api.dto.response.ComunidadeCriadaResponse;
 import com.readrace.api.dto.response.ComunidadeResponse;
 import com.readrace.api.dto.response.MembroComunidadeResponse;
 import com.readrace.api.exception.ComunidadeNaoEncontradaException;
+import com.readrace.api.exception.ParametroInvalidoException;
+import com.readrace.api.exception.SoMembroPostaException;
 import com.readrace.api.exception.UnicoAdministradorException;
+import com.readrace.api.exception.UsuarioNaoEncontradoException;
 import com.readrace.api.model.Cargo;
 import com.readrace.api.model.Comunidade;
 import com.readrace.api.model.MembroComunidade;
@@ -51,13 +58,43 @@ public class ComunidadeService {
         this.usuarioAtual = usuarioAtual;
     }
 
+    @Transactional
+    public ComunidadeCriadaResponse criar(CriarComunidadeRequest request) {
+        Comunidade comunidade =
+                new Comunidade(request.nome(), request.descricao(), request.imagemUrl());
+        UUID criadorId = usuarioAtual.idDoUsuarioAtual().valor();
+        // Mesma ordem de locks dos fluxos que alteram o usuário e seus vínculos.
+        // Impede criar uma comunidade para um usuário excluído simultaneamente.
+        usuarioRepository
+                .buscarAtivoComLock(criadorId)
+                .orElseThrow(UsuarioNaoEncontradoException::new);
+        comunidadeRepository.save(comunidade);
+        membroRepository.save(new MembroComunidade(comunidade, criadorId, Cargo.ADMINISTRADOR));
+        return new ComunidadeCriadaResponse(
+                comunidade.getId(),
+                comunidade.getNome(),
+                comunidade.getDescricao(),
+                comunidade.getImagemUrl(),
+                1L,
+                true);
+    }
+
     public ComunidadeResponse buscar(UUID comunidadeId) {
+        return buscar(comunidadeId, "recentes");
+    }
+
+    public ComunidadeResponse buscar(UUID comunidadeId, String ordem) {
         Comunidade comunidade = comunidade(comunidadeId);
         UUID usuarioId = usuarioAtual.idDoUsuarioAtual().valor();
+        if (!ordem.equals("recentes") && !ordem.equals("em_alta")) {
+            throw new ParametroInvalidoException(
+                    "O parâmetro 'ordem' deve ser recentes ou em_alta.");
+        }
         List<Post> posts =
-                postRepository
-                        .findByComunidadeIdAndPostPaiIdIsNullAndExcluidoEmIsNullOrderByCriadoEmDesc(
-                                comunidadeId);
+                new ArrayList<>(
+                        postRepository
+                                .findByComunidadeIdAndPostPaiIdIsNullAndExcluidoEmIsNullOrderByCriadoEmDesc(
+                                        comunidadeId));
         List<UUID> postIds = posts.stream().map(Post::getId).toList();
         Map<UUID, Usuario> autores =
                 usuarioRepository
@@ -72,6 +109,12 @@ public class ComunidadeService {
                                         Collectors.toMap(
                                                 CurtidaRepository.ContagemPorPost::getPostId,
                                                 CurtidaRepository.ContagemPorPost::getTotal));
+        if (ordem.equals("em_alta")) {
+            posts.sort(
+                    Comparator.comparingLong((Post post) -> curtidas.getOrDefault(post.getId(), 0L))
+                            .reversed()
+                            .thenComparing(Post::getCriadoEm, Comparator.reverseOrder()));
+        }
         Set<UUID> curtidosPorMim =
                 postIds.isEmpty()
                         ? Set.of()
@@ -93,25 +136,46 @@ public class ComunidadeService {
                 membroRepository
                         .findByComunidade_IdAndUsuarioId(comunidadeId, usuarioId)
                         .isPresent(),
+                comunidade.getDescricao(),
                 posts.stream()
                         .map(
-                                post -> {
-                                    Usuario autor = autores.get(post.getAutorId());
-                                    return new ComunidadeResponse.Post(
-                                            post.getId(),
-                                            new ComunidadeResponse.Autor(
-                                                    post.getAutorId(),
-                                                    autor == null || autor.getNome() == null
-                                                            ? ""
-                                                            : autor.getNome(),
-                                                    autor == null ? null : autor.getAvatarUrl()),
-                                            post.getCriadoEm(),
-                                            post.getConteudo(),
-                                            curtidas.getOrDefault(post.getId(), 0L),
-                                            curtidosPorMim.contains(post.getId()),
-                                            comentarios.getOrDefault(post.getId(), 0L));
-                                })
+                                post ->
+                                        paraPost(
+                                                post,
+                                                autores.get(post.getAutorId()),
+                                                curtidas.getOrDefault(post.getId(), 0L),
+                                                curtidosPorMim.contains(post.getId()),
+                                                comentarios.getOrDefault(post.getId(), 0L)))
                         .toList());
+    }
+
+    @Transactional
+    public ComunidadeResponse.Post publicar(UUID comunidadeId, String conteudo) {
+        comunidade(comunidadeId);
+        UUID autorId = usuarioAtual.idDoUsuarioAtual().valor();
+        if (membroRepository.findByComunidade_IdAndUsuarioId(comunidadeId, autorId).isEmpty()) {
+            throw new SoMembroPostaException("Somente participantes da comunidade podem publicar.");
+        }
+
+        Post post =
+                postRepository.save(Post.criarRaizDeComunidade(autorId, comunidadeId, conteudo));
+        Usuario autor = usuarioRepository.findById(autorId).orElse(null);
+        return paraPost(post, autor, 0L, false, 0L);
+    }
+
+    private static ComunidadeResponse.Post paraPost(
+            Post post, Usuario autor, long curtidas, boolean curtidoPorMim, long comentarios) {
+        return new ComunidadeResponse.Post(
+                post.getId(),
+                new ComunidadeResponse.Autor(
+                        post.getAutorId(),
+                        autor == null || autor.getNome() == null ? "" : autor.getNome(),
+                        autor == null ? null : autor.getAvatarUrl()),
+                post.getCriadoEm(),
+                post.getConteudo(),
+                curtidas,
+                curtidoPorMim,
+                comentarios);
     }
 
     @Transactional

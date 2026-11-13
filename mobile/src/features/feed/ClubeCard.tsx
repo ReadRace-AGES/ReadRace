@@ -1,4 +1,4 @@
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { StyleSheet, Text, View } from 'react-native';
 import Svg, { Circle, Path } from 'react-native-svg';
 
 import { Avatar } from '@/components/avatar';
@@ -41,45 +41,41 @@ export function ClubeCard({
 }) {
   const { titulo, autor } = clube.livroAtual;
   const subtitulo = autor ? `${titulo} - ${autor}` : titulo;
-  const label = `${clube.nome}, ${subtitulo}, ${clube.totalMembros} membros`;
+  const membros = `${clube.totalMembros} ${clube.totalMembros === 1 ? 'membro' : 'membros'}`;
+  const label = `${clube.nome}, ${subtitulo}, ${membros}`;
 
   return (
-    <Card surfaceStyle={styles.surface}>
-      <Pressable
-        accessibilityRole="button"
-        accessibilityLabel={label}
-        onPress={onPress}
-        style={({ pressed }) => [styles.main, pressed && styles.pressed]}
-      >
-        <View style={styles.image}>
-          <Avatar
-            name={clube.nome}
-            photoUrl={clube.capaUrl}
-            size={sizes.avatarLarge}
-          />
+    <Card
+      surfaceStyle={styles.main}
+      accessibilityLabel={label}
+      onPress={onPress}
+    >
+      <View style={styles.image}>
+        <Avatar
+          name={clube.nome}
+          photoUrl={clube.capaUrl}
+          size={sizes.avatarLarge}
+        />
+      </View>
+      <View style={styles.copy}>
+        <Text numberOfLines={2} ellipsizeMode="tail" style={styles.title}>
+          {clube.nome}
+        </Text>
+        <Text numberOfLines={2} style={styles.subtitle}>
+          <Text style={styles.subtitleStrong}>{titulo}</Text>
+          {autor ? ` - ${autor}` : ''}
+        </Text>
+        <View style={styles.members}>
+          <IconeMembros />
+          <Text style={styles.subtitle}>{membros}</Text>
         </View>
-        <View style={styles.copy}>
-          <Text numberOfLines={1} ellipsizeMode="tail" style={styles.title}>
-            {clube.nome}
-          </Text>
-          <Text numberOfLines={2} style={styles.subtitle}>
-            <Text style={styles.subtitleStrong}>{titulo}</Text>
-            {autor ? ` - ${autor}` : ''}
-          </Text>
-          <View style={styles.members}>
-            <IconeMembros />
-            <Text style={styles.subtitle}>{clube.totalMembros} membros</Text>
-          </View>
-        </View>
-      </Pressable>
+      </View>
     </Card>
   );
 }
 
 const styles = StyleSheet.create({
-  surface: { padding: spacing[0] },
   main: {
-    flex: 1,
     minWidth: 0,
     flexDirection: 'row',
     alignItems: 'center',
@@ -92,7 +88,6 @@ const styles = StyleSheet.create({
   subtitle: { ...textStyles.caption, color: colors.textSecondary },
   subtitleStrong: { fontFamily: typography.fontFamily.bold },
   members: { flexDirection: 'row', alignItems: 'center', gap: spacing[1] },
-  pressed: { backgroundColor: colors.surfaceAlt },
 });
 
 export default ClubeCard;

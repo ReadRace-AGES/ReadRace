@@ -1,0 +1,58 @@
+name: E2E Playwright
+
+on:
+  pull_request:
+    branches: [dev, main]
+    paths:
+      - 'mobile/**'
+      - 'backend/**'
+      - 'infra/e2e/**'
+      - '.github/workflows/e2e.yml'
+  push:
+    branches: [dev]
+    paths:
+      - 'mobile/**'
+      - 'backend/**'
+      - 'infra/e2e/**'
+      - '.github/workflows/e2e.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: e2e-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  e2e:
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    defaults:
+      run:
+        working-directory: mobile
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+          cache-dependency-path: mobile/package-lock.json
+      - run: npm ci
+      - run: npx playwright install --with-deps chromium
+      - name: Smoke no PR
+        if: github.event_name == 'pull_request'
+        run: npm run test:e2e:smoke
+      - name: Smoke e regressão
+        if: github.event_name != 'pull_request'
+        run: npm run test:e2e
+      - name: Evidências
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-${{ github.run_attempt }}
+          retention-days: 7
+          path: |
+            mobile/playwright-report/
+            mobile/test-results/
+            mobile/e2e-artifacts/

@@ -3,6 +3,7 @@ import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { useAuth } from '@/auth/AuthProvider';
 import { authHabilitada } from '@/auth/config';
 import { BottomSheet } from '@/components/BottomSheet';
+import { LogoutIcon } from '@/components/icons/LogoutIcon';
 import { useToastContext } from '@/components/toast-provider';
 import { colors, sizes, spacing, textStyles } from '@/theme';
 
@@ -15,19 +16,14 @@ export function ConfiguracoesGeraisSheet({ visible, onClose }: Props) {
   const { sair } = useAuth();
   const { showToast } = useToastContext();
 
-  // O modal fica por cima do toast: fecha o painel antes de avisar.
-  function avisarEmDesenvolvimento() {
-    onClose();
-    showToast();
-  }
-
   function desconectar() {
+    onClose();
     // Sem Cognito configurado (modo seed) não há sessão para encerrar.
+    // O modal fica por cima do toast: fecha o painel antes de avisar.
     if (!authHabilitada) {
-      avisarEmDesenvolvimento();
+      showToast();
       return;
     }
-    onClose();
     // Ao encerrar a sessão, o app volta sozinho para o login (Stack.Protected).
     void sair();
   }
@@ -39,45 +35,59 @@ export function ConfiguracoesGeraisSheet({ visible, onClose }: Props) {
       accessibilityLabel="Configurações gerais"
     >
       <View style={styles.conteudo}>
-        <Text style={styles.titulo}>Configurações gerais</Text>
-        <Item label="Notificações" onPress={avisarEmDesenvolvimento} />
-        <Item label="Fale conosco" onPress={avisarEmDesenvolvimento} />
-        <Item label="Desconectar" onPress={desconectar} perigo />
+        <View style={styles.cabecalho}>
+          <Text style={styles.titulo}>Configurações gerais</Text>
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel="Fechar"
+            onPress={onClose}
+            hitSlop={spacing[3]}
+            style={styles.botaoFechar}
+          >
+            <Text style={styles.textoFechar}>✕</Text>
+          </Pressable>
+        </View>
+        <Pressable
+          accessibilityRole="button"
+          onPress={desconectar}
+          style={styles.item}
+        >
+          <LogoutIcon />
+          <Text style={styles.itemTexto}>Desconectar</Text>
+        </Pressable>
       </View>
     </BottomSheet>
   );
 }
 
-function Item({
-  label,
-  onPress,
-  perigo = false,
-}: {
-  label: string;
-  onPress: () => void;
-  perigo?: boolean;
-}) {
-  return (
-    <Pressable accessibilityRole="button" onPress={onPress} style={styles.item}>
-      <Text style={[styles.itemTexto, perigo && styles.itemPerigo]}>
-        {label}
-      </Text>
-    </Pressable>
-  );
-}
-
 const styles = StyleSheet.create({
   conteudo: { gap: spacing[2], paddingBottom: spacing[4] },
-  titulo: {
-    ...textStyles.h3,
-    color: colors.text,
+  cabecalho: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: spacing[4],
     marginBottom: spacing[2],
   },
+  titulo: {
+    ...textStyles.h3,
+    flex: 1,
+    color: colors.text,
+  },
+  botaoFechar: {
+    minWidth: spacing[8],
+    minHeight: spacing[8],
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  textoFechar: { ...textStyles.h3, color: colors.text },
   item: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing[3],
     paddingVertical: spacing[3],
     borderBottomWidth: sizes.borderWidth,
     borderBottomColor: colors.border,
   },
-  itemTexto: { ...textStyles.body, color: colors.text },
-  itemPerigo: { color: colors.danger },
+  itemTexto: { ...textStyles.body, color: colors.danger },
 });

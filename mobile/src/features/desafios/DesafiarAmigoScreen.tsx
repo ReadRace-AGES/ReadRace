@@ -147,9 +147,6 @@ function CartaoTipoMeta({
     >
       <BookIcon size={sizes.icon} color={cor} />
       <Text
-        numberOfLines={1}
-        adjustsFontSizeToFit
-        minimumFontScale={0.8}
         style={[
           selecionado ? textStyles.bodyStrong : textStyles.body,
           styles.textoTipo,

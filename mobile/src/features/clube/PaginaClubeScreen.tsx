@@ -20,6 +20,8 @@ import { RegistrarProgressoSheet } from '@/features/progresso/RegistrarProgresso
 import { colors, spacing, textStyles, typography } from '@/theme';
 
 import { sairDoClube } from './api';
+import { useAbrirPerfilDoRanking } from './useAbrirPerfilDoRanking';
+import { EntradaClubeButton } from './EntradaClubeButton';
 import { RankingCard } from './RankingCard';
 import { useClube } from './useClube';
 
@@ -35,10 +37,15 @@ const COPY = {
   sairDoClube: 'Sair do clube',
   tituloConfirmacao: 'Sair do clube?',
   descricaoConfirmacao:
-    'Você deixa de ver o clube nos seus grupos e perde seus pontos nele.',
+    'Você deixa de ver o clube nos seus clubes e perde seus pontos nele.',
+  confirmacaoSucessao: (nome: string) =>
+    `Você é o único líder. Ao sair, ${nome} passa a liderar o clube.`,
   confirmarSaida: 'Sair',
   cancelar: 'Cancelar',
-  sucessoSaida: 'Você saiu do clube.',
+  sucessoSaida: (nome?: string) =>
+    nome
+      ? `Você saiu do clube. ${nome} agora é o líder.`
+      : 'Você saiu do clube.',
   erroSaida: 'Não foi possível sair do clube. Tente novamente.',
   quizJaRespondido: 'Você já respondeu o quiz deste clube.',
   quizInexistente: 'Este clube ainda não tem quiz.',
@@ -131,9 +138,10 @@ function IconeChat({ size, color }: PrimaryButtonIconProps) {
 
 export function PaginaClubeScreen({ clubeId }: { clubeId: string }) {
   const router = useRouter();
-  const { showToast, showErrorToast, showToastAfterNavigation } =
-    useToastContext();
-  const { clube, recarregar } = useClube(clubeId);
+  const abrirPerfil = useAbrirPerfilDoRanking(clubeId);
+  const { showErrorToast, showToastAfterNavigation } = useToastContext();
+  const { clube, recarregar, atualizar, pedidoEnviado, cancelarCarregamento } =
+    useClube(clubeId);
 
   const [livroDoModal, setLivroDoModal] = useState<LivroDetalhe | null>(null);
   const [abrindoModal, setAbrindoModal] = useState(false);
@@ -155,7 +163,23 @@ export function PaginaClubeScreen({ clubeId }: { clubeId: string }) {
   useFocusEffect(useCallback(() => () => fecharModal(), [fecharModal]));
 
   const dados = clube.situacao === 'sucesso' ? clube.dados : null;
-  const podeSairDoClube = dados !== null && dados.meuCargo !== null;
+  const membro = dados?.situacao === 'membro';
+  const podeSairDoClube = membro && dados.meuCargo !== null;
+  const administrador = membro && dados.meuCargo === 'administrador';
+  const primeiroFoco = useRef(true);
+  useFocusEffect(
+    useCallback(() => {
+      if (primeiroFoco.current) {
+        primeiroFoco.current = false;
+      } else {
+        atualizar();
+      }
+      return cancelarCarregamento;
+    }, [atualizar, cancelarCarregamento])
+  );
+  useEffect(() => {
+    if (!membro) fecharModal();
+  }, [membro, fecharModal]);
 
   // Voltando do quiz: responder mexeu nos Pontos, então o ranking recarrega. O resumo de quem
   // concluiu só aparece depois do ranking novo, e não ao ganhar foco: o toast é escondido na troca
@@ -212,10 +236,10 @@ export function PaginaClubeScreen({ clubeId }: { clubeId: string }) {
     setSaindoDoClube(true);
     setErroAoSair(null);
     try {
-      await sairDoClube(clubeId);
+      const resultado = await sairDoClube(clubeId);
       setConfirmandoSaida(false);
-      showToastAfterNavigation(COPY.sucessoSaida);
-      voltar();
+      showToastAfterNavigation(COPY.sucessoSaida(resultado.novoLider?.nome));
+      router.replace('/feed');
     } catch (erro: unknown) {
       setErroAoSair(erro instanceof ApiError ? erro.message : COPY.erroSaida);
     } finally {
@@ -225,7 +249,7 @@ export function PaginaClubeScreen({ clubeId }: { clubeId: string }) {
   }
 
   async function abrirRegistroDeLeitura() {
-    if (!dados || abrindoModal) return;
+    if (!membro || !dados || abrindoModal) return;
 
     setAbrindoModal(true);
     setErroDoModal(null);
@@ -255,7 +279,7 @@ export function PaginaClubeScreen({ clubeId }: { clubeId: string }) {
 
   /** O que o "Acessar Quiz" faz depende de `meuCargo` e, para o membro, do estado do quiz. */
   async function acessarQuiz() {
-    if (!dados || abrindoQuiz) return;
+    if (!membro || !dados || abrindoQuiz) return;
     if (dados.meuCargo === 'administrador') {
       router.push(rotaDaConfiguracaoDoQuiz(clubeId));
       return;
@@ -298,9 +322,20 @@ export function PaginaClubeScreen({ clubeId }: { clubeId: string }) {
   if (clube.situacao === 'erro') {
     return (
       <View style={styles.tela}>
+        <AppHeader
+          variant="surface"
+          titleAlign="center"
+          showBack
+          onBackPress={voltar}
+          title={dados?.nome ?? ''}
+          subtitle={subtitulo}
+          titleOverflow="wrap"
+          titleNumberOfLines={2}
+        />
         <EmptyState
           icon={BookIcon}
           message={clube.mensagem}
+          messageStyle={{ color: colors.danger }}
           action={
             <View style={styles.acoesDoErro}>
               <PrimaryButton
@@ -340,37 +375,66 @@ export function PaginaClubeScreen({ clubeId }: { clubeId: string }) {
             <PrimaryButton
               label={COPY.registrarLeitura}
               icon={IconePlus}
-              disabled={!dados}
+              disabled={!membro}
               loading={abrindoModal}
               onPress={abrirRegistroDeLeitura}
             />
 
             <PrimaryButton
               label={COPY.acessarQuiz}
+              variant="outline"
               icon={IconeCheck}
-              disabled={!dados}
+              disabled={!membro}
               loading={abrindoQuiz}
               onPress={acessarQuiz}
             />
+            {dados && (
+              <Text className="text-center font-inter text-caption text-text-secondary">
+                {dados.temQuizAtivo
+                  ? 'Quiz do livro disponível'
+                  : administrador
+                    ? 'Crie um quiz para este livro'
+                    : 'Ainda não há quiz para este livro'}
+              </Text>
+            )}
 
             <PrimaryButton
               label={COPY.forum}
+              variant="outline"
               icon={IconeLista}
               disabled={!dados}
-              onPress={() => router.push(rotaDoForum(clubeId))}
+              onPress={() => {
+                if (dados) router.push(rotaDoForum(clubeId));
+              }}
             />
 
             <PrimaryButton
               label={COPY.chat}
+              variant="outline"
               icon={IconeChat}
-              disabled={!dados}
+              disabled={!membro}
               onPress={() => {
-                if (dados) {
+                if (membro && dados) {
                   router.push(rotaDoChat(clubeId, dados.nome));
                 }
               }}
             />
           </View>
+
+          {administrador && (
+            <PrimaryButton
+              label={
+                dados.solicitacoesPendentes === undefined
+                  ? 'Solicitações'
+                  : `Solicitações (${dados.solicitacoesPendentes})`
+              }
+              variant="outline"
+              onPress={() => {
+                if (administrador)
+                  router.push(`/clube/${clubeId}/solicitacoes` as Href);
+              }}
+            />
+          )}
 
           {erroDoModal && (
             <Text accessibilityRole="alert" style={styles.erroDoModal}>
@@ -380,13 +444,21 @@ export function PaginaClubeScreen({ clubeId }: { clubeId: string }) {
 
           <RankingCard
             ranking={dados?.ranking ?? null}
-            onLinhaPress={showToast}
+            onLinhaPress={(usuarioId) => void abrirPerfil(usuarioId)}
             onVerTodosPress={
-              dados?.meuCargo
-                ? () => router.push(rotaDoRanking(clubeId))
-                : undefined
+              membro ? () => router.push(rotaDoRanking(clubeId)) : undefined
             }
           />
+
+          {dados && !membro && (
+            <EntradaClubeButton
+              key={clubeId}
+              clubeId={clubeId}
+              situacao={dados.situacao}
+              onPedido={pedidoEnviado}
+              onReconciliar={atualizar}
+            />
+          )}
 
           {podeSairDoClube && (
             <PrimaryButton
@@ -399,7 +471,7 @@ export function PaginaClubeScreen({ clubeId }: { clubeId: string }) {
         </View>
       </ScrollView>
 
-      {livroDoModal && (
+      {membro && livroDoModal && (
         <RegistrarProgressoSheet
           visible
           livroId={livroDoModal.livro.id}
@@ -422,7 +494,9 @@ export function PaginaClubeScreen({ clubeId }: { clubeId: string }) {
         <View style={styles.confirmacaoSaida}>
           <Text style={styles.tituloConfirmacao}>{COPY.tituloConfirmacao}</Text>
           <Text style={styles.descricaoConfirmacao}>
-            {COPY.descricaoConfirmacao}
+            {dados?.proximoLider
+              ? COPY.confirmacaoSucessao(dados.proximoLider.nome)
+              : COPY.descricaoConfirmacao}
           </Text>
           {erroAoSair && (
             <Text accessibilityRole="alert" style={styles.erroDoModal}>
@@ -478,7 +552,7 @@ const styles = StyleSheet.create({
 
   erroDoModal: {
     ...textStyles.bodySmall,
-    color: colors.accent,
+    color: colors.danger,
     textAlign: 'center',
   },
   confirmacaoSaida: { paddingBottom: spacing[6], gap: spacing[4] },

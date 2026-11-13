@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
-import { ApiError } from '@/api/client';
+import { mensagemErroCarregamento } from '@/api/client';
 import { buscarPerfil, buscarUsuarioAtual } from '@/features/perfil/api';
 import { buscarLista, type Leitor, type TipoLista } from './api';
 
@@ -37,10 +37,7 @@ export function useListaSeguidores(usuarioId: string, tipo: TipoLista) {
       .catch((erro: unknown) => {
         aplicar({
           situacao: 'erro',
-          mensagem:
-            erro instanceof ApiError
-              ? erro.message
-              : 'Não foi possível carregar a lista. Tente novamente.',
+          mensagem: mensagemErroCarregamento(erro),
         });
       });
     return () => controller.abort();

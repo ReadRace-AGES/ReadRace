@@ -18,7 +18,9 @@ public record LivroDetalheResponse(Livro livro, Progresso progresso, List<Post> 
             Integer paginaAtual,
             Integer paginaMaximaAlcancada,
             Integer percentual,
-            boolean concluido) {}
+            boolean concluido,
+            String statusLeitura,
+            boolean favorito) {}
 
     public record Post(
             UUID id,
@@ -26,7 +28,9 @@ public record LivroDetalheResponse(Livro livro, Progresso progresso, List<Post> 
             String texto,
             OffsetDateTime criadoEm,
             long curtidas,
-            boolean curtidoPorMim) {}
+            boolean curtidoPorMim,
+            long totalComentarios,
+            boolean meu) {}
 
     public record Autor(String nome, String avatarUrl, Integer sequenciaDias) {}
 }

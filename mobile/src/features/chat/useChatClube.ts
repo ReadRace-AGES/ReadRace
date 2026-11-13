@@ -1,8 +1,7 @@
-
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { useFocusEffect } from 'expo-router';
 
-import { ApiError } from '@/api/client';
+import { ApiError, mensagemErroCarregamento } from '@/api/client';
 
 import {
   buscarMensagensDoClube,
@@ -13,7 +12,6 @@ import {
 const INTERVALO_POLLING_MS = 5000;
 
 const COPY = {
-  erroCarregar: 'Não foi possível carregar as mensagens. Tente novamente.',
   erroEnviar: 'Não foi possível enviar a mensagem. Tente novamente.',
   soMembro: 'Só membros do clube participam do chat.',
 } as const;
@@ -55,8 +53,7 @@ function adicionarSemDuplicar(
   }
 
   return Array.from(porId.values()).sort(
-    (a, b) =>
-      new Date(a.enviadaEm).getTime() - new Date(b.enviadaEm).getTime()
+    (a, b) => new Date(a.enviadaEm).getTime() - new Date(b.enviadaEm).getTime()
   );
 }
 
@@ -143,7 +140,7 @@ export function useChatClube(clubeId: string) {
       setChat({
         situacao: 'erro',
         mensagens: mensagensRef.current,
-        mensagem: mensagemDeErro(erro, COPY.erroCarregar),
+        mensagem: mensagemErroCarregamento(erro),
       });
     }
   }, [clubeId]);
@@ -198,7 +195,7 @@ export function useChatClube(clubeId: string) {
         setChat({
           situacao: 'erro',
           mensagens: mensagensRef.current,
-          mensagem: mensagemDeErro(erro, COPY.erroCarregar),
+          mensagem: mensagemErroCarregamento(erro),
         });
       }
     } finally {
@@ -237,10 +234,9 @@ export function useChatClube(clubeId: string) {
           return false;
         }
 
-        const atualizadas = adicionarSemDuplicar(
-          mensagensRef.current,
-          [novaMensagem]
-        );
+        const atualizadas = adicionarSemDuplicar(mensagensRef.current, [
+          novaMensagem,
+        ]);
 
         atualizarMensagens(atualizadas);
 

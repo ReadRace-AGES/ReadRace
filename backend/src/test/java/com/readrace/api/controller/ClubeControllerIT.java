@@ -5,6 +5,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 import java.io.UnsupportedEncodingException;
 import java.util.UUID;
 
+import jakarta.persistence.EntityManager;
+
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -37,6 +39,8 @@ class ClubeControllerIT {
     @Autowired private MockMvcTester mvc;
 
     @Autowired private JdbcTemplate jdbc;
+
+    @Autowired private EntityManager entityManager;
 
     @Test
     void deve_devolver_o_nome_do_clube_no_cabecalho() {
@@ -216,6 +220,98 @@ class ClubeControllerIT {
                 .bodyJson()
                 .extractingPath("$.ranking[0].usuario.id")
                 .isEqualTo(USUARIO_1);
+    }
+
+    @Test
+    @Transactional
+    void lider_unico_sai_e_promove_membro_com_mais_pontos() {
+        UUID clubeId = UUID.fromString(CLUBE);
+        UUID liderId = UUID.fromString(USUARIO_1);
+        UUID sucessorId =
+                jdbc.queryForObject(
+                        "SELECT usuario_id FROM membro_clube WHERE clube_id = ? AND usuario_id <> ?"
+                                + " ORDER BY pontos DESC, entrou_em, usuario_id LIMIT 1",
+                        UUID.class,
+                        clubeId,
+                        liderId);
+        String sucessorNome =
+                jdbc.queryForObject(
+                        "SELECT nome FROM usuario WHERE id = ?", String.class, sucessorId);
+
+        assertThat(mvc.get().uri("/api/clubes/{id}", CLUBE))
+                .hasStatusOk()
+                .bodyJson()
+                .extractingPath("$.proximoLider.id")
+                .isEqualTo(sucessorId.toString());
+
+        assertThat(mvc.delete().uri("/api/clubes/{id}/membros/eu", CLUBE))
+                .hasStatusOk()
+                .bodyJson()
+                .extractingPath("$.novoLider.nome")
+                .isEqualTo(sucessorNome);
+        entityManager.flush();
+        assertThat(
+                        jdbc.queryForObject(
+                                "SELECT cargo_clube::text FROM membro_clube"
+                                        + " WHERE clube_id = ? AND usuario_id = ?",
+                                String.class,
+                                clubeId,
+                                sucessorId))
+                .isEqualTo("administrador");
+        assertThat(
+                        jdbc.queryForObject(
+                                "SELECT count(*) FROM membro_clube"
+                                        + " WHERE clube_id = ? AND cargo_clube = 'administrador'",
+                                Integer.class,
+                                clubeId))
+                .isEqualTo(1);
+    }
+
+    @Test
+    @Transactional
+    void empate_em_pontos_promove_quem_entrou_primeiro() {
+        UUID clubeId = UUID.fromString(CLUBE);
+        UUID liderId = UUID.fromString(USUARIO_1);
+        UUID maisAntigo = UUID.fromString(USUARIO_2);
+        UUID maisRecente = UUID.fromString("00000000-0000-0000-0000-000000000003");
+        jdbc.update(
+                "UPDATE membro_clube SET pontos = 2000, entrou_em = '2020-01-01T00:00:00Z'"
+                        + " WHERE clube_id = ? AND usuario_id = ?",
+                clubeId,
+                maisAntigo);
+        jdbc.update(
+                "UPDATE membro_clube SET pontos = 2000, entrou_em = '2021-01-01T00:00:00Z'"
+                        + " WHERE clube_id = ? AND usuario_id = ?",
+                clubeId,
+                maisRecente);
+
+        assertThat(mvc.delete().uri("/api/clubes/{id}/membros/eu", CLUBE))
+                .hasStatusOk()
+                .bodyJson()
+                .extractingPath("$.novoLider.id")
+                .isEqualTo(maisAntigo.toString());
+    }
+
+    @Test
+    @Transactional
+    void membro_comum_sai_sem_alterar_lideranca() {
+        UUID clubeId = UUID.fromString(CLUBE_3);
+        UUID liderId = UUID.fromString(USUARIO_2);
+
+        assertThat(mvc.delete().uri("/api/clubes/{id}/membros/eu", CLUBE_3))
+                .hasStatusOk()
+                .bodyJson()
+                .extractingPath("$.novoLider")
+                .isNull();
+        entityManager.flush();
+        assertThat(
+                        jdbc.queryForObject(
+                                "SELECT cargo_clube::text FROM membro_clube"
+                                        + " WHERE clube_id = ? AND usuario_id = ?",
+                                String.class,
+                                clubeId,
+                                liderId))
+                .isEqualTo("administrador");
     }
 
     @Test

@@ -30,6 +30,8 @@ import { colors, gradients, sizes, spacing, textStyles } from '@/theme';
 export type RankingRowProps = {
   /** Posição no ranking, a partir de 1. Vem pronta de quem usa: a linha não calcula ordem nem trata empate. */
   position: number;
+  /** Índice visual usado apenas para alternar o fundo, sem alterar a posição. */
+  rowIndex?: number;
   /** Nome de usuário do membro. Vai no rótulo e alimenta a inicial do `Avatar` quando não há foto. */
   name: string;
   /** `Pontos` do clube. Nunca XP. */
@@ -83,21 +85,15 @@ function GradientText({ text, gradient, style }: GradientTextProps) {
   const textStyle = [style, { color: start }];
   return (
     <MaskedView
-      style={{ flexShrink: 1 }}
-      maskElement={
-        <Text numberOfLines={1} style={textStyle}>
-          {text}
-        </Text>
-      }
+      style={{ alignSelf: 'stretch' }}
+      maskElement={<Text style={textStyle}>{text}</Text>}
     >
       <LinearGradient
         colors={[start, end]}
         start={{ x: 0, y: 0 }}
         end={{ x: 1, y: 0 }}
       >
-        <Text numberOfLines={1} style={[textStyle, { opacity: 0 }]}>
-          {text}
-        </Text>
+        <Text style={[textStyle, { opacity: 0 }]}>{text}</Text>
       </LinearGradient>
     </MaskedView>
   );
@@ -105,6 +101,7 @@ function GradientText({ text, gradient, style }: GradientTextProps) {
 
 export function RankingRow({
   position,
+  rowIndex = position - 1,
   name,
   points,
   photoUrl,
@@ -117,8 +114,7 @@ export function RankingRow({
   const pointsText = formatRankingPoints(points);
 
   return (
-    // Passo de 64px entre linhas: faixa de 48px (avatar + 4px de cada lado) com
-    // 8px de respiro em cima e embaixo, como o frame 3-6 (63px de passo, faixa de 49).
+    // Mantém o respiro e o avatar do frame 3-6; a altura cresce com o nome completo.
     <View
       accessible
       accessibilityLabel={`${labelText}, ${pointsText}`}
@@ -134,17 +130,16 @@ export function RankingRow({
           // Linhas consecutivas alternam o fundo, inclusive dentro do pódio: as
           // pares ganham a faixa `surfaceAlt`, as ímpares deixam o card aparecer.
           backgroundColor:
-            position % 2 === 0 ? colors.surfaceAlt : 'transparent',
+            rowIndex % 2 === 1 ? colors.surfaceAlt : 'transparent',
         }}
       >
         <Avatar name={name} photoUrl={photoUrl} size={sizes.avatar} />
         <View
           style={{
             flex: 1,
-            flexDirection: 'row',
-            alignItems: 'center',
-            justifyContent: 'space-between',
-            gap: spacing[2],
+            minWidth: 0,
+            alignItems: 'stretch',
+            gap: spacing[1],
           }}
         >
           {podiumGradient ? (
@@ -154,10 +149,7 @@ export function RankingRow({
               style={labelStyle}
             />
           ) : (
-            <Text
-              numberOfLines={1}
-              style={[labelStyle, { color: colors.text, flexShrink: 1 }]}
-            >
+            <Text style={[labelStyle, { color: colors.text }]}>
               {labelText}
             </Text>
           )}
