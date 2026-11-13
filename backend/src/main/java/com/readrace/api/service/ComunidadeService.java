@@ -12,12 +12,15 @@ import java.util.stream.Collectors;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.readrace.api.dto.request.CriarComunidadeRequest;
+import com.readrace.api.dto.response.ComunidadeCriadaResponse;
 import com.readrace.api.dto.response.ComunidadeResponse;
 import com.readrace.api.dto.response.MembroComunidadeResponse;
 import com.readrace.api.exception.ComunidadeNaoEncontradaException;
 import com.readrace.api.exception.ParametroInvalidoException;
 import com.readrace.api.exception.SoMembroPostaException;
 import com.readrace.api.exception.UnicoAdministradorException;
+import com.readrace.api.exception.UsuarioNaoEncontradoException;
 import com.readrace.api.model.Cargo;
 import com.readrace.api.model.Comunidade;
 import com.readrace.api.model.MembroComunidade;
@@ -53,6 +56,27 @@ public class ComunidadeService {
         this.curtidaRepository = curtidaRepository;
         this.usuarioRepository = usuarioRepository;
         this.usuarioAtual = usuarioAtual;
+    }
+
+    @Transactional
+    public ComunidadeCriadaResponse criar(CriarComunidadeRequest request) {
+        Comunidade comunidade =
+                new Comunidade(request.nome(), request.descricao(), request.imagemUrl());
+        UUID criadorId = usuarioAtual.idDoUsuarioAtual().valor();
+        // Mesma ordem de locks dos fluxos que alteram o usuário e seus vínculos.
+        // Impede criar uma comunidade para um usuário excluído simultaneamente.
+        usuarioRepository
+                .buscarAtivoComLock(criadorId)
+                .orElseThrow(UsuarioNaoEncontradoException::new);
+        comunidadeRepository.save(comunidade);
+        membroRepository.save(new MembroComunidade(comunidade, criadorId, Cargo.ADMINISTRADOR));
+        return new ComunidadeCriadaResponse(
+                comunidade.getId(),
+                comunidade.getNome(),
+                comunidade.getDescricao(),
+                comunidade.getImagemUrl(),
+                1L,
+                true);
     }
 
     public ComunidadeResponse buscar(UUID comunidadeId) {
@@ -112,6 +136,7 @@ public class ComunidadeService {
                 membroRepository
                         .findByComunidade_IdAndUsuarioId(comunidadeId, usuarioId)
                         .isPresent(),
+                comunidade.getDescricao(),
                 posts.stream()
                         .map(
                                 post ->

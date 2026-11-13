@@ -5,7 +5,13 @@ import java.util.List;
 import java.util.UUID;
 
 public record ComunidadeResponse(
-        UUID id, String nome, String imagemUrl, long seguidores, boolean sigo, List<Post> posts) {
+        UUID id,
+        String nome,
+        String imagemUrl,
+        long seguidores,
+        boolean sigo,
+        String descricao,
+        List<Post> posts) {
 
     public record Post(
             UUID id,

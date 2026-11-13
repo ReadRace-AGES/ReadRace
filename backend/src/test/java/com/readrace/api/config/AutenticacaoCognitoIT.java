@@ -43,6 +43,39 @@ import com.readrace.api.repository.UsuarioRepository;
 @Transactional
 @DisplayName("Autenticação com Cognito")
 class AutenticacaoCognitoIT {
+    @Test
+    void criacao_de_comunidade_exige_login_e_usa_o_administrador_do_token() {
+        String corpo = "{\"nome\":\"Comunidade autenticada\",\"criadorId\":\"" + ID_DANIEL + "\"}";
+        assertThat(
+                        mvc.post()
+                                .uri("/api/comunidades")
+                                .contentType(org.springframework.http.MediaType.APPLICATION_JSON)
+                                .content(corpo))
+                .hasStatus(HttpStatus.UNAUTHORIZED);
+        UUID ana = UUID.fromString("00000000-0000-0000-0000-000000000002");
+        jdbc.update("UPDATE usuario SET cognito_sub = 'sub-ana-cria-comunidade' WHERE id = ?", ana);
+        assertThat(
+                        mvc.post()
+                                .uri("/api/comunidades")
+                                .with(token("sub-ana-cria-comunidade", "token-ana-comunidade"))
+                                .contentType(org.springframework.http.MediaType.APPLICATION_JSON)
+                                .content(corpo))
+                .hasStatus(HttpStatus.CREATED);
+        assertThat(
+                        mvc.get()
+                                .uri("/api/feed/comunidades")
+                                .with(token("sub-ana-cria-comunidade", "token-ana-comunidade")))
+                .hasStatusOk()
+                .bodyJson()
+                .extractingPath("$.comunidades[*].nome")
+                .asArray()
+                .contains("Comunidade autenticada");
+        assertThat(
+                        jdbc.queryForList(
+                                "SELECT mc.usuario_id, mc.cargo_comunidade::text AS cargo FROM membro_comunidade mc JOIN comunidade c ON c.id = mc.comunidade_id WHERE c.nome = 'Comunidade autenticada'"))
+                .containsExactly(java.util.Map.of("usuario_id", ana, "cargo", "administrador"));
+    }
+
     private static final String ID_DANIEL = "00000000-0000-0000-0000-000000000001";
 
     @Autowired private MockMvcTester mvc;
