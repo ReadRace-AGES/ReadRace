@@ -1,5 +1,5 @@
 import { StatusBar } from 'expo-status-bar';
-import { useEffect, useRef, type ReactNode } from 'react';
+import { useEffect, useRef, useState, type ReactNode } from 'react';
 import {
   Pressable,
   ScrollView,
@@ -30,26 +30,39 @@ export function TelaDeAcesso({
   voltarDesabilitado,
 }: TelaDeAcessoProps) {
   const insets = useSafeAreaInsets();
-  const { width } = useWindowDimensions();
+  const { width, height: alturaJanela } = useWindowDimensions();
   const alturaTeclado = useAlturaTeclado();
   const rolagem = useRef<ScrollView>(null);
+  const telaRef = useRef<View>(null);
+  const [distanciaAteFundo, setDistanciaAteFundo] = useState(0);
+
+  // Em parte dos aparelhos a janela já encolhe quando o teclado abre. Somar a altura inteira do
+  // teclado por cima disso empurrava o formulário para fora da tela e deixava um vão vinho acima
+  // do teclado. A tela só abre o espaço que o teclado realmente cobre, como no chat do clube.
+  const sobreposicaoTeclado = Math.max(0, alturaTeclado - distanciaAteFundo);
+
+  function medirTela() {
+    telaRef.current?.measureInWindow((_x, y, _largura, altura) => {
+      setDistanciaAteFundo(Math.max(0, alturaJanela - (y + altura)));
+    });
+  }
 
   // Com o teclado aberto, rola até o fim para o campo e o botão ficarem acima dele.
   useEffect(() => {
     if (alturaTeclado > 0) {
       rolagem.current?.scrollToEnd({ animated: true });
     }
-  }, [alturaTeclado]);
+  }, [alturaTeclado, sobreposicaoTeclado]);
 
   return (
-    <View style={styles.tela}>
+    <View ref={telaRef} style={styles.tela} onLayout={medirTela}>
       <StatusBar style="light" />
       <ScrollView
         ref={rolagem}
         contentContainerStyle={{
           flexGrow: 1,
           paddingTop: insets.top,
-          paddingBottom: alturaTeclado,
+          paddingBottom: sobreposicaoTeclado,
         }}
         keyboardShouldPersistTaps="handled"
       >
