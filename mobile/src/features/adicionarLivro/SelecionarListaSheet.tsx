@@ -19,6 +19,8 @@ export type SelecionarListaSheetProps = {
   livro: ResultadoCatalogo | null;
   onClose: () => void;
   onSuccess: (resultado: LivroAdicionado) => void;
+  /** "Lendo agora": quem chama abre o registro de leitura; nada é gravado aqui. */
+  onLendoAgora: () => void;
 };
 
 function mensagemDe(erro: unknown) {
@@ -27,12 +29,13 @@ function mensagemDe(erro: unknown) {
     : 'Não foi possível adicionar o livro. Tente novamente.';
 }
 
-/** Capa, título, autor, ISBN, páginas e os três botões de lista (#155). */
+/** Capa, título, autor, ISBN, páginas, "Lendo agora" e os três botões de lista (#155). */
 export function SelecionarListaSheet({
   visible,
   livro,
   onClose,
   onSuccess,
+  onLendoAgora,
 }: SelecionarListaSheetProps) {
   const [listaEmAndamento, setListaEmAndamento] = useState<ListaDestino | null>(
     null
@@ -115,7 +118,13 @@ export function SelecionarListaSheet({
 
         <View style={styles.actions}>
           <PrimaryButton
+            label="Lendo agora"
+            disabled={carregando}
+            onPress={onLendoAgora}
+          />
+          <PrimaryButton
             label="Lido"
+            variant="outline"
             loading={listaEmAndamento === 'lido'}
             disabled={carregando && listaEmAndamento !== 'lido'}
             onPress={() => selecionar('lido')}

@@ -100,6 +100,10 @@ function montarTela({ buscaInicial, postsApi, routerMocks = {} }) {
     '@/components/PrimaryButton': { PrimaryButton: 'PrimaryButton' },
     '@/components/SearchInput': { SearchInput: 'SearchInput' },
     './SelecionarListaSheet': { SelecionarListaSheet },
+    './api': postsApi,
+    '@/features/progresso/RegistrarProgressoSheet': {
+      RegistrarProgressoSheet: 'RegistrarProgressoSheet',
+    },
     './useBuscaCatalogo': {
       useBuscaCatalogo: () => ({
         busca: buscaState.atual,
@@ -135,7 +139,10 @@ test('tela de busca: carregando, erro, vazio e lista de resultados', async () =>
   try {
     assert.equal(achar(renderer, 'AppHeader').props.title, 'Adicionar Livro');
     assert.equal(renderer.root.findAllByType('ListItem').length, 0);
-    assert.match(renderer.root.findByType('EmptyState').props.message, /Encontre sua próxima leitura/);
+    assert.match(
+      renderer.root.findByType('EmptyState').props.message,
+      /Encontre sua próxima leitura/
+    );
 
     buscaState.atual = { situacao: 'carregando' };
     await act(async () =>
