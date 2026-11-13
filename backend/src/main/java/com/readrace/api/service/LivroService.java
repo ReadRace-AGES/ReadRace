@@ -13,6 +13,8 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.readrace.api.dto.response.LivroDetalheResponse;
 import com.readrace.api.exception.LivroNaoEncontradoException;
+import com.readrace.api.exception.PostNaoEncontradoException;
+import com.readrace.api.exception.SoAutorApagaPostException;
 import com.readrace.api.model.Genero;
 import com.readrace.api.model.ItemBiblioteca;
 import com.readrace.api.model.Livro;
@@ -86,6 +88,35 @@ public class LivroService {
         return new LivroDetalheResponse(livroResponse, progresso, posts);
     }
 
+    @Transactional
+    public LivroDetalheResponse.Post publicarPost(UUID livroId, String texto) {
+        livroRepository.findById(livroId).orElseThrow(LivroNaoEncontradoException::new);
+        UUID autorId = usuarioAtual.idDoUsuarioAtual().valor();
+        Post post = postRepository.save(Post.criarRaizDeLivro(autorId, livroId, texto));
+        Map<UUID, Usuario> autores =
+                usuarioRepository.findById(autorId).stream()
+                        .collect(Collectors.toMap(Usuario::getId, Function.identity()));
+        return criarPostResponse(
+                post, autores, Map.of(), Map.of(), Set.of(), autorId, SequenciaDeLeitura.hoje());
+    }
+
+    @Transactional
+    public void apagarPost(UUID livroId, UUID postId) {
+        Post post =
+                postRepository
+                        .findById(postId)
+                        .filter(
+                                encontrado ->
+                                        livroId.equals(encontrado.getLivroId())
+                                                && encontrado.getPostPaiId() == null
+                                                && encontrado.getExcluidoEm() == null)
+                        .orElseThrow(PostNaoEncontradoException::new);
+        if (!post.getAutorId().equals(usuarioAtual.idDoUsuarioAtual().valor())) {
+            throw new SoAutorApagaPostException();
+        }
+        post.excluir();
+    }
+
     private LivroDetalheResponse.Progresso buscarProgresso(UUID usuarioId, Livro livro) {
 
         return itemBibliotecaRepository
@@ -151,7 +182,13 @@ public class LivroService {
                 .map(
                         post ->
                                 criarPostResponse(
-                                        post, autores, curtidas, comentarios, curtidosPorMim, hoje))
+                                        post,
+                                        autores,
+                                        curtidas,
+                                        comentarios,
+                                        curtidosPorMim,
+                                        usuarioId,
+                                        hoje))
                 .toList();
     }
 
@@ -161,6 +198,7 @@ public class LivroService {
             Map<UUID, Long> curtidasPorPost,
             Map<UUID, Long> comentariosPorPost,
             Set<UUID> curtidosPorMim,
+            UUID usuarioId,
             LocalDate hoje) {
 
         Usuario autor = autores.get(post.getAutorId());
@@ -183,6 +221,7 @@ public class LivroService {
                 post.getCriadoEm(),
                 curtidas,
                 curtidosPorMim.contains(post.getId()),
-                totalComentarios);
+                totalComentarios,
+                post.getAutorId().equals(usuarioId));
     }
 }

@@ -2,7 +2,13 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { ApiError, mensagemErroCarregamento } from '@/api/client';
 import type { ProgressoLeituraResponse } from '@/features/progresso/api';
 import { curtir, descurtir } from '@/features/posts/api';
-import { buscarDetalhe, type LivroDetalhe, type PostLivro } from './api';
+import {
+  apagarPostDoLivro,
+  buscarDetalhe,
+  publicarPostDoLivro,
+  type LivroDetalhe,
+  type PostLivro,
+} from './api';
 import { aplicarProgresso } from './model';
 
 function mensagemDeCurtida(erro: unknown) {
@@ -131,11 +137,62 @@ export function useLivroDetalhe(livroId: string) {
     );
   }, []);
 
+  const publicarPost = useCallback(
+    (texto: string, signal: AbortSignal) =>
+      publicarPostDoLivro(livroId, texto, signal),
+    [livroId]
+  );
+
+  const adicionarPost = useCallback((post: PostLivro) => {
+    setEstado((atual) =>
+      atual.situacao === 'sucesso'
+        ? {
+            situacao: 'sucesso',
+            dados: {
+              ...atual.dados,
+              posts: [
+                post,
+                ...atual.dados.posts.filter((item) => item.id !== post.id),
+              ],
+            },
+          }
+        : atual
+    );
+  }, []);
+
+  const apagarPost = useCallback(
+    async (postId: string) => {
+      try {
+        await apagarPostDoLivro(livroId, postId);
+      } catch (erro) {
+        throw new Error(
+          (erro instanceof ApiError ? erro.publicMessage : null) ??
+            'Não foi possível apagar o post. Tente novamente.'
+        );
+      }
+      setEstado((atual) =>
+        atual.situacao === 'sucesso'
+          ? {
+              situacao: 'sucesso',
+              dados: {
+                ...atual.dados,
+                posts: atual.dados.posts.filter((post) => post.id !== postId),
+              },
+            }
+          : atual
+      );
+    },
+    [livroId]
+  );
+
   return {
     estado,
     recarregar: () => setTentativa((t) => t + 1),
     atualizarProgresso,
     alternarCurtida,
     registrarComentario,
+    publicarPost,
+    adicionarPost,
+    apagarPost,
   };
 }

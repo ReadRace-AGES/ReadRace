@@ -81,6 +81,7 @@ function renderDetalhe(dados, options = {}) {
   const dependencies = {
     react: {
       useCallback: (fn) => fn,
+      useRef: (current) => ({ current }),
       useState: (inicial) => [inicial, () => {}],
     },
 
@@ -126,6 +127,12 @@ function renderDetalhe(dados, options = {}) {
     },
     '@/features/biblioteca/MinhasListasSheet': {
       MinhasListasSheet: 'MinhasListasSheet',
+    },
+    '@/features/forum/NovoPostSheet': { NovoPostSheet: 'NovoPostSheet' },
+    './AcoesDoLivro': {
+      MenuDoLivro: 'MenuDoLivro',
+      MenuDoPost: 'MenuDoPost',
+      ConfirmarApagarPostSheet: 'ConfirmarApagarPostSheet',
     },
     './model': { tempoRelativo },
 

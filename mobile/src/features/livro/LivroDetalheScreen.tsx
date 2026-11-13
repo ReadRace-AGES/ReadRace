@@ -1,4 +1,4 @@
-import { useCallback, useState } from 'react';
+import { useCallback, useRef, useState } from 'react';
 import { useFocusEffect, useRouter } from 'expo-router';
 import {
   ActivityIndicator,
@@ -13,6 +13,7 @@ import { AppHeader } from '@/components/AppHeader';
 import { BookCover } from '@/components/BookCover';
 import { EmptyState } from '@/components/EmptyState';
 import { BookIcon } from '@/components/icons/BookIcon';
+import type { Ancora } from '@/components/MenuSuspenso';
 import { PostCard } from '@/components/PostCard';
 import { PrimaryButton } from '@/components/PrimaryButton';
 import { ProgressBar } from '@/components/ProgressBar';
@@ -20,7 +21,13 @@ import { useToastContext } from '@/components/toast-provider';
 import { ComentariosSheet } from '@/features/comentarios/ComentariosSheet';
 import { RegistrarProgressoSheet } from '@/features/progresso/RegistrarProgressoSheet';
 import { MinhasListasSheet } from '@/features/biblioteca/MinhasListasSheet';
+import { NovoPostSheet } from '@/features/forum/NovoPostSheet';
 import { bookCover, colors, radius, sizes, spacing, textStyles } from '@/theme';
+import {
+  ConfirmarApagarPostSheet,
+  MenuDoLivro,
+  MenuDoPost,
+} from './AcoesDoLivro';
 import { tempoRelativo } from './model';
 import { useLivroDetalhe } from './useLivroDetalhe';
 
@@ -39,6 +46,9 @@ export function LivroDetalheScreen({
     atualizarProgresso,
     alternarCurtida,
     registrarComentario,
+    publicarPost,
+    adicionarPost,
+    apagarPost,
   } = useLivroDetalhe(livroId);
 
   const { showErrorToast } = useToastContext();
@@ -52,11 +62,24 @@ export function LivroDetalheScreen({
     null
   );
   const [listasAbertas, setListasAbertas] = useState(false);
+  const maisAcoes = useRef<View>(null);
+  const [menuDoLivro, setMenuDoLivro] = useState<Ancora | null>(null);
+  const [novoPostAberto, setNovoPostAberto] = useState(false);
+  const [menuDoPost, setMenuDoPost] = useState<{
+    postId: string;
+    ancora: Ancora;
+  } | null>(null);
+  const [postParaApagar, setPostParaApagar] = useState<string | null>(null);
+  const [apagando, setApagando] = useState(false);
+  const [erroAoApagar, setErroAoApagar] = useState<string | null>(null);
   useFocusEffect(
     useCallback(
       () => () => {
         setModalAberto(false);
         setPostComentariosId(null);
+        setMenuDoLivro(null);
+        setMenuDoPost(null);
+        setNovoPostAberto(false);
       },
       []
     )
@@ -67,6 +90,37 @@ export function LivroDetalheScreen({
 
   const detalhe = estado.situacao === 'sucesso' ? estado.dados : null;
   const progresso = detalhe?.progresso;
+
+  function abrirMenuDoLivro() {
+    maisAcoes.current?.measureInWindow((x, y, width, height) =>
+      setMenuDoLivro({ x, y, width, height })
+    );
+  }
+
+  function fecharConfirmacao() {
+    if (apagando) return;
+    setPostParaApagar(null);
+    setErroAoApagar(null);
+  }
+
+  async function confirmarApagar() {
+    if (!postParaApagar || apagando) return;
+    setApagando(true);
+    setErroAoApagar(null);
+    try {
+      await apagarPost(postParaApagar);
+      setPostParaApagar(null);
+      showErrorToast('Post apagado.');
+    } catch (erro) {
+      setErroAoApagar(
+        erro instanceof Error
+          ? erro.message
+          : 'Não foi possível apagar o post. Tente novamente.'
+      );
+    } finally {
+      setApagando(false);
+    }
+  }
 
   async function curtirPost(postId: string) {
     if (curtidasPendentes.has(postId)) return;
@@ -145,9 +199,10 @@ export function LivroDetalheScreen({
                     </View>
 
                     <Pressable
+                      ref={maisAcoes}
                       accessibilityRole="button"
-                      accessibilityLabel="Registrar progresso de leitura"
-                      onPress={() => setModalAberto(true)}
+                      accessibilityLabel="Registrar progresso ou escrever post"
+                      onPress={abrirMenuDoLivro}
                       style={styles.add}
                     >
                       <Text style={styles.plus}>+</Text>
@@ -211,6 +266,11 @@ export function LivroDetalheScreen({
                   onLikePress={() => curtirPost(post.id)}
                   comments={post.totalComentarios ?? 0}
                   onCommentsPress={() => setPostComentariosId(post.id)}
+                  onMorePress={
+                    post.meu
+                      ? (ancora) => setMenuDoPost({ postId: post.id, ancora })
+                      : undefined
+                  }
                 />
               ))
             )}
@@ -255,6 +315,37 @@ export function LivroDetalheScreen({
         contexto="livro"
         onClose={() => setPostComentariosId(null)}
         onComentado={registrarComentario}
+      />
+
+      <MenuDoLivro
+        ancora={menuDoLivro}
+        onClose={() => setMenuDoLivro(null)}
+        onRegistrarProgresso={() => setModalAberto(true)}
+        onEscreverPost={() => setNovoPostAberto(true)}
+      />
+
+      <MenuDoPost
+        ancora={menuDoPost?.ancora ?? null}
+        onClose={() => setMenuDoPost(null)}
+        onApagar={() => {
+          if (menuDoPost) setPostParaApagar(menuDoPost.postId);
+        }}
+      />
+
+      <NovoPostSheet
+        visible={novoPostAberto}
+        destinoId={`livro:${livroId}`}
+        publicar={publicarPost}
+        onClose={() => setNovoPostAberto(false)}
+        onSuccess={adicionarPost}
+      />
+
+      <ConfirmarApagarPostSheet
+        visible={postParaApagar !== null}
+        apagando={apagando}
+        erro={erroAoApagar}
+        onConfirmar={confirmarApagar}
+        onClose={fecharConfirmacao}
       />
     </View>
   );

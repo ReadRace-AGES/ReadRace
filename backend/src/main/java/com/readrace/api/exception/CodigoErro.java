@@ -28,6 +28,7 @@ public enum CodigoErro {
     POST_INVALIDO(
             HttpStatus.BAD_REQUEST, "O post deve conter texto e ter no máximo 2.000 caracteres."),
     SO_MEMBRO_POSTA(HttpStatus.FORBIDDEN, "Somente membros do clube podem publicar no fórum."),
+    SO_AUTOR_APAGA_POST(HttpStatus.FORBIDDEN, "Só quem escreveu o post pode apagá-lo."),
     COMENTARIO_INVALIDO(
             HttpStatus.BAD_REQUEST,
             "O comentário deve conter texto e ter no máximo 1.000 caracteres."),
