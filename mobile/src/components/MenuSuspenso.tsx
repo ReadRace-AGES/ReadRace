@@ -69,6 +69,7 @@ export function MenuSuspenso({
         {itens.map((item, indice) => (
           <Pressable
             key={item.label}
+            cssInterop={false}
             accessibilityRole="menuitem"
             accessibilityLabel={item.label}
             onPress={() => {
