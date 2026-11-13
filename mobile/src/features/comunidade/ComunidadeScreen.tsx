@@ -20,7 +20,7 @@ import { useVoltar } from '@/components/useVoltar';
 import { ComentariosSheet } from '@/features/comentarios/ComentariosSheet';
 import { NovoPostSheet } from '@/features/forum/NovoPostSheet';
 import { tempoRelativo } from '@/features/livro/model';
-import { colors } from '@/theme';
+import { colors, sizes } from '@/theme';
 
 import { useComunidade } from './useComunidade';
 import type { OrdemComunidade } from './api';
@@ -69,6 +69,7 @@ export function ComunidadeScreen({
   );
   const [comentariosAbertos, setComentariosAbertos] = useState(false);
   const [novoPostAberto, setNovoPostAberto] = useState(false);
+  const [capaComErro, setCapaComErro] = useState<string | null>(null);
   const dados = comunidade.situacao === 'sucesso' ? comunidade.dados : null;
 
   async function alternar() {
@@ -107,14 +108,20 @@ export function ComunidadeScreen({
     <View style={styles.tela}>
       <ScrollView contentContainerStyle={styles.rolagem}>
         <View style={[styles.hero, { paddingTop: insets.top }]}>
-          {dados?.imagemUrl ? (
+          {dados?.imagemUrl && dados.imagemUrl !== capaComErro ? (
             <Image
               source={{ uri: dados.imagemUrl }}
               style={styles.heroImage}
               contentFit="cover"
+              onError={() => setCapaComErro(dados.imagemUrl)}
             />
           ) : (
-            <View style={styles.heroPlaceholder} />
+            <View style={styles.heroPlaceholder}>
+              <BookIcon size={sizes.icon * 3} color={colors.textInverse} />
+              <Text style={styles.heroCaption}>
+                HISTÓRIAS QUE NOS APROXIMAM
+              </Text>
+            </View>
           )}
           <View style={styles.heroShade} />
           <Pressable
@@ -172,6 +179,9 @@ export function ComunidadeScreen({
                   </Text>
                 </Pressable>
               </View>
+              {!!dados.descricao && (
+                <Text style={styles.descricao}>{dados.descricao}</Text>
+              )}
               <View style={styles.resumo}>
                 <View style={styles.metrica}>
                   <Text style={styles.seguidores}>{dados.seguidores}</Text>
@@ -233,7 +243,13 @@ export function ComunidadeScreen({
                   }
                 />
               ) : dados.posts.length === 0 ? (
-                <EmptyState icon={BookIcon} message={COPY.semPosts} />
+                <View style={styles.vazio}>
+                  <BookIcon />
+                  <Text style={styles.vazioTitulo}>
+                    Toda conversa começa com uma história
+                  </Text>
+                  <Text style={styles.vazioMensagem}>{COPY.semPosts}</Text>
+                </View>
               ) : (
                 dados.posts.map((post) => (
                   <View key={post.id} style={styles.post}>

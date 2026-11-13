@@ -10,6 +10,7 @@ import {
   type AbaFeed,
 } from '@/features/feed/FeedComunidadesView';
 import { CriarGrupoSheet } from '@/features/feed/CriarGrupoSheet';
+import { CriarComunidadeSheet } from '@/features/comunidade/CriarComunidadeSheet';
 import { useFeedComunidades } from '@/features/feed/useFeedComunidades';
 import { useFeedSocial } from '@/features/feed/useFeedSocial';
 
@@ -19,7 +20,7 @@ function rotaDoClube(clubeId: string): Href {
 }
 
 function rotaDaComunidade(comunidadeId: string): Href {
-  return `/(tabs)/(feed)/comunidade/${comunidadeId}` as Href;
+  return `/(tabs)/(feed)/feed-comunidade/${comunidadeId}` as Href;
 }
 
 // O perfil e o livro abertos pela aba Social (#204) também são empilhados dentro da aba: o voltar
@@ -51,7 +52,8 @@ function rotaDaBuscaDeLeitores(): Href {
 export default function FeedScreen() {
   const { feed, recarregar, atualizar, participar, participacoesPendentes } =
     useFeedComunidades();
-  const { showSuccessToast, showErrorToast } = useToastContext();
+  const { showSuccessToast, showErrorToast, showToastAfterNavigation } =
+    useToastContext();
 
   async function participarDaComunidade(comunidade: ComunidadeSugeridaFeed) {
     let sucesso: boolean;
@@ -72,9 +74,11 @@ export default function FeedScreen() {
     abaAtual.current = aba;
   }, [aba]);
   const [modalAberto, setModalAberto] = useState(false);
+  const [comunidadeAberta, setComunidadeAberta] = useState(false);
   const fecharModal = useCallback(() => {
     Keyboard.dismiss();
     setModalAberto(false);
+    setComunidadeAberta(false);
   }, []);
   useFocusEffect(useCallback(() => () => fecharModal(), [fecharModal]));
 
@@ -109,6 +113,7 @@ export default function FeedScreen() {
         onLivroPress={(livroId) => router.push(rotaDoLivro(livroId))}
         onVerTodosPress={() => router.push('/clubes' as Href)}
         onCriarGrupoPress={() => setModalAberto(true)}
+        onCriarComunidadePress={() => setComunidadeAberta(true)}
         onClubePress={(clube) => router.push(rotaDoClube(clube.id))}
         onComunidadePress={(comunidade) =>
           router.push(rotaDaComunidade(comunidade.id))
@@ -118,6 +123,18 @@ export default function FeedScreen() {
         visible={modalAberto}
         onClose={fecharModal}
         onSuccess={atualizar}
+      />
+      <CriarComunidadeSheet
+        visible={comunidadeAberta}
+        onClose={fecharModal}
+        onSuccess={(comunidade) => {
+          fecharModal();
+          atualizar();
+          showToastAfterNavigation(
+            'Comunidade criada! Boas conversas começam aqui.'
+          );
+          router.push(rotaDaComunidade(comunidade.id));
+        }}
       />
     </>
   );
