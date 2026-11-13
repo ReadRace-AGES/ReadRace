@@ -142,6 +142,12 @@ test('LivroDetalheScreen: curtir é otimista, ignora toque duplo em andamento, r
     '@/features/biblioteca/MinhasListasSheet': {
       MinhasListasSheet: 'MinhasListasSheet',
     },
+    '@/features/forum/NovoPostSheet': { NovoPostSheet: 'NovoPostSheet' },
+    './AcoesDoLivro': {
+      MenuDoLivro: 'MenuDoLivro',
+      MenuDoPost: 'MenuDoPost',
+      ConfirmarApagarPostSheet: 'ConfirmarApagarPostSheet',
+    },
   };
 
   for (const name of [

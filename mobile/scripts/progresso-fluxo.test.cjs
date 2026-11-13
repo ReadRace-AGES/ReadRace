@@ -189,6 +189,12 @@ test('detalhe abre modal, valida, bloqueia toque duplo, preserva erro e aplica s
     '@/features/biblioteca/MinhasListasSheet': {
       MinhasListasSheet: 'MinhasListasSheet',
     },
+    '@/features/forum/NovoPostSheet': { NovoPostSheet: 'NovoPostSheet' },
+    './AcoesDoLivro': {
+      MenuDoLivro: 'MenuDoLivro',
+      MenuDoPost: 'MenuDoPost',
+      ConfirmarApagarPostSheet: 'ConfirmarApagarPostSheet',
+    },
   };
 
   for (const name of [
@@ -231,7 +237,9 @@ test('detalhe abre modal, valida, bloqueia toque duplo, preserva erro e aplica s
       renderer.root
         .findAllByType('Pressable')
         .find(
-          (n) => n.props.accessibilityLabel === 'Registrar progresso de leitura'
+          (n) =>
+            n.props.accessibilityLabel ===
+            'Seu progresso. Registrar progresso de leitura'
         )
         .props.onPress()
     );

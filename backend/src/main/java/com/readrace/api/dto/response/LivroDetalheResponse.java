@@ -29,7 +29,8 @@ public record LivroDetalheResponse(Livro livro, Progresso progresso, List<Post> 
             OffsetDateTime criadoEm,
             long curtidas,
             boolean curtidoPorMim,
-            long totalComentarios) {}
+            long totalComentarios,
+            boolean meu) {}
 
     public record Autor(String nome, String avatarUrl, Integer sequenciaDias) {}
 }

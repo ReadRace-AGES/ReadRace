@@ -71,6 +71,21 @@ public class Post {
         return post;
     }
 
+    public static Post criarRaizDeLivro(UUID autorId, UUID livroId, String texto) {
+        String conteudo = ValidadorTextoPost.validar(texto);
+        Post post = new Post();
+        post.id = UUID.randomUUID();
+        post.autorId = autorId;
+        post.livroId = livroId;
+        post.conteudo = conteudo;
+        post.criadoEm = OffsetDateTime.now();
+        return post;
+    }
+
+    public void excluir() {
+        excluidoEm = OffsetDateTime.now();
+    }
+
     /**
      * Cria um comentário: post com pai e sem clube, livro ou comunidade, porque o escopo vem do pai
      * ({@code chk_comentario_sem_escopo}). Limite de 1.000 unidades UTF-16 (#150).
