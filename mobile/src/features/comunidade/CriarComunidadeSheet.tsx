@@ -82,9 +82,8 @@ export function CriarComunidadeSheet({ visible, onClose, onSuccess }: Props) {
     } catch (err) {
       if (!controller.signal.aborted)
         setError(
-          err instanceof ApiError
-            ? err.message
-            : 'Não foi possível criar a comunidade. Tente novamente.'
+          (err instanceof ApiError ? err.publicMessage : null) ??
+            'Não foi possível criar a comunidade. Tente novamente.'
         );
       return;
     } finally {
