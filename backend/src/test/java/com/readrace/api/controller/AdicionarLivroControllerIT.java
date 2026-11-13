@@ -283,11 +283,84 @@ class AdicionarLivroControllerIT {
     @Test
     @DisplayName("lista inválida devolve 400 LISTA_INVALIDA")
     void deve_devolver_400_para_lista_invalida() {
-        assertThat(post("br001", "lendo"))
+        assertThat(post("br001", "abandonado"))
                 .hasStatus(HttpStatus.BAD_REQUEST)
                 .bodyJson()
                 .extractingPath("$.code")
                 .isEqualTo("LISTA_INVALIDA");
+    }
+
+    private org.springframework.test.web.servlet.assertj.MockMvcTester.MockMvcRequestBuilder
+            postLendo(String volumeId, String pagina) {
+        return mvc.post()
+                .uri(URL)
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(
+                        "{\"volumeId\":\"%s\",\"lista\":\"lendo\",\"pagina\":%s}"
+                                .formatted(volumeId, pagina));
+    }
+
+    @Test
+    @DisplayName("lendo com página adiciona o livro já com a leitura registrada")
+    void deve_adicionar_em_lendo_com_pagina() {
+        UUID livroExistente = idDoLivro("Dom Casmurro");
+
+        assertThat(postLendo("br001", "10"))
+                .hasStatus(HttpStatus.CREATED)
+                .bodyJson()
+                .extractingPath("$")
+                .asMap()
+                .containsEntry("livroId", livroExistente.toString())
+                .containsEntry("status", "lendo");
+
+        assertThat(contarItens(livroExistente)).isEqualTo(1);
+        assertThat(
+                        jdbc.queryForObject(
+                                "SELECT pagina_atual FROM item_biblioteca"
+                                        + " WHERE usuario_id = ? AND livro_id = ?",
+                                Integer.class,
+                                USUARIO_ATUAL,
+                                livroExistente))
+                .isEqualTo(10);
+    }
+
+    // O seed pode já ter o livro na biblioteca do usuário: o que importa é o item não mudar.
+    private java.util.List<Map<String, Object>> estadoDoItem(UUID livroId) {
+        return jdbc.queryForList(
+                "SELECT status_leitura::text AS status, pagina_atual, pagina_maxima"
+                        + " FROM item_biblioteca WHERE usuario_id = ? AND livro_id = ?",
+                USUARIO_ATUAL,
+                livroId);
+    }
+
+    @Test
+    @DisplayName("lendo com página 0 devolve 422 e não altera a biblioteca")
+    void nao_deve_adicionar_em_lendo_com_pagina_zero() {
+        UUID livroExistente = idDoLivro("Dom Casmurro");
+        var antes = estadoDoItem(livroExistente);
+
+        assertThat(postLendo("br001", "0"))
+                .hasStatus(HttpStatus.UNPROCESSABLE_ENTITY)
+                .bodyJson()
+                .extractingPath("$.code")
+                .isEqualTo("PAGINA_INVALIDA");
+
+        assertThat(estadoDoItem(livroExistente)).isEqualTo(antes);
+    }
+
+    @Test
+    @DisplayName("lendo sem página devolve 422 e não altera a biblioteca")
+    void nao_deve_adicionar_em_lendo_sem_pagina() {
+        UUID livroExistente = idDoLivro("Dom Casmurro");
+        var antes = estadoDoItem(livroExistente);
+
+        assertThat(post("br001", "lendo"))
+                .hasStatus(HttpStatus.UNPROCESSABLE_ENTITY)
+                .bodyJson()
+                .extractingPath("$.code")
+                .isEqualTo("PAGINA_INVALIDA");
+
+        assertThat(estadoDoItem(livroExistente)).isEqualTo(antes);
     }
 
     @Test

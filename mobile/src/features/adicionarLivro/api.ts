@@ -1,4 +1,5 @@
 import { apiGet, apiRequest } from '@/api/client';
+import type { ProgressoLeituraResponse } from '@/features/progresso/api';
 
 type IndustryIdentifier = { type: string; identifier: string };
 
@@ -79,6 +80,8 @@ export type LivroAdicionado = {
   capaUrl: string | null;
   status: 'lendo' | 'lido' | 'desejo';
   favorito: boolean;
+  /** Só em "lendo": a recompensa do registro de leitura feito junto. */
+  progresso?: ProgressoLeituraResponse | null;
 };
 
 /** `POST /api/biblioteca` — cria ou atualiza o item, sem duplicar (#155). */
@@ -90,6 +93,22 @@ export function adicionarNaBiblioteca(
   return apiRequest<LivroAdicionado>('/api/biblioteca', {
     method: 'POST',
     body: JSON.stringify({ volumeId, lista }),
+    signal,
+  });
+}
+
+/**
+ * `POST /api/biblioteca` com `lista: "lendo"` — adiciona o livro já registrando a página. O
+ * backend faz as duas coisas na mesma transação: página inválida não adiciona o livro.
+ */
+export function adicionarLendo(
+  volumeId: string,
+  pagina: number,
+  signal?: AbortSignal
+) {
+  return apiRequest<LivroAdicionado>('/api/biblioteca', {
+    method: 'POST',
+    body: JSON.stringify({ volumeId, lista: 'lendo', pagina }),
     signal,
   });
 }

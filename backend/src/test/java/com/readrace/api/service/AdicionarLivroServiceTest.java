@@ -28,11 +28,14 @@ import com.readrace.api.dto.GoogleBookVolume;
 import com.readrace.api.dto.IndustryIdentifier;
 import com.readrace.api.dto.VolumeInfo;
 import com.readrace.api.dto.request.AdicionarLivroRequest;
+import com.readrace.api.dto.request.RegistrarProgressoRequest;
+import com.readrace.api.dto.response.ProgressoLeituraResponse;
 import com.readrace.api.exception.CodigoErro;
 import com.readrace.api.exception.ListaInvalidaException;
 import com.readrace.api.exception.LivroEmProgressoException;
 import com.readrace.api.exception.LivroNaoEncontradoException;
 import com.readrace.api.exception.LivroSemIsbnOuPaginasException;
+import com.readrace.api.exception.PaginaInvalidaException;
 import com.readrace.api.model.Autor;
 import com.readrace.api.model.ItemBiblioteca;
 import com.readrace.api.model.Livro;
@@ -56,6 +59,7 @@ class AdicionarLivroServiceTest {
     @Mock private GeneroRepository generoRepository;
     @Mock private ItemBibliotecaRepository itemBibliotecaRepository;
     @Mock private UsuarioAtual usuarioAtual;
+    @Mock private RegistrarProgressoService registrarProgressoService;
 
     private AdicionarLivroService service() {
         return new AdicionarLivroService(
@@ -65,7 +69,8 @@ class AdicionarLivroServiceTest {
                 livroAutorRepository,
                 generoRepository,
                 itemBibliotecaRepository,
-                usuarioAtual);
+                usuarioAtual,
+                registrarProgressoService);
     }
 
     private VolumeInfo volumeInfo(
@@ -135,8 +140,58 @@ class AdicionarLivroServiceTest {
     @Test
     @DisplayName("lista inválida não consulta o catálogo")
     void deve_recusar_lista_invalida() {
-        assertThatThrownBy(() -> service().adicionar(new AdicionarLivroRequest("v1", "lendo")))
+        assertThatThrownBy(() -> service().adicionar(new AdicionarLivroRequest("v1", "abandonado")))
                 .isInstanceOf(ListaInvalidaException.class);
+    }
+
+    @Test
+    @DisplayName("lendo sem página não consulta o catálogo nem adiciona o livro")
+    void deve_recusar_lendo_sem_pagina() {
+        assertThatThrownBy(() -> service().adicionar(new AdicionarLivroRequest("v1", "lendo")))
+                .isInstanceOf(PaginaInvalidaException.class);
+
+        verifyNoInteractions(bookSearchPort, livroRepository, registrarProgressoService);
+        verifyNoInteractions(itemBibliotecaRepository);
+    }
+
+    @Test
+    @DisplayName("lendo registra a página informada e devolve a recompensa da leitura")
+    void deve_adicionar_em_lendo_registrando_a_pagina() {
+        String isbn = "9786586490077";
+        UUID livroId = UUID.randomUUID();
+        configurarCatalogo("br001", "Dom Casmurro", List.of("Machado de Assis"), isbn);
+        Livro livro = mock(Livro.class);
+        when(livro.getId()).thenReturn(livroId);
+        when(livroRepository.findByIsbn(isbn)).thenReturn(Optional.of(livro));
+        configurarBiblioteca(livroId);
+        ProgressoLeituraResponse progresso = mock(ProgressoLeituraResponse.class);
+        when(registrarProgressoService.registrar(eq(livroId), any())).thenReturn(progresso);
+
+        var resposta = service().adicionar(new AdicionarLivroRequest("br001", "lendo", 42));
+
+        var request = ArgumentCaptor.forClass(RegistrarProgressoRequest.class);
+        verify(registrarProgressoService).registrar(eq(livroId), request.capture());
+        assertThat(request.getValue().pagina()).isEqualTo(42);
+        assertThat(resposta.progresso()).isSameAs(progresso);
+        verify(itemBibliotecaRepository, never()).definirStatus(any(), any(), any(), anyString());
+    }
+
+    @Test
+    @DisplayName("página inválida em lendo propaga o erro do registro de leitura")
+    void deve_propagar_pagina_invalida_em_lendo() {
+        String isbn = "9786586490077";
+        UUID livroId = UUID.randomUUID();
+        configurarCatalogo("br001", "Dom Casmurro", List.of("Machado de Assis"), isbn);
+        Livro livro = mock(Livro.class);
+        when(livro.getId()).thenReturn(livroId);
+        when(livroRepository.findByIsbn(isbn)).thenReturn(Optional.of(livro));
+        when(usuarioAtual.idDoUsuarioAtual()).thenReturn(new UsuarioId(UUID.randomUUID()));
+        when(registrarProgressoService.registrar(eq(livroId), any()))
+                .thenThrow(new PaginaInvalidaException("Informe uma página entre 1 e 200."));
+
+        assertThatThrownBy(
+                        () -> service().adicionar(new AdicionarLivroRequest("br001", "lendo", 0)))
+                .isInstanceOf(PaginaInvalidaException.class);
     }
 
     @Test

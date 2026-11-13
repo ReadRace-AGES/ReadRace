@@ -15,11 +15,14 @@ import com.readrace.api.dto.GoogleBookVolume;
 import com.readrace.api.dto.IndustryIdentifier;
 import com.readrace.api.dto.VolumeInfo;
 import com.readrace.api.dto.request.AdicionarLivroRequest;
+import com.readrace.api.dto.request.RegistrarProgressoRequest;
 import com.readrace.api.dto.response.AdicionarLivroResponse;
+import com.readrace.api.dto.response.ProgressoLeituraResponse;
 import com.readrace.api.exception.ListaInvalidaException;
 import com.readrace.api.exception.LivroEmProgressoException;
 import com.readrace.api.exception.LivroNaoEncontradoException;
 import com.readrace.api.exception.LivroSemIsbnOuPaginasException;
+import com.readrace.api.exception.PaginaInvalidaException;
 import com.readrace.api.model.Autor;
 import com.readrace.api.model.ItemBiblioteca;
 import com.readrace.api.model.Livro;
@@ -40,7 +43,7 @@ import com.readrace.api.repository.LivroRepository;
 @Service
 public class AdicionarLivroService {
 
-    private static final Set<String> LISTAS_VALIDAS = Set.of("lido", "desejo", "favorito");
+    private static final Set<String> LISTAS_VALIDAS = Set.of("lido", "desejo", "favorito", "lendo");
     private static final int TITULO_MAXIMO = 255;
 
     private final BookSearchPort bookSearchPort;
@@ -50,6 +53,7 @@ public class AdicionarLivroService {
     private final GeneroRepository generoRepository;
     private final ItemBibliotecaRepository itemBibliotecaRepository;
     private final UsuarioAtual usuarioAtual;
+    private final RegistrarProgressoService registrarProgressoService;
 
     public AdicionarLivroService(
             BookSearchPort bookSearchPort,
@@ -58,7 +62,8 @@ public class AdicionarLivroService {
             LivroAutorRepository livroAutorRepository,
             GeneroRepository generoRepository,
             ItemBibliotecaRepository itemBibliotecaRepository,
-            UsuarioAtual usuarioAtual) {
+            UsuarioAtual usuarioAtual,
+            RegistrarProgressoService registrarProgressoService) {
         this.bookSearchPort = bookSearchPort;
         this.livroRepository = livroRepository;
         this.autorRepository = autorRepository;
@@ -66,6 +71,7 @@ public class AdicionarLivroService {
         this.generoRepository = generoRepository;
         this.itemBibliotecaRepository = itemBibliotecaRepository;
         this.usuarioAtual = usuarioAtual;
+        this.registrarProgressoService = registrarProgressoService;
     }
 
     @Transactional
@@ -73,6 +79,10 @@ public class AdicionarLivroService {
         String lista = validarLista(request.lista());
         if (request.volumeId() == null || request.volumeId().isBlank()) {
             throw new LivroNaoEncontradoException();
+        }
+        // "Lendo" só com uma página lida: sem ela, o livro nem é buscado no catálogo.
+        if (lista.equals("lendo") && request.pagina() == null) {
+            throw new PaginaInvalidaException("Informe a página em que você está.");
         }
 
         // Não confia no que o app manda: busca os detalhes do volume pelo catálogo.
@@ -91,12 +101,19 @@ public class AdicionarLivroService {
         Livro livro = buscarOuCriarLivro(isbn, titulo, info);
         UUID usuarioId = usuarioAtual.idDoUsuarioAtual().valor();
 
+        ProgressoLeituraResponse progresso = null;
         switch (lista) {
             case "lido" -> definirStatus(usuarioId, livro.getId(), StatusLeitura.lido);
             case "desejo" -> definirStatus(usuarioId, livro.getId(), StatusLeitura.desejo);
             case "favorito" ->
                     itemBibliotecaRepository.marcarFavorito(
                             UUID.randomUUID(), usuarioId, livro.getId());
+            // O registro de leitura cria o item em "lendo" e paga o XP. Na mesma transação: página
+            // inválida desfaz tudo e o livro não entra na biblioteca.
+            case "lendo" ->
+                    progresso =
+                            registrarProgressoService.registrar(
+                                    livro.getId(), new RegistrarProgressoRequest(request.pagina()));
             default -> throw new ListaInvalidaException();
         }
 
@@ -110,7 +127,8 @@ public class AdicionarLivroService {
                 livro.getTitulo(),
                 livro.getCapaUrl(),
                 item.getStatusLeitura().name(),
-                item.isFavorito());
+                item.isFavorito(),
+                progresso);
     }
 
     /**
