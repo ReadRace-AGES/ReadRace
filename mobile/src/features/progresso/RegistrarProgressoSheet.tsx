@@ -18,9 +18,16 @@ import { linhasDaRecompensa } from './recompensa';
 
 const AVISO_PAGINA_ANTERIOR = 'Você já passou desta página. Ela não soma XP.';
 
-export type RegistrarProgressoSheetProps = {
+type Destino =
+  | { livroId: string; enviar?: never }
+  | {
+      livroId?: never;
+      /** Envio próprio, para um livro que ainda não está na biblioteca (adicionar em "lendo"). */
+      enviar: (pagina: number) => Promise<ProgressoLeituraResponse>;
+    };
+
+export type RegistrarProgressoSheetProps = Destino & {
   visible: boolean;
-  livroId: string;
   totalPaginas: number;
   paginaAtual: number;
   /** Contexto da leitura. O cálculo de XP continua exclusivamente no backend. */
@@ -64,6 +71,7 @@ function LivroIcon({ color = colors.text }: { color?: string }) {
 export function RegistrarProgressoSheet({
   visible,
   livroId,
+  enviar,
   totalPaginas,
   paginaAtual,
   paginaMaximaAlcancada = paginaAtual,
@@ -125,7 +133,9 @@ export function RegistrarProgressoSheet({
     setLoading(true);
     setError(null);
     try {
-      const response = await registrarProgresso(livroId, parsedPage);
+      const response = enviar
+        ? await enviar(parsedPage)
+        : await registrarProgresso(livroId!, parsedPage);
       onSuccess?.(response);
       // O painel é um Modal e ficaria por cima do aviso: fecha antes de mostrar a recompensa.
       onClose();
