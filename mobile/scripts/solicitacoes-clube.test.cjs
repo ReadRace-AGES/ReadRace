@@ -345,6 +345,9 @@ test('Todos os clubes: estados, cards, navegação independente do botão e Cria
     './EntradaClubeButton': { EntradaClubeButton: 'EntradaClubeButton' },
     '@/features/feed/ClubeCard': { ClubeCard: 'ClubeCard' },
     '@/features/feed/CriarGrupoSheet': { CriarGrupoSheet: 'CriarGrupoSheet' },
+    '@/features/comunidade/CriarComunidadeSheet': {
+      CriarComunidadeSheet: 'CriarComunidadeSheet',
+    },
   });
   let tree;
   const render = () => React.createElement(TodosClubesScreen);
@@ -879,6 +882,9 @@ test('rotas existentes usam proteção de clube com o cargo correspondente; Ver 
       useFeedSocial: () => ({ atualizar: () => {} }),
     },
     '@/features/feed/CriarGrupoSheet': { CriarGrupoSheet: 'CriarGrupoSheet' },
+    '@/features/comunidade/CriarComunidadeSheet': {
+      CriarComunidadeSheet: 'CriarComunidadeSheet',
+    },
   });
   let tree;
   act(() => {

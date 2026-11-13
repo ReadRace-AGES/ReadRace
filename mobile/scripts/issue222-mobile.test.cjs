@@ -825,7 +825,14 @@ test('comunidade: falha em Em alta permite retry sem trocar a aba selecionada', 
     await act(async () =>
       tree.root.findByType('EmptyState').props.action.props.onPress()
     );
-    assert.equal(tree.root.findAllByType('EmptyState').length, 1);
+    assert.equal(tree.root.findAllByType('EmptyState').length, 0);
+    assert.ok(
+      tree.root
+        .findAllByType('Text')
+        .some(
+          (n) => n.props.children === 'Esta comunidade ainda não tem postagens.'
+        )
+    );
     assert.deepEqual(emAlta().props.accessibilityState, { selected: true });
   } finally {
     await close(tree);

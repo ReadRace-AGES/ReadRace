@@ -129,11 +129,15 @@ async function mount(initial = data()) {
     '@/components/toast-provider': {
       useToastContext: () => ({
         showSuccessToast: (lines) => h.success.push(lines),
+        showToastAfterNavigation: (message) => h.success.push([message]),
         showErrorToast: (text) => h.errors.push(text),
       }),
     },
     '@/features/feed/FeedComunidadesView': view,
     '@/features/feed/CriarGrupoSheet': { CriarGrupoSheet: 'CriarGrupoSheet' },
+    '@/features/comunidade/CriarComunidadeSheet': {
+      CriarComunidadeSheet: 'CriarComunidadeSheet',
+    },
     '@/features/feed/useFeedComunidades': {
       useFeedComunidades() {
         h.state = hook.useFeedComunidades();
@@ -189,8 +193,8 @@ test('Feed mapeia listas e campos distintos, mantém clubes e navegação', asyn
       suggested.props.onPress();
     });
     assert.deepEqual(h.routes, [
-      '/(tabs)/(feed)/comunidade/m',
-      '/(tabs)/(feed)/comunidade/a',
+      '/(tabs)/(feed)/feed-comunidade/m',
+      '/(tabs)/(feed)/feed-comunidade/a',
     ]);
     act(() => h.tree.root.findByType('ClubeCard').props.onPress());
     assert.equal(h.routes.at(-1), '/clube/clube');

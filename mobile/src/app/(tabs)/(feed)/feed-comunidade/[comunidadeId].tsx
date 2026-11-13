@@ -2,7 +2,7 @@ import { useLocalSearchParams } from 'expo-router';
 
 import { ComunidadeScreen } from '@/features/comunidade/ComunidadeScreen';
 
-// Mora dentro da pilha da aba para a aba continuar marcada e o voltar voltar para ela.
+// URL exclusiva do Feed: preserva a aba de origem também ao recarregar no navegador.
 export default function ComunidadeRoute() {
   const { comunidadeId } = useLocalSearchParams<{ comunidadeId: string }>();
   return (

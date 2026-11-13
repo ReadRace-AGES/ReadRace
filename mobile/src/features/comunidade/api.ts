@@ -3,6 +3,7 @@ import { apiGet, apiRequest } from '@/api/client';
 export type Comunidade = {
   id: string;
   nome: string;
+  descricao?: string | null;
   imagemUrl: string | null;
   seguidores: number;
   sigo: boolean;
@@ -25,6 +26,25 @@ export type EstadoMembroComunidade = {
 };
 
 export type OrdemComunidade = 'recentes' | 'em_alta';
+
+export type CriarComunidadeRequest = {
+  nome: string;
+  descricao: string | null;
+  imagemUrl: string | null;
+};
+
+export type ComunidadeCriada = Omit<Comunidade, 'posts'>;
+
+export function criarComunidade(
+  request: CriarComunidadeRequest,
+  signal?: AbortSignal
+) {
+  return apiRequest<ComunidadeCriada>('/api/comunidades', {
+    method: 'POST',
+    body: JSON.stringify(request),
+    signal,
+  });
+}
 
 export function buscarComunidade(
   comunidadeId: string,

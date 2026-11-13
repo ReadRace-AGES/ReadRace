@@ -152,6 +152,9 @@ test('Feed recarrega uma vez por criação e exibe os dados consultados sem alte
     },
     '@/features/feed/FeedComunidadesView': feedView,
     '@/features/feed/CriarGrupoSheet': { CriarGrupoSheet: 'CriarGrupoSheet' },
+    '@/features/comunidade/CriarComunidadeSheet': {
+      CriarComunidadeSheet: 'CriarComunidadeSheet',
+    },
     '@/features/feed/useFeedComunidades': hooks,
     '@/features/feed/useFeedSocial': hooksSocial,
   });

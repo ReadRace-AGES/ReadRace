@@ -145,7 +145,9 @@ async function montar({
   );
   let rotaId = 'c1';
   const { default: Route } = load(
-    `app/(tabs)/(${origem === '/feed' ? 'feed' : 'busca'})/comunidade/[comunidadeId].tsx`,
+    origem === '/feed'
+      ? 'app/(tabs)/(feed)/feed-comunidade/[comunidadeId].tsx'
+      : 'app/(tabs)/(busca)/comunidade/[comunidadeId].tsx',
     {
       'expo-router': { useLocalSearchParams: () => ({ comunidadeId: rotaId }) },
       '@/features/comunidade/ComunidadeScreen': { ComunidadeScreen },

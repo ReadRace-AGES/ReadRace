@@ -328,6 +328,9 @@ test('Feed: Social fica selecionada, busca só quando aberta, tenta de novo e le
     },
     '@/features/feed/FeedComunidadesView': feedView,
     '@/features/feed/CriarGrupoSheet': { CriarGrupoSheet: 'CriarGrupoSheet' },
+    '@/features/comunidade/CriarComunidadeSheet': {
+      CriarComunidadeSheet: 'CriarComunidadeSheet',
+    },
     '@/features/feed/useFeedComunidades': useFeedComunidades,
     '@/features/feed/useFeedSocial': useFeedSocial,
   });

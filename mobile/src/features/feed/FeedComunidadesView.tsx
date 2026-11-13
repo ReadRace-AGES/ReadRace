@@ -107,6 +107,7 @@ export type FeedComunidadesViewProps = Pick<
   onLivroPress: (livroId: string) => void;
   onVerTodosPress: () => void;
   onCriarGrupoPress: () => void;
+  onCriarComunidadePress: () => void;
   onClubePress: (clube: ClubeFeed) => void;
   onComunidadePress: (comunidade: Pick<ComunidadeFeed, 'id'>) => void;
   onParticiparPress: (comunidade: ComunidadeSugeridaFeed) => void;
@@ -123,6 +124,7 @@ export function FeedComunidadesView({
   onLivroPress,
   onVerTodosPress,
   onCriarGrupoPress,
+  onCriarComunidadePress,
   onClubePress,
   onComunidadePress,
   onParticiparPress,
@@ -220,6 +222,12 @@ export function FeedComunidadesView({
           />
 
           <CabecalhoSecao titulo={COPY.minhasComunidades} />
+          <PrimaryButton
+            label="Criar comunidade"
+            variant="outline"
+            icon={IconePlus}
+            onPress={onCriarComunidadePress}
+          />
           {feed.dados.comunidades.length === 0 ? (
             <Text className="font-inter text-bodySmall text-text-secondary">
               {COPY.semComunidades}
