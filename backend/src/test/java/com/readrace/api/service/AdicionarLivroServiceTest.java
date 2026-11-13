@@ -18,6 +18,8 @@ import java.util.UUID;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -26,7 +28,9 @@ import com.readrace.api.dto.GoogleBookVolume;
 import com.readrace.api.dto.IndustryIdentifier;
 import com.readrace.api.dto.VolumeInfo;
 import com.readrace.api.dto.request.AdicionarLivroRequest;
+import com.readrace.api.exception.CodigoErro;
 import com.readrace.api.exception.ListaInvalidaException;
+import com.readrace.api.exception.LivroEmProgressoException;
 import com.readrace.api.exception.LivroNaoEncontradoException;
 import com.readrace.api.exception.LivroSemIsbnOuPaginasException;
 import com.readrace.api.model.Autor;
@@ -359,6 +363,131 @@ class AdicionarLivroServiceTest {
         service().adicionar(new AdicionarLivroRequest("v1", "desejo"));
 
         verify(livroRepository).findByIsbn(esperado);
+    }
+
+    private static final String ISBN_TROCA = "9780060850524";
+
+    /** Livro que o catálogo devolve em "sci002" e que já existe no banco, achado pelo ISBN. */
+    private UUID livroDoCatalogoJaCadastrado() {
+        UUID livroId = UUID.randomUUID();
+        configurarCatalogo("sci002", "Admirável Mundo Novo", List.of("Aldous Huxley"), ISBN_TROCA);
+        Livro livro = mock(Livro.class);
+        when(livro.getId()).thenReturn(livroId);
+        when(livroRepository.findByIsbn(ISBN_TROCA)).thenReturn(Optional.of(livro));
+        return livroId;
+    }
+
+    private UUID usuarioLogado() {
+        UUID usuarioId = UUID.randomUUID();
+        when(usuarioAtual.idDoUsuarioAtual()).thenReturn(new UsuarioId(usuarioId));
+        return usuarioId;
+    }
+
+    /** O item que a trava de troca de lista encontra na biblioteca do usuário. */
+    private ItemBiblioteca itemNaBiblioteca(
+            UUID usuarioId, UUID livroId, StatusLeitura status, int paginaMaxima) {
+        ItemBiblioteca item = mock(ItemBiblioteca.class);
+        when(item.getPaginaMaxima()).thenReturn(paginaMaxima);
+        when(item.getStatusLeitura()).thenReturn(status);
+        when(itemBibliotecaRepository.findByUsuarioIdAndLivro_Id(usuarioId, livroId))
+                .thenReturn(Optional.of(item));
+        return item;
+    }
+
+    @ParameterizedTest(name = "{0} para {1}")
+    @CsvSource({"lendo, lido", "lendo, desejo", "lido, desejo"})
+    @DisplayName("livro com leitura registrada não troca de lista e nada é gravado")
+    void deve_recusar_troca_de_lista_de_livro_com_leitura(StatusLeitura atual, String lista) {
+        UUID livroId = livroDoCatalogoJaCadastrado();
+        UUID usuarioId = usuarioLogado();
+        itemNaBiblioteca(usuarioId, livroId, atual, 94);
+
+        assertThatThrownBy(() -> service().adicionar(new AdicionarLivroRequest("sci002", lista)))
+                .isInstanceOf(LivroEmProgressoException.class)
+                .extracting(erro -> ((LivroEmProgressoException) erro).getCodigo())
+                .isEqualTo(CodigoErro.LIVRO_EM_PROGRESSO);
+
+        verify(itemBibliotecaRepository, never())
+                .definirStatus(any(UUID.class), any(UUID.class), any(UUID.class), anyString());
+        verify(itemBibliotecaRepository, never())
+                .marcarFavorito(any(UUID.class), any(UUID.class), any(UUID.class));
+    }
+
+    @Test
+    @DisplayName("favoritar livro com leitura registrada passa e não troca o status")
+    void deve_favoritar_livro_com_leitura() {
+        UUID livroId = livroDoCatalogoJaCadastrado();
+        UUID usuarioId = usuarioLogado();
+        ItemBiblioteca item = mock(ItemBiblioteca.class);
+        when(item.getStatusLeitura()).thenReturn(StatusLeitura.lendo);
+        when(item.isFavorito()).thenReturn(true);
+        when(itemBibliotecaRepository.findByUsuarioIdAndLivroId(usuarioId, livroId))
+                .thenReturn(Optional.of(item));
+
+        var resposta = service().adicionar(new AdicionarLivroRequest("sci002", "favorito"));
+
+        assertThat(resposta.status()).isEqualTo("lendo");
+        assertThat(resposta.favorito()).isTrue();
+        verify(itemBibliotecaRepository)
+                .marcarFavorito(any(UUID.class), eq(usuarioId), eq(livroId));
+        verify(itemBibliotecaRepository, never())
+                .definirStatus(any(UUID.class), any(UUID.class), any(UUID.class), anyString());
+    }
+
+    @ParameterizedTest(name = "para {0}")
+    @CsvSource({"lido", "desejo"})
+    @DisplayName("livro da biblioteca sem leitura registrada troca de lista")
+    void deve_trocar_lista_de_livro_sem_leitura(String lista) {
+        UUID livroId = livroDoCatalogoJaCadastrado();
+        UUID usuarioId = usuarioLogado();
+        ItemBiblioteca item = mock(ItemBiblioteca.class);
+        when(item.getPaginaMaxima()).thenReturn(0);
+        when(item.getStatusLeitura()).thenReturn(StatusLeitura.valueOf(lista));
+        when(itemBibliotecaRepository.findByUsuarioIdAndLivro_Id(usuarioId, livroId))
+                .thenReturn(Optional.of(item));
+        when(itemBibliotecaRepository.findByUsuarioIdAndLivroId(usuarioId, livroId))
+                .thenReturn(Optional.of(item));
+
+        var resposta = service().adicionar(new AdicionarLivroRequest("sci002", lista));
+
+        assertThat(resposta.status()).isEqualTo(lista);
+        verify(itemBibliotecaRepository)
+                .definirStatus(any(UUID.class), eq(usuarioId), eq(livroId), eq(lista));
+    }
+
+    @Test
+    @DisplayName("pedir a lista em que o livro com leitura já está não é recusado")
+    void deve_aceitar_a_lista_em_que_o_livro_ja_esta() {
+        UUID livroId = livroDoCatalogoJaCadastrado();
+        UUID usuarioId = usuarioLogado();
+        ItemBiblioteca item = itemNaBiblioteca(usuarioId, livroId, StatusLeitura.lido, 288);
+        when(itemBibliotecaRepository.findByUsuarioIdAndLivroId(usuarioId, livroId))
+                .thenReturn(Optional.of(item));
+
+        var resposta = service().adicionar(new AdicionarLivroRequest("sci002", "lido"));
+
+        assertThat(resposta.status()).isEqualTo("lido");
+        verify(itemBibliotecaRepository)
+                .definirStatus(any(UUID.class), eq(usuarioId), eq(livroId), eq("lido"));
+    }
+
+    @Test
+    @DisplayName("livro que o usuário ainda não tem entra na lista pedida")
+    void deve_adicionar_livro_que_o_usuario_nao_tem() {
+        UUID livroId = livroDoCatalogoJaCadastrado();
+        UUID usuarioId = usuarioLogado();
+        when(itemBibliotecaRepository.findByUsuarioIdAndLivro_Id(usuarioId, livroId))
+                .thenReturn(Optional.empty());
+        ItemBiblioteca item = mock(ItemBiblioteca.class);
+        when(item.getStatusLeitura()).thenReturn(StatusLeitura.desejo);
+        when(itemBibliotecaRepository.findByUsuarioIdAndLivroId(usuarioId, livroId))
+                .thenReturn(Optional.of(item));
+
+        var resposta = service().adicionar(new AdicionarLivroRequest("sci002", "desejo"));
+
+        assertThat(resposta.status()).isEqualTo("desejo");
+        verify(itemBibliotecaRepository)
+                .definirStatus(any(UUID.class), eq(usuarioId), eq(livroId), eq("desejo"));
     }
 
     @Test

@@ -18,7 +18,7 @@ public enum CodigoErro {
             HttpStatus.CONFLICT, "Não é possível remover um livro que já tem leitura registrada."),
     LIVRO_EM_PROGRESSO(
             HttpStatus.CONFLICT,
-            "Um livro com leitura registrada não pode entrar na lista de desejos."),
+            "Este livro já tem leitura registrada e não pode ser movido para outra lista."),
     COMUNIDADE_NAO_ENCONTRADA(HttpStatus.NOT_FOUND, "Comunidade não encontrada."),
     POST_NAO_ENCONTRADO(HttpStatus.NOT_FOUND, "Post não encontrado."),
     LISTA_INVALIDA(HttpStatus.BAD_REQUEST, "Lista inválida. Use lido, desejo ou favorito."),

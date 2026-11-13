@@ -17,6 +17,7 @@ import com.readrace.api.dto.VolumeInfo;
 import com.readrace.api.dto.request.AdicionarLivroRequest;
 import com.readrace.api.dto.response.AdicionarLivroResponse;
 import com.readrace.api.exception.ListaInvalidaException;
+import com.readrace.api.exception.LivroEmProgressoException;
 import com.readrace.api.exception.LivroNaoEncontradoException;
 import com.readrace.api.exception.LivroSemIsbnOuPaginasException;
 import com.readrace.api.model.Autor;
@@ -112,7 +113,20 @@ public class AdicionarLivroService {
                 item.isFavorito());
     }
 
+    /**
+     * Livro que já tem leitura registrada não troca de lista por aqui, a mesma regra de {@code
+     * PATCH /api/biblioteca/{livroId}}: o status dele só anda pelo registro de leitura. Pedir a
+     * lista em que o livro já está não muda nada e passa.
+     */
     private void definirStatus(UUID usuarioId, UUID livroId, StatusLeitura status) {
+        itemBibliotecaRepository
+                .findByUsuarioIdAndLivro_Id(usuarioId, livroId)
+                .filter(item -> item.getPaginaMaxima() > 0)
+                .filter(item -> item.getStatusLeitura() != status)
+                .ifPresent(
+                        item -> {
+                            throw new LivroEmProgressoException();
+                        });
         itemBibliotecaRepository.definirStatus(
                 UUID.randomUUID(), usuarioId, livroId, status.name());
     }

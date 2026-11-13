@@ -40,6 +40,8 @@ class AdicionarLivroControllerIT {
             UUID.fromString("00000000-0000-0000-0000-000000000001");
 
     private static final String ISBN_BR001 = "9786586490077";
+    private static final String ISBN_BR002 = "9788525053251";
+    private static final String MEMORIAS_POSTUMAS = "Memórias Póstumas de Brás Cubas";
     private static final String ISBN_HOBBIT = "9788595085800";
 
     @Autowired private MockMvcTester mvc;
@@ -62,9 +64,21 @@ class AdicionarLivroControllerIT {
                 "SELECT COUNT(*) FROM livro WHERE isbn = ?", Integer.class, isbn);
     }
 
-    private UUID idDomCasmurroExistente() {
-        return jdbc.queryForObject(
-                "SELECT id FROM livro WHERE titulo = 'Dom Casmurro'", UUID.class);
+    private UUID idDoLivro(String titulo) {
+        return jdbc.queryForObject("SELECT id FROM livro WHERE titulo = ?", UUID.class, titulo);
+    }
+
+    // No seed, o usuário atual não tem este livro na biblioteca.
+    private UUID idMemoriasPostumasExistente() {
+        return idDoLivro(MEMORIAS_POSTUMAS);
+    }
+
+    private Map<String, Object> itemDoUsuario(UUID livroId) {
+        return jdbc.queryForMap(
+                "SELECT id, status_leitura::text AS status, favorito, pagina_atual, pagina_maxima"
+                        + " FROM item_biblioteca WHERE usuario_id = ? AND livro_id = ?",
+                USUARIO_ATUAL,
+                livroId);
     }
 
     private Integer contarItens(UUID livroId) {
@@ -76,31 +90,32 @@ class AdicionarLivroControllerIT {
     }
 
     @Test
-    @DisplayName("Dom Casmurro reutiliza livro do seed e adiciona como desejo")
+    @DisplayName("Memórias Póstumas reutiliza livro do seed e adiciona como desejo")
     void deve_adicionar_livro_novo_como_desejo() {
-        UUID livroExistente = idDomCasmurroExistente();
+        UUID livroExistente = idMemoriasPostumasExistente();
+        assertThat(contarItens(livroExistente)).isZero();
 
-        assertThat(post("br001", "desejo"))
+        assertThat(post("br002", "desejo"))
                 .hasStatus(HttpStatus.CREATED)
                 .bodyJson()
                 .extractingPath("$")
                 .asMap()
                 .containsEntry("livroId", livroExistente.toString())
-                .containsEntry("titulo", "Dom Casmurro")
+                .containsEntry("titulo", MEMORIAS_POSTUMAS)
                 .containsEntry("status", "desejo");
 
-        assertThat(contarLivrosPorIsbn(ISBN_BR001)).isZero();
+        assertThat(contarLivrosPorIsbn(ISBN_BR002)).isZero();
         assertThat(contarItens(livroExistente)).isEqualTo(1);
     }
 
     @Test
     @DisplayName("trocar para lido depois de desejo não duplica livro nem item")
     void deve_trocar_status_sem_duplicar() {
-        UUID livroExistente = idDomCasmurroExistente();
+        UUID livroExistente = idMemoriasPostumasExistente();
 
-        assertThat(post("br001", "desejo")).hasStatus(HttpStatus.CREATED);
+        assertThat(post("br002", "desejo")).hasStatus(HttpStatus.CREATED);
 
-        assertThat(post("br001", "lido"))
+        assertThat(post("br002", "lido"))
                 .hasStatus(HttpStatus.CREATED)
                 .bodyJson()
                 .extractingPath("$")
@@ -108,14 +123,14 @@ class AdicionarLivroControllerIT {
                 .containsEntry("livroId", livroExistente.toString())
                 .containsEntry("status", "lido");
 
-        assertThat(contarLivrosPorIsbn(ISBN_BR001)).isZero();
+        assertThat(contarLivrosPorIsbn(ISBN_BR002)).isZero();
         assertThat(contarItens(livroExistente)).isEqualTo(1);
     }
 
     @Test
     @DisplayName("marcar como lido não concede XP")
     void marcar_como_lido_nao_mexe_em_registro_de_leitura() {
-        UUID livroExistente = idDomCasmurroExistente();
+        UUID livroExistente = idMemoriasPostumasExistente();
 
         var usuarioAntes = jdbc.queryForMap("SELECT * FROM usuario WHERE id = ?", USUARIO_ATUAL);
 
@@ -129,7 +144,7 @@ class AdicionarLivroControllerIT {
                         USUARIO_ATUAL,
                         livroExistente);
 
-        assertThat(post("br001", "lido")).hasStatus(HttpStatus.CREATED);
+        assertThat(post("br002", "lido")).hasStatus(HttpStatus.CREATED);
 
         assertThat(jdbc.queryForMap("SELECT * FROM usuario WHERE id = ?", USUARIO_ATUAL))
                 .isEqualTo(usuarioAntes);
@@ -158,23 +173,17 @@ class AdicionarLivroControllerIT {
                 .containsEntry("favorito", true);
     }
 
+    // No seed, o usuário atual está lendo Admirável Mundo Novo (página 94 de 288, sem favorito) e
+    // já concluiu A Hora da Estrela; O Hobbit está em desejos, sem leitura.
     @Test
     @DisplayName("favoritar livro em leitura mantém status e página")
     void deve_favoritar_sem_mudar_status_nem_pagina_de_livro_em_leitura() {
-        UUID livroExistente = idDomCasmurroExistente();
+        UUID livroId = idDoLivro("Admirável Mundo Novo");
+        Map<String, Object> antes = itemDoUsuario(livroId);
+        assertThat(antes).containsEntry("status", "lendo").containsEntry("favorito", false);
+        assertThat((Integer) antes.get("pagina_maxima")).isPositive();
 
-        assertThat(post("br001", "desejo")).hasStatus(HttpStatus.CREATED);
-
-        jdbc.update(
-                "UPDATE item_biblioteca"
-                        + " SET status_leitura = 'lendo',"
-                        + " pagina_atual = 50,"
-                        + " pagina_maxima = GREATEST(pagina_maxima, 50)"
-                        + " WHERE usuario_id = ? AND livro_id = ?",
-                USUARIO_ATUAL,
-                livroExistente);
-
-        assertThat(post("br001", "favorito"))
+        assertThat(post("sci002", "favorito"))
                 .hasStatus(HttpStatus.CREATED)
                 .bodyJson()
                 .extractingPath("$")
@@ -182,15 +191,72 @@ class AdicionarLivroControllerIT {
                 .containsEntry("status", "lendo")
                 .containsEntry("favorito", true);
 
-        Integer paginaAtual =
-                jdbc.queryForObject(
-                        "SELECT pagina_atual FROM item_biblioteca"
-                                + " WHERE usuario_id = ? AND livro_id = ?",
-                        Integer.class,
-                        USUARIO_ATUAL,
-                        livroExistente);
+        Map<String, Object> depois = itemDoUsuario(livroId);
+        assertThat(depois)
+                .containsEntry("status", "lendo")
+                .containsEntry("favorito", true)
+                .containsEntry("pagina_atual", antes.get("pagina_atual"))
+                .containsEntry("pagina_maxima", antes.get("pagina_maxima"));
+    }
 
-        assertThat(paginaAtual).isEqualTo(50);
+    @ParameterizedTest(name = "{1} para {2}")
+    @CsvSource({
+        "sci002, Admirável Mundo Novo, lido",
+        "sci002, Admirável Mundo Novo, desejo",
+        "br008, A Hora da Estrela, desejo"
+    })
+    @DisplayName("livro com leitura registrada não troca de lista: 409 e item intacto")
+    void deve_recusar_troca_de_lista_de_livro_com_leitura(
+            String volumeId, String titulo, String lista) {
+        UUID livroId = idDoLivro(titulo);
+        Map<String, Object> antes = itemDoUsuario(livroId);
+        assertThat((Integer) antes.get("pagina_maxima")).isPositive();
+        assertThat(antes.get("status")).isNotEqualTo(lista);
+
+        assertThat(post(volumeId, lista))
+                .hasStatus(HttpStatus.CONFLICT)
+                .bodyJson()
+                .extractingPath("$.code")
+                .isEqualTo("LIVRO_EM_PROGRESSO");
+
+        assertThat(itemDoUsuario(livroId)).isEqualTo(antes);
+        assertThat(contarItens(livroId)).isEqualTo(1);
+    }
+
+    @Test
+    @DisplayName("pedir a lista em que o livro lido já está não é recusado nem muda o item")
+    void deve_aceitar_lido_para_livro_ja_concluido() {
+        UUID livroId = idDoLivro("A Hora da Estrela");
+        Map<String, Object> antes = itemDoUsuario(livroId);
+        assertThat(antes).containsEntry("status", "lido");
+        assertThat((Integer) antes.get("pagina_maxima")).isPositive();
+
+        assertThat(post("br008", "lido"))
+                .hasStatus(HttpStatus.CREATED)
+                .bodyJson()
+                .extractingPath("$.status")
+                .isEqualTo("lido");
+
+        assertThat(itemDoUsuario(livroId)).isEqualTo(antes);
+    }
+
+    @Test
+    @DisplayName("livro da biblioteca sem leitura registrada continua trocando de lista")
+    void deve_trocar_lista_de_livro_sem_leitura() {
+        UUID livroId = idDoLivro("O Hobbit");
+        Map<String, Object> antes = itemDoUsuario(livroId);
+        assertThat(antes).containsEntry("status", "desejo").containsEntry("pagina_maxima", 0);
+
+        assertThat(post("fan003", "lido"))
+                .hasStatus(HttpStatus.CREATED)
+                .bodyJson()
+                .extractingPath("$.status")
+                .isEqualTo("lido");
+
+        assertThat(itemDoUsuario(livroId))
+                .containsEntry("id", antes.get("id"))
+                .containsEntry("status", "lido")
+                .containsEntry("pagina_maxima", 0);
     }
 
     @Test
@@ -306,7 +372,9 @@ class AdicionarLivroControllerIT {
 
         Integer quantidadeAntes = jdbc.queryForObject("SELECT COUNT(*) FROM livro", Integer.class);
 
-        assertThat(post(volumeId, "desejo"))
+        // Favorito e não desejo: vários destes livros já têm leitura do usuário no seed, e a troca
+        // de lista seria recusada. Favoritar passa pela mesma busca do livro e vale para todos.
+        assertThat(post(volumeId, "favorito"))
                 .hasStatus(HttpStatus.CREATED)
                 .bodyJson()
                 .extractingPath("$.livroId")
