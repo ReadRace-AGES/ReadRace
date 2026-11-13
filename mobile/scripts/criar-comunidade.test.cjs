@@ -161,6 +161,31 @@ test('envio único bloqueia fechamento e edições; falha preserva campos e perm
   }
 });
 
+test('falha sem envelope da API (502/504 de intermediário) mostra o texto padrão, não o diagnóstico técnico', async () => {
+  const h = await mount();
+  try {
+    await h.type('Nome da comunidade', 'Leitores');
+    for (const [indice, status, corpo] of [
+      [0, 502, '<html>Bad Gateway</html>'],
+      [1, 504, { message: 'Gateway Timeout' }],
+    ]) {
+      await act(async () => {
+        h.submit().props.onPress();
+      });
+      await act(async () =>
+        h.requests[indice].reject(new client.ApiError(status, corpo))
+      );
+      assert.equal(
+        h.tree.root.findByProps({ accessibilityRole: 'alert' }).props.children,
+        'Não foi possível criar a comunidade. Tente novamente.'
+      );
+    }
+    assert.equal(h.input('Nome da comunidade').props.value, 'Leitores');
+  } finally {
+    await h.dispose();
+  }
+});
+
 test('fechar ou desmontar cancela envio; resposta antiga não interfere em nova abertura', async () => {
   const h = await mount();
   let desmontado = false;
